@@ -93,6 +93,12 @@ fun LoginScreen(navController: NavController){
             ){
                 Text("Login")
             }
+            
+            TextButton(
+                onClick = { viewModel.forgotPassword(email) }
+            ) {
+                Text("Forgot Password?")
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -106,7 +112,11 @@ fun LoginScreen(navController: NavController){
 
         if(viewModel.errorMessage.isNotEmpty()){
             Spacer(modifier = Modifier.height(10.dp))
-            Text(viewModel.errorMessage, color = MaterialTheme.colorScheme.error)
+            val isSuccess = viewModel.errorMessage.contains("sent")
+            Text(
+                text = viewModel.errorMessage, 
+                color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+            )
         }
     }
 }

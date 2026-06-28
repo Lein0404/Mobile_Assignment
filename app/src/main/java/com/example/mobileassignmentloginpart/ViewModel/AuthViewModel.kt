@@ -182,6 +182,24 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    fun forgotPassword(email: String) {
+        if (email.isEmpty()) {
+            errorMessage = "Please enter your email address"
+            return
+        }
+        isProcessing = true
+        errorMessage = ""
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    errorMessage = "Reset link sent to your email"
+                } else {
+                    errorMessage = task.exception?.message ?: "Failed to send reset email"
+                }
+                isProcessing = false
+            }
+    }
+
     fun logout() {
         auth.signOut()
         currentUser = null
