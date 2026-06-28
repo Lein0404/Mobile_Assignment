@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,13 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.user.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @Composable
 fun HomeScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +48,7 @@ fun HomeScreen(navController: NavController){
         }
         Spacer(modifier = Modifier.height(10.dp))
         Button(
-            onClick = { 
+            onClick = {
                 viewModel.logout()
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Home.route) { inclusive = true }

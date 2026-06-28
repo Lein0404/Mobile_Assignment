@@ -1,5 +1,6 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.user
 
+import android.util.Patterns
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 
 @Composable
 fun RegisterScreen(navController: NavController){
@@ -40,7 +40,7 @@ fun RegisterScreen(navController: NavController){
     var confirmPassword by remember { mutableStateOf("") }
     val viewModel : AuthViewModel = viewModel()
 
-    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.length in 6..20
     val passwordsMatch = password == confirmPassword
     val isFormValid = isEmailValid && isPasswordValid && passwordsMatch && !viewModel.isProcessing
@@ -116,7 +116,7 @@ fun RegisterScreen(navController: NavController){
             }
         )
         Spacer(modifier = Modifier.height(10.dp))
-        
+
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {
@@ -131,7 +131,7 @@ fun RegisterScreen(navController: NavController){
 
         if (viewModel.errorMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(10.dp))
-            Text(text = viewModel.errorMessage, color = androidx.compose.ui.graphics.Color.Red)
+            Text(text = viewModel.errorMessage, color = Color.Red)
         }
 
         Spacer(modifier = Modifier.weight(1f))

@@ -1,11 +1,11 @@
-package com.example.mobileassignmentloginpart.ViewModel
+package com.example.mobileassignmentloginpart.user
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.mobileassignmentloginpart.Model.User
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
@@ -21,7 +21,7 @@ class AuthViewModel : ViewModel() {
 
     var registerSuccess by mutableStateOf(false)
         private set
-    
+
     var isProcessing by mutableStateOf(false)
         private set
 
@@ -71,7 +71,7 @@ class AuthViewModel : ViewModel() {
 
     private fun setupNewUser(uid: String, email: String) {
         val metadataRef = firestore.collection("metadata").document("user_count")
-        
+
         metadataRef.get().addOnSuccessListener { document ->
             val count = (document.getLong("count") ?: 0L) + 1L
             val customId = "U" + count.toString().padStart(5, '0')
@@ -84,7 +84,7 @@ class AuthViewModel : ViewModel() {
 
     private fun saveUserToFirestore(uid: String, customId: String, email: String, name: String, count: Long) {
         val newUser = User(id = uid, customId = customId, email = email, name = name)
-        
+
         firestore.collection("users").document(uid).set(newUser)
             .addOnSuccessListener {
                 firestore.collection("metadata").document("user_count").set(mapOf("count" to count))
@@ -109,12 +109,22 @@ class AuthViewModel : ViewModel() {
                     currentUser = document.toObject(User::class.java)
                 } else {
                     // This user exists in Auth but not Firestore
-                    currentUser = User(id = uid, customId = "Pending...", email = auth.currentUser?.email ?: "", name = "User")
+                    currentUser = User(
+                        id = uid,
+                        customId = "Pending...",
+                        email = auth.currentUser?.email ?: "",
+                        name = "User"
+                    )
                 }
             }
             .addOnFailureListener {
                 errorMessage = "Access Denied: ${it.message}"
-                currentUser = User(id = uid, customId = "No Data", email = auth.currentUser?.email ?: "", name = "User")
+                currentUser = User(
+                    id = uid,
+                    customId = "No Data",
+                    email = auth.currentUser?.email ?: "",
+                    name = "User"
+                )
             }
     }
 
@@ -122,7 +132,7 @@ class AuthViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         isProcessing = true
         errorMessage = ""
-        
+
         val cid = if (currentUser?.customId == "Pending..." || currentUser?.customId == "No Data") "U00001" else currentUser?.customId ?: "U00001"
 
         val updatedData = User(
@@ -143,7 +153,7 @@ class AuthViewModel : ViewModel() {
                             if (task.isSuccessful) {
                                 errorMessage = "Profile Updated"
                             } else {
-                                if (task.exception is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+                                if (task.exception is FirebaseAuthRecentLoginRequiredException) {
                                     errorMessage = "Sensitive change. Please logout and login again to update email/password."
                                 } else {
                                     errorMessage = "Saved, but email update failed: ${task.exception?.message}"
@@ -173,12 +183,30 @@ class AuthViewModel : ViewModel() {
                     errorMessage = "Profile Updated"
                 } else {
                     val exception = task.exception
-                    if (exception is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+                    if (exception is FirebaseAuthRecentLoginRequiredException) {
                         errorMessage = "Sensitive operation. Please logout and login again to update password."
                     } else {
                         errorMessage = exception?.message ?: "Password update failed"
                     }
                 }
+            }
+    }
+
+    fun forgotPassword(email: String) {
+        if (email.isEmpty()) {
+            errorMessage = "Please enter your email address"
+            return
+        }
+        isProcessing = true
+        errorMessage = ""
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    errorMessage = "Reset link sent to your email"
+                } else {
+                    errorMessage = task.exception?.message ?: "Failed to send reset email"
+                }
+                isProcessing = false
             }
     }
 
