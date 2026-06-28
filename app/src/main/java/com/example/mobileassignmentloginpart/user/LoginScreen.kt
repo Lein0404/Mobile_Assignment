@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.user
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @Composable
@@ -37,7 +36,7 @@ fun LoginScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
     var email by remember{ mutableStateOf("") }
     var password by remember{mutableStateOf("")}
-    
+
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     LaunchedEffect(viewModel.loginSuccess) {
@@ -76,7 +75,7 @@ fun LoginScreen(navController: NavController){
             modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
         )
         Spacer(modifier = Modifier.height(20.dp))
-        
+
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {
@@ -93,6 +92,12 @@ fun LoginScreen(navController: NavController){
             ){
                 Text("Login")
             }
+
+            TextButton(
+                onClick = { viewModel.forgotPassword(email) }
+            ) {
+                Text("Forgot Password?")
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -106,7 +111,11 @@ fun LoginScreen(navController: NavController){
 
         if(viewModel.errorMessage.isNotEmpty()){
             Spacer(modifier = Modifier.height(10.dp))
-            Text(viewModel.errorMessage, color = MaterialTheme.colorScheme.error)
+            val isSuccess = viewModel.errorMessage.contains("sent")
+            Text(
+                text = viewModel.errorMessage,
+                color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+            )
         }
     }
 }

@@ -1,9 +1,10 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.user
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import android.util.Patterns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -28,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -43,7 +43,7 @@ fun ProfileScreen(navController: NavController) {
     var confirmPassword by remember { mutableStateOf("") }
     var profilePicBase64 by remember { mutableStateOf("") }
 
-    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.isEmpty() || password.length >= 6
     val passwordsMatch = password == confirmPassword
     val isFormValid = isEmailValid && isPasswordValid && passwordsMatch && !viewModel.isProcessing
@@ -107,7 +107,7 @@ fun ProfileScreen(navController: NavController) {
                     )
                 }
             }
-            
+
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
             // Profile Picture Circle
@@ -143,7 +143,7 @@ fun ProfileScreen(navController: NavController) {
                 }
             }
             item { Text("Tap to change picture", fontSize = 10.sp, color = Color.Gray) }
-            
+
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { Text(text = "User ID: ${user.customId}", fontWeight = FontWeight.Bold) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -247,7 +247,7 @@ fun ProfileScreen(navController: NavController) {
                 if (viewModel.errorMessage.isNotEmpty()) {
                     val isSuccess = viewModel.errorMessage == "Profile Updated"
                     Text(
-                        text = viewModel.errorMessage, 
+                        text = viewModel.errorMessage,
                         color = if (isSuccess) Color(0xFF4CAF50) else Color.Red,
                         modifier = Modifier.padding(top = 8.dp)
                     )
