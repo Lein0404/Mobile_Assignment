@@ -1,6 +1,6 @@
 package com.example.mobileassignmentloginpart.meal_planner
 
-import androidx.annotation.DrawableRes
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,17 +40,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mobileassignmentloginpart.R
-import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentLoginPartTheme
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
+import com.example.mobileassignmentloginpart.Recipe
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
+import kotlin.collections.emptyList
+import kotlin.collections.mutableListOf
 
 @Composable
 fun DateCard(
@@ -106,7 +110,7 @@ fun DateCard(
 fun WeeklyCalendarRow(
     weekDays: List<LocalDate>,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit,     // Receive the callback here
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -171,16 +175,9 @@ fun CalorieProgressBar(
     }
 }
 
-data class MealItem(
-    val name: String,
-    val calories: Int,
-    val cookingTime: Int,
-    @DrawableRes val image: Int
-)
-
 @Composable
 fun MealCard(
-    meal: MealItem,
+    recipe: Recipe,
     onDeleteClick: () -> Unit,
     onClick:() -> Unit,
     color: Color
@@ -188,9 +185,10 @@ fun MealCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(100.dp)
+            .padding(end = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(6.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(color)
     )
     {
@@ -198,24 +196,25 @@ fun MealCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .padding(start = 6.dp),
+                .padding(start = 5.5.dp),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp),
-            onClick = onClick
+            onClick = onClick,
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
         ) {
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Image(
-                    painter = painterResource(meal.image),
+                    painter = painterResource(recipe.recipeImage),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(88.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
@@ -226,8 +225,8 @@ fun MealCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = meal.name,
-                        fontSize = 16.sp,
+                        text = recipe.recipeName,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                     )
@@ -241,24 +240,24 @@ fun MealCard(
                         Icon(
                             painter = painterResource(R.drawable.fire),
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(20.dp)
                         )
 
                         Spacer(modifier = Modifier.width(4.dp))
 
-                        Text("${meal.calories} kcal", fontSize = 12.sp, maxLines = 1)
+                        Text("${recipe.calories} kcal", fontSize = 15.sp, maxLines = 1)
 
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Icon(
                             painter = painterResource(R.drawable.time),
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(20.dp)
                         )
 
                         Spacer(modifier = Modifier.width(4.dp))
 
-                        Text("${meal.cookingTime} mins", fontSize = 12.sp, maxLines = 1)
+                        Text("${recipe.time} mins", fontSize = 15.sp, maxLines = 1)
                     }
                 }
 
@@ -276,40 +275,39 @@ fun MealCard(
 
 @Composable
 fun MealSection(
-    modifier:Modifier = Modifier,
+    modifier: Modifier = Modifier,
     title: String,
-    meal: MealItem,
+    recipes: List<Recipe>, // Changed from recipe: Recipe to a List
     onAddClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {},
+    onDeleteClick: (Recipe) -> Unit = {}, // Updated to pass back which recipe to delete
 ) {
-    val color:Color = when (title) {
+    val color: Color = when (title) {
         "Breakfast" -> Color(0XFFF4A260)
         "Lunch" -> Color(0XFF65B960)
         "Dinner" -> Color(0XFF4F6D7A)
-        else -> Color.Gray
+        else -> Color(0XFFFCBA03)
     }
-    val icon:Int = when(title){
+    val icon: Int = when(title){
         "Breakfast" -> R.drawable.breakfast
         "Lunch" -> R.drawable.lunch
         "Dinner" -> R.drawable.dinner
-        else -> R.drawable.breakfast
+        else -> R.drawable.snack
     }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp,vertical = 10.dp)
             .background(
-                Color(0xFFE8E8E8),
+                MaterialTheme.colorScheme.background,
                 RoundedCornerShape(20.dp)
             )
-            .padding(16.dp)
     ) {
-
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .padding(start = 16.dp,end = 16.dp,top = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
@@ -337,34 +335,64 @@ fun MealSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        MealCard(
-            meal = meal,
-            onDeleteClick = onDeleteClick,
-            onClick = {/*TODO*/},
-            color = color
-        )
+        // Check if there are any recipes scheduled for this meal slot
+        if (recipes.isEmpty()) {
+            Text(
+                text = "Planning Something?",
+                color = Color.Gray,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(start = 26.dp,bottom = 16.dp)
+            )
+        } else {
+            // Loop through and display a MealCard for each recipe in this slot
+            recipes.forEach { recipeItem ->
+                MealCard(
+                    recipe = recipeItem,
+                    onDeleteClick = { onDeleteClick(recipeItem) }, // Pass the recipe up
+                    onClick = {/*TODO*/},
+                    color = color,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+        }
     }
 }
 
 @Composable
-fun MealPlannerScreenPreview(viewModel: MealPlannerViewModel, modifier: Modifier) {
+fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
     // 1. State for the currently selected day (defaults to today)
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
+    LaunchedEffect(selectedDate) {
+        viewModel.loadPlanForDate(selectedDate)
+    }
+
     // 2. State to track the active week (defaults to Monday of the current week)
     var currentWeekStart by remember {
-        mutableStateOf(LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY)))
+        mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
     }
 
     // 3. Generate the 7 days based on the current week start state
-    val weekDays = getCurrentWeekDays(currentWeekStart)
+    val weekDays = viewModel.getCurrentWeekDays(currentWeekStart)
 
     // 4. Format the header text dynamically (e.g., "13 - 19 Jul 2026")
     val weekEndDate = weekDays.last()
-    val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${weekEndDate.month.getDisplayName(java.time.format.TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
+    val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${weekEndDate.month.getDisplayName(
+        TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
 
     // State to control showing/hiding the date picker dialog
     var showDatePicker by remember { mutableStateOf(false) }
+
+
+    // Starts as an empty read-only list wrapped in state
+    var mealPlanList by remember { mutableStateOf(listOf<DailyPlan>()) }
+    // To add data later, you must overwrite the whole variable:
+    fun onLoadFromDatabase(loadedPlans: List<DailyPlan>) {
+        mealPlanList = loadedPlans
+    }
+    fun addNewPlan(newPlan: DailyPlan) {
+        mealPlanList = mealPlanList + newPlan
+    }
 
     // Show Dialog when triggered
     if (showDatePicker) {
@@ -373,7 +401,7 @@ fun MealPlannerScreenPreview(viewModel: MealPlannerViewModel, modifier: Modifier
             onDateSelected = { newDate ->
                 selectedDate = newDate
                 // Snap to the Sunday of that week
-                currentWeekStart = newDate.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY))
+                currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
             },
             onDismiss = { showDatePicker = false }
         )
@@ -398,7 +426,6 @@ fun MealPlannerScreenPreview(viewModel: MealPlannerViewModel, modifier: Modifier
         }
     ) { innerPadding ->
         val scrollState = rememberScrollState()
-
         Box(
             modifier
                 .fillMaxSize()
@@ -470,32 +497,73 @@ fun MealPlannerScreenPreview(viewModel: MealPlannerViewModel, modifier: Modifier
                 )
 
                 Spacer(Modifier.height(12.dp))
-                CalorieProgressBarPreview()
+
+                CalorieProgressBar(250,600,Color.Green,Modifier)//TODO
+
                 Spacer(Modifier.height(20.dp))
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp)),
-                    elevation = CardDefaults.cardElevation(100.dp)
+                    elevation = CardDefaults.cardElevation(100.dp),
+                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                 ) {
-                    MealSectionPreview()
+                    val selectedDailyPlan = remember(selectedDate) {
+                        try {
+                            // Put the exact expression/call on line 510 here
+                        } catch (e: Throwable) {
+                            Log.e("MealPlannerCrash", "The real cause is: ", e)
+                        }
+                        DailyPlan.findPlanByDate(selectedDate)
+                    }
 
-                    val meal = MealItem(
-                        name = "Greek Yogurt",
-                        calories = 400,
-                        cookingTime = 120,
-                        image = R.drawable.food
-                    )
+                    // 3. Extract the recipe lists safely. If no plan exists, it falls back to an empty list.
+                    val breakfastRecipes = selectedDailyPlan?.meals
+                        ?.filter { it.mealType == MealType.BREAKFAST }
+                        ?.flatMap { it.recipes } ?: emptyList()
 
-                    MealSection(
-                        title = "Lunch",
-                        meal = meal
-                    )
+                    val lunchRecipes = selectedDailyPlan?.meals
+                        ?.filter { it.mealType == MealType.LUNCH }
+                        ?.flatMap { it.recipes } ?: emptyList()
 
-                    MealSection(
-                        title = "Dinner",
-                        meal = meal
-                    )
+                    val dinnerRecipes = selectedDailyPlan?.meals
+                        ?.filter { it.mealType == MealType.DINNER }
+                        ?.flatMap { it.recipes } ?: emptyList()
+
+                    val snackRecipes = selectedDailyPlan?.meals
+                        ?.filter { it.mealType == MealType.SNACK }
+                        ?.flatMap { it.recipes } ?: emptyList()
+
+                    // 4. Pass the extracted lists into your UI components
+                    Column {
+                        MealSection(
+                            title = "Breakfast",
+                            recipes = breakfastRecipes,
+                            onAddClick = { /* Handle add */ },
+                            onDeleteClick = { recipe -> /* Handle delete */ }
+                        )
+
+                        MealSection(
+                            title = "Lunch",
+                            recipes = lunchRecipes,
+                            onAddClick = { /* Handle add */ },
+                            onDeleteClick = { recipe -> /* Handle delete */ }
+                        )
+
+                        MealSection(
+                            title = "Dinner",
+                            recipes = dinnerRecipes,
+                            onAddClick = { /* Handle add */ },
+                            onDeleteClick = { recipe -> /* Handle delete */ }
+                        )
+
+                        MealSection(
+                            title = "Snack",
+                            recipes = snackRecipes,
+                            onAddClick = { /* Handle add */ },
+                            onDeleteClick = { recipe -> /* Handle delete */ }
+                        )
+                    }
                 }
             }
         }
@@ -542,37 +610,4 @@ fun MealDatePickerDialog(
     ) {
         DatePicker(state = datePickerState)
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MobileAssignmentLoginPartTheme {
-        DateCard(Modifier,"Mon","14",false, onClick = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CalorieProgressBarPreview() {
-    MobileAssignmentLoginPartTheme {
-        CalorieProgressBar(250,600,Color.Green,Modifier)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MealSectionPreview() {
-
-    val meal = MealItem(
-        name = "Greek Yogurt",
-        calories = 200,
-        cookingTime = 20,
-        image = R.drawable.food
-    )
-
-    MealSection(
-        title = "Breakfast",
-        meal = meal
-    )
 }

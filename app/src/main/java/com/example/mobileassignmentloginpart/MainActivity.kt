@@ -17,13 +17,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mobileassignmentloginpart.home.HomeScreen
-import com.example.mobileassignmentloginpart.meal_planner.MealPlannerScreenPreview
+import com.example.mobileassignmentloginpart.meal_planner.MealPlannerScreen
 import com.example.mobileassignmentloginpart.meal_planner.MealPlannerViewModel
 import com.example.mobileassignmentloginpart.user.LoginScreen
 import com.example.mobileassignmentloginpart.user.ProfileScreen
 import com.example.mobileassignmentloginpart.user.RegisterScreen
 import com.example.mobileassignmentloginpart.navigation.Screen
 import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentLoginPartTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -53,12 +54,12 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.Profile.route){
                         ProfileScreen(navController)
                     }
-                    composable(Screen.Meal_Planner.route){
-                        // 1. Create an instance of your ViewModel
-                        val viewModel = MealPlannerViewModel()
+                    composable(Screen.Meal_Planner.route) {
+                        // 1. Properly fetch or create the ViewModel managed by the architecture lifecycle
+                        val viewModel: MealPlannerViewModel = viewModel()
 
-                        // 2. Pass the instance and modifier correctly
-                        MealPlannerScreenPreview(
+                        // 2. Pass the instance safely
+                        MealPlannerScreen(
                             viewModel = viewModel,
                             modifier = Modifier
                         )
