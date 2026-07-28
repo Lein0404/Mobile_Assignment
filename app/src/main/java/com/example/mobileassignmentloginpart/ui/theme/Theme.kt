@@ -13,32 +13,40 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0XFFF07F60),
+    onPrimary = Color.White,
+
     secondary = Color(0XFF7BA889),
-    tertiary = Color(0XFFEBB353),
-    surface = Color(0xFF303030),
-    background = Color(0xFF181818),
-    onPrimary = Color(0XFFFFFFFF),
-    onSecondary = Color(0XFFFFFFFF),
-    onTertiary = Color(0XFFFFFFFF),
-    onSurface = Color(0xFFFFFFFF),
-    onBackground = Color(0xFFD0D0D0),
+    onSecondary = Color.White,
+
+    tertiary = Color(0xFF2E2E2E),     // neutral card/surface tone
+    onTertiary = Color.White,
+
+    surface = Color(0XFF1E1E1E),      // general surface background
+    onSurface = Color(0XFFE6E6E6),    // soft white text (not too bright)
+
+    background = Color(0XFF1C1C1C),   // main dark background
+    onBackground = Color(0XFF1C1B1F),
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0XFFEC5E3A),
+    onPrimary = Color.White,
+
     secondary = Color(0XFF5D8068),
-    tertiary = Color(0XFFD29221),
-    surface = Color(0xFFFFFFFF),
-    background = Color(0xFFE5E5E5),
-    onPrimary = Color(0XFFFFFFFF),
-    onSecondary = Color(0XFFFFFFFF),
-    onTertiary = Color(0XFFFFFFFF),
-    onSurface = Color(0xFF4A4A4A),
-    onBackground = Color(0xFF1B1B1B),
+    onSecondary = Color.White,
+
+    tertiary = Color(0XFFE2E2E2),     // neutral card/surface tone
+    onTertiary = Color.Black,
+
+    surface = Color(0XFFFFFFFF),      // standard white surface
+    onSurface = Color(0XFF1B1B1B),
+
+    background = Color(0XFFF2F2F2),   // soft light background
+    onBackground = Color(0XFF1B1B1B),
 )
 
 @Composable
-fun MobileAssignmentLoginPartTheme(
+fun MobileAssignmentTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,

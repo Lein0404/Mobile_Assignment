@@ -326,7 +326,7 @@ fun MealSection(
 
             IconButton(onClick = onAddClick) {
                 Icon(
-                    painter = painterResource(R.drawable.add_circle),
+                    painter = painterResource(R.drawable.ic_add_circle_outline),
                     contentDescription = "Add",
                     modifier = Modifier.size(34.dp)
                 )

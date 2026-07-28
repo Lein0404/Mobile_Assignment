@@ -23,8 +23,8 @@ import com.example.mobileassignmentloginpart.user.LoginScreen
 import com.example.mobileassignmentloginpart.user.ProfileScreen
 import com.example.mobileassignmentloginpart.user.RegisterScreen
 import com.example.mobileassignmentloginpart.navigation.Screen
-import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentLoginPartTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobileAssignmentLoginPartTheme {
+            MobileAssignmentTheme {
                 val navController = rememberNavController()
 
                 NavHost(
