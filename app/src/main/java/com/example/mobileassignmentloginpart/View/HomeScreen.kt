@@ -30,7 +30,7 @@ fun HomeScreen(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .navigationBarsPadding() // Added to handle bottom navigation bar
+            .navigationBarsPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

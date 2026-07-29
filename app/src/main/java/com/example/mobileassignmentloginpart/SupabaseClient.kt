@@ -9,7 +9,10 @@ object SupabaseClient {
         supabaseUrl = "https://gamlgwljbicaanomazvz.supabase.co",
         supabaseKey = "sb_publishable_NHNRwxkgEzo4V-dgDokkKw_WbrTkrQr"
     ) {
-        install(Auth)
+        install(Auth) {
+            scheme = "foodieheal"
+            host = "reset"
+        }
         install(Postgrest)
     }
 }
