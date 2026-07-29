@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="padding_xxl">35dp</dimen>
+    <dimen name="padding_xl">30dp</dimen>
+    <dimen name="padding_l">16dp</dimen>
+    <dimen name="padding_md">12dp</dimen>
+    <dimen name="padding_sm">6dp</dimen> <!-- new -->
+    <dimen name="padding_xsm">4dp</dimen>
+    <dimen name="padding_xxsm">2dp</dimen> <!-- new -->
+    <dimen name="corner_radius_sm">12dp</dimen>
+    <dimen name="bottom_nav_icon_size">24dp</dimen>
+</resources>
