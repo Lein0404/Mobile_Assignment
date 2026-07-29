@@ -88,6 +88,15 @@ fun LoginScreen(navController: NavController){
             Text("Don't have an account? Register")
         }
 
+        Spacer(modifier = Modifier.height(5.dp))
+        TextButton(
+            onClick = {
+                navController.navigate(Screen.Welcome.route)
+            }
+        ) {
+            Text("Register as a Chef")
+        }
+
         if(viewModel.errorMessage.isNotEmpty()){
             Spacer(modifier = Modifier.height(10.dp))
             val isSuccess = viewModel.errorMessage.contains("sent")

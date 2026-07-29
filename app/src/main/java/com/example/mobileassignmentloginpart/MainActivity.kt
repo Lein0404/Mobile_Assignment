@@ -11,6 +11,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.mobileassignmentloginpart.Chef.ChefRegister
+import com.example.mobileassignmentloginpart.Chef.Register.ChefWelcomeScreen
 import com.example.mobileassignmentloginpart.View.HomeScreen
 import com.example.mobileassignmentloginpart.View.LoginScreen
 import com.example.mobileassignmentloginpart.View.ProfileScreen
@@ -43,6 +45,14 @@ class MainActivity : ComponentActivity() {
                         RegisterScreen(navController)
                     }
 
+                    composable(Screen.ChefRegister.route){
+                        ChefRegister(navController)
+                    }
+
+                    composable(Screen.Welcome.route){
+                        ChefWelcomeScreen(navController)
+                    }
+
                     composable(Screen.Profile.route){
                         ProfileScreen(navController)
                     }
@@ -63,8 +73,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    MobileAssignmentLoginPartTheme {
+    MobileAssignmentTheme {
         Greeting("Android")
     }
-}
 }
