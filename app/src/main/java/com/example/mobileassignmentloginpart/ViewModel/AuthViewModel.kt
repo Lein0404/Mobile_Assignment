@@ -167,7 +167,7 @@ class AuthViewModel : ViewModel() {
                 client.auth.updateUser { password = newPassword }
                 errorMessage = "Profile Updated"
             } catch (e: Exception) {
-                errorMessage = "Password update failed"
+                errorMessage = e.message ?: "Password update failed"
             }
         }
     }
@@ -184,7 +184,10 @@ class AuthViewModel : ViewModel() {
                 client.auth.resetPasswordForEmail(emailInput)
                 errorMessage = "Reset link sent to your email"
             } catch (e: Exception) {
-                errorMessage = "Failed to send reset email"
+                errorMessage = e.message ?: "Failed to send reset email"
+                if (errorMessage.contains("rate limit", ignoreCase = true)) {
+                    errorMessage = "Too many requests. Please try again in an hour."
+                }
             } finally {
                 isProcessing = false
             }
@@ -192,15 +195,14 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout(onComplete: () -> Unit) {
-        isProcessing = true
+        currentUser = null
+        loginSuccess = false
+        registerSuccess = false
+        errorMessage = ""
         viewModelScope.launch {
             try {
                 client.auth.signOut()
             } catch (e: Exception) { }
-            currentUser = null
-            loginSuccess = false
-            registerSuccess = false
-            errorMessage = ""
             isProcessing = false
             onComplete()
         }
