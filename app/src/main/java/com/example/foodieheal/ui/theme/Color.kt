@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.ui.theme
+package com.example.foodieheal.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

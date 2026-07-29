@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.view
+package com.example.foodieheal.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.viewmodel.AuthViewModel
-import com.example.mobileassignmentloginpart.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.navigation.Screen
 
 @Composable
 fun HomeScreen(navController: NavController){

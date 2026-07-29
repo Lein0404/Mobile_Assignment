@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.navigation
+package com.example.foodieheal.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")

@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.view
+package com.example.foodieheal.view
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.viewmodel.AuthViewModel
-import com.example.mobileassignmentloginpart.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.navigation.Screen
 import java.io.ByteArrayOutputStream
 
 @Composable
