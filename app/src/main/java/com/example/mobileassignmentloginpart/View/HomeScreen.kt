@@ -49,9 +49,10 @@ fun HomeScreen(navController: NavController){
         Spacer(modifier = Modifier.height(10.dp))
         Button(
             onClick = { 
-                viewModel.logout()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true }
+                viewModel.logout {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp),
