@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mobileassignmentloginpart"
+    namespace = "com.example.foodieheal"
     compileSdk {
         version = release(37) {
 
@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.mobileassignmentloginpart"
+        applicationId = "com.example.foodieheal"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

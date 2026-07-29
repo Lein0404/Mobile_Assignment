@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.view
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 import java.io.ByteArrayOutputStream
 

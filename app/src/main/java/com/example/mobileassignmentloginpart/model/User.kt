@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Model
+package com.example.mobileassignmentloginpart.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

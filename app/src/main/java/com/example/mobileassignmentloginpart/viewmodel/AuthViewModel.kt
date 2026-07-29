@@ -1,11 +1,11 @@
-package com.example.mobileassignmentloginpart.ViewModel
+package com.example.mobileassignmentloginpart.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobileassignmentloginpart.Model.User
+import com.example.mobileassignmentloginpart.model.User
 import com.example.mobileassignmentloginpart.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
