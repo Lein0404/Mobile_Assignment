@@ -14,17 +14,30 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
-class MealPlannerViewModel: ViewModel() {
+class MealPlannerViewModel(
+    private val repository: MealPlannerRepository
+) : ViewModel() {
+
+    // Observable UI state for the selected day's meal plan
     var selectedDailyPlan by mutableStateOf<DailyPlan?>(null)
         private set
 
+    // Simple state to show loading status if wanted
+    var isLoading by mutableStateOf(false)
+        private set
+
     fun loadPlanForDate(date: LocalDate) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Fetch safely on a background thread
-            val plan = DailyPlan.findPlanByDate(date)
-            withContext(Dispatchers.Main) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = repository.getDailyPlan(date)
+
+            result.onSuccess { plan ->
                 selectedDailyPlan = plan
+            }.onFailure { exception ->
+                // Log or handle errors here
+                selectedDailyPlan = null
             }
+            isLoading = false
         }
     }
 

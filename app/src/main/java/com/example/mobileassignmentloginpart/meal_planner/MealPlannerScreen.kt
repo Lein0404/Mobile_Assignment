@@ -49,12 +49,13 @@ import java.util.Locale
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
 import com.example.mobileassignmentloginpart.Recipe
+import com.example.mobileassignmentloginpart.SupabaseClient
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import kotlin.collections.emptyList
-import kotlin.collections.mutableListOf
+import io.github.jan.supabase.auth.auth
 
 @Composable
 fun DateCard(
@@ -367,7 +368,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
         viewModel.loadPlanForDate(selectedDate)
     }
 
-    // 2. State to track the active week (defaults to Monday of the current week)
+    // 2. State to track the active week (defaults to Sunday of the current week)
     var currentWeekStart by remember {
         mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
     }
@@ -383,13 +384,24 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
     // State to control showing/hiding the date picker dialog
     var showDatePicker by remember { mutableStateOf(false) }
 
-
     // Starts as an empty read-only list wrapped in state
     var mealPlanList by remember { mutableStateOf(listOf<DailyPlan>()) }
+
     // To add data later, you must overwrite the whole variable:
     fun onLoadFromDatabase(loadedPlans: List<DailyPlan>) {
         mealPlanList = loadedPlans
     }
+
+    // 🌟 FIX: Grab the state out of the viewmodel so the calorie calculator can see it!
+    val selectedDailyPlan = viewModel.selectedDailyPlan
+
+    // Now this works perfectly without errors
+    val totalDailyCalories = remember(selectedDailyPlan) {
+        selectedDailyPlan?.meals
+            ?.flatMap { it.recipes }
+            ?.sumOf { it.calories ?: 0 } ?: 0
+    }
+
     fun addNewPlan(newPlan: DailyPlan) {
         mealPlanList = mealPlanList + newPlan
     }
@@ -498,7 +510,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
 
                 Spacer(Modifier.height(12.dp))
 
-                CalorieProgressBar(250,600,Color.Green,Modifier)//TODO
+                CalorieProgressBar(totalDailyCalories,600,Color.Green,Modifier)//TODO
 
                 Spacer(Modifier.height(20.dp))
                 Card(
@@ -508,14 +520,6 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                     elevation = CardDefaults.cardElevation(100.dp),
                     colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                 ) {
-                    val selectedDailyPlan = remember(selectedDate) {
-                        try {
-                            // Put the exact expression/call on line 510 here
-                        } catch (e: Throwable) {
-                            Log.e("MealPlannerCrash", "The real cause is: ", e)
-                        }
-                        DailyPlan.findPlanByDate(selectedDate)
-                    }
 
                     // 3. Extract the recipe lists safely. If no plan exists, it falls back to an empty list.
                     val breakfastRecipes = selectedDailyPlan?.meals

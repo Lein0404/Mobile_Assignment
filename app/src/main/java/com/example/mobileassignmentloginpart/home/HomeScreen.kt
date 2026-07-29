@@ -19,18 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.user.AuthViewModel
+import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @Composable
 fun HomeScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
-
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .navigationBarsPadding() // Added to handle bottom navigation bar
+            .navigationBarsPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -48,16 +48,23 @@ fun HomeScreen(navController: NavController){
         }
         Spacer(modifier = Modifier.height(10.dp))
         Button(
-            onClick = {
-                viewModel.logout()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true }
+            onClick = { 
+                viewModel.logout {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
             Text("Logout")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = {navController.navigate(Screen.MealPlanner.route)}
+        ){
+            Text("Meal Planner")
         }
     }
 }

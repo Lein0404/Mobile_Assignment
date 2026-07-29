@@ -16,15 +16,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.mobileassignmentloginpart.home.HomeScreen
 import com.example.mobileassignmentloginpart.meal_planner.MealPlannerScreen
 import com.example.mobileassignmentloginpart.meal_planner.MealPlannerViewModel
 import com.example.mobileassignmentloginpart.user.LoginScreen
-import com.example.mobileassignmentloginpart.user.ProfileScreen
-import com.example.mobileassignmentloginpart.user.RegisterScreen
 import com.example.mobileassignmentloginpart.navigation.Screen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobileassignmentloginpart.home.HomeScreen
+import com.example.mobileassignmentloginpart.View.ProfileScreen
+import com.example.mobileassignmentloginpart.View.RegisterScreen
+import com.example.mobileassignmentloginpart.meal_planner.MealPlannerRepository
 import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentTheme
+import io.github.jan.supabase.postgrest.postgrest
 
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Zh.route
+                    startDestination = Screen.Login.route
                 ){
                     composable(Screen.Login.route){
                         LoginScreen(navController)
@@ -54,16 +56,28 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.Profile.route){
                         ProfileScreen(navController)
                     }
-                    composable(Screen.Meal_Planner.route) {
-                        // 1. Properly fetch or create the ViewModel managed by the architecture lifecycle
-                        val viewModel: MealPlannerViewModel = viewModel()
 
-                        // 2. Pass the instance safely
+                    composable(Screen.MealPlanner.route) {
+                        val viewModel: MealPlannerViewModel = viewModel(
+                            factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                                @Suppress("UNCHECKED_CAST")
+                                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                                    // Accessing your global object here
+                                    val repository = MealPlannerRepository(
+                                        postgrest = SupabaseClient.client.postgrest,
+                                        supabaseClient = SupabaseClient.client
+                                    )
+                                    return MealPlannerViewModel(repository) as T
+                                }
+                            }
+                        )
+
                         MealPlannerScreen(
                             viewModel = viewModel,
                             modifier = Modifier
                         )
                     }
+
                     composable (Screen.Zh.route){
                         ZhScreen(navController)
                     }
@@ -77,7 +91,7 @@ class MainActivity : ComponentActivity() {
 fun ZhScreen(navController: NavHostController){
     Scaffold{innerPadding->
         Box(Modifier.fillMaxSize().padding(innerPadding)) {
-            Button(onClick = { navController.navigate(Screen.Meal_Planner.route) }) {
+            Button(onClick = { navController.navigate(Screen.MealPlanner.route) }) {
                 Text("Meal Planner")
             }
         }

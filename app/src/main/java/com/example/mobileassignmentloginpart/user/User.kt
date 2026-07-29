@@ -1,9 +1,15 @@
-package com.example.mobileassignmentloginpart.user
+package com.example.mobileassignmentloginpart.Model
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class User(
-    val id: String = "",
-    val customId: String = "", // Added for U00001 format
-    val email: String = "",
-    val name: String = "",
-    val profilePicUrl: String = ""
+    val id: String? = "",
+    @SerialName("custom_id")
+    val customId: String? = "",
+    val email: String? = "",
+    val name: String? = "",
+    @SerialName("profile_pic_url")
+    val profilePicUrl: String? = ""
 )

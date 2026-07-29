@@ -1,10 +1,9 @@
-package com.example.mobileassignmentloginpart.user
+package com.example.mobileassignmentloginpart.View
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
-import android.util.Patterns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -29,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.navigation.Screen
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -43,7 +44,7 @@ fun ProfileScreen(navController: NavController) {
     var confirmPassword by remember { mutableStateOf("") }
     var profilePicBase64 by remember { mutableStateOf("") }
 
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.isEmpty() || password.length >= 6
     val passwordsMatch = password == confirmPassword
     val isFormValid = isEmailValid && isPasswordValid && passwordsMatch && !viewModel.isProcessing
@@ -64,9 +65,9 @@ fun ProfileScreen(navController: NavController) {
 
     LaunchedEffect(user) {
         user?.let {
-            name = it.name
-            email = it.email
-            profilePicBase64 = it.profilePicUrl
+            name = it.name ?: ""
+            email = it.email ?: ""
+            profilePicBase64 = it.profilePicUrl ?: ""
         }
     }
 
@@ -86,7 +87,7 @@ fun ProfileScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding() // Added to handle bottom navigation bar
+                .navigationBarsPadding()
                 .imePadding()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -107,10 +108,9 @@ fun ProfileScreen(navController: NavController) {
                     )
                 }
             }
-
+            
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // Profile Picture Circle
             item {
                 Box(
                     modifier = Modifier
@@ -121,17 +121,24 @@ fun ProfileScreen(navController: NavController) {
                         .clickable(enabled = !viewModel.isProcessing) { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (profilePicBase64.isNotEmpty()) {
-                        val imageBytes = Base64.decode(profilePicBase64, Base64.DEFAULT)
-                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                    val bitmap = remember(profilePicBase64) {
+                        if (profilePicBase64.isNotEmpty()) {
+                            try {
+                                val imageBytes = Base64.decode(profilePicBase64, Base64.DEFAULT)
+                                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else null
+                    }
+
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     } else {
                         Text(
                             text = if (name.isNotEmpty()) name.take(1).uppercase() else "?",
@@ -143,9 +150,9 @@ fun ProfileScreen(navController: NavController) {
                 }
             }
             item { Text("Tap to change picture", fontSize = 10.sp, color = Color.Gray) }
-
+            
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { Text(text = "User ID: ${user.customId}", fontWeight = FontWeight.Bold) }
+            item { Text(text = "User ID: ${user.customId ?: "U001"}", fontWeight = FontWeight.Bold) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
@@ -229,9 +236,10 @@ fun ProfileScreen(navController: NavController) {
             item {
                 Button(
                     onClick = {
-                        viewModel.logout()
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
+                        viewModel.logout {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -247,7 +255,7 @@ fun ProfileScreen(navController: NavController) {
                 if (viewModel.errorMessage.isNotEmpty()) {
                     val isSuccess = viewModel.errorMessage == "Profile Updated"
                     Text(
-                        text = viewModel.errorMessage,
+                        text = viewModel.errorMessage, 
                         color = if (isSuccess) Color(0xFF4CAF50) else Color.Red,
                         modifier = Modifier.padding(top = 8.dp)
                     )
