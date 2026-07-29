@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.viewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @Composable

@@ -28,7 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.viewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.viewmodel.AuthViewModel
+import com.example.mobileassignmentloginpart.navigation.Screen
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -64,9 +65,9 @@ fun ProfileScreen(navController: NavController) {
 
     LaunchedEffect(user) {
         user?.let {
-            name = it.name
-            email = it.email
-            profilePicBase64 = it.profilePicUrl
+            name = it.name ?: ""
+            email = it.email ?: ""
+            profilePicBase64 = it.profilePicUrl ?: ""
         }
     }
 
@@ -86,7 +87,7 @@ fun ProfileScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding() // Added to handle bottom navigation bar
+                .navigationBarsPadding()
                 .imePadding()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -110,7 +111,6 @@ fun ProfileScreen(navController: NavController) {
             
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // Profile Picture Circle
             item {
                 Box(
                     modifier = Modifier
@@ -121,17 +121,24 @@ fun ProfileScreen(navController: NavController) {
                         .clickable(enabled = !viewModel.isProcessing) { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (profilePicBase64.isNotEmpty()) {
-                        val imageBytes = Base64.decode(profilePicBase64, Base64.DEFAULT)
-                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                    val bitmap = remember(profilePicBase64) {
+                        if (profilePicBase64.isNotEmpty()) {
+                            try {
+                                val imageBytes = Base64.decode(profilePicBase64, Base64.DEFAULT)
+                                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else null
+                    }
+
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     } else {
                         Text(
                             text = if (name.isNotEmpty()) name.take(1).uppercase() else "?",
@@ -145,7 +152,7 @@ fun ProfileScreen(navController: NavController) {
             item { Text("Tap to change picture", fontSize = 10.sp, color = Color.Gray) }
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { Text(text = "User ID: ${user.customId}", fontWeight = FontWeight.Bold) }
+            item { Text(text = "User ID: ${user.customId ?: "U001"}", fontWeight = FontWeight.Bold) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
@@ -229,9 +236,10 @@ fun ProfileScreen(navController: NavController) {
             item {
                 Button(
                     onClick = {
-                        viewModel.logout()
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
+                        viewModel.logout {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
