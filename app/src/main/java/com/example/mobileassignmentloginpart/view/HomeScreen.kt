@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.View
+package com.example.mobileassignmentloginpart.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
+import com.example.mobileassignmentloginpart.viewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @Composable

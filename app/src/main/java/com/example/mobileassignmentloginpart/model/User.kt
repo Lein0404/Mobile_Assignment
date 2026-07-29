@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Model
+package com.example.mobileassignmentloginpart.model
 
 data class User(
     val id: String = "",

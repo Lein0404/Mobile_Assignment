@@ -1,10 +1,10 @@
-package com.example.mobileassignmentloginpart.ViewModel
+package com.example.mobileassignmentloginpart.viewModel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.mobileassignmentloginpart.Model.User
+import com.example.mobileassignmentloginpart.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
