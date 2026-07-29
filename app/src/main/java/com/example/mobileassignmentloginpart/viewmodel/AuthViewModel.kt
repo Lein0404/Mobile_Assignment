@@ -13,6 +13,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
+    //this is the correct auth view model
     private val client = SupabaseClient.client
 
     var currentUser by mutableStateOf<User?>(null)
