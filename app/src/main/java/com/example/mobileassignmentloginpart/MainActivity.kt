@@ -16,7 +16,7 @@ import com.example.mobileassignmentloginpart.View.LoginScreen
 import com.example.mobileassignmentloginpart.View.ProfileScreen
 import com.example.mobileassignmentloginpart.View.RegisterScreen
 import com.example.mobileassignmentloginpart.navigation.Screen
-import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentLoginPartTheme
+import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobileAssignmentLoginPartTheme {
+            MobileAssignmentTheme {
                 val navController = rememberNavController()
 
                 NavHost(
@@ -66,4 +66,5 @@ fun GreetingPreview() {
     MobileAssignmentLoginPartTheme {
         Greeting("Android")
     }
+}
 }

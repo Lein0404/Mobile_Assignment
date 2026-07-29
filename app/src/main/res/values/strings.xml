@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">Foodie Heal</string>
+
+    <string name="login_title">Login</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="nav_home">Home</string>
+    <string name="topapp_back">To previous page</string>
+
+    <!-- Error Messages -->
+    <string name="error_fields_empty">Please fill in the input fields.</string>
+    <string name="error_unknown">An unknown error occurred. Please try again later.</string>
+    <string name="error_user_not_found">No account found with this email.</string>
+    <string name="error_network_connection">No internet connection. Please check your network and try again.</string>
+    <string name="error_logout_failed">Logout failed. Please try again.</string>
+    <string name="error_invalid_credentials">Invalid email and/or password. Please try again.</string>
+    <string name="nav_logout">Logout</string>
+
+    <!-- Image related -->
+    <string name="select_image">Select Image</string>
+    <string name="change_image">Change Image</string>
+    <string name="image_unavailable">No image available</string>"
+
+    <!-- Common Dialog Buttons -->
+    <string name="dialog_done">Done</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_cancel">Cancel</string>
 </resources>
