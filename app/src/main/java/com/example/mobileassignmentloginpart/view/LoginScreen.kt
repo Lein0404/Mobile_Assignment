@@ -1,28 +1,9 @@
 package com.example.mobileassignmentloginpart.view
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,40 +39,43 @@ fun LoginScreen(navController: NavController){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        TextField(
+        Text(text = "Login", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(20.dp))
+
+        OutlinedTextField(
             value = email,
             onValueChange = {email = it},
-            label = {
-                Text("Email")
-            },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            enabled = !viewModel.isProcessing
         )
         Spacer(modifier = Modifier.height(10.dp))
-        TextField(
+        OutlinedTextField(
             value = password,
             onValueChange = {password = it},
-            label = {
-                Text("Password")
-            },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            enabled = !viewModel.isProcessing
         )
+
         Spacer(modifier = Modifier.height(20.dp))
         
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = {
-                    viewModel.login(
-                        email,
-                        password
-                    )
-                },
+                onClick = { viewModel.login(email, password) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 enabled = isFormValid,
                 border = if (!isFormValid) BorderStroke(1.dp, Color.Gray) else null
             ){
                 Text("Login")
+            }
+            
+            TextButton(
+                onClick = { viewModel.forgotPassword(email) }
+            ) {
+                Text("Forgot Password?")
             }
         }
 
@@ -106,7 +90,11 @@ fun LoginScreen(navController: NavController){
 
         if(viewModel.errorMessage.isNotEmpty()){
             Spacer(modifier = Modifier.height(10.dp))
-            Text(viewModel.errorMessage, color = MaterialTheme.colorScheme.error)
+            val isSuccess = viewModel.errorMessage.contains("sent")
+            Text(
+                text = viewModel.errorMessage, 
+                color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+            )
         }
     }
 }
