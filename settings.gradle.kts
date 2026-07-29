@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Mobile Assignment"
+rootProject.name = "Foodie Heal"
 include(":app")
  

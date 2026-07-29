@@ -16,14 +16,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.mobileassignmentloginpart.home.HomeScreen
 import com.example.mobileassignmentloginpart.meal_planner.MealPlannerScreen
 import com.example.mobileassignmentloginpart.meal_planner.MealPlannerViewModel
 import com.example.mobileassignmentloginpart.user.LoginScreen
-import com.example.mobileassignmentloginpart.user.ProfileScreen
-import com.example.mobileassignmentloginpart.user.RegisterScreen
 import com.example.mobileassignmentloginpart.navigation.Screen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobileassignmentloginpart.View.HomeScreen
+import com.example.mobileassignmentloginpart.View.ProfileScreen
+import com.example.mobileassignmentloginpart.View.RegisterScreen
 import com.example.mobileassignmentloginpart.ui.theme.MobileAssignmentTheme
 
 
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.Profile.route){
                         ProfileScreen(navController)
                     }
-                    composable(Screen.Meal_Planner.route) {
+                    composable(Screen.MealPlanner.route) {
                         // 1. Properly fetch or create the ViewModel managed by the architecture lifecycle
                         val viewModel: MealPlannerViewModel = viewModel()
 
@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 fun ZhScreen(navController: NavHostController){
     Scaffold{innerPadding->
         Box(Modifier.fillMaxSize().padding(innerPadding)) {
-            Button(onClick = { navController.navigate(Screen.Meal_Planner.route) }) {
+            Button(onClick = { navController.navigate(Screen.MealPlanner.route) }) {
                 Text("Meal Planner")
             }
         }

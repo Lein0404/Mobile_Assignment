@@ -390,6 +390,17 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
     fun onLoadFromDatabase(loadedPlans: List<DailyPlan>) {
         mealPlanList = loadedPlans
     }
+
+    val selectedDailyPlan = remember(selectedDate) {
+        DailyPlan.findPlanByDate(selectedDate)
+    }
+
+    val totalDailyCalories = remember(selectedDailyPlan) {
+        selectedDailyPlan?.meals
+            ?.flatMap { it.recipes }
+            ?.sumOf { it.calories ?: 0 } ?: 0
+    }
+
     fun addNewPlan(newPlan: DailyPlan) {
         mealPlanList = mealPlanList + newPlan
     }
@@ -498,7 +509,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
 
                 Spacer(Modifier.height(12.dp))
 
-                CalorieProgressBar(250,600,Color.Green,Modifier)//TODO
+                CalorieProgressBar(totalDailyCalories,600,Color.Green,Modifier)//TODO
 
                 Spacer(Modifier.height(20.dp))
                 Card(
@@ -508,14 +519,6 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                     elevation = CardDefaults.cardElevation(100.dp),
                     colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                 ) {
-                    val selectedDailyPlan = remember(selectedDate) {
-                        try {
-                            // Put the exact expression/call on line 510 here
-                        } catch (e: Throwable) {
-                            Log.e("MealPlannerCrash", "The real cause is: ", e)
-                        }
-                        DailyPlan.findPlanByDate(selectedDate)
-                    }
 
                     // 3. Extract the recipe lists safely. If no plan exists, it falls back to an empty list.
                     val breakfastRecipes = selectedDailyPlan?.meals
