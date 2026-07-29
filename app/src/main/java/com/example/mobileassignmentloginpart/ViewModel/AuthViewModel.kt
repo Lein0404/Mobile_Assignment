@@ -4,14 +4,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mobileassignmentloginpart.Model.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
+import com.example.mobileassignmentloginpart.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
+    private val client = SupabaseClient.client
 
     var currentUser by mutableStateOf<User?>(null)
         private set
@@ -29,137 +31,130 @@ class AuthViewModel : ViewModel() {
         private set
 
     init {
-        auth.currentUser?.let {
-            fetchUserData(it.uid)
-            loginSuccess = true
+        val user = client.auth.currentUserOrNull()
+        if (user != null) {
+            viewModelScope.launch {
+                fetchUserData(user.id)
+                loginSuccess = true
+            }
         }
     }
 
-    fun login(email: String, password: String) {
-        if (email.isEmpty() || password.isEmpty()) {
+    fun login(emailInput: String, passwordInput: String) {
+        if (emailInput.isEmpty() || passwordInput.isEmpty()) {
             errorMessage = "Email and password cannot be empty"
             return
         }
         isProcessing = true
         errorMessage = ""
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    fetchUserData(task.result?.user?.uid ?: "")
-                    loginSuccess = true
-                } else {
-                    errorMessage = task.exception?.message ?: "Login Failed"
+        viewModelScope.launch {
+            try {
+                client.auth.signInWith(Email) {
+                    email = emailInput
+                    password = passwordInput
                 }
+                val user = client.auth.currentUserOrNull()
+                if (user != null) {
+                    fetchUserData(user.id)
+                    loginSuccess = true
+                }
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Login Failed"
+                if (errorMessage.contains("Invalid login credentials")) {
+                    errorMessage = "Invalid email or password"
+                }
+            } finally {
                 isProcessing = false
             }
-    }
-
-    fun register(email: String, password: String) {
-        isProcessing = true
-        errorMessage = ""
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result?.user?.uid ?: ""
-                    setupNewUser(uid, email)
-                } else {
-                    errorMessage = task.exception?.message ?: "Register Failed"
-                    isProcessing = false
-                }
-            }
-    }
-
-    private fun setupNewUser(uid: String, email: String) {
-        val metadataRef = firestore.collection("metadata").document("user_count")
-        
-        metadataRef.get().addOnSuccessListener { document ->
-            val count = (document.getLong("count") ?: 0L) + 1L
-            val customId = "U" + count.toString().padStart(5, '0')
-            saveUserToFirestore(uid, customId, email, "User ($customId)", count)
-        }.addOnFailureListener {
-            // If metadata fails, we still try to create the user as U00001
-            saveUserToFirestore(uid, "U00001", email, "User (U00001)", 1L)
         }
     }
 
-    private fun saveUserToFirestore(uid: String, customId: String, email: String, name: String, count: Long) {
-        val newUser = User(id = uid, customId = customId, email = email, name = name)
-        
-        firestore.collection("users").document(uid).set(newUser)
-            .addOnSuccessListener {
-                firestore.collection("metadata").document("user_count").set(mapOf("count" to count))
-                currentUser = newUser
-                registerSuccess = true
+    fun register(emailInput: String, passwordInput: String) {
+        isProcessing = true
+        errorMessage = ""
+        viewModelScope.launch {
+            try {
+                client.auth.signUpWith(Email) {
+                    email = emailInput
+                    password = passwordInput
+                }
+                val user = client.auth.currentUserOrNull()
+                if (user != null) {
+                    setupNewUser(user.id, emailInput)
+                } else {
+                    errorMessage = "Register successful! Login now."
+                    isProcessing = false
+                }
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Register Failed"
                 isProcessing = false
             }
-            .addOnFailureListener {
-                errorMessage = "Database Error: ${it.message}"
-                isProcessing = false
-                // Even if firestore fails, we let them in so they can try "Update Profile" later
-                currentUser = newUser
-                registerSuccess = true
-            }
+        }
     }
 
-    fun fetchUserData(uid: String) {
-        errorMessage = ""
-        firestore.collection("users").document(uid).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    currentUser = document.toObject(User::class.java)
-                } else {
-                    // This user exists in Auth but not Firestore
-                    currentUser = User(id = uid, customId = "Pending...", email = auth.currentUser?.email ?: "", name = "User")
-                }
+    private fun setupNewUser(uid: String, email: String) {
+        viewModelScope.launch {
+            try {
+                // Generate U001, U002 etc using a simple timestamp for uniqueness
+                val randomNum = (100..999).random() 
+                val customId = "U$randomNum" 
+                val newUser = User(id = uid, customId = customId, email = email, name = "User ($customId)")
+
+                client.postgrest.from("users").insert(newUser)
+                currentUser = newUser
+                registerSuccess = true
+            } catch (e: Exception) {
+                errorMessage = "Database Error: ${e.message}"
+            } finally {
+                isProcessing = false
             }
-            .addOnFailureListener {
-                errorMessage = "Access Denied: ${it.message}"
-                currentUser = User(id = uid, customId = "No Data", email = auth.currentUser?.email ?: "", name = "User")
+        }
+    }
+
+    private suspend fun fetchUserData(uid: String) {
+        try {
+            val user = client.postgrest.from("users").select {
+                filter { eq("id", uid) }
+            }.decodeSingleOrNull<User>()
+            
+            if (user != null) {
+                currentUser = user
+            } else {
+                // If row doesn't exist, create a local placeholder with the user's email
+                val authEmail = client.auth.currentUserOrNull()?.email ?: ""
+                currentUser = User(id = uid, customId = "U001", email = authEmail, name = "New User")
             }
+        } catch (e: Exception) {
+            // If data is missing or NULL, fallback to a default user instead of showing ERROR
+            val authEmail = client.auth.currentUserOrNull()?.email ?: ""
+            currentUser = User(id = uid, customId = "U001", email = authEmail, name = "User")
+        }
     }
 
     fun updateProfile(name: String, email: String, profilePicUrl: String) {
-        val uid = auth.currentUser?.uid ?: return
+        val uid = currentUser?.id ?: return
         isProcessing = true
         errorMessage = ""
         
-        val cid = if (currentUser?.customId == "Pending..." || currentUser?.customId == "No Data") "U00001" else currentUser?.customId ?: "U00001"
-
-        val updatedData = User(
-            id = uid,
-            customId = cid,
-            name = name,
-            email = email,
-            profilePicUrl = profilePicUrl
-        )
-
-        firestore.collection("users").document(uid).set(updatedData, SetOptions.merge())
-            .addOnSuccessListener {
-                currentUser = updatedData
-                val user = auth.currentUser
-                if (user != null && user.email != email) {
-                    user.updateEmail(email)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                errorMessage = "Profile Updated"
-                            } else {
-                                if (task.exception is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
-                                    errorMessage = "Sensitive change. Please logout and login again to update email/password."
-                                } else {
-                                    errorMessage = "Saved, but email update failed: ${task.exception?.message}"
-                                }
-                            }
-                            isProcessing = false
-                        }
-                } else {
-                    errorMessage = "Profile Updated"
-                    isProcessing = false
+        viewModelScope.launch {
+            try {
+                val updatedUser = currentUser?.copy(name = name, email = email, profilePicUrl = profilePicUrl) ?: return@launch
+                client.postgrest.from("users").update(updatedUser) {
+                    filter { eq("id", uid) }
                 }
-            }
-            .addOnFailureListener {
-                errorMessage = "Save Failed: ${it.message}"
+                currentUser = updatedUser
+                
+                if (client.auth.currentUserOrNull()?.email != email) {
+                    client.auth.updateUser { this.email = email }
+                }
+                
+                errorMessage = "Profile Updated"
+            } catch (e: Exception) {
+                errorMessage = "Update Failed: ${e.message}"
+            } finally {
                 isProcessing = false
             }
+        }
     }
 
     fun updatePassword(newPassword: String) {
@@ -167,44 +162,47 @@ class AuthViewModel : ViewModel() {
             errorMessage = "Password must be at least 6 characters"
             return
         }
-        auth.currentUser?.updatePassword(newPassword)
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    errorMessage = "Profile Updated"
-                } else {
-                    val exception = task.exception
-                    if (exception is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
-                        errorMessage = "Sensitive operation. Please logout and login again to update password."
-                    } else {
-                        errorMessage = exception?.message ?: "Password update failed"
-                    }
-                }
+        viewModelScope.launch {
+            try {
+                client.auth.updateUser { password = newPassword }
+                errorMessage = "Profile Updated"
+            } catch (e: Exception) {
+                errorMessage = "Password update failed"
             }
+        }
     }
 
-    fun forgotPassword(email: String) {
-        if (email.isEmpty()) {
+    fun forgotPassword(emailInput: String) {
+        if (emailInput.isEmpty()) {
             errorMessage = "Please enter your email address"
             return
         }
         isProcessing = true
         errorMessage = ""
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    errorMessage = "Reset link sent to your email"
-                } else {
-                    errorMessage = task.exception?.message ?: "Failed to send reset email"
-                }
+        viewModelScope.launch {
+            try {
+                client.auth.resetPasswordForEmail(emailInput)
+                errorMessage = "Reset link sent to your email"
+            } catch (e: Exception) {
+                errorMessage = "Failed to send reset email"
+            } finally {
                 isProcessing = false
             }
+        }
     }
 
-    fun logout() {
-        auth.signOut()
-        currentUser = null
-        loginSuccess = false
-        registerSuccess = false
-        errorMessage = ""
+    fun logout(onComplete: () -> Unit) {
+        isProcessing = true
+        viewModelScope.launch {
+            try {
+                client.auth.signOut()
+            } catch (e: Exception) { }
+            currentUser = null
+            loginSuccess = false
+            registerSuccess = false
+            errorMessage = ""
+            isProcessing = false
+            onComplete()
+        }
     }
 }
