@@ -9,6 +9,11 @@ data class Chef(
     val email: String = "",
     val phoneNumber: String = "",
     val gender: String = "",
+    val age: String = "",
+
+    val address: String = "",
+    val postcode: String = "",
+    val state: String = "",
 
     val experience: Int = 0,
     val description: String = "",

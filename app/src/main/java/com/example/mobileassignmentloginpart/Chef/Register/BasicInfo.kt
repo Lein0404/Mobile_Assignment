@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -24,26 +25,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
 import com.example.mobileassignmentloginpart.R
+import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.ui.components.CommonInputField
 import com.example.mobileassignmentloginpart.ui.components.DropDownList
+import com.example.mobileassignmentloginpart.ui.components.PasswordInputField
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun addressInfo(
+@OptIn(ExperimentalMaterial3Api::class)
+fun basicInfo(
     navController: NavController,
     chefviewModel: chefRegisterViewModel
 ) {
+
+    val viewModel: AuthViewModel = viewModel()
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Address Information") },
+                    title = { Text("Basic Information") },
 
                     navigationIcon = {
                         IconButton(
@@ -58,7 +65,7 @@ fun addressInfo(
                 )
 
                 LinearProgressIndicator(
-                    progress = { 0.75f },
+                    progress = { 0.25f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -72,60 +79,76 @@ fun addressInfo(
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ){
+        ) {
+
             Text(
-                text = "Address",
+                text = "Create your chef profile",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Personal Information",
                 style = MaterialTheme.typography.titleMedium
             )
 
             CommonInputField(
-                value = chefviewModel.address,
+                value = chefviewModel.name,
                 onValueChange = {
-                    chefviewModel.address = it
+                    chefviewModel.name = it
                 },
-                textId = R.string.address,
-                placeholder = "Enter your address",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            CommonInputField(
-                value = chefviewModel.postcode,
-                onValueChange = {
-                    chefviewModel.postcode = it
-                },
-                textId = R.string.postcode,
-                placeholder = "Enter your Postcode",
+                textId = R.string.full_name,
+                placeholder = stringResource(R.string.enter_name),
                 modifier = Modifier.fillMaxWidth()
             )
 
             DropDownList(
-                labelId = R.string.state,
-                placeholderId = R.string.select_state,
-                selectedValue = chefviewModel.state,
+                labelId = R.string.gender,
+                placeholderId = R.string.select_gender,
+                selectedValue = chefviewModel.gender,
                 options = listOf(
-                    "Pulau Pinang",
-                    "Kedah",
-                    "Perak",
-                    "Perlis",
-                    "Selangor",
-                    "Negeri Sembilan",
-                    "Johor",
-                    "Melaka",
-                    "Pahang",
-                    "Terengganu",
-                    "Sabah",
-                    "Sarawak"
+                    "Male",
+                    "Female"
                 ),
                 onOptionSelected = {
-                    chefviewModel.updateState(it)
+                    chefviewModel.gender = it ?: ""
                 }
+            )
+
+            CommonInputField(
+                value = chefviewModel.age,
+                onValueChange = {
+                    chefviewModel.age = it
+                },
+                textId = R.string.age,
+                placeholder = stringResource(R.string.enter_age),
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                        )
+            )
+
+            PasswordInputField(
+                value = chefviewModel.password,
+                onValueChange = { chefviewModel.password = it },
+                textId = R.string.password,
+                placeholder = stringResource(R.string.password),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            PasswordInputField(
+                value = chefviewModel.confirmPassword,
+                onValueChange = { chefviewModel.confirmPassword = it },
+                textId = R.string.confirm_password,
+                placeholder = stringResource(R.string.confirm_password),
+                modifier = Modifier.fillMaxWidth()
             )
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    navController.navigate("descriptionInfo")
+                    // Navigate to Contact Info page
+                    navController.navigate("contactInfo")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,7 +156,7 @@ fun addressInfo(
             ) {
                 Text("Next")
             }
-        }
 
+        }
     }
 }

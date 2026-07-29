@@ -91,7 +91,7 @@ fun ChefWelcomeScreen(
 
         Button(
             onClick = {
-                navController.navigate("chefBasicInfo")
+                navController.navigate("basicInfo")
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -99,11 +99,7 @@ fun ChefWelcomeScreen(
 
             shape = RoundedCornerShape(12.dp)
         ) {
-
-            Text(
-                text = "Get Started"
-            )
-
+            Text("Next")
         }
 
         TextButton(
@@ -121,8 +117,6 @@ fun ChefWelcomeScreen(
     }
 
 }
-
-
 
 @Composable
 fun FeatureItem(

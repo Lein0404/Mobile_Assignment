@@ -10,7 +10,10 @@
     <string name="topapp_back">To previous page</string>
 
     <!-- Login -->
-    <string name="full_name">Full Name</string>
+    <string name="full_name">Name</string>
+    <string name="enter_name">Enter your name</string>
+    <string name="age">Age</string>
+    <string name="enter_age">Enter your age</string>
     <string name="email">Email</string>
     <string name="phone_number">Phone Number</string>
     <string name="password">Password</string>
@@ -19,6 +22,10 @@
     <string name="select_gender">Select Gender</string>
     <string name="experience">Year of Experience</string>
     <string name="description">Description</string>">
+    <string name="address">Address</string>
+    <string name="postcode">Postcode</string>">
+    <string name="state">State</string>
+    <string name="select_state">Choose your state</string>
 
     <!-- Error Messages -->
     <string name="error_fields_empty">Please fill in the input fields.</string>

@@ -231,7 +231,8 @@ fun PasswordInputField(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(painterResource(id = visibilityIcon),
                         contentDescription = description,
-                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_xsm))
+                        modifier = Modifier
+                            .padding(dimensionResource(R.dimen.padding_xsm))
                             .padding(end = dimensionResource(R.dimen.padding_xsm))
                     )
                 }
@@ -259,9 +260,9 @@ fun PasswordInputField(
 fun DropDownList(
     @StringRes labelId: Int,
     @StringRes placeholderId: Int,
-    selectedValue: String?,
+    selectedValue: String,
     options: List<String>,
-    onOptionSelected: (String?) -> Unit,
+    onOptionSelected: (String) -> Unit,
     isError: Boolean = false,
     @StringRes errorMessageId: Int? = null
 ) {
@@ -282,13 +283,15 @@ fun DropDownList(
         ) {
             OutlinedTextField(
                 value = selectedValue ?: "",
-                onValueChange = onOptionSelected,
+                onValueChange = { },
                 readOnly = true,
                 placeholder = { Text(stringResource(placeholderId)) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
                 isError = isError
             )
             ExposedDropdownMenu(

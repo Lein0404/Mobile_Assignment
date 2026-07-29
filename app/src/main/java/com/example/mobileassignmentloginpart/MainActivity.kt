@@ -8,11 +8,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.mobileassignmentloginpart.Chef.ChefRegister
 import com.example.mobileassignmentloginpart.Chef.Register.ChefWelcomeScreen
+import com.example.mobileassignmentloginpart.Chef.Register.addressInfo
+import com.example.mobileassignmentloginpart.Chef.Register.basicInfo
+import com.example.mobileassignmentloginpart.Chef.Register.contactInfo
+import com.example.mobileassignmentloginpart.Chef.Register.descriptionInfo
+import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
 import com.example.mobileassignmentloginpart.View.HomeScreen
 import com.example.mobileassignmentloginpart.View.LoginScreen
 import com.example.mobileassignmentloginpart.View.ProfileScreen
@@ -28,6 +35,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MobileAssignmentTheme {
                 val navController = rememberNavController()
+                val chefviewModel: chefRegisterViewModel = viewModel()
+
 
                 NavHost(
                     navController = navController,
@@ -45,12 +54,38 @@ class MainActivity : ComponentActivity() {
                         RegisterScreen(navController)
                     }
 
-                    composable(Screen.ChefRegister.route){
-                        ChefRegister(navController)
-                    }
+                    navigation(
+                        startDestination = Screen.Welcome.route,
+                        route = "chefRegisterRoute"
+                    ) {
+                        composable(Screen.Welcome.route) {
+                            ChefWelcomeScreen(navController)
+                        }
 
-                    composable(Screen.Welcome.route){
-                        ChefWelcomeScreen(navController)
+                        composable(Screen.BasicInfo.route) {
+                            basicInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Contact.route) {
+                            contactInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Address.route) {
+                            addressInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Description.route) {
+                            descriptionInfo(navController)
+                        }
                     }
 
                     composable(Screen.Profile.route){
