@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,6 +69,15 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
         TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
 
     var showDatePicker by remember { mutableStateOf(false) }
+    var showPasteDatePicker by remember { mutableStateOf(false) }
+    var showWeeklyPasteDatePicker by remember { mutableStateOf(false) }
+
+    val snackBarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(key1 = true) {
+        viewModel.uiEvent.collect { message ->
+            snackBarHostState.showSnackbar(message = message)
+        }
+    }
 
     val selectedDailyPlan = viewModel.selectedDailyPlan
 
@@ -80,6 +91,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
     if (showDatePicker) {
         MealDatePickerDialog(
             initialDate = selectedDate,
+            titleText = "Select Date to View",
             onDateSelected = { newDate ->
                 selectedDate = newDate
                 currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
@@ -88,8 +100,37 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
         )
     }
 
+    // DIALOG ADDITION: Picker window to choose where to paste today's menu layout
+    if (showPasteDatePicker) {
+        MealDatePickerDialog(
+            initialDate = selectedDate.plusDays(1), // Default option set to tomorrow
+            titleText = "Choose a date to paste today's plan",
+            onDateSelected = { targetDate ->
+                selectedDailyPlan?.let { sourcePlan ->
+                    viewModel.copyDailyPlanToDate(sourcePlan, targetDate)
+                }
+            },
+            onDismiss = { showPasteDatePicker = false }
+        )
+    }
+
+    // 🌟 DIALOG ADDITION: Picker window to choose where to paste this entire week's plan
+    if (showWeeklyPasteDatePicker) {
+        MealDatePickerDialog(
+            initialDate = currentWeekStart.plusWeeks(1), // Default option set to next week
+            titleText = "Choose any day within target week to paste",
+            onDateSelected = { targetDate ->
+                // Calculate the Sunday start boundary of the target selected week
+                val targetWeekStart = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+                viewModel.copyWeeklyPlanToDate(weekDays, targetWeekStart)
+            },
+            onDismiss = { showWeeklyPasteDatePicker = false }
+        )
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { /* TODO: Handle edit profile, this icon is too big will block interaction ui,*/ },
@@ -163,7 +204,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                             )
                         }
                         IconButton(
-                            onClick = {/*TODO: copy this weeks plan and allowed to select base on week*/ }
+                            onClick = { showWeeklyPasteDatePicker = true }
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.repeat),
@@ -351,7 +392,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                                         MaterialTheme.colorScheme.tertiary,
                                         RoundedCornerShape(20.dp)
                                     ),
-                                onClick = {/*TODO: copy today's plan*/ }
+                                onClick = {showPasteDatePicker = true }
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxSize(),

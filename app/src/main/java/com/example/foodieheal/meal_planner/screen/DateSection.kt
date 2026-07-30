@@ -108,10 +108,11 @@ fun WeeklyDateCardRow(
 @Composable
 fun MealDatePickerDialog(
     initialDate: LocalDate,
+    titleText: String,
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val initialMillis = initialDate.atStartOfDay(ZoneId.of("UTC"))
+    val initialMillis = initialDate.atStartOfDay(ZoneId.of("UTC+8"))
         .toInstant().toEpochMilli()
 
     val datePickerState = rememberDatePickerState(
@@ -125,7 +126,7 @@ fun MealDatePickerDialog(
                 onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val selectedLocalDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.of("UTC"))
+                            .atZone(ZoneId.of("UTC+8"))
                             .toLocalDate()
                         onDateSelected(selectedLocalDate)
                     }
@@ -141,6 +142,15 @@ fun MealDatePickerDialog(
             }
         }
     ) {
-        DatePicker(state = datePickerState)
+        DatePicker(
+            state = datePickerState,
+            title = { // 🌟 Overriding the default "Select date" title
+                Text(
+                    text = titleText,
+                    modifier = Modifier.padding(start = 24.dp, top = 24.dp),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        )
     }
 }

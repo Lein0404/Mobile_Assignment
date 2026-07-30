@@ -11,6 +11,8 @@ import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -27,6 +29,9 @@ class MealPlannerViewModel(
     // Simple state to show loading status if wanted
     var isLoading by mutableStateOf(false)
         private set
+
+    private val _uiEvent = MutableSharedFlow<String>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     fun loadPlanForDate(date: LocalDate) {
         viewModelScope.launch {
@@ -150,6 +155,47 @@ class MealPlannerViewModel(
             }
 
             Log.d("MealPlannerDelete", "=== 🛑 END DELETE PROCESS ===")
+        }
+    }
+
+    fun copyDailyPlanToDate(sourcePlan: DailyPlan, targetDate: LocalDate) {
+        viewModelScope.launch {
+            val result = repository.saveDailyPlan(
+                sourcePlan.copy(
+                    date = targetDate.toString(),
+                    meals = sourcePlan.meals.map { it.copy(recipes = it.recipes.toList()) }
+                )
+            )
+            result.onSuccess {
+                if (selectedDailyPlan?.date == targetDate.toString()) {
+                    loadPlanForDate(targetDate)
+                }
+                // 🌟 Emit success message to UI
+                _uiEvent.emit("Successfully copied plan to $targetDate!")
+            }.onFailure {
+                _uiEvent.emit("Failed to copy meal plan.")
+            }
+        }
+    }
+
+    fun copyWeeklyPlanToDate(sourceWeekDays: List<LocalDate>, targetWeekStart: LocalDate) {
+        viewModelScope.launch {
+            sourceWeekDays.forEachIndexed { index, sourceDate ->
+                val targetDate = targetWeekStart.plusDays(index.toLong())
+                val sourcePlan = repository.getDailyPlan(sourceDate).getOrNull()
+
+                if (sourcePlan != null && sourcePlan.meals.any { it.recipes.isNotEmpty() }) {
+                    val clonedPlan = sourcePlan.copy(
+                        date = targetDate.toString(),
+                        meals = sourcePlan.meals.map { slot -> slot.copy(recipes = slot.recipes.toList()) }
+                    )
+                    repository.saveDailyPlan(clonedPlan)
+                }
+            }
+            loadPlanForDate(selectedDailyPlan?.date?.let { LocalDate.parse(it) } ?: LocalDate.now())
+
+            // 🌟 Emit success message to UI
+            _uiEvent.emit("Successfully duplicated the entire week schedule!")
         }
     }
 

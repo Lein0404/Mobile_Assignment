@@ -26,16 +26,16 @@ fun CalorieProgressBar(
     val weightage:Float = (currentCalories.toFloat() / maxCalories.toFloat())
     val progress:Float = weightage.coerceIn(0f, 1f)
     val calorieTextColor:Color = when {
-        (weightage<0.8) -> Color.Red
-        (weightage in 0.8 .. 0.94) -> Color.Yellow
-        (weightage in 0.95 .. 1.05) -> Color.Green
+        (weightage<0.899999999) -> Color.Red
+        (weightage in 0.8 .. 0.949999999999999) -> Color(0XFFCC9900)
+        (weightage in 0.95 .. 1.05999999999999) -> Color.Green
         (weightage in 1.06 .. 1.20) -> Color(0XFFFA8F2A)//Orange color
         else -> Color.Red
     }
     val reminderText:String = when {
-        (weightage<0.8) -> "Under Intake"
-        (weightage in 0.8 .. 0.94) -> "Slightly Low"
-        (weightage in 0.95 .. 1.05) -> "Ideal Intake"
+        (weightage<0.899999999) -> "Under Intake"
+        (weightage in 0.8 .. 0.949999999999999) -> "Slightly Low"
+        (weightage in 0.95 .. 1.05999999999999) -> "Ideal Intake"
         (weightage in 1.06 .. 1.20) -> "Slightly High"
         else->"Excess Intake"
     }
