@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mobileassignmentloginpart"
+    namespace = "com.example.foodieheal"
     compileSdk {
         version = release(37) {
 
