@@ -19,6 +19,7 @@ import com.example.mobileassignmentloginpart.Chef.Register.addressInfo
 import com.example.mobileassignmentloginpart.Chef.Register.basicInfo
 import com.example.mobileassignmentloginpart.Chef.Register.contactInfo
 import com.example.mobileassignmentloginpart.Chef.Register.descriptionInfo
+import com.example.mobileassignmentloginpart.Chef.Register.reviewInfo
 import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
 import com.example.mobileassignmentloginpart.View.HomeScreen
 import com.example.mobileassignmentloginpart.View.LoginScreen
@@ -84,7 +85,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(Screen.Description.route) {
-                            descriptionInfo(navController)
+                            descriptionInfo(
+                                navController,
+                                chefviewModel)
+                        }
+
+                        composable(Screen.Review.route) {
+                            reviewInfo(
+                                navController,
+                                chefviewModel
+                            )
                         }
                     }
 

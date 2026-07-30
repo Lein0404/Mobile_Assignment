@@ -6,6 +6,9 @@ import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewMode
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @Composable
-fun reviewScreen(navController: NavController) {
+fun reviewInfo(
+    navController: NavController,
+    chefRegisterViewModel: chefRegisterViewModel)
+{
 
 }
