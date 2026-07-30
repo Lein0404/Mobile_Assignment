@@ -1,6 +1,5 @@
 package com.example.mobileassignmentloginpart.Chef.Register
 
-import android.widget.Button
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,10 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,8 +30,6 @@ import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewMode
 import com.example.mobileassignmentloginpart.R
 import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.ui.components.CommonInputField
-import com.example.mobileassignmentloginpart.ui.components.DropDownList
-import com.example.mobileassignmentloginpart.ui.components.PasswordInputField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +74,7 @@ fun contactInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Contact",
+                text = "Step 2 of 4",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -97,6 +90,16 @@ fun contactInfo(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                chefviewModel.showContactErrorMessage &&
+                !chefviewModel.isValidEmail()
+            ) {
+                Text(
+                    text = "Please enter a valid email address.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             CommonInputField(
                 value = chefviewModel.phoneNumber,
@@ -110,13 +113,26 @@ fun contactInfo(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                chefviewModel.showContactErrorMessage &&
+                !chefviewModel.isValidPhoneNumber()
+            ) {
+                Text(
+                    text = "Please enter a valid phone number.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    navController.navigate("addressInfo")
+                    if (chefviewModel.validateContactInfo()) {
+                        navController.navigate("addressInfo")
+                    }
                 },
+                enabled = chefviewModel.canProceedContactInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

@@ -74,7 +74,7 @@ fun addressInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             Text(
-                text = "Address",
+                text = "Step 3 of 4",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -87,6 +87,16 @@ fun addressInfo(
                 placeholder = "Enter your address",
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidAddress()
+            ) {
+                Text(
+                    text = "Address cannot be empty.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             CommonInputField(
                 value = chefviewModel.postcode,
@@ -97,6 +107,16 @@ fun addressInfo(
                 placeholder = "Enter your Postcode",
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidPostcode()
+            ) {
+                Text(
+                    text = "Postcode must contain 5 digits.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             DropDownList(
                 labelId = R.string.state,
@@ -120,13 +140,26 @@ fun addressInfo(
                     chefviewModel.updateState(it)
                 }
             )
+            if (
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidState()
+            ) {
+                Text(
+                    text = "Please select a state.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    navController.navigate("descriptionInfo")
+                    if (chefviewModel.validateAddressInfo()) {
+                        navController.navigate("descriptionInfo")
+                    }
                 },
+                enabled = chefviewModel.canProceedAddressInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

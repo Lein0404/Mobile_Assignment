@@ -1,29 +1,46 @@
 package com.example.mobileassignmentloginpart.Model
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Chef(
-    val chefId: String = "",
-    val id: String? = "",
-    val password: String ="",
+    @SerialName("chefId")
+    val chefId: String,
 
-    val name: String = "",
-    val email: String = "",
-    val phoneNumber: String = "",
-    val gender: String = "",
-    val age: String = "",
+    @SerialName("Name")
+    val name: String,
 
-    val address: String = "",
-    val postcode: String = "",
-    val state: String = "",
+    @SerialName("gender")
+    val gender: String,
 
-    val experience: Int = 0,
-    val description: String = "",
+    @SerialName("age")
+    val age: Int,
 
-    val profileImageUrl: String = "",
-    // val certificateUrl: String = "",
+    @SerialName("phoneNumber")
+    val phoneNumber: String,
 
-    val location: String = "",
+    @SerialName("password")
+    val password: String,
 
-    val approvalStatus: String = "Pending",
-    val rating: Double = 0.0,
-    val totalBooking: Int = 0
+    @SerialName("email")
+    val email: String,
+
+    @SerialName("address")
+    val address: String,
+
+    @SerialName("state")
+    val state: String,
+
+    @SerialName("postcode")
+    val postcode: String,
+
+    @SerialName("experience")
+    val experience: Int,
+
+    @SerialName("description")
+    val description: String,
+
+    @SerialName("Status")
+    val status: String
 )

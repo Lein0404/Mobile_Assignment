@@ -60,7 +60,10 @@ class MainActivity : ComponentActivity() {
                         route = "chefRegisterRoute"
                     ) {
                         composable(Screen.Welcome.route) {
-                            ChefWelcomeScreen(navController)
+                            ChefWelcomeScreen(
+                                navController,
+                                chefviewModel
+                            )
                         }
 
                         composable(Screen.BasicInfo.route) {

@@ -18,14 +18,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
 import com.example.mobileassignmentloginpart.R
@@ -35,7 +33,7 @@ import com.example.mobileassignmentloginpart.ui.components.CommonInputField
 @Composable
 fun descriptionInfo(
     navController: NavController,
-    chefRegisterViewModel: chefRegisterViewModel
+    chefviewModel: chefRegisterViewModel
 ){
 
     Scaffold(
@@ -73,14 +71,14 @@ fun descriptionInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             Text(
-                text ="Description",
+                text ="Step 4 of 4",
                 style = MaterialTheme.typography.titleMedium
             )
 
             CommonInputField(
-                value = chefRegisterViewModel.experience,
+                value = chefviewModel.experience,
                 onValueChange = {
-                    chefRegisterViewModel.experience = it
+                    chefviewModel.experience = it
                 },
                 textId = R.string.experience,
                 placeholder = "Enter your experience",
@@ -88,13 +86,23 @@ fun descriptionInfo(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number)
             )
+            if (
+                chefviewModel.showDescriptionErrorMessage &&
+                !chefviewModel.isValidExperience()
+            ) {
+                Text(
+                    text = "Please enter your working experience.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
                 CommonInputField(
-                    value = chefRegisterViewModel.description,
+                    value = chefviewModel.description,
                     onValueChange = { input ->
 
                         val wordCount = input.trim()
@@ -103,7 +111,7 @@ fun descriptionInfo(
                             .size
 
                         if (wordCount <= 300) {
-                            chefRegisterViewModel.description = input
+                            chefviewModel.description = input
                         }
 
                     },
@@ -114,20 +122,32 @@ fun descriptionInfo(
                     maxLines = 8,
                     modifier = Modifier.fillMaxWidth()
                 )
-
-
                 Text(
-                    text = "${chefRegisterViewModel.description.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size}/300 words",
+                    text = "${chefviewModel.description.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size}/300 words",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
+            if (
+                chefviewModel.showDescriptionErrorMessage &&
+                !chefviewModel.isValidDescription()
+            ) {
+                Text(
+                    text = "Description cannot be empty.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Button(
                 // update data to view model
                 // do validation
                 onClick = {
-                    navController.navigate("reviewInfo")
+                    if (chefviewModel.validateDescriptionInfo()) {
+                        navController.navigate("reviewInfo")
+                    }
                 },
+                enabled = chefviewModel.canProceedDescriptionInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -136,5 +156,4 @@ fun descriptionInfo(
             }
         }
     }
-
 }

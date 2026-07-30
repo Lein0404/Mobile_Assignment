@@ -19,10 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -82,12 +78,7 @@ fun basicInfo(
         ) {
 
             Text(
-                text = "Create your chef profile",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Personal Information",
+                text = "Step 1 of 4",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -100,6 +91,16 @@ fun basicInfo(
                 placeholder = stringResource(R.string.enter_name),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                chefviewModel.showBasicInfoErrorMessage &&
+                !chefviewModel.isValidName()
+            ) {
+                Text(
+                    text = "Name is required.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             DropDownList(
                 labelId = R.string.gender,
@@ -113,6 +114,14 @@ fun basicInfo(
                     chefviewModel.gender = it ?: ""
                 }
             )
+            if (chefviewModel.showBasicInfoErrorMessage &&
+                !chefviewModel.isValidGender()) {
+                Text(
+                    text = "Please select your gender.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             CommonInputField(
                 value = chefviewModel.age,
@@ -126,6 +135,15 @@ fun basicInfo(
                     keyboardType = KeyboardType.Number
                         )
             )
+            if (chefviewModel.showBasicInfoErrorMessage &&
+                chefviewModel.age.isNotEmpty() &&
+                !chefviewModel.isValidAge()) {
+                Text(
+                    text = "Chef must be at least 18 years old.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             PasswordInputField(
                 value = chefviewModel.password,
@@ -134,6 +152,15 @@ fun basicInfo(
                 placeholder = stringResource(R.string.password),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (chefviewModel.showBasicInfoErrorMessage &&
+                chefviewModel.password.isNotEmpty()
+                && !chefviewModel.isValidPassword()) {
+                Text(
+                    text = "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             PasswordInputField(
                 value = chefviewModel.confirmPassword,
@@ -142,21 +169,42 @@ fun basicInfo(
                 placeholder = stringResource(R.string.confirm_password),
                 modifier = Modifier.fillMaxWidth()
             )
+            if (chefviewModel.showBasicInfoErrorMessage &&
+                chefviewModel.confirmPassword.isBlank()
+            ) {
+                Text(
+                    text = "Please confirm your password.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            if (chefviewModel.showBasicInfoErrorMessage &&
+                chefviewModel.confirmPassword.isNotBlank() &&
+                !chefviewModel.isPasswordMatched()
+            ) {
+                Text(
+                    text = "Passwords do not match.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    // Navigate to Contact Info page
-                    navController.navigate("contactInfo")
+                    if (chefviewModel.validateBasicInfo()) {
+                        navController.navigate("contactInfo")
+                    }
                 },
+                enabled = chefviewModel.canProceedBasicInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
                 Text("Next")
             }
-
         }
     }
 }

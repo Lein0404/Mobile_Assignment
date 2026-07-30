@@ -11,11 +11,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
 import com.example.mobileassignmentloginpart.R
 
 @Composable
 fun ChefWelcomeScreen(
-    navController: NavController
+    navController: NavController,
+    chefRegisterViewModel: chefRegisterViewModel
 ) {
 
     Column(
@@ -105,6 +107,7 @@ fun ChefWelcomeScreen(
         TextButton(
             onClick = {
                 navController.popBackStack()
+                chefRegisterViewModel.clearData()
             }
         ) {
 
