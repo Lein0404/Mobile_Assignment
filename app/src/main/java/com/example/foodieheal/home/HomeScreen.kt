@@ -60,11 +60,19 @@ fun HomeScreen(navController: NavController){
         ) {
             Text("Logout")
         }
+
         Spacer(modifier = Modifier.height(10.dp))
         Button(
             onClick = {navController.navigate(Screen.MealPlanner.route)}
         ){
             Text("Meal Planner")
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = {navController.navigate(Screen.AddRecipeToPlanScreen.route)}
+        ){
+            Text("ADD RECIPE TO MEAL PLAN")
         }
     }
 }

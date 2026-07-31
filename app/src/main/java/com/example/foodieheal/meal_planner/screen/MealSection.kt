@@ -2,6 +2,9 @@ package com.example.foodieheal.meal_planner.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,7 +40,8 @@ fun RecipeCard(
     recipe: Recipe,
     onDeleteClick: () -> Unit,
     onClick: () -> Unit,
-    color: Color
+    color: Color,
+    isSelectionMode: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -113,12 +118,13 @@ fun RecipeCard(
                     }
                 }
 
-                IconButton(onClick = onDeleteClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.close),
-                        contentDescription = "Delete",
-                        modifier = Modifier.size(26.dp)
-                    )
+                if (!isSelectionMode) {
+                    IconButton(onClick = onDeleteClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete), // your delete resource
+                            contentDescription = "Remove recipe"
+                        )
+                    }
                 }
             }
         }
@@ -130,6 +136,9 @@ fun MealSection(
     modifier: Modifier = Modifier,
     title: String,
     recipes: List<Recipe>,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onSelectionChange: (Boolean) -> Unit = {},
     onAddClick: () -> Unit = {},
     onDeleteClick: (Recipe) -> Unit = {},
 ) {
@@ -154,9 +163,15 @@ fun MealSection(
                 MaterialTheme.colorScheme.tertiary,
                 RoundedCornerShape(20.dp)
             )
+            // 🌟 Make the entire card head checkable if selection mode is true
+            .clickable(enabled = isSelectionMode) { onSelectionChange(!isSelected) },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -176,11 +191,20 @@ fun MealSection(
                 modifier = Modifier.weight(1f)
             )
 
-            IconButton(onClick = onAddClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_add_circle_outline),
-                    contentDescription = "Add",
-                    modifier = Modifier.size(34.dp)
+            // 🌟 Hide add icon completely during slot allocation mode
+            if (!isSelectionMode) {
+                IconButton(onClick = onAddClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_add_circle_outline),
+                        contentDescription = "Add",
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            } else {
+                RoundCheckbox(
+                    checked = isSelected,
+                    onCheckedChange = onSelectionChange,
+                    modifier = Modifier.padding(end = 4.dp)
                 )
             }
         }
@@ -195,15 +219,54 @@ fun MealSection(
                 modifier = Modifier.padding(start = 26.dp, bottom = 16.dp)
             )
         } else {
-            recipes.forEach { recipeItem ->
-                RecipeCard(
-                    recipe = recipeItem,
-                    onDeleteClick = { onDeleteClick(recipeItem) },
-                    onClick = {/*TODO*/ },
-                    color = color,
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            Column(
+                modifier = Modifier.padding(bottom = 10.dp)
+            ) {
+                recipes.forEach { recipeItem ->
+                    RecipeCard(
+                        recipe = recipeItem,
+                        // 🌟 Pass empty lambda if in selection mode to suppress unexpected deletes
+                        onDeleteClick = {
+                            if (!isSelectionMode) {
+                                onDeleteClick(recipeItem)
+                            }
+                        },
+                        onClick = { /*TODO*/ },
+                        color = color,
+                        isSelectionMode = isSelectionMode // Make sure to pass down to RecipeCard if it hides the delete button
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
             }
+        }
+    }
+}
+@Composable
+fun RoundCheckbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .background(if (checked) MaterialTheme.colorScheme.primary else Color.Transparent)
+            .border(
+                width = 2.dp,
+                color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                shape = CircleShape
+            )
+            .clickable { onCheckedChange(!checked) },
+        contentAlignment = Alignment.Center
+    ) {
+        if (checked) {
+            Icon(
+                painter = painterResource(R.drawable.check),
+                contentDescription = "Checked",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

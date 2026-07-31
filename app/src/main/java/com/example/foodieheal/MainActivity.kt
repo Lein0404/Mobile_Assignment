@@ -12,6 +12,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,6 +27,7 @@ import com.example.foodieheal.View.HomeScreen
 import com.example.foodieheal.View.ProfileScreen
 import com.example.foodieheal.View.RegisterScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
+import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.ui.theme.MobileAssignmentTheme
 import io.github.jan.supabase.postgrest.postgrest
 
@@ -59,9 +62,9 @@ class MainActivity : ComponentActivity() {
 
                     composable(Screen.MealPlanner.route) {
                         val viewModel: MealPlannerViewModel = viewModel(
-                            factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                            factory = object : ViewModelProvider.Factory {
                                 @Suppress("UNCHECKED_CAST")
-                                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                     // Accessing your global object here
                                     val repository = MealPlannerRepository(
                                         postgrest = SupabaseClient.client.postgrest,
@@ -78,8 +81,37 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable (Screen.Zh.route){
-                        ZhScreen(navController)
+                    composable (Screen.AddRecipeToPlanScreen.route){
+                        val viewModel: MealPlannerViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                @Suppress("UNCHECKED_CAST")
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    // Accessing your global object here
+                                    val repository = MealPlannerRepository(
+                                        postgrest = SupabaseClient.client.postgrest,
+                                        supabaseClient = SupabaseClient.client
+                                    )
+                                    return MealPlannerViewModel(repository) as T
+                                }
+                            }
+                        )
+
+                        AddRecipeToPlanScreen(
+                            viewModel = viewModel,
+                            modifier = Modifier,
+                            recipe = Recipe(//TODO pass specific recipe here, wait for recipe module
+                                recipe_id = "R011",
+                                recipeName = "Chicken Wrap",
+                                calories = 340,
+                                time = 15,
+                                recipeImage = R.drawable.lunch,
+                                recipeDescription = "A delicious wrap filled with grilled chicken.",
+                                budget = 5.80,
+                                skillLevel = 1,
+                                recipeStep = "Grill chicken, fill tortilla, roll."
+                            ),
+                            onExecutionComplete = {navController.popBackStack()},
+                        )
                     }
                 }
             }

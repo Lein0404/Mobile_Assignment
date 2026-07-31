@@ -148,7 +148,8 @@ fun MealDatePickerDialog(
                 Text(
                     text = titleText,
                     modifier = Modifier.padding(start = 24.dp, top = 24.dp),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         )

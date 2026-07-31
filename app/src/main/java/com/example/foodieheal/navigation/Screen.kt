@@ -5,6 +5,6 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object Profile : Screen("profile")
-    object Zh :Screen("zh")
+    object AddRecipeToPlanScreen :Screen("add_recipe_to_plan")
     object MealPlanner:Screen("meal_planner")
 }
