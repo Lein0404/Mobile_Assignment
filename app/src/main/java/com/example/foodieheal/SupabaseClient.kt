@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart
+package com.example.foodieheal
 
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient

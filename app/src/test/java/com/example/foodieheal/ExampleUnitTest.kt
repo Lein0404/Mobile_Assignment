@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart
+package com.example.foodieheal
 
 import org.junit.Test
 
