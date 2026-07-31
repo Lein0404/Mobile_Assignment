@@ -21,7 +21,6 @@ class AdminApprovalViewModel : ViewModel() {
         private set
 
     fun loadPendingChefs() {
-
         viewModelScope.launch {
 
             val client = SupabaseClient.client
@@ -35,54 +34,37 @@ class AdminApprovalViewModel : ViewModel() {
                     }
                 }
                 .decodeList()
-
         }
-
     }
 
     fun loadChefDetail(chefId: String) {
-
         viewModelScope.launch {
-
             try {
-
                 selectedChef = SupabaseClient.client
                     .postgrest
                     .from("Chef")
                     .select {
-
                         filter {
 
                             eq("chefId", chefId)
-
                         }
-
                     }
                     .decodeSingle<Chef>()
-
-
             } catch (e: Exception) {
-
                 Log.e(
                     "AdminApproval",
                     e.message ?: "Error loading chef"
                 )
-
             }
-
         }
-
     }
 
     fun updateChefStatus(
         chefId: String,
         status: String
     ) {
-
         viewModelScope.launch {
-
             try {
-
                 SupabaseClient.client
                     .postgrest
                     .from("Chef")
@@ -94,29 +76,20 @@ class AdminApprovalViewModel : ViewModel() {
                             )
                         }
                     ) {
-
                         filter {
-
                             eq(
                                 "chefId",
                                 chefId
                             )
-
                         }
-
                     }
-
-
             } catch (e: Exception) {
 
                 Log.e(
                     "AdminApproval",
                     e.message ?: "Update failed"
                 )
-
             }
-
         }
-
     }
 }
