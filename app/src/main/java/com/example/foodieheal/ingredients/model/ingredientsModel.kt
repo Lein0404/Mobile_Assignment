@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.ingredients.model
+package com.example.foodieheal.ingredients.model
 
 data class Ingredients(
     val ingredientId: String = "",
