@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.mobileassignmentloginpart.Model.User
 import com.example.mobileassignmentloginpart.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -18,12 +19,18 @@ class AuthViewModel : ViewModel() {
     var currentUser by mutableStateOf<User?>(null)
         private set
 
+    var isAdmin by mutableStateOf(false)
+        private set
+
+    var isChef by mutableStateOf(false)
+        private set
+
     var loginSuccess by mutableStateOf(false)
         private set
 
     var registerSuccess by mutableStateOf(false)
         private set
-    
+
     var isProcessing by mutableStateOf(false)
         private set
 
@@ -45,6 +52,14 @@ class AuthViewModel : ViewModel() {
             errorMessage = "Email and password cannot be empty"
             return
         }
+
+        // Hardcode for Admin Login
+        if (emailInput == "admin@gmail.com" && passwordInput == "admin1234") {
+            loginSuccess = true
+            isAdmin = true
+            return
+        }
+
         isProcessing = true
         errorMessage = ""
         viewModelScope.launch {
@@ -55,8 +70,19 @@ class AuthViewModel : ViewModel() {
                 }
                 val user = client.auth.currentUserOrNull()
                 if (user != null) {
-                    fetchUserData(user.id)
-                    loginSuccess = true
+                    // Check Chef account
+                    fetchChefData(user.id)
+                    if (isChef) {
+                        // Approved Chef
+                        loginSuccess = true
+                    } else if (errorMessage.isNotEmpty()) {
+
+                        // Pending / Rejected Chef
+                        client.auth.signOut()
+                    } else {
+                        fetchUserData(user.id)
+                        loginSuccess = true
+                    }
                 }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Login Failed"
@@ -96,8 +122,8 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // Generate U001, U002 etc using a simple timestamp for uniqueness
-                val randomNum = (100..999).random() 
-                val customId = "U$randomNum" 
+                val randomNum = (100..999).random()
+                val customId = "U$randomNum"
                 val newUser = User(id = uid, customId = customId, email = email, name = "User ($customId)")
 
                 client.postgrest.from("users").insert(newUser)
@@ -112,11 +138,12 @@ class AuthViewModel : ViewModel() {
     }
 
     private suspend fun fetchUserData(uid: String) {
+
         try {
             val user = client.postgrest.from("users").select {
                 filter { eq("id", uid) }
             }.decodeSingleOrNull<User>()
-            
+
             if (user != null) {
                 currentUser = user
             } else {
@@ -131,11 +158,46 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    private suspend fun fetchChefData(uid: String) {
+        try {
+            val chef = client
+                .postgrest
+                .from("Chef")
+                .select {
+                    filter {
+                        eq("chefId", uid)
+                    }
+                }
+                .decodeSingleOrNull<Chef>()
+            if (chef != null) {
+                when (chef.status) {
+                    "Approved" -> {
+                        isChef = true
+                    }
+                    "Pending" -> {
+                        errorMessage =
+                            "Your chef account is waiting for admin approval."
+                        client.auth.signOut()
+                    }
+                    "Rejected" -> {
+                        errorMessage =
+                            "Your chef registration has been rejected."
+                        client.auth.signOut()
+                    }
+                }
+            } else {
+                errorMessage = "Account not found."
+            }
+        } catch (e: Exception) {
+            errorMessage = e.message ?: "Failed to fetch chef data"
+        }
+    }
+
     fun updateProfile(name: String, email: String, profilePicUrl: String) {
         val uid = currentUser?.id ?: return
         isProcessing = true
         errorMessage = ""
-        
+
         viewModelScope.launch {
             try {
                 val updatedUser = currentUser?.copy(name = name, email = email, profilePicUrl = profilePicUrl) ?: return@launch
@@ -143,11 +205,11 @@ class AuthViewModel : ViewModel() {
                     filter { eq("id", uid) }
                 }
                 currentUser = updatedUser
-                
+
                 if (client.auth.currentUserOrNull()?.email != email) {
                     client.auth.updateUser { this.email = email }
                 }
-                
+
                 errorMessage = "Profile Updated"
             } catch (e: Exception) {
                 errorMessage = "Update Failed: ${e.message}"
@@ -206,5 +268,10 @@ class AuthViewModel : ViewModel() {
             isProcessing = false
             onComplete()
         }
+    }
+
+    fun resetLoginState() {
+        loginSuccess = false
+        isAdmin = false
     }
 }

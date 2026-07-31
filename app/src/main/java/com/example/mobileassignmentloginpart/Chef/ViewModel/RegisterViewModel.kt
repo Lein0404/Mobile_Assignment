@@ -88,7 +88,6 @@ class chefRegisterViewModel : ViewModel() {
                     gender = gender,
                     age = age.trim().toIntOrNull() ?: 0,
                     phoneNumber = phoneNumber.trim(),
-                    password = password,
                     email = email.trim(),
                     address = address.trim(),
                     state = state,

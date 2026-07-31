@@ -20,9 +20,6 @@ data class Chef(
     @SerialName("phoneNumber")
     val phoneNumber: String,
 
-    @SerialName("password")
-    val password: String,
-
     @SerialName("email")
     val email: String,
 

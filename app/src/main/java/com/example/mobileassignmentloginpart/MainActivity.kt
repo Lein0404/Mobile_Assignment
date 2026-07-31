@@ -13,7 +13,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.example.mobileassignmentloginpart.Chef.ChefRegister
+import com.example.mobileassignmentloginpart.Admin.AdminApprovalScreen
+import com.example.mobileassignmentloginpart.Admin.ChefDetailScreen
+import com.example.mobileassignmentloginpart.Chef.Home.ChefHomeScreen
 import com.example.mobileassignmentloginpart.Chef.Register.ChefWelcomeScreen
 import com.example.mobileassignmentloginpart.Chef.Register.addressInfo
 import com.example.mobileassignmentloginpart.Chef.Register.basicInfo
@@ -38,7 +40,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val chefviewModel: chefRegisterViewModel = viewModel()
 
-
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Login.route
@@ -53,6 +54,25 @@ class MainActivity : ComponentActivity() {
 
                     composable(Screen.Register.route){
                         RegisterScreen(navController)
+                    }
+
+                    //Ivan part (admin site)
+                    composable(Screen.AdminChefScreen.route) {
+                        AdminApprovalScreen(navController)
+                    }
+
+                    composable(
+                        "chefDetail/{chefId}"
+                    ) { backStackEntry ->
+                        ChefDetailScreen(
+                            chefId = backStackEntry.arguments
+                                ?.getString("chefId") ?: "",
+                            navController = navController
+                        )
+                    }
+
+                    composable(Screen.ChefHomeScreen.route) {
+                        ChefHomeScreen(navController)
                     }
 
                     navigation(

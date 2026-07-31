@@ -22,9 +22,33 @@ fun LoginScreen(navController: NavController){
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     LaunchedEffect(viewModel.loginSuccess) {
-        if(viewModel.loginSuccess){
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+
+        if (viewModel.loginSuccess) {
+            when {
+                viewModel.isAdmin -> {
+                    navController.navigate(Screen.AdminChefScreen.route) {
+                        popUpTo(0) { // Clear the back stack mean back to first page <Login page>
+                            inclusive = true
+                        }
+                        launchSingleTop = true //use to prevent create duplicate same screen
+                    }
+                }
+                viewModel.isChef -> {
+                    navController.navigate(Screen.ChefHomeScreen.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+                else -> {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                            launchSingleTop = true
+                    }
+                }
             }
         }
     }
