@@ -1,6 +1,5 @@
 package com.example.foodieheal.meal_planner.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,8 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -37,34 +35,37 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
+import com.example.foodieheal.ui.theme.Green
+import com.example.foodieheal.ui.theme.Orange
+import com.example.foodieheal.ui.theme.Red
+import com.example.foodieheal.ui.theme.Yellow
 
 @Composable
 fun CalorieProgressBar(
     currentCalories: Int,
     maxCalories: Int,
-    onNavigateToProfile: () -> Unit, // 🌟 Added navigation callback
+    onNavigateToProfile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showHelpDialog by remember { mutableStateOf(false) } // 🌟 State to toggle popup window
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val weightage: Float = if (maxCalories > 0) currentCalories.toFloat() / maxCalories.toFloat() else 0f
     val progress: Float = weightage.coerceIn(0f, 1f)
 
-    // 🛠️ Fixed Overlap Bug logic to match your custom table structure accurately:
     val calorieTextColor: Color = when {
-        weightage < 0.80f -> Color.Red
-        weightage in 0.80f..0.949f -> Color(0XFFCC9900) // Yellow
-        weightage in 0.95f..1.059f -> Color.Green
-        weightage in 1.06f..1.20f -> Color(0XFFFA8F2A) // Orange
-        else -> Color.Red
+        weightage < 0.80f -> Red
+        weightage in 0.80f..0.949f -> Yellow
+        weightage in 0.95f..1.059f -> Green
+        weightage in 1.06f..1.20f -> Orange
+        else -> Red
     }
 
     val reminderText: String = when {
-        weightage < 0.80f -> "Under Intake"
-        weightage in 0.80f..0.949f -> "Slightly Low"
-        weightage in 0.95f..1.059f -> "Ideal Intake"
-        weightage in 1.06f..1.20f -> "Slightly High"
-        else -> "Excess Intake"
+        weightage < 0.80f -> stringResource(R.string.status_under_intake)
+        weightage in 0.80f..0.949f -> stringResource(R.string.status_slightly_low)
+        weightage in 0.95f..1.059f -> stringResource(R.string.status_ideal_intake)
+        weightage in 1.06f..1.20f -> stringResource(R.string.status_slightly_high)
+        else -> stringResource(R.string.status_excess_intake)
     }
 
     Column(
@@ -75,27 +76,27 @@ fun CalorieProgressBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Today's Calories: ",
+                text = stringResource(R.string.label_todays_calories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "$currentCalories kcal",
+                text = stringResource(R.string.format_kcal_current, currentCalories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = calorieTextColor
             )
             Text(
-                text = " / $maxCalories kcal",
+                text = stringResource(R.string.format_kcal_max, maxCalories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.padding(2.dp))
             Icon(
-                painter = painterResource(R.drawable.help),
-                contentDescription = "Show calorie breakdown guide",
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.desc_show_calorie_guide),
                 modifier = Modifier
                     .size(18.dp)
-                    .clickable { showHelpDialog = true } // 🌟 Show dialog window layout on tap
+                    .clickable { showHelpDialog = true }
             )
             Spacer(Modifier.weight(1f))
             Text(
@@ -116,13 +117,12 @@ fun CalorieProgressBar(
         )
     }
 
-    // 🌟 CALORIE GUIDE POPUP DIALOG WINDOW IMPLEMENTATION
     if (showHelpDialog) {
         AlertDialog(
-            onDismissRequest = { showHelpDialog = false }, // Tapping outside bounds automatically dismisses
+            onDismissRequest = { showHelpDialog = false },
             title = {
                 Text(
-                    text = "How Calorie Target Works",
+                    text = stringResource(R.string.dialog_title_calorie_works),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -130,23 +130,49 @@ fun CalorieProgressBar(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Your recommended calorie status ranges are calculated relative to your target goals:",
+                        text = stringResource(R.string.dialog_description_ranges),
                         style = MaterialTheme.typography.bodySmall
                     )
 
-                    // Guide Matrix List Items
-                    CalorieGuideRow(percent = "< 80%", status = "Under Intake", color = Color.Red, description = "Calories too low. May not be meeting nutritional needs.")
-                    CalorieGuideRow(percent = "80% - 94%", status = "Slightly Low", color = Color(0XFFCC9900), description = "Slightly below target. Acceptable but room to adjust.")
-                    CalorieGuideRow(percent = "95% - 105%", status = "Ideal Intake", color = Color.Green, description = "Very close to recommended targets.")
-                    CalorieGuideRow(percent = "106% - 120%", status = "Slightly High", color = Color(0XFFFA8F2A), description = "Slightly over standard recommendation limit.")
-                    CalorieGuideRow(percent = "> 120%", status = "Excess Intake", color = Color.Red, description = "Significantly above target parameters.")
+                    CalorieGuideRow(
+                        percent = stringResource(R.string.percent_under_80),
+                        status = stringResource(R.string.status_under_intake),
+                        color = Red,
+                        description = stringResource(R.string.desc_under_intake)
+                    )
+                    CalorieGuideRow(
+                        percent = stringResource(R.string.percent_80_94),
+                        status = stringResource(R.string.status_slightly_low),
+                        color = Yellow,
+                        description = stringResource(R.string.desc_slightly_low)
+                    )
+                    CalorieGuideRow(
+                        percent = stringResource(R.string.percent_95_105),
+                        status = stringResource(R.string.status_ideal_intake),
+                        color = Green,
+                        description = stringResource(R.string.desc_ideal_intake)
+                    )
+                    CalorieGuideRow(
+                        percent = stringResource(R.string.percent_106_120),
+                        status = stringResource(R.string.status_slightly_high),
+                        color = Orange,
+                        description = stringResource(R.string.desc_slightly_high)
+                    )
+                    CalorieGuideRow(
+                        percent = stringResource(R.string.percent_over_120),
+                        status = stringResource(R.string.status_excess_intake),
+                        color = Red,
+                        description = stringResource(R.string.desc_excess_intake)
+                    )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                    // BMI Reference Notice Footer with clickable action hook trigger
-                    val annotatedString = buildAnnotatedString {
-                        append("Your unique recommended daily calorie intake limits are configured dynamically based on your recorded BMI, height, and body weight targets. You can update these parameters anytime via the ")
+                    val partOne = stringResource(R.string.profile_notice_part_1)
+                    val profileLink = stringResource(R.string.profile_notice_link)
+                    val partTwo = stringResource(R.string.profile_notice_part_2)
 
+                    val annotatedString = buildAnnotatedString {
+                        append(partOne)
                         pushStringAnnotation(tag = "PROFILE", annotation = "navigate")
                         withStyle(
                             style = SpanStyle(
@@ -155,25 +181,25 @@ fun CalorieProgressBar(
                                 textDecoration = TextDecoration.Underline
                             )
                         ) {
-                            append("Profile Page")
+                            append(profileLink)
                         }
                         pop()
-                        append(".")
+                        append(partTwo)
                     }
 
                     Text(
                         text = annotatedString,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.clickable {
-                            showHelpDialog = false // Close modal immediately
-                            onNavigateToProfile() // Route to target screen
+                            showHelpDialog = false
+                            onNavigateToProfile()
                         }
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showHelpDialog = false }) {
-                    Text("Close")
+                    Text(stringResource(R.string.btn_close))
                 }
             }
         )
@@ -192,7 +218,7 @@ private fun CalorieGuideRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "• $percent",
+            text = stringResource(R.string.format_bullet_percent, percent),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(0.7f)

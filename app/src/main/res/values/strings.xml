@@ -27,4 +27,104 @@
     <string name="dialog_done">Done</string>
     <string name="dialog_yes">Yes</string>
     <string name="dialog_cancel">Cancel</string>
+
+    <!-- Add meal to plan strings -->
+    <string name="daily_date_picker_dialog">Select Target Date Window</string>
+    <string name="offline">Offline</string>
+    <string name="add_slots">Add (%1$d)</string>
+    <string name="select_slots_below">Select Slots Below</string>
+    <string name="adding_recipe">Adding: %1$s</string>
+
+    <string name="previous_week">Previous Week</string>
+    <string name="calendar">Calendar</string>
+    <string name="next_week">Next Week</string>
+
+    <string name="no_network">No Network</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+    <string name="connect_to_internet_message">Please connect to the internet to view and update your meal plans.</string>
+
+    <string name="breakfast">Breakfast</string>
+    <string name="lunch">Lunch</string>
+    <string name="dinner">Dinner</string>
+    <string name="snack">Snack</string>
+
+    <string name="success">Success!</string>
+    <string name="meals_added_successfully">Your meals have been successfully added to your planner.</string>
+    <string name="ok">OK</string>
+
+    <!-- Calorie Status Identifiers -->
+    <string name="status_under_intake">Under Intake</string>
+    <string name="status_slightly_low">Slightly Low</string>
+    <string name="status_ideal_intake">Ideal Intake</string>
+    <string name="status_slightly_high">Slightly High</string>
+    <string name="status_excess_intake">Excess Intake</string>
+
+    <!-- Content Labels and Value formatters -->
+    <string name="label_todays_calories">"Today\'s Calories: "</string>
+    <string name="format_kcal_current">%1$d kcal</string>
+    <string name="format_kcal_max">" / %1$d kcal"</string>
+    <string name="desc_show_calorie_guide">Show calorie breakdown guide</string>
+    <string name="format_bullet_percent">• %1$s</string>
+    <string name="btn_close">Close</string>
+
+    <!-- Calorie Help Dialog Strings -->
+    <string name="dialog_title_calorie_works">How Calorie Target Works</string>
+    <string name="dialog_description_ranges">Your recommended calorie status ranges are calculated relative to your target goals:</string>
+
+    <!-- Percent Ranges -->
+    <string name="percent_under_80">&lt; 80%</string>
+    <string name="percent_80_94">80% - 94%</string>
+    <string name="percent_95_105">95% - 105%</string>
+    <string name="percent_106_120">106% - 120%</string>
+    <string name="percent_over_120">&gt; 120%</string>
+
+    <!-- Range Descriptions -->
+    <string name="desc_under_intake">Calories too low. May not be meeting nutritional needs.</string>
+    <string name="desc_slightly_low">Slightly below target. Acceptable but room to adjust.</string>
+    <string name="desc_ideal_intake">Very close to recommended targets.</string>
+    <string name="desc_slightly_high">Slightly over standard recommendation limit.</string>
+    <string name="desc_excess_intake">Significantly above target parameters.</string>
+
+    <!-- Dynamic Footnote Notice Splits -->
+    <string name="profile_notice_part_1">Your unique recommended daily calorie intake limits are configured dynamically based on your recorded BMI, height, and body weight targets. You can update these parameters anytime via the </string>
+    <string name="profile_notice_link">Profile Page</string>
+    <string name="profile_notice_part_2">.</string>
+
+    <!-- Date Picker Dialog Header Texts -->
+    <string name="dialog_title_select_date_view">Select Date to View</string>
+    <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
+    <string name="dialog_title_choose_weekly_paste_date">Choose any day within target week to paste your weekly plan!</string>
+
+    <!-- Content Descriptions -->
+    <string name="desc_calendar_back">Calendar Back</string>
+    <string name="desc_calendar_icon">Calendar</string>
+    <string name="desc_calendar_forward">Calendar Forward</string>
+    <string name="desc_copy_daily_plan">copy daily plan</string>
+    <string name="desc_no_network">No Network Available</string>
+
+    <!-- Loading and Connectivity States -->
+    <string name="title_no_internet">No Internet Connection</string>
+    <string name="desc_connect_internet_prompt">Please connect to the internet to view and update your meal plans.</string>
+    <string name="label_loading_plans">Loading plans…</string>
+
+    <!-- Meal Sections Categories -->
+    <string name="meal_title_breakfast">Breakfast</string>
+    <string name="meal_title_lunch">Lunch</string>
+    <string name="meal_title_dinner">Dinner</string>
+    <string name="meal_title_snack">Snack</string>
+
+    <!-- Action Buttons -->
+    <string name="btn_copy_todays_plan">Copy Today\'s Plan?</string>
+
+    <!-- Recipe Numeric Metrics Formatters -->
+    <string name="format_recipe_calories">%1$d kcal</string>
+    <string name="format_recipe_duration">%1$d mins</string>
+
+    <!-- UI Interaction Descriptions -->
+    <string name="desc_remove_recipe">Remove recipe</string>
+    <string name="desc_add_recipe">Add</string>
+    <string name="desc_checkbox_checked">Checked</string>
+
+    <!-- Empty State Placeholders -->
+    <string name="placeholder_empty_plan">Planning Something?</string>
 </resources>

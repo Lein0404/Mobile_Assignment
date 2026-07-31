@@ -65,12 +65,12 @@ class MainActivity : ComponentActivity() {
                             factory = object : ViewModelProvider.Factory {
                                 @Suppress("UNCHECKED_CAST")
                                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    // Accessing your global object here
                                     val repository = MealPlannerRepository(
                                         postgrest = SupabaseClient.client.postgrest,
                                         supabaseClient = SupabaseClient.client
                                     )
-                                    return MealPlannerViewModel(repository) as T
+                                    // 🌟 FIXED: Passed 'application' context alongside the repository
+                                    return MealPlannerViewModel(application, repository) as T
                                 }
                             }
                         )
@@ -86,12 +86,12 @@ class MainActivity : ComponentActivity() {
                             factory = object : ViewModelProvider.Factory {
                                 @Suppress("UNCHECKED_CAST")
                                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    // Accessing your global object here
                                     val repository = MealPlannerRepository(
                                         postgrest = SupabaseClient.client.postgrest,
                                         supabaseClient = SupabaseClient.client
                                     )
-                                    return MealPlannerViewModel(repository) as T
+                                    // 🌟 FIXED: Passed 'application' context alongside the repository here too
+                                    return MealPlannerViewModel(application, repository) as T
                                 }
                             }
                         )
@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
                                 recipeName = "Chicken Wrap",
                                 calories = 340,
                                 time = 15,
-                                recipeImage = R.drawable.lunch,
+                                recipeImage = R.drawable.ic_lunch,
                                 recipeDescription = "A delicious wrap filled with grilled chicken.",
                                 budget = 5.80,
                                 skillLevel = 1,
@@ -114,17 +114,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun ZhScreen(navController: NavHostController){
-    Scaffold{innerPadding->
-        Box(Modifier.fillMaxSize().padding(innerPadding)) {
-            Button(onClick = { navController.navigate(Screen.MealPlanner.route) }) {
-                Text("Meal Planner")
             }
         }
     }

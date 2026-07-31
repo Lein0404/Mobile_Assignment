@@ -22,7 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
@@ -67,10 +68,14 @@ fun AddRecipeToPlanScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var showSuccessDialog by remember { mutableStateOf(false) } // 🌟 Dialog trigger state variable
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
+    val isNetworkAvailable = viewModel.isNetworkAvailable
 
     LaunchedEffect(selectedDate) {
-        viewModel.loadPlanForDate(selectedDate)
+        if (isNetworkAvailable) {
+            viewModel.loadPlanForDate(selectedDate)
+        }
     }
 
     var currentWeekStart by remember {
@@ -91,17 +96,7 @@ fun AddRecipeToPlanScreen(
         }
     }
 
-    val selectedDailyPlan = viewModel.selectedDailyPlan
-
-    val totalDailyCalories = remember(selectedDailyPlan) {
-        selectedDailyPlan?.meals
-            ?.flatMap { meal -> meal.recipes }
-            ?.sumOf { r: Recipe -> r.calories } ?: 0
-    }
-
-    // STATE TRACKER MAP: Maps unique (Date String -> List of selected MealTypes) across pages
     val selectedSlots = remember { mutableStateMapOf<String, Set<MealType>>() }
-
     val anchorDate = remember { LocalDate.now().minusYears(1) }
     val initialPage = remember { ChronoUnit.DAYS.between(anchorDate, LocalDate.now()).toInt() }
 
@@ -110,7 +105,6 @@ fun AddRecipeToPlanScreen(
         pageCount = { 730 }
     )
 
-    // Sync Pager Swipes → State updates (Fixed race loop by using settledPage)
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
             val targetDate = anchorDate.plusDays(page.toLong())
@@ -121,7 +115,6 @@ fun AddRecipeToPlanScreen(
         }
     }
 
-    // Sync Programmatic Dates → Pager layout shifts
     LaunchedEffect(selectedDate) {
         val targetPage = ChronoUnit.DAYS.between(anchorDate, selectedDate).toInt()
         if (pagerState.currentPage != targetPage && targetPage in 0 until 730) {
@@ -132,7 +125,7 @@ fun AddRecipeToPlanScreen(
     if (showDatePicker) {
         MealDatePickerDialog(
             initialDate = selectedDate,
-            titleText = "Select Target Date Window",
+            titleText = stringResource(R.string.daily_date_picker_dialog) ,
             onDateSelected = { newDate ->
                 selectedDate = newDate
                 currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
@@ -141,32 +134,12 @@ fun AddRecipeToPlanScreen(
         )
     }
 
-    // Helper functions to handle ticking states cleanly inside our components
-    val dateKey = selectedDate.toString()
-    val activeSelectionsForToday = selectedSlots[dateKey] ?: emptySet()
-
-    fun toggleSlotSelection(mealType: MealType) {
-        val currentSet = selectedSlots[dateKey] ?: emptySet()
-        val updatedSet = if (currentSet.contains(mealType)) {
-            currentSet - mealType
-        } else {
-            currentSet + mealType
-        }
-        if (updatedSet.isEmpty()) {
-            selectedSlots.remove(dateKey)
-        } else {
-            selectedSlots[dateKey] = updatedSet
-        }
-    }
-
-    // Calculate total checked slots item count globally across all checked pages
-    val totalSelectionsCount = selectedSlots.values.sumOf { it.size }
+    val totalSelectionsCount = if (isNetworkAvailable) selectedSlots.values.sumOf { it.size } else 0
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
-            // BOTTOM PERSISTENT TERMINAL INTERACTION LAYER
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,16 +148,15 @@ fun AddRecipeToPlanScreen(
             ) {
                 Button(
                     onClick = {
-                        // Batch write tasks systematically across recorded dates
                         selectedSlots.forEach { (savedDateStr, mealTypesList) ->
                             val targetDateParsed = LocalDate.parse(savedDateStr)
                             mealTypesList.forEach { mealType ->
                                 viewModel.addRecipeToMeal(targetDateParsed, mealType, recipe)
                             }
                         }
-                        showSuccessDialog = true // 🌟 Show the success dialog on successful execution completion
+                        showSuccessDialog = true
                     },
-                    enabled = totalSelectionsCount > 0,
+                    enabled = totalSelectionsCount > 0 && isNetworkAvailable,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -195,7 +167,14 @@ fun AddRecipeToPlanScreen(
                     )
                 ) {
                     Text(
-                        text = if (totalSelectionsCount > 0) "Add ($totalSelectionsCount)" else "Select Slots Below",
+                        text = when {
+                            !isNetworkAvailable -> stringResource(R.string.offline)
+                            totalSelectionsCount > 0 -> stringResource(
+                                R.string.add_slots,
+                                totalSelectionsCount
+                            )
+                            else -> stringResource(R.string.select_slots_below)
+                        },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -203,108 +182,148 @@ fun AddRecipeToPlanScreen(
             }
         }
     ) { innerPadding ->
-        val scrollState = rememberScrollState()
-
-        Box(
-            Modifier
+        // 🌟 SCROLL FIX: The parent Column is now layout-stable without root vertical scroll.
+        Column(
+            modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .padding(innerPadding)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Simplified Header Layout without copy/paste actions
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Column(modifier = Modifier.padding(top = 10.dp)) {
+                    Text(
+                        text = stringResource(R.string.adding_recipe, recipe.recipeName),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = headerText,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 Row(
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.padding(horizontal = 10.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Column(modifier = Modifier.padding(top = 10.dp)) {
-                        Text(
-                            text = "Adding: ${recipe.recipeName}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = headerText,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
+                    IconButton(
+                        onClick = {
+                            selectedDate = selectedDate.minusWeeks(1)
+                            currentWeekStart = currentWeekStart.minusWeeks(1)
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.previous_week),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_calendar),
+                            contentDescription = stringResource(R.string.calendar),
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            selectedDate = selectedDate.plusWeeks(1)
+                            currentWeekStart = currentWeekStart.plusWeeks(1)
+                        }
                     ) {
-                        IconButton(
-                            onClick = {
-                                selectedDate = selectedDate.minusWeeks(1)
-                                currentWeekStart = currentWeekStart.minusWeeks(1)
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.arrow_back),
-                                contentDescription = "Calendar Back",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_forward),
+                            contentDescription = stringResource(R.string.next_week),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
 
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(
-                                painter = painterResource(R.drawable.calendar),
-                                contentDescription = "Calendar",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
+            Spacer(Modifier.height(16.dp))
 
-                        IconButton(
-                            onClick = {
-                                selectedDate = selectedDate.plusWeeks(1)
-                                currentWeekStart = currentWeekStart.plusWeeks(1)
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.arrow_forward),
-                                contentDescription = "Calendar Forward",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+            WeeklyDateCardRow(
+                weekDays = weekDays,
+                selectedDate = selectedDate,
+                onDateSelected = { newDate -> selectedDate = newDate },
+                modifier = Modifier
+            )
+
+            Spacer(Modifier.height(25.dp))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1 // 🌟 Preload adjacent frames
+            ) { page ->
+                // 🌟 FIX: Calculate localized configuration for each specific page block inside the pager loop
+                val pageDate = remember(page) { anchorDate.plusDays(page.toLong()) }
+                val pageDateStr = pageDate.toString()
+
+                LaunchedEffect(pageDate) {
+                    if (isNetworkAvailable) {
+                        viewModel.loadPlanForDate(pageDate)
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                // 🌟 FIX: Pull layout state safely from the dictionary cache map instead of deleted global variable
+                val dailyPlanForThisPage = viewModel.mealPlansCache[pageDate]
+                val activeSelectionsForThisPage = selectedSlots[pageDateStr] ?: emptySet()
 
-                WeeklyDateCardRow(
-                    weekDays = weekDays,
-                    selectedDate = selectedDate,
-                    onDateSelected = { newDate -> selectedDate = newDate },
+                val totalCaloriesForPage = remember(dailyPlanForThisPage, isNetworkAvailable) {
+                    if (!isNetworkAvailable) 0 else {
+                        dailyPlanForThisPage?.meals
+                            ?.flatMap { meal -> meal.recipes }
+                            ?.sumOf { r: Recipe -> r.calories } ?: 0
+                    }
+                }
+
+                val pageScrollState = rememberScrollState()
+
+                // 🌟 SCROLL FIX: Each page canvas handles its own vertical scroll independently
+                Box(
                     modifier = Modifier
-                )
-
-                Spacer(Modifier.height(25.dp))
-
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxWidth()
-                ) { page ->
-                    val isLoading = viewModel.isLoading
-
-                    if (isLoading) {
+                        .fillMaxSize()
+                        .verticalScroll(pageScrollState)
+                ) {
+                    if (!isNetworkAvailable) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = 32.dp, vertical = 60.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Spacer(modifier = Modifier.height(40.dp))
-                            CircularProgressIndicator(modifier = Modifier.size(44.dp))
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text("Loading plans...", style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.height(200.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.wifi_off),
+                                contentDescription = stringResource(R.string.no_network),
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(70.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.no_internet_connection),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.connect_to_internet_message),
+                                fontSize = 15.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     } else {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             CalorieProgressBar(
-                                currentCalories = totalDailyCalories,
+                                currentCalories = totalCaloriesForPage,
                                 maxCalories = 1800,
                                 onNavigateToProfile = {/*TODO*/},
                             )
@@ -313,64 +332,76 @@ fun AddRecipeToPlanScreen(
 
                             Card(
                                 modifier = Modifier
-                                    .fillMaxSize()
+                                    .fillMaxWidth()
                                     .clip(RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp)),
                                 elevation = CardDefaults.cardElevation(4.dp),
                                 colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                             ) {
-                                val breakfastRecipes = selectedDailyPlan?.meals
+                                val breakfastRecipes = dailyPlanForThisPage?.meals
                                     ?.filter { it.mealType == MealType.BREAKFAST }
                                     ?.flatMap { meal -> meal.recipes } ?: emptyList()
 
-                                val lunchRecipes = selectedDailyPlan?.meals
+                                val lunchRecipes = dailyPlanForThisPage?.meals
                                     ?.filter { it.mealType == MealType.LUNCH }
                                     ?.flatMap { meal -> meal.recipes } ?: emptyList()
 
-                                val dinnerRecipes = selectedDailyPlan?.meals
+                                val dinnerRecipes = dailyPlanForThisPage?.meals
                                     ?.filter { it.mealType == MealType.DINNER }
                                     ?.flatMap { meal -> meal.recipes } ?: emptyList()
 
-                                val snackRecipes = selectedDailyPlan?.meals
+                                val snackRecipes = dailyPlanForThisPage?.meals
                                     ?.filter { it.mealType == MealType.SNACK }
                                     ?.flatMap { meal -> meal.recipes } ?: emptyList()
 
                                 Column {
                                     MealSection(
-                                        title = "Breakfast",
+                                        title = stringResource(R.string.breakfast),
                                         recipes = breakfastRecipes,
                                         isSelectionMode = true,
-                                        isSelected = activeSelectionsForToday.contains(MealType.BREAKFAST),
-                                        onSelectionChange = { toggleSlotSelection(MealType.BREAKFAST) },
-                                        onAddClick = {},//empty bcs ui do not appear
+                                        isSelected = activeSelectionsForThisPage.contains(MealType.BREAKFAST),
+                                        onSelectionChange = {
+                                            val currentSet = selectedSlots[pageDateStr] ?: emptySet()
+                                            selectedSlots[pageDateStr] = if (currentSet.contains(MealType.BREAKFAST)) currentSet - MealType.BREAKFAST else currentSet + MealType.BREAKFAST
+                                        },
+                                        onAddClick = {},
                                         onDeleteClick = {}
                                     )
 
                                     MealSection(
-                                        title = "Lunch",
+                                        title = stringResource(R.string.lunch),
                                         recipes = lunchRecipes,
                                         isSelectionMode = true,
-                                        isSelected = activeSelectionsForToday.contains(MealType.LUNCH),
-                                        onSelectionChange = { toggleSlotSelection(MealType.LUNCH) },
+                                        isSelected = activeSelectionsForThisPage.contains(MealType.LUNCH),
+                                        onSelectionChange = {
+                                            val currentSet = selectedSlots[pageDateStr] ?: emptySet()
+                                            selectedSlots[pageDateStr] = if (currentSet.contains(MealType.LUNCH)) currentSet - MealType.LUNCH else currentSet + MealType.LUNCH
+                                        },
                                         onAddClick = {},
                                         onDeleteClick = {}
                                     )
 
                                     MealSection(
-                                        title = "Dinner",
+                                        title = stringResource(R.string.dinner),
                                         recipes = dinnerRecipes,
                                         isSelectionMode = true,
-                                        isSelected = activeSelectionsForToday.contains(MealType.DINNER),
-                                        onSelectionChange = { toggleSlotSelection(MealType.DINNER) },
+                                        isSelected = activeSelectionsForThisPage.contains(MealType.DINNER),
+                                        onSelectionChange = {
+                                            val currentSet = selectedSlots[pageDateStr] ?: emptySet()
+                                            selectedSlots[pageDateStr] = if (currentSet.contains(MealType.DINNER)) currentSet - MealType.DINNER else currentSet + MealType.DINNER
+                                        },
                                         onAddClick = {},
                                         onDeleteClick = {}
                                     )
 
                                     MealSection(
-                                        title = "Snack",
+                                        title = stringResource(R.string.snack),
                                         recipes = snackRecipes,
                                         isSelectionMode = true,
-                                        isSelected = activeSelectionsForToday.contains(MealType.SNACK),
-                                        onSelectionChange = { toggleSlotSelection(MealType.SNACK) },
+                                        isSelected = activeSelectionsForThisPage.contains(MealType.SNACK),
+                                        onSelectionChange = {
+                                            val currentSet = selectedSlots[pageDateStr] ?: emptySet()
+                                            selectedSlots[pageDateStr] = if (currentSet.contains(MealType.SNACK)) currentSet - MealType.SNACK else currentSet + MealType.SNACK
+                                        },
                                         onAddClick = {},
                                         onDeleteClick = {}
                                     )
@@ -384,12 +415,11 @@ fun AddRecipeToPlanScreen(
             }
         }
 
-        // 🌟 Embed dialog state inside screen boundary to draw correctly atop Scaffold framework layers
         SuccessDialog(
             showDialog = showSuccessDialog,
             onDismiss = {
                 showSuccessDialog = false
-                onExecutionComplete() // 🌟 Cleanly trigger screen navigation back after dismissal click completes
+                onExecutionComplete()
             }
         )
     }
@@ -405,28 +435,32 @@ fun SuccessDialog(
             onDismissRequest = onDismiss,
             icon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.check),
+                    painter = painterResource(id = R.drawable.ic_check),
                     contentDescription = null,
-                    tint = Color.Green,
-                    modifier = Modifier.size(60.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(70.dp)
                 )
             },
             title = {
                 Text(
-                    text = "Success!",
+                    text = stringResource(R.string.success),
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp
                 )
             },
             text = {
                 Text(
-                    text = "Your meals have been successfully added to your planner.",
+                    text = stringResource(R.string.meals_added_successfully),
                     fontSize = 16.sp
                 )
             },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("OK", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text(
+                        stringResource(R.string.ok),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
                 }
             },
             shape = RoundedCornerShape(28.dp),

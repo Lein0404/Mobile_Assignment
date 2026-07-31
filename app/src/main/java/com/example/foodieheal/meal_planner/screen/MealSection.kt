@@ -28,12 +28,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe
-import kotlin.collections.forEach
+import com.example.foodieheal.ui.theme.BreakfastColor
+import com.example.foodieheal.ui.theme.DinnerColor
+import com.example.foodieheal.ui.theme.LunchColor
+import com.example.foodieheal.ui.theme.SnackColor
 
 @Composable
 fun RecipeCard(
@@ -95,34 +99,42 @@ fun RecipeCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.fire),
+                            painter = painterResource(R.drawable.ic_fire),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))
 
-                        Text("${recipe.calories} kcal", fontSize = 14.sp, maxLines = 1)
+                        Text(
+                            text = stringResource(R.string.format_recipe_calories, recipe.calories),
+                            fontSize = 14.sp,
+                            maxLines = 1
+                        )
 
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Icon(
-                            painter = painterResource(R.drawable.time),
+                            painter = painterResource(R.drawable.ic_time),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))
 
-                        Text("${recipe.time} mins", fontSize = 14.sp, maxLines = 1)
+                        Text(
+                            text = stringResource(R.string.format_recipe_duration, recipe.time),
+                            fontSize = 14.sp,
+                            maxLines = 1
+                        )
                     }
                 }
 
                 if (!isSelectionMode) {
                     IconButton(onClick = onDeleteClick) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_delete), // your delete resource
-                            contentDescription = "Remove recipe"
+                            painter = painterResource(R.drawable.ic_delete),
+                            contentDescription = stringResource(R.string.desc_remove_recipe)
                         )
                     }
                 }
@@ -143,16 +155,16 @@ fun MealSection(
     onDeleteClick: (Recipe) -> Unit = {},
 ) {
     val color: Color = when (title) {
-        "Breakfast" -> Color(0XFFF4A260)
-        "Lunch" -> Color(0XFF65B960)
-        "Dinner" -> Color(0XFF4F6D7A)
-        else -> Color(0XFFFCBA03)
+        stringResource(R.string.meal_title_breakfast) -> BreakfastColor
+        stringResource(R.string.meal_title_lunch) -> LunchColor
+        stringResource(R.string.meal_title_dinner) -> DinnerColor
+        else -> SnackColor
     }
-    val icon: Int = when(title){
-        "Breakfast" -> R.drawable.breakfast
-        "Lunch" -> R.drawable.lunch
-        "Dinner" -> R.drawable.dinner
-        else -> R.drawable.snack
+    val icon: Int = when (title) {
+        stringResource(R.string.meal_title_breakfast) -> R.drawable.ic_breakfast
+        stringResource(R.string.meal_title_lunch) -> R.drawable.ic_lunch
+        stringResource(R.string.meal_title_dinner) -> R.drawable.ic_dinner
+        else -> R.drawable.ic_snack
     }
 
     Card(
@@ -163,7 +175,6 @@ fun MealSection(
                 MaterialTheme.colorScheme.tertiary,
                 RoundedCornerShape(20.dp)
             )
-            // 🌟 Make the entire card head checkable if selection mode is true
             .clickable(enabled = isSelectionMode) { onSelectionChange(!isSelected) },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
@@ -191,12 +202,11 @@ fun MealSection(
                 modifier = Modifier.weight(1f)
             )
 
-            // 🌟 Hide add icon completely during slot allocation mode
             if (!isSelectionMode) {
                 IconButton(onClick = onAddClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_add_circle_outline),
-                        contentDescription = "Add",
+                        contentDescription = stringResource(R.string.desc_add_recipe),
                         modifier = Modifier.size(34.dp)
                     )
                 }
@@ -213,7 +223,7 @@ fun MealSection(
 
         if (recipes.isEmpty()) {
             Text(
-                text = "Planning Something?",
+                text = stringResource(R.string.placeholder_empty_plan),
                 color = Color.Gray,
                 fontSize = 16.sp,
                 modifier = Modifier.padding(start = 26.dp, bottom = 16.dp)
@@ -225,7 +235,6 @@ fun MealSection(
                 recipes.forEach { recipeItem ->
                     RecipeCard(
                         recipe = recipeItem,
-                        // 🌟 Pass empty lambda if in selection mode to suppress unexpected deletes
                         onDeleteClick = {
                             if (!isSelectionMode) {
                                 onDeleteClick(recipeItem)
@@ -233,7 +242,7 @@ fun MealSection(
                         },
                         onClick = { /*TODO*/ },
                         color = color,
-                        isSelectionMode = isSelectionMode // Make sure to pass down to RecipeCard if it hides the delete button
+                        isSelectionMode = isSelectionMode
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -241,6 +250,7 @@ fun MealSection(
         }
     }
 }
+
 @Composable
 fun RoundCheckbox(
     checked: Boolean,
@@ -262,8 +272,8 @@ fun RoundCheckbox(
     ) {
         if (checked) {
             Icon(
-                painter = painterResource(R.drawable.check),
-                contentDescription = "Checked",
+                painter = painterResource(R.drawable.ic_check),
+                contentDescription = stringResource(R.string.desc_checkbox_checked),
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
             )
