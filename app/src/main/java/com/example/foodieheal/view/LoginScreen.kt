@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.navigation.*
 
 @Composable
 fun LoginScreen(navController: NavController){
@@ -23,8 +23,8 @@ fun LoginScreen(navController: NavController){
 
     LaunchedEffect(viewModel.loginSuccess) {
         if(viewModel.loginSuccess){
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+            navController.navigate(Home) {
+                popUpTo(Login) { inclusive = true }
             }
         }
     }
@@ -82,7 +82,7 @@ fun LoginScreen(navController: NavController){
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(
             onClick = {
-                navController.navigate(Screen.Register.route)
+                navController.navigate(Register)
             }
         ) {
             Text("Don't have an account? Register")

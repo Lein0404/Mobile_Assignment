@@ -1,8 +1,21 @@
 package com.example.foodieheal.navigation
 
-sealed class Screen(val route: String) {
-    object Login : Screen("login")
-    object Register : Screen("register")
-    object Home : Screen("home")
-    object Profile : Screen("profile")
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+object Login
+
+@Serializable
+object Register
+
+@Serializable
+object Home
+
+@Serializable
+object Profile
+
+@Serializable
+object Ingredients
+
+@Serializable
+data class IngredientDetail(val id: String)

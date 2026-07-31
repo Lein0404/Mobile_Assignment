@@ -1,5 +1,8 @@
 package com.example.foodieheal.ingredients.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Ingredients(
     val ingredientId: String = "",
     val ingredientName: String = "",
@@ -9,6 +12,7 @@ data class Ingredients(
     val isDefault: Boolean = false
 )
 
+@Serializable
 data class IngredientUnits(
     val ingredientUnitId: String = "",
     val ingredientID: String = "",
@@ -16,19 +20,21 @@ data class IngredientUnits(
     val caloriesPerDefaultQuantity: Double = 0.0,
 )
 
+@Serializable
 data class Units(
     val unitID: String = "",
     val unitName: String = "",
     val defaultQuantity: Double = 1.0
 )
 
+@Serializable
 enum class IngredientCategory(val categoryName: String){
     BAKERY("Bakery"),
     BEVERAGES("Beverages"),
     BREAKFAST_CEREALS("Breakfast & Cereals"),
     CANNED_PACKAGED("Canned & Packaged"),
     CONDIMENTS_SAUCES_DRESSINGS("Condiments, Sauces & Dressings"),
-    DAIRY_EGGS("Diary & Eggs"),
+    DAIRY_EGGS("Dairy & Eggs"),
     FROZEN_FOODS("Frozen Foods"),
     FRUITS("Fruits"),
     GRAINS_RICE("Grains & Rice"),
@@ -42,3 +48,14 @@ enum class IngredientCategory(val categoryName: String){
     VEGETABLES("Vegetables"),
     OTHERS("Others")
 }
+
+data class IngredientDetailInfo(
+    val ingredient: Ingredients,
+    val calorieEntries: List<CalorieEntry> = emptyList()
+)
+
+data class CalorieEntry(
+    val calories: Double,
+    val quantity: Double,
+    val unitName: String
+)

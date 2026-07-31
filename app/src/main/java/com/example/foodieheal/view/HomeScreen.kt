@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.navigation.*
 
 @Composable
 fun HomeScreen(navController: NavController){
@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController){
         )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
-            onClick = { navController.navigate(Screen.Profile.route) },
+            onClick = { navController.navigate(Profile) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp)
         ) {
             Text("Go to Profile")
@@ -50,7 +50,7 @@ fun HomeScreen(navController: NavController){
         Button(
             onClick = { 
                 viewModel.logout {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Login) {
                         popUpTo(0) { inclusive = true }
                     }
                 }

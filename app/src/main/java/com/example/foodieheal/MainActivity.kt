@@ -7,11 +7,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.ProfileScreen
 import com.example.foodieheal.view.RegisterScreen
-import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.navigation.*
+import com.example.foodieheal.ingredients.view.IngredientsScreen
+import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ui.theme.MobileAssignmentTheme
 
 
@@ -25,22 +28,31 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Login.route
+                    startDestination = Login
                 ){
-                    composable(Screen.Login.route){
+                    composable<Login>{
                         LoginScreen(navController)
                     }
 
-                    composable(Screen.Home.route){
+                    composable<Home>{
                         HomeScreen(navController)
                     }
 
-                    composable(Screen.Register.route){
+                    composable<Register>{
                         RegisterScreen(navController)
                     }
 
-                    composable(Screen.Profile.route){
+                    composable<Profile>{
                         ProfileScreen(navController)
+                    }
+
+                    composable<Ingredients> {
+                        IngredientsScreen(navController)
+                    }
+
+                    composable<IngredientDetail> { backStackEntry ->
+                        val detail: IngredientDetail = backStackEntry.toRoute()
+                        IngredientDetailScreen(navController, detail.id)
                     }
                 }
             }
