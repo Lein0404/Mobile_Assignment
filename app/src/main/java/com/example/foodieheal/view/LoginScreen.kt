@@ -23,7 +23,7 @@ fun LoginScreen(navController: NavController){
 
     LaunchedEffect(viewModel.loginSuccess) {
         if(viewModel.loginSuccess){
-            navController.navigate(Screen.Home.route) {
+            navController.navigate(Screen.Main.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
@@ -39,7 +39,11 @@ fun LoginScreen(navController: NavController){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Text(text = "Login", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Login", 
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.Black // Force black color
+        )
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
@@ -47,7 +51,12 @@ fun LoginScreen(navController: NavController){
             onValueChange = {email = it},
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing
+            enabled = !viewModel.isProcessing,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Black
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
@@ -55,7 +64,12 @@ fun LoginScreen(navController: NavController){
             onValueChange = {password = it},
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing
+            enabled = !viewModel.isProcessing,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Black
+            )
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -67,13 +81,18 @@ fun LoginScreen(navController: NavController){
                 onClick = { viewModel.login(email, password) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 enabled = isFormValid,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                ),
                 border = if (!isFormValid) BorderStroke(1.dp, Color.Gray) else null
             ){
                 Text("Login")
             }
             
             TextButton(
-                onClick = { viewModel.forgotPassword(email) }
+                onClick = { viewModel.forgotPassword(email) },
+                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
             ) {
                 Text("Forgot Password?")
             }
@@ -83,7 +102,8 @@ fun LoginScreen(navController: NavController){
         TextButton(
             onClick = {
                 navController.navigate(Screen.Register.route)
-            }
+            },
+            colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
         ) {
             Text("Don't have an account? Register")
         }
