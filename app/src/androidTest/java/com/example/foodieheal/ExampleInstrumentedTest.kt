@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart
+package com.example.foodieheal
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
