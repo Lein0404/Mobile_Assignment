@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mobileassignmentloginpart.Admin.AdminApprovalScreen
 import com.example.mobileassignmentloginpart.Admin.ChefDetailScreen
 import com.example.mobileassignmentloginpart.Chef.Home.ChefHomeScreen
+import com.example.mobileassignmentloginpart.Chef.Register.ChefPictureScreen
 import com.example.mobileassignmentloginpart.Chef.Register.ChefWelcomeScreen
 import com.example.mobileassignmentloginpart.Chef.Register.addressInfo
 import com.example.mobileassignmentloginpart.Chef.Register.basicInfo
@@ -111,6 +112,13 @@ class MainActivity : ComponentActivity() {
                             descriptionInfo(
                                 navController,
                                 chefviewModel)
+                        }
+
+                        composable(Screen.ChefPicture.route) {
+                            ChefPictureScreen(
+                                navController,
+                                chefviewModel
+                            )
                         }
 
                         composable(Screen.Review.route) {

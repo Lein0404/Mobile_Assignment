@@ -58,7 +58,7 @@ fun addressInfo(
                 )
 
                 LinearProgressIndicator(
-                    progress = { 0.75f },
+                    progress = { 0.6f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

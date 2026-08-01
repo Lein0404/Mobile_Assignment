@@ -33,6 +33,7 @@ import com.example.mobileassignmentloginpart.Model.Chef
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import com.example.mobileassignmentloginpart.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,6 +42,9 @@ fun reviewInfo(
     navController: NavController,
     chefRegisterViewModel: chefRegisterViewModel)
 {
+
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -106,7 +110,9 @@ fun reviewInfo(
 
             Button(
                 onClick = {
-                    chefRegisterViewModel.registerChef {
+                    chefRegisterViewModel.registerChef(
+                        context = context,
+                    ) {
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }

@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.example.mobileassignmentloginpart.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.mobileassignmentloginpart.Admin.ViewModel.AdminApprovalViewModel
 import com.example.mobileassignmentloginpart.navigation.Screen
 
@@ -120,18 +122,26 @@ fun ChefDetailScreen(
                         Box(
                             modifier = Modifier
                                 .size(90.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    Color(0xFFFFE0B2)
-                                ),
+                                .clip(CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_outline_account_circle),
-                                contentDescription = null,
-                                modifier = Modifier.size(55.dp),
-                                tint = Color(0xFFFF9800)
-                            )
+                            if (chef.profilePictureUrl.isNullOrEmpty()) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_outline_account_circle),
+                                    contentDescription = "Default Profile",
+                                    tint = Color(0xFFFF9800),
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                AsyncImage(
+                                    model = chef.profilePictureUrl,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
 
                         Spacer(

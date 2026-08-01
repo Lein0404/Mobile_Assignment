@@ -61,7 +61,7 @@ fun basicInfo(
                 )
 
                 LinearProgressIndicator(
-                    progress = { 0.25f },
+                    progress = { 0.2f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

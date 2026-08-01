@@ -55,7 +55,7 @@ fun descriptionInfo(
                 )
 
                 LinearProgressIndicator(
-                    progress = { 1f },
+                    progress = { 0.8f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -71,7 +71,7 @@ fun descriptionInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             Text(
-                text ="Step 4 of 4",
+                text ="Step 4 of 5",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -144,7 +144,7 @@ fun descriptionInfo(
                 // do validation
                 onClick = {
                     if (chefviewModel.validateDescriptionInfo()) {
-                        navController.navigate("reviewInfo")
+                        navController.navigate("chefPicture")
                     }
                 },
                 enabled = chefviewModel.canProceedDescriptionInfo(),

@@ -19,6 +19,9 @@ class AuthViewModel : ViewModel() {
     var currentUser by mutableStateOf<User?>(null)
         private set
 
+    var currentChef by mutableStateOf<Chef?>(null)
+        private set
+
     var isAdmin by mutableStateOf(false)
         private set
 
@@ -48,46 +51,89 @@ class AuthViewModel : ViewModel() {
     }
 
     fun login(emailInput: String, passwordInput: String) {
-        if (emailInput.isEmpty() || passwordInput.isEmpty()) {
+        val cleanEmail = emailInput.trim()
+        val cleanPassword = passwordInput.trim()
+
+        if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
             errorMessage = "Email and password cannot be empty"
             return
         }
 
         // Hardcode for Admin Login
-        if (emailInput == "admin@gmail.com" && passwordInput == "admin1234") {
-            loginSuccess = true
+        if (cleanEmail == "admin@gmail.com" && cleanPassword == "admin1234") {
             isAdmin = true
+            loginSuccess = true
             return
         }
 
         isProcessing = true
         errorMessage = ""
+
         viewModelScope.launch {
             try {
+                // 1. Authenticate with Supabase Auth
                 client.auth.signInWith(Email) {
-                    email = emailInput
-                    password = passwordInput
+                    email = cleanEmail
+                    password = cleanPassword
                 }
-                val user = client.auth.currentUserOrNull()
-                if (user != null) {
-                    // Check Chef account
-                    fetchChefData(user.id)
-                    if (isChef) {
-                        // Approved Chef
-                        loginSuccess = true
-                    } else if (errorMessage.isNotEmpty()) {
 
-                        // Pending / Rejected Chef
-                        client.auth.signOut()
-                    } else {
-                        fetchUserData(user.id)
-                        loginSuccess = true
+                val currentUser = client.auth.currentUserOrNull()
+                    ?: throw Exception("User session not found.")
+
+                val userId = currentUser.id
+
+                //Check current user got exists in 'Chef' supabase table or not
+                val chefData = client.postgrest["Chef"]
+                    .select { filter { eq("chefId", userId) } }
+                    .decodeSingleOrNull<Chef>()
+
+                if (chefData != null) {
+                    // User is a Chef -> Check Approval Status
+                    when (chefData.status?.lowercase()) {
+                        "approved" -> {
+                            currentChef = chefData
+                            isChef = true
+                            isAdmin = false
+                            loginSuccess = true
+                        }
+                        "pending" -> {
+                            client.auth.signOut()
+                            errorMessage = "Your chef application is pending admin approval."
+                        }
+                        "rejected" -> {
+                            client.auth.signOut()
+                            errorMessage = "Your chef application has been rejected."
+                        }
+                        else -> {
+                            client.auth.signOut()
+                            errorMessage = "Account status unknown. Please contact support."
+                        }
                     }
+                    return@launch
                 }
+
+                // If not a Chef, check if user exists in "users" table
+                // so no need use fetchUserData
+                val userData = client.postgrest["users"]
+                    .select { filter { eq("id", userId) } }
+                    .decodeSingleOrNull<User>()
+
+                if (userData != null) {
+                    isChef = false
+                    isAdmin = false
+                    loginSuccess = true
+                } else {
+                    // Not found in either table
+                    client.auth.signOut()
+                    errorMessage = "User not found."
+                }
+
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Login Failed"
-                if (errorMessage.contains("Invalid login credentials")) {
-                    errorMessage = "Invalid email or password"
+                val rawMessage = e.message ?: "Login Failed"
+                errorMessage = if (rawMessage.contains("Invalid login credentials", ignoreCase = true)) {
+                    "Invalid email or password"
+                } else {
+                    rawMessage
                 }
             } finally {
                 isProcessing = false
@@ -158,6 +204,22 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun fetchChefData() {
+        val userId = client.auth.currentUserOrNull()?.id ?: return
+        viewModelScope.launch {
+            try {
+                val chefData = client.postgrest["Chef"]
+                    .select { filter { eq("chefId", userId) } }
+                    .decodeSingleOrNull<Chef>()
+
+                currentChef = chefData
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Failed to fetch chef profile"
+            }
+        }
+    }
+
+// Not using currently
     private suspend fun fetchChefData(uid: String) {
         try {
             val chef = client

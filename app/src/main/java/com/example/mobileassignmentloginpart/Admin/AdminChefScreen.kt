@@ -42,11 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.mobileassignmentloginpart.Admin.ViewModel.AdminApprovalViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.mobileassignmentloginpart.R
@@ -225,19 +227,27 @@ fun ChefApprovalCard(
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Color(0xFFFFE0B2)
-                        ),
+                        .clip(CircleShape),
 
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_outline_account_circle),
-                        contentDescription = null,
-                        tint = Color(0xFFFF9800),
-                        modifier = Modifier.size(35.dp)
-                    )
+                    if (chef.profilePictureUrl.isNullOrEmpty()) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_outline_account_circle),
+                            contentDescription = "Default Profile",
+                            tint = Color(0xFFFF9800),
+                            modifier = Modifier.size(75.dp)
+                        )
+                    } else {
+                        AsyncImage(
+                            model = chef.profilePictureUrl,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(75.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
 
                 Spacer(

@@ -38,6 +38,8 @@ data class Chef(
     @SerialName("description")
     val description: String,
 
+    val profilePictureUrl: String? = "",
+
     @SerialName("Status")
     val status: String
 )

@@ -1,5 +1,8 @@
 package com.example.mobileassignmentloginpart.Chef.ViewModel
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +13,16 @@ import com.example.mobileassignmentloginpart.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import org.json.JSONObject
+import java.io.File
 
 class chefRegisterViewModel : ViewModel() {
 
@@ -36,13 +48,82 @@ class chefRegisterViewModel : ViewModel() {
     var experience by mutableStateOf("")
     var description by mutableStateOf("")
 
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+        private set
+
     var isSubmitting by mutableStateOf(false)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun registerChef(onSuccess: () -> Unit) {
+    fun updateImage(uri: Uri?) {
+        selectedImageUri = uri
+    }
+
+    private suspend fun uploadImageToCloudinary(
+        context: Context,
+        uri: Uri
+    ): String {
+
+        return withContext(Dispatchers.IO) {
+
+            val inputStream = context.contentResolver.openInputStream(uri)
+                ?: throw Exception("Cannot open image")
+
+            val file = File(
+                context.cacheDir,
+                "chef_profile_${System.currentTimeMillis()}.jpg"
+            )
+
+            inputStream.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            val uploadUrl =
+                "https://api.cloudinary.com/v1_1/${CloudinaryConfig.CLOUD_NAME}/image/upload"
+
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "upload_preset",
+                    CloudinaryConfig.UPLOAD_PRESET
+                )
+                .addFormDataPart(
+                    "file",
+                    file.name,
+                    file.asRequestBody(
+                        "image/*".toMediaType()
+                    )
+                )
+                .build()
+
+            val request = Request.Builder()
+                .url(uploadUrl)
+                .post(requestBody)
+                .build()
+
+            val client = OkHttpClient()
+
+            val response = client.newCall(request).execute()
+
+            if (!response.isSuccessful) {
+                throw Exception(
+                    "Cloudinary upload failed: ${response.message}"
+                )
+            }
+            val responseBody =
+                response.body?.string()
+                    ?: throw Exception("Empty Cloudinary response")
+            val json = JSONObject(responseBody)
+            json.getString("secure_url")
+        }
+    }
+    fun registerChef(
+        context : Context,
+        onSuccess: () -> Unit) {
         isSubmitting = true
         errorMessage = null
         viewModelScope.launch {
@@ -82,6 +163,26 @@ class chefRegisterViewModel : ViewModel() {
 
                 val authId = user?.id ?: java.util.UUID.randomUUID().toString()
 
+                var imageUrl = ""
+
+                if (selectedImageUri != null) {
+
+                    Log.d(
+                        "ChefRegister",
+                        "Start Cloudinary upload: $selectedImageUri"
+                    )
+
+                    imageUrl = uploadImageToCloudinary(
+                        context = context,
+                        uri = selectedImageUri!!
+                    )
+
+                    Log.d(
+                        "ChefRegister",
+                        "Cloudinary URL: $imageUrl"
+                    )
+                }
+
                 val newChef = Chef(
                     chefId = authId,
                     name = name.trim(),
@@ -94,6 +195,7 @@ class chefRegisterViewModel : ViewModel() {
                     postcode = postcode.trim(),
                     experience = experience.trim().toIntOrNull() ?: 0,
                     description = description.trim(),
+                    profilePictureUrl = imageUrl,
                     status = "Pending"
                 )
 
@@ -138,6 +240,10 @@ class chefRegisterViewModel : ViewModel() {
         description = ""
     }
 
+
+
+
+    //Validation
     var showBasicInfoErrorMessage by mutableStateOf(false)
         private set
 
@@ -226,6 +332,10 @@ class chefRegisterViewModel : ViewModel() {
         return description.isNotBlank()
     }
 
+    fun isValidProfilePicture(): Boolean {
+     return selectedImageUri != null
+    }
+
     // Next button enable feature
     fun canProceedBasicInfo(): Boolean {
         return name.isNotBlank() &&
@@ -249,6 +359,10 @@ class chefRegisterViewModel : ViewModel() {
     fun canProceedDescriptionInfo(): Boolean {
         return experience.isNotBlank() &&
                 description.isNotBlank()
+    }
+
+    fun canProceedReviewPage(): Boolean {
+        return selectedImageUri != null
     }
 
     // Validation of data field after click next button
@@ -285,5 +399,11 @@ class chefRegisterViewModel : ViewModel() {
 
         return isValidExperience() &&
                 isValidDescription()
+    }
+
+    fun validateProfilePicture(){
+        showDescriptionErrorMessage = true
+
+        return
     }
 }
