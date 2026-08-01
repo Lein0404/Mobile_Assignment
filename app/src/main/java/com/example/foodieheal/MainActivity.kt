@@ -28,30 +28,30 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Login
+                    startDestination = NavRoute.Ingredients
                 ){
-                    composable<Login>{
+                    composable<NavRoute.Login>{
                         LoginScreen(navController)
                     }
 
-                    composable<Home>{
+                    composable<NavRoute.Home>{
                         HomeScreen(navController)
                     }
 
-                    composable<Register>{
+                    composable<NavRoute.Register>{
                         RegisterScreen(navController)
                     }
 
-                    composable<Profile>{
+                    composable<NavRoute.Profile>{
                         ProfileScreen(navController)
                     }
 
-                    composable<Ingredients> {
+                    composable<NavRoute.Ingredients> {
                         IngredientsScreen(navController)
                     }
 
-                    composable<IngredientDetail> { backStackEntry ->
-                        val detail: IngredientDetail = backStackEntry.toRoute()
+                    composable<NavRoute.IngredientDetail> { backStackEntry ->
+                        val detail: NavRoute.IngredientDetail = backStackEntry.toRoute()
                         IngredientDetailScreen(navController, detail.id)
                     }
                 }

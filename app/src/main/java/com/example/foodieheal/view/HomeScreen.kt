@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController){
         )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
-            onClick = { navController.navigate(Profile) },
+            onClick = { navController.navigate(NavRoute.Profile) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp)
         ) {
             Text("Go to Profile")
@@ -50,7 +50,7 @@ fun HomeScreen(navController: NavController){
         Button(
             onClick = { 
                 viewModel.logout {
-                    navController.navigate(Login) {
+                    navController.navigate(NavRoute.Login) {
                         popUpTo(0) { inclusive = true }
                     }
                 }

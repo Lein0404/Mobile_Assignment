@@ -1,61 +1,79 @@
 package com.example.foodieheal.ingredients.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Ingredients(
-    val ingredientId: String = "",
-    val ingredientName: String = "",
-    val ingredientCategory: IngredientCategory? = null,
-    val ingredientDesc: String = "",
-    val createdByUserId: String? = null,
-    val isDefault: Boolean = false
+    @SerialName("ingredient_id") val ingredientId: String = "",
+    @SerialName("ing_name") val ingredientName: String = "",
+    @SerialName("ing_category") val ingredientCategory: IngredientCategory? = null,
+    @SerialName("ing_description") val ingredientDesc: String = "",
+    @SerialName("ing_image") val ingredientImage: String? = null,
+    @SerialName("created_by_user_id") val createdByUserId: String? = null,
+    @SerialName("is_default") val isDefault: Boolean = false,
 )
 
 @Serializable
 data class IngredientUnits(
-    val ingredientUnitId: String = "",
-    val ingredientID: String = "",
-    val unitID: String = "",
-    val caloriesPerDefaultQuantity: Double = 0.0,
+    @SerialName("ingredient_unit_id") val ingredientUnitId: String = "",
+    @SerialName("ingredient_id") val ingredientID: String = "",
+    @SerialName("unit_id") val unitID: String = "",
+    @SerialName("calories_per_default_quantity") val caloriesPerDefaultQuantity: Double = 0.0,
 )
 
 @Serializable
 data class Units(
-    val unitID: String = "",
-    val unitName: String = "",
-    val defaultQuantity: Double = 1.0
+    @SerialName("unit_id") val unitID: String = "",
+    @SerialName("unit_display") val unitName: String = "",
+    @SerialName("default_quantity") val defaultQuantity: Double = 1.0
 )
 
 @Serializable
 enum class IngredientCategory(val categoryName: String){
-    BAKERY("Bakery"),
-    BEVERAGES("Beverages"),
-    BREAKFAST_CEREALS("Breakfast & Cereals"),
-    CANNED_PACKAGED("Canned & Packaged"),
-    CONDIMENTS_SAUCES_DRESSINGS("Condiments, Sauces & Dressings"),
-    DAIRY_EGGS("Dairy & Eggs"),
-    FROZEN_FOODS("Frozen Foods"),
-    FRUITS("Fruits"),
-    GRAINS_RICE("Grains & Rice"),
-    HERBS_SPICES_SEASONINGS("Herbs, Spices & Seasonings"),
-    LEGUMES_BEANS("Legumes & Beans"),
-    MEAT_POULTRY("Meat & Poultry"),
-    NUTS_SEEDS("Nuts & Seeds"),
-    OILS_FATS("Oils & Fats"),
-    SEAFOOD("Seafood"),
-    SNACKS_SWEETS("Snack & Sweets"),
-    VEGETABLES("Vegetables"),
-    OTHERS("Others")
+    @SerialName("BAKERY") BAKERY("Bakery"),
+    @SerialName("BEVERAGES") BEVERAGES("Beverages"),
+    @SerialName("BREAKFAST_CEREALS") BREAKFAST_CEREALS("Breakfast & Cereals"),
+    @SerialName("CANNED_PACKAGED") CANNED_PACKAGED("Canned & Packaged"),
+    @SerialName("CONDIMENTS_SAUCES_DRESSINGS") CONDIMENTS_SAUCES_DRESSINGS("Condiments, Sauces & Dressings"),
+    @SerialName("DAIRY_EGGS") DAIRY_EGGS("Dairy & Eggs"),
+    @SerialName("FROZEN_FOODS") FROZEN_FOODS("Frozen Foods"),
+    @SerialName("FRUITS") FRUITS("Fruits"),
+    @SerialName("GRAINS_RICE") GRAINS_RICE("Grains & Rice"),
+    @SerialName("HERBS_SPICES_SEASONINGS") HERBS_SPICES_SEASONINGS("Herbs, Spices & Seasonings"),
+    @SerialName("LEGUMES_BEANS") LEGUMES_BEANS("Legumes & Beans"),
+    @SerialName("MEAT_POULTRY") MEAT_POULTRY("Meat & Poultry"),
+    @SerialName("NUTS_SEEDS") NUTS_SEEDS("Nuts & Seeds"),
+    @SerialName("OILS_FATS") OILS_FATS("Oils & Fats"),
+    @SerialName("SEAFOOD") SEAFOOD("Seafood"),
+    @SerialName("SNACKS_SWEETS") SNACKS_SWEETS("Snack & Sweets"),
+    @SerialName("VEGETABLES") VEGETABLES("Vegetables"),
+    @SerialName("OTHERS") OTHERS("Others")
 }
+
+data class IngredientItem(
+    val ingredient: Ingredients,
+    val calorieSummary: String = ""
+)
 
 data class IngredientDetailInfo(
     val ingredient: Ingredients,
-    val calorieEntries: List<CalorieEntry> = emptyList()
+    val calorieEntries: List<CalorieEntry> = emptyList(),
+    val calorieSummary: String = ""
 )
 
 data class CalorieEntry(
     val calories: Double,
     val quantity: Double,
     val unitName: String
+)
+
+data class IngredientsUiState(
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val ingredients: List<IngredientItem> = emptyList(),
+    val filteredIngredients: List<IngredientItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val ingredientDetail: IngredientDetailInfo? = null,
+    val errorMessage: String? = null
 )

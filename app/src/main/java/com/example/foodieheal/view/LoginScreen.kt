@@ -23,8 +23,8 @@ fun LoginScreen(navController: NavController){
 
     LaunchedEffect(viewModel.loginSuccess) {
         if(viewModel.loginSuccess){
-            navController.navigate(Home) {
-                popUpTo(Login) { inclusive = true }
+            navController.navigate(NavRoute.Home) {
+                popUpTo(NavRoute.Login) { inclusive = true }
             }
         }
     }
@@ -82,7 +82,7 @@ fun LoginScreen(navController: NavController){
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(
             onClick = {
-                navController.navigate(Register)
+                navController.navigate(NavRoute.Register)
             }
         ) {
             Text("Don't have an account? Register")

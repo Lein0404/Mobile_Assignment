@@ -1,9 +1,5 @@
 package com.example.foodieheal.ingredients.viewModel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.*
@@ -15,25 +11,8 @@ class IngredientsViewModel(
     private val repository: IngredientsRepository = IngredientsRepository()
 ) : ViewModel() {
 
-    var searchQuery by mutableStateOf("")
-    var selectedCategories by mutableStateOf(setOf<IngredientCategory>())
-    
-    private val _ingredients = MutableStateFlow<List<Ingredients>>(emptyList())
-    val ingredients: StateFlow<List<Ingredients>> = _ingredients.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    val filteredIngredients = combine(
-        _ingredients, 
-        snapshotFlow { searchQuery }, 
-        snapshotFlow { selectedCategories }
-    ) { list, query, categories ->
-        list.filter { 
-            (query.isEmpty() || it.ingredientName.contains(query, ignoreCase = true)) &&
-            (categories.isEmpty() || it.ingredientCategory == null || categories.contains(it.ingredientCategory))
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _uiState = MutableStateFlow(IngredientsUiState())
+    val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()
 
     init {
         fetchIngredients()
@@ -41,32 +20,69 @@ class IngredientsViewModel(
 
     fun fetchIngredients() {
         viewModelScope.launch {
-            _isLoading.value = true
+            updateLoading(true)
             try {
-                _ingredients.value = repository.getIngredients()
+                val ingredients = repository.getIngredients()
+                val allUnits = repository.getUnits().associateBy { it.unitID }
+                val allIngredientUnits = repository.getAllIngredientUnits()
+
+                val ingredientItems = ingredients.map { ingredient ->
+                    val unitsForIngredient = allIngredientUnits.filter { it.ingredientID == ingredient.ingredientId }
+                    val summary = unitsForIngredient.joinToString(", ") { iu ->
+                        val unit = allUnits[iu.unitID]
+                        val qty = unit?.defaultQuantity?.toInt() ?: 0
+                        val name = unit?.unitName ?: ""
+                        "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${name}"
+                    }
+                    IngredientItem(ingredient, summary)
+                }
+
+                _uiState.update { it.copy(ingredients = ingredientItems) }
+                applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredients") }
             } finally {
-                _isLoading.value = false
+                updateLoading(false)
             }
         }
     }
 
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        applyFilters()
+    }
+
     fun toggleCategory(category: IngredientCategory) {
-        selectedCategories = if (selectedCategories.contains(category)) {
-            selectedCategories - category
-        } else {
-            selectedCategories + category
+        _uiState.update { state ->
+            val newCategories = if (state.selectedCategories.contains(category)) {
+                state.selectedCategories - category
+            } else {
+                state.selectedCategories + category
+            }
+            state.copy(selectedCategories = newCategories)
+        }
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        _uiState.update { state ->
+            val filtered = state.ingredients.filter { item ->
+                val ingredient = item.ingredient
+                (state.searchQuery.isEmpty() || ingredient.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
+                (state.selectedCategories.isEmpty() || ingredient.ingredientCategory == null || state.selectedCategories.contains(ingredient.ingredientCategory))
+            }
+            state.copy(filteredIngredients = filtered)
         }
     }
 
-    // Detail Screen logic
-    private val _ingredientDetail = MutableStateFlow<IngredientDetailInfo?>(null)
-    val ingredientDetail: StateFlow<IngredientDetailInfo?> = _ingredientDetail.asStateFlow()
+    private fun updateLoading(loading: Boolean) {
+        _uiState.update { it.copy(isLoading = loading) }
+    }
 
     fun fetchIngredientDetail(id: String) {
         viewModelScope.launch {
-            _isLoading.value = true
+            updateLoading(true)
             try {
                 val ingredient = repository.getIngredientById(id)
                 if (ingredient != null) {
@@ -82,12 +98,16 @@ class IngredientsViewModel(
                             )
                         }
                     }
-                    _ingredientDetail.value = IngredientDetailInfo(ingredient, calorieEntries)
+                    val calorieSummary = calorieEntries.joinToString("\n") { entry ->
+                        "${entry.calories.toInt()} kcal / ${entry.quantity.toInt()} ${entry.unitName}"
+                    }
+                    _uiState.update { it.copy(ingredientDetail = IngredientDetailInfo(ingredient, calorieEntries, calorieSummary)) }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredient details") }
             } finally {
-                _isLoading.value = false
+                updateLoading(false)
             }
         }
     }
