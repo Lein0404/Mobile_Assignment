@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Register
+package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -21,26 +20,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
-import com.example.mobileassignmentloginpart.R
-import com.example.mobileassignmentloginpart.ui.components.CommonInputField
+import com.example.foodieheal.R
+import com.example.foodieheal.ui.components.CommonInputField
+import com.example.foodieheal.ui.components.DropDownList
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun descriptionInfo(
+fun addressInfo(
     navController: NavController,
     chefviewModel: chefRegisterViewModel
-){
+) {
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Basic Information") },
+                    title = { Text("Address Information") },
 
                     navigationIcon = {
                         IconButton(
@@ -55,7 +53,7 @@ fun descriptionInfo(
                 )
 
                 LinearProgressIndicator(
-                    progress = { 0.8f },
+                    progress = { 0.6f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -71,83 +69,92 @@ fun descriptionInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             Text(
-                text ="Step 4 of 5",
+                text = "Step 3 of 4",
                 style = MaterialTheme.typography.titleMedium
             )
 
             CommonInputField(
-                value = chefviewModel.experience,
+                value = chefviewModel.address,
                 onValueChange = {
-                    chefviewModel.experience = it
+                    chefviewModel.address = it
                 },
-                textId = R.string.experience,
-                placeholder = "Enter your experience",
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number)
+                textId = R.string.address,
+                placeholder = "Enter your address",
+                modifier = Modifier.fillMaxWidth()
             )
             if (
-                chefviewModel.showDescriptionErrorMessage &&
-                !chefviewModel.isValidExperience()
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidAddress()
             ) {
                 Text(
-                    text = "Please enter your working experience.",
+                    text = "Address cannot be empty.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Column(
+            CommonInputField(
+                value = chefviewModel.postcode,
+                onValueChange = {
+                    chefviewModel.postcode = it
+                },
+                textId = R.string.postcode,
+                placeholder = "Enter your Postcode",
                 modifier = Modifier.fillMaxWidth()
+            )
+            if (
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidPostcode()
             ) {
-
-                CommonInputField(
-                    value = chefviewModel.description,
-                    onValueChange = { input ->
-
-                        val wordCount = input.trim()
-                            .split("\\s+".toRegex())
-                            .filter { it.isNotEmpty() }
-                            .size
-
-                        if (wordCount <= 300) {
-                            chefviewModel.description = input
-                        }
-
-                    },
-                    textId = R.string.description,
-                    placeholder = stringResource(R.string.description),
-                    singleLine = false,
-                    minLines = 5,
-                    maxLines = 8,
-                    modifier = Modifier.fillMaxWidth()
-                )
                 Text(
-                    text = "${chefviewModel.description.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size}/300 words",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp)
+                    text = "Postcode must contain 5 digits.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
+
+            DropDownList(
+                labelId = R.string.state,
+                placeholderId = R.string.select_state,
+                selectedValue = chefviewModel.state,
+                options = listOf(
+                    "Pulau Pinang",
+                    "Kedah",
+                    "Perak",
+                    "Perlis",
+                    "Selangor",
+                    "Negeri Sembilan",
+                    "Johor",
+                    "Melaka",
+                    "Pahang",
+                    "Terengganu",
+                    "Sabah",
+                    "Sarawak"
+                ),
+                onOptionSelected = {
+                    chefviewModel.updateState(it)
+                }
+            )
             if (
-                chefviewModel.showDescriptionErrorMessage &&
-                !chefviewModel.isValidDescription()
+                chefviewModel.showAddressErrorMessage &&
+                !chefviewModel.isValidState()
             ) {
                 Text(
-                    text = "Description cannot be empty.",
+                    text = "Please select a state.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
             Button(
-                // update data to view model
-                // do validation
                 onClick = {
-                    if (chefviewModel.validateDescriptionInfo()) {
-                        navController.navigate("chefPicture")
+                    // Validate input
+                    // Save data to ViewModel
+                    if (chefviewModel.validateAddressInfo()) {
+                        navController.navigate("descriptionInfo")
                     }
                 },
-                enabled = chefviewModel.canProceedDescriptionInfo(),
+                enabled = chefviewModel.canProceedAddressInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -155,5 +162,6 @@ fun descriptionInfo(
                 Text("Next")
             }
         }
+
     }
 }

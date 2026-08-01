@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Home
+package com.example.foodieheal.Chef
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

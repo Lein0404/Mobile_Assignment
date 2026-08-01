@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
 
 @Composable
@@ -42,7 +42,7 @@ fun LoginScreen(navController: NavController){
                     }
                 }
                 else -> {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Main.route) {
                         popUpTo(0) {
                             inclusive = true
                         }

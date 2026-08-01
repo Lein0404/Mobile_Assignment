@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.ViewModel.AuthViewModel
 
 @Composable
 fun RegisterScreen(navController: NavController){

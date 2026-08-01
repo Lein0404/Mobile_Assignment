@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Register
+package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,10 +26,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
-import com.example.mobileassignmentloginpart.R
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
-import com.example.mobileassignmentloginpart.ui.components.CommonInputField
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.R
+import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.ui.components.CommonInputField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

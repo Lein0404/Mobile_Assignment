@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Home
+package com.example.foodieheal.Chef
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -46,8 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.mobileassignmentloginpart.R
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
+import com.example.foodieheal.R
+import com.example.foodieheal.ViewModel.AuthViewModel
 
 sealed class Screen(val route : String, val title : String, @DrawableRes val iconRes: Int){
     object HomeScreen : Screen("ChefHome", "Home", R.drawable.ic_home)
@@ -121,7 +121,7 @@ fun ChefHomeScreen(
 fun ChefHomeScreenContent(
     onNavigateToAppointments: () -> Unit,
     chef: Chef?,
-    ) {
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

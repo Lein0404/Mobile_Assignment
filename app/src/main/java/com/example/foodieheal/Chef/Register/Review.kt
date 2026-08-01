@@ -1,6 +1,5 @@
-package com.example.mobileassignmentloginpart.Chef.Register
+package com.example.foodieheal.Chef.Register
 
-import android.R.attr.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import com.example.mobileassignmentloginpart.R
+import com.example.foodieheal.R
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -27,14 +26,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
-import com.example.mobileassignmentloginpart.Model.Chef
-
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import com.example.mobileassignmentloginpart.navigation.Screen
+import com.example.foodieheal.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

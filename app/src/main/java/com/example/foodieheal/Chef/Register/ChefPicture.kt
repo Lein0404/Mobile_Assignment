@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Register
+package com.example.foodieheal.Chef.Register
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -26,13 +26,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
-import com.example.mobileassignmentloginpart.R
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

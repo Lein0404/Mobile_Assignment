@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Register
+package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -9,10 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mobileassignmentloginpart.Chef.ViewModel.chefRegisterViewModel
-import com.example.mobileassignmentloginpart.R
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.R
 
 @Composable
 fun ChefWelcomeScreen(
@@ -62,7 +63,7 @@ fun ChefWelcomeScreen(
         Text(
             text = "Share your cooking skills and inspire others with healthy meals.",
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
 
 

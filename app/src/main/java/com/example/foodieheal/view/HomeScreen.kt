@@ -18,12 +18,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.viewmodel.AuthViewModel
-
 import androidx.compose.ui.platform.LocalView
 import android.app.Activity
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
+import com.example.foodieheal.ViewModel.AuthViewModel
 
 @Composable
 fun HomeScreen(navController: NavController) {

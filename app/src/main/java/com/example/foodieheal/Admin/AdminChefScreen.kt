@@ -1,6 +1,5 @@
-package com.example.mobileassignmentloginpart.Admin
+package com.example.foodieheal.Admin
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,11 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.mobileassignmentloginpart.Admin.ViewModel.AdminApprovalViewModel
+import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
+import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.mobileassignmentloginpart.R
-import com.example.mobileassignmentloginpart.ViewModel.AuthViewModel
-import com.example.mobileassignmentloginpart.navigation.Screen
+import com.example.foodieheal.R
+import com.example.foodieheal.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

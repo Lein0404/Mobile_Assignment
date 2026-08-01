@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.ViewModel
+package com.example.foodieheal.Chef.ViewModel
 
 object CloudinaryConfig {
 

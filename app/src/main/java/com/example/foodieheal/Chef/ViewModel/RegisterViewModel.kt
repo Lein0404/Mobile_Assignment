@@ -1,15 +1,16 @@
-package com.example.mobileassignmentloginpart.Chef.ViewModel
+package com.example.foodieheal.Chef.ViewModel
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.mobileassignmentloginpart.SupabaseClient
+import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
@@ -23,6 +24,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import java.io.File
+import java.util.UUID
 
 class chefRegisterViewModel : ViewModel() {
 
@@ -136,7 +138,7 @@ class chefRegisterViewModel : ViewModel() {
                         password = this@chefRegisterViewModel.password
                     }
                 } catch (signUpException: Exception) {
-                    android.util.Log.w("ChefRegister", "signUpWith exception: ${signUpException.message}")
+                    Log.w("ChefRegister", "signUpWith exception: ${signUpException.message}")
                     // If user is already registered in Auth, attempt signInWith
                     try {
                         client.auth.signInWith(Email) {
@@ -157,11 +159,11 @@ class chefRegisterViewModel : ViewModel() {
                         }
                         user = client.auth.currentUserOrNull()
                     } catch (e: Exception) {
-                        android.util.Log.w("ChefRegister", "signInWith fallback failed: ${e.message}")
+                        Log.w("ChefRegister", "signInWith fallback failed: ${e.message}")
                     }
                 }
 
-                val authId = user?.id ?: java.util.UUID.randomUUID().toString()
+                val authId = user?.id ?: UUID.randomUUID().toString()
 
                 var imageUrl = ""
 
@@ -206,7 +208,7 @@ class chefRegisterViewModel : ViewModel() {
                 clearData()
                 onSuccess()
             } catch (e: Exception) {
-                android.util.Log.e("ChefRegister", "Registration error trace", e)
+                Log.e("ChefRegister", "Registration error trace", e)
                 isSubmitting = false
                 val msg = e.message ?: "Registration failed. Please try again."
                 errorMessage = when {
@@ -285,7 +287,7 @@ class chefRegisterViewModel : ViewModel() {
 
     // All Contact Information Ui validation
     fun isValidEmail(): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS
+        return Patterns.EMAIL_ADDRESS
             .matcher(email)
             .matches()
     }

@@ -4,9 +4,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.Admin.AdminApprovalScreen
+import com.example.foodieheal.Admin.ChefDetailScreen
+import com.example.foodieheal.Chef.ChefHomeScreen
+import com.example.foodieheal.Chef.Register.ChefPictureScreen
+import com.example.foodieheal.Chef.Register.ChefWelcomeScreen
+import com.example.foodieheal.Chef.Register.addressInfo
+import com.example.foodieheal.Chef.Register.basicInfo
+import com.example.foodieheal.Chef.Register.contactInfo
+import com.example.foodieheal.Chef.Register.descriptionInfo
+import com.example.foodieheal.Chef.Register.reviewInfo
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.view.MainScreen
@@ -22,6 +35,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
+                val chefviewModel: chefRegisterViewModel = viewModel()
 
                 NavHost(
                     navController = navController,
@@ -41,6 +55,78 @@ class MainActivity : ComponentActivity() {
 
                     composable(Screen.AddRecipe.route) {
                         AddRecipeScreen(navController)
+                    }
+
+                    //Ivan part (admin site)
+                    composable(Screen.AdminChefScreen.route) {
+                        AdminApprovalScreen(navController)
+                    }
+
+                    composable(
+                        "chefDetail/{chefId}"
+                    ) { backStackEntry ->
+                        ChefDetailScreen(
+                            chefId = backStackEntry.arguments
+                                ?.getString("chefId") ?: "",
+                            navController = navController
+                        )
+                    }
+
+                    composable(Screen.ChefHomeScreen.route) {
+                        ChefHomeScreen(navController)
+                    }
+
+                    navigation(
+                        startDestination = Screen.Welcome.route,
+                        route = "chefRegisterRoute"
+                    ) {
+                        composable(Screen.Welcome.route) {
+                            ChefWelcomeScreen(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.BasicInfo.route) {
+                            basicInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Contact.route) {
+                            contactInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Address.route) {
+                            addressInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Description.route) {
+                            descriptionInfo(
+                                navController,
+                                chefviewModel)
+                        }
+
+                        composable(Screen.ChefPicture.route) {
+                            ChefPictureScreen(
+                                navController,
+                                chefviewModel
+                            )
+                        }
+
+                        composable(Screen.Review.route) {
+                            reviewInfo(
+                                navController,
+                                chefviewModel
+                            )
+                        }
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.example.mobileassignmentloginpart.Chef.Home
+package com.example.foodieheal.Chef
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.mobileassignmentloginpart.R
+import com.example.foodieheal.R
 
 // Placeholder for Profile view
 @Composable
