@@ -167,7 +167,7 @@ fun ChefHomeScreenContent(
         // Search Bar
         item {
             OutlinedTextField(
-                value = "",
+                value = "H",
                 onValueChange = {},
                 placeholder = { Text("Search dishes, events, clients...") },
                 leadingIcon = { Icon(painter = painterResource(R.drawable.ic_vertical_more), contentDescription = "Search") },
