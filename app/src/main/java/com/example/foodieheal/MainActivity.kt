@@ -7,12 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
-import com.example.foodieheal.view.ProfileScreen
 import com.example.foodieheal.view.RegisterScreen
+import com.example.foodieheal.view.MainScreen
+import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.ui.theme.MobileAssignmentTheme
+import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobileAssignmentTheme {
+            FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
 
                 NavHost(
@@ -31,21 +31,19 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(navController)
                     }
 
-                    composable(Screen.Home.route){
-                        HomeScreen(navController)
-                    }
-
                     composable(Screen.Register.route){
                         RegisterScreen(navController)
                     }
 
-                    composable(Screen.Profile.route){
-                        ProfileScreen(navController)
+                    composable(Screen.Main.route) {
+                        MainScreen(navController)
+                    }
+
+                    composable(Screen.AddRecipe.route) {
+                        AddRecipeScreen(navController)
                     }
                 }
             }
         }
     }
 }
-
-
