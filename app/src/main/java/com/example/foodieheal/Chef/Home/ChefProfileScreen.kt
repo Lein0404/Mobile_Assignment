@@ -65,7 +65,6 @@ fun ChefProfileScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // --- 1. HEADER CARD (Avatar, Name, Status Badge) ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -78,7 +77,7 @@ fun ChefProfileScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Initial Circle / Avatar
+
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -127,7 +126,6 @@ fun ChefProfileScreen(
             }
         }
 
-        // --- 2. PROFESSIONAL DETAILS CARD ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -158,7 +156,7 @@ fun ChefProfileScreen(
                 ProfileInfoRow(
                     painter = painterResource(R.drawable.ic_outline_account_circle),
                     label = "Chef ID",
-                    value = chef.chefId ?: "N/A"
+                    value = chef.id ?: "N/A"
                 )
 
                 if (!chef.description.isNullOrBlank()) {
@@ -178,7 +176,6 @@ fun ChefProfileScreen(
             }
         }
 
-        // --- 3. CONTACT & LOCATION CARD ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -226,7 +223,6 @@ fun ChefProfileScreen(
     }
 }
 
-// Helper Composable for clean key-value rows with icons
 @Composable
 private fun ProfileInfoRow(
     painter: Painter,

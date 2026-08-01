@@ -164,7 +164,6 @@ fun ChefHomeScreenContent(
             }
         }
 
-        // Search Bar
         item {
             OutlinedTextField(
                 value = "",

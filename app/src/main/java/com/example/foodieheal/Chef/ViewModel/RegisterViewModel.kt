@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.SupabaseClient.client
+import com.example.foodieheal.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
@@ -165,6 +167,8 @@ class chefRegisterViewModel : ViewModel() {
 
                 val authId = user?.id ?: UUID.randomUUID().toString()
 
+                val randomNum = (100..999).random()
+                val customId = "C$randomNum"
                 var imageUrl = ""
 
                 if (selectedImageUri != null) {
@@ -186,6 +190,7 @@ class chefRegisterViewModel : ViewModel() {
                 }
 
                 val newChef = Chef(
+                    id = customId,
                     chefId = authId,
                     name = name.trim(),
                     gender = gender,
@@ -241,9 +246,6 @@ class chefRegisterViewModel : ViewModel() {
         experience = ""
         description = ""
     }
-
-
-
 
     //Validation
     var showBasicInfoErrorMessage by mutableStateOf(false)

@@ -8,6 +8,9 @@ data class Chef(
     @SerialName("chefId")
     val chefId: String,
 
+    @SerialName("id")
+    val id : String,
+
     @SerialName("Name")
     val name: String,
 
