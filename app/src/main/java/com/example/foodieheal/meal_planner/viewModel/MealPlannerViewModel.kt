@@ -13,9 +13,11 @@ import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
-import com.example.foodieheal.util.NetworkMonitor
+import com.example.foodieheal.navigation.Screen
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -45,7 +47,40 @@ class MealPlannerViewModel(
     init {
         observeNetworkStatus()
     }
+    var deepLinkSourceDays by mutableStateOf<List<LocalDate>?>(null)
+        private set
 
+    // Channels ensure one-time UI event delivery (like navigation) without missing signals
+    // 1. Change SharedFlow to a Channel to prevent dropping cold-start events
+    private val _navigationChannel = Channel<String>(Channel.BUFFERED)
+    val navigationEvent = _navigationChannel.receiveAsFlow()
+
+    var selectedTabRoute by mutableStateOf(Screen.Home.route)
+        private set
+
+    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate) {
+        deepLinkSourceDays = getCurrentWeekDays(sourceWeekStart)
+
+        // Set the active tab to Planner when deep link is processed
+        selectedTabRoute = Screen.Planner.route
+
+        viewModelScope.launch {
+            _navigationChannel.send(Screen.Main.route)
+        }
+    }
+
+    // Function to update current tab manually when user taps bottom bar items
+    fun onTabSelected(route: String) {
+        selectedTabRoute = route
+    }
+
+    fun clearDeepLinkState() {
+        deepLinkSourceDays = null
+    }
+
+    fun generateShareLink(currentWeekStart: LocalDate): String {
+        return "https://tzh652.github.io/share?sourceStart=$currentWeekStart"
+    }
     private fun observeNetworkStatus() {
         viewModelScope.launch {
             networkMonitor.isConnected.collect { connected ->
@@ -60,7 +95,6 @@ class MealPlannerViewModel(
         }
     }
 
-    // 🌟 FIXED: Added forceRefresh parameter to bypass cache check when structural data changes
     fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
         lastActiveDate = date
 

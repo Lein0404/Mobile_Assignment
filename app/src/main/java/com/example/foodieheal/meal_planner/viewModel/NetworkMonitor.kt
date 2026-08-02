@@ -1,4 +1,4 @@
-package com.example.foodieheal.util
+package com.example.foodieheal.meal_planner.viewModel
 
 import android.content.Context
 import android.net.ConnectivityManager

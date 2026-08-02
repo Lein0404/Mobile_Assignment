@@ -156,7 +156,7 @@ fun AddRecipeToPlanScreen(
                         }
                         showSuccessDialog = true
                     },
-                    enabled = totalSelectionsCount > 0 && isNetworkAvailable,
+                    enabled = totalSelectionsCount > 0,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -182,7 +182,6 @@ fun AddRecipeToPlanScreen(
             }
         }
     ) { innerPadding ->
-        // 🌟 SCROLL FIX: The parent Column is now layout-stable without root vertical scroll.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -202,7 +201,8 @@ fun AddRecipeToPlanScreen(
                     Text(
                         text = headerText,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Row(
@@ -310,7 +310,7 @@ fun AddRecipeToPlanScreen(
                                 text = stringResource(R.string.no_internet_connection),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -445,13 +445,15 @@ fun SuccessDialog(
                 Text(
                     text = stringResource(R.string.success),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
+                    fontSize = 22.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
                 Text(
                     text = stringResource(R.string.meals_added_successfully),
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             confirmButton = {
@@ -459,7 +461,8 @@ fun SuccessDialog(
                     Text(
                         stringResource(R.string.ok),
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },

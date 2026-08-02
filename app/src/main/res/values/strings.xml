@@ -47,6 +47,7 @@
     <string name="lunch">Lunch</string>
     <string name="dinner">Dinner</string>
     <string name="snack">Snack</string>
+    <string name="meal_planner">Meal Planner</string>
 
     <string name="success">Success!</string>
     <string name="meals_added_successfully">Your meals have been successfully added to your planner.</string>
@@ -86,14 +87,14 @@
     <string name="desc_excess_intake">Significantly above target parameters.</string>
 
     <!-- Dynamic Footnote Notice Splits -->
-    <string name="profile_notice_part_1">Your unique recommended daily calorie intake limits are configured dynamically based on your recorded BMI, height, and body weight targets. You can update these parameters anytime via the </string>
+    <string name="profile_notice_part_1">Your unique recommended daily calorie intake limits are configured dynamically based on your recorded BMI, height, and body weight targets. You can update these parameters anytime via the    </string>
     <string name="profile_notice_link">Profile Page</string>
     <string name="profile_notice_part_2">.</string>
 
     <!-- Date Picker Dialog Header Texts -->
     <string name="dialog_title_select_date_view">Select Date to View</string>
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
-    <string name="dialog_title_choose_weekly_paste_date">Choose any day within target week to paste your weekly plan!</string>
+    <string name="dialog_title_choose_weekly_repeat_date">Choose any day within target week to repeat your weekly plan!</string>
 
     <!-- Content Descriptions -->
     <string name="desc_calendar_back">Calendar Back</string>
@@ -101,6 +102,7 @@
     <string name="desc_calendar_forward">Calendar Forward</string>
     <string name="desc_copy_daily_plan">copy daily plan</string>
     <string name="desc_no_network">No Network Available</string>
+    <string name="share">Share</string>
 
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">No Internet Connection</string>

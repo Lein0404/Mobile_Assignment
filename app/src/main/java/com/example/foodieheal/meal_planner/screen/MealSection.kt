@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe
 import com.example.foodieheal.ui.theme.BreakfastColor
+import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor
 import com.example.foodieheal.ui.theme.LunchColor
 import com.example.foodieheal.ui.theme.SnackColor
@@ -91,6 +92,7 @@ fun RecipeCard(
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -101,7 +103,8 @@ fun RecipeCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_fire),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
+                            tint = CaloriesColor
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))
@@ -109,7 +112,8 @@ fun RecipeCard(
                         Text(
                             text = stringResource(R.string.format_recipe_calories, recipe.calories),
                             fontSize = 14.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.width(16.dp))
@@ -117,7 +121,7 @@ fun RecipeCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_time),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))
@@ -125,7 +129,8 @@ fun RecipeCard(
                         Text(
                             text = stringResource(R.string.format_recipe_duration, recipe.time),
                             fontSize = 14.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -177,7 +182,7 @@ fun MealSection(
             )
             .clickable(enabled = isSelectionMode) { onSelectionChange(!isSelected) },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -199,7 +204,8 @@ fun MealSection(
                 text = title,
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onTertiary
             )
 
             if (!isSelectionMode) {
@@ -207,7 +213,8 @@ fun MealSection(
                     Icon(
                         painter = painterResource(R.drawable.ic_add_circle_outline),
                         contentDescription = stringResource(R.string.desc_add_recipe),
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(34.dp),
+                        tint = MaterialTheme.colorScheme.onTertiary
                     )
                 }
             } else {
@@ -240,7 +247,7 @@ fun MealSection(
                                 onDeleteClick(recipeItem)
                             }
                         },
-                        onClick = { /*TODO*/ },
+                        onClick = { /*TODO: Recipe details*/ },
                         color = color,
                         isSelectionMode = isSelectionMode
                     )

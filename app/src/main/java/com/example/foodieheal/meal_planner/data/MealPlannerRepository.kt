@@ -53,7 +53,6 @@ class MealPlannerRepository(
             val rawPlan = response.decodeList<DailyPlanDTO>().firstOrNull()
                 ?: return@runCatching null
 
-            val allRecipeIds = rawPlan.meals?.flatMap { it.recipes }?.map { it.recipeId }?.distinct() ?: emptyList()
 
             // 🛠️ DIAGNOSTIC STEP 3: Bypass filters to see what columns and rows actually exist!
             Log.d("MealPlannerDebug", "🔍 DIAGNOSTIC: Fetching raw unfiltered table data...")
@@ -82,30 +81,6 @@ class MealPlannerRepository(
             finalPlan
         }.onFailure { error ->
             Log.e("MealPlannerDebug", "💥 CRASH/EXCEPTION in repository layer!", error)
-        }
-    }
-
-    /**
-     * DELETE: Removes the plan for a specific date, restricted to the logged-in user.
-     */
-    suspend fun deleteDailyPlan(date: LocalDate): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            // 1. Check if user is logged in
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
-                ?: throw Exception("User is not authenticated")
-
-            // 2. Format the date to an ISO string ("yyyy-MM-dd") that Supabase understands
-            val dateString = date.toString()
-
-            // 3. Execute deletion matching the string date and target user identity
-            supabaseClient.postgrest.from("daily_plans")
-                .delete {
-                    filter {
-                        eq("date", dateString) // Use the plain String here!
-                        eq("user_id", currentUserId)
-                    }
-                }
-            Unit
         }
     }
 }

@@ -78,7 +78,7 @@ fun CalorieProgressBar(
             Text(
                 text = stringResource(R.string.label_todays_calories),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = stringResource(R.string.format_kcal_current, currentCalories),
@@ -88,7 +88,7 @@ fun CalorieProgressBar(
             Text(
                 text = stringResource(R.string.format_kcal_max, maxCalories),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(Modifier.padding(2.dp))
             Icon(
@@ -96,7 +96,8 @@ fun CalorieProgressBar(
                 contentDescription = stringResource(R.string.desc_show_calorie_guide),
                 modifier = Modifier
                     .size(18.dp)
-                    .clickable { showHelpDialog = true }
+                    .clickable { showHelpDialog = true },
+                tint = Color.Gray
             )
             Spacer(Modifier.weight(1f))
             Text(
@@ -124,14 +125,16 @@ fun CalorieProgressBar(
                 Text(
                     text = stringResource(R.string.dialog_title_calorie_works),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = stringResource(R.string.dialog_description_ranges),
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     CalorieGuideRow(
@@ -199,7 +202,8 @@ fun CalorieProgressBar(
             },
             confirmButton = {
                 TextButton(onClick = { showHelpDialog = false }) {
-                    Text(stringResource(R.string.btn_close))
+                    Text(stringResource(R.string.btn_close),
+                        color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         )
@@ -221,7 +225,8 @@ private fun CalorieGuideRow(
             text = stringResource(R.string.format_bullet_percent, percent),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(0.7f)
+            modifier = Modifier.weight(0.7f),
+            color = MaterialTheme.colorScheme.onSurface
         )
         Column(modifier = Modifier.weight(2f)) {
             Text(
