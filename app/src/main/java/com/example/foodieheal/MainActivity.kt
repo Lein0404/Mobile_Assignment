@@ -4,31 +4,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
-import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
-import com.example.foodieheal.user.LoginScreen
-import com.example.foodieheal.navigation.Screen
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.View.HomeScreen
-import com.example.foodieheal.View.ProfileScreen
-import com.example.foodieheal.View.RegisterScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
-import com.example.foodieheal.ui.theme.MobileAssignmentTheme
+import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
+import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
+import com.example.foodieheal.view.MainScreen
+import com.example.foodieheal.view.AddRecipeScreen
+import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.theme.FoodieHealTheme
+import com.example.foodieheal.view.LoginScreen
+import com.example.foodieheal.view.RegisterScreen
 import io.github.jan.supabase.postgrest.postgrest
 
 
@@ -37,7 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobileAssignmentTheme {
+            FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
 
                 NavHost(
@@ -48,19 +40,21 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(navController)
                     }
 
-                    composable(Screen.Home.route){
-                        HomeScreen(navController)
-                    }
-
                     composable(Screen.Register.route){
                         RegisterScreen(navController)
                     }
 
-                    composable(Screen.Profile.route){
-                        ProfileScreen(navController)
+                    composable(Screen.Main.route) {
+                        MainScreen(navController)
                     }
 
-                    composable(Screen.MealPlanner.route) {
+                    composable(Screen.AddRecipe.route) {
+                        AddRecipeScreen(navController)
+                    }
+
+
+
+                    composable (Screen.AddRecipeToPlanner.route){
                         val viewModel: MealPlannerViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
                                 @Suppress("UNCHECKED_CAST")
@@ -69,28 +63,7 @@ class MainActivity : ComponentActivity() {
                                         postgrest = SupabaseClient.client.postgrest,
                                         supabaseClient = SupabaseClient.client
                                     )
-                                    // 🌟 FIXED: Passed 'application' context alongside the repository
-                                    return MealPlannerViewModel(application, repository) as T
-                                }
-                            }
-                        )
-
-                        MealPlannerScreen(
-                            viewModel = viewModel,
-                            modifier = Modifier
-                        )
-                    }
-
-                    composable (Screen.AddRecipeToPlanScreen.route){
-                        val viewModel: MealPlannerViewModel = viewModel(
-                            factory = object : ViewModelProvider.Factory {
-                                @Suppress("UNCHECKED_CAST")
-                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    val repository = MealPlannerRepository(
-                                        postgrest = SupabaseClient.client.postgrest,
-                                        supabaseClient = SupabaseClient.client
-                                    )
-                                    // 🌟 FIXED: Passed 'application' context alongside the repository here too
+                                    // 🌟Passed 'application' context alongside the repository here too
                                     return MealPlannerViewModel(application, repository) as T
                                 }
                             }

@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.mobileassignmentloginpart"
+        applicationId = "com.example.foodieheal"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -39,10 +39,8 @@ android {
 }
 
 dependencies {
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4") // Or your current lifecycle version
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -52,7 +50,6 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.firebase.dataconnect)
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
     implementation(libs.ktor.client.android)

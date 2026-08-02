@@ -67,6 +67,9 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Update Password";
             } else {
+                // Log out immediately so the mobile app doesn't auto-login to Home
+                await supabaseClient.auth.signOut();
+
                 showMessage("Password updated successfully!", "success");
                 submitBtn.style.display = "none";
                 document.getElementById('app-link').style.display = "block";

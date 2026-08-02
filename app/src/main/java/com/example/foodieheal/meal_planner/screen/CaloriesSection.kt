@@ -96,7 +96,8 @@ fun CalorieProgressBar(
                 contentDescription = stringResource(R.string.desc_show_calorie_guide),
                 modifier = Modifier
                     .size(18.dp)
-                    .clickable { showHelpDialog = true }
+                    .clickable { showHelpDialog = true },
+                tint = Color.Gray
             )
             Spacer(Modifier.weight(1f))
             Text(
