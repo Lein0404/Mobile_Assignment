@@ -19,12 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,11 +57,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
+fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val isNetworkAvailable = viewModel.isNetworkAvailable
 
-    // 🌟 FIXED: Use the new cache layer to grab the currently active selected plan safely
     val activeDailyPlan = viewModel.mealPlansCache[selectedDate]
 
     LaunchedEffect(selectedDate) {
@@ -77,6 +77,13 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${weekEndDate.month.getDisplayName(
         TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
+
+    // Dynamic state computation layer tracking current active calendar totals safely above the pager
+    val totalCaloriesForSelectedDate = remember(activeDailyPlan) {
+        activeDailyPlan?.meals
+            ?.flatMap { it.recipes }
+            ?.sumOf { it.calories } ?: 0
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showPasteDatePicker by remember { mutableStateOf(false) }
@@ -131,7 +138,6 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
             initialDate = selectedDate.plusDays(1),
             titleText = stringResource(R.string.dialog_title_choose_paste_date),
             onDateSelected = { targetDate ->
-                // 🌟 FIXED: Read from computed local active variable state instead of deleted field reference
                 activeDailyPlan?.let { sourcePlan ->
                     viewModel.copyDailyPlanToDate(sourcePlan, targetDate)
                 }
@@ -154,25 +160,40 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
-    ) { innerPadding ->
-        // 🌟 ARCHITECTURE FIX: Moved ScrollState down inside the page layers.
-        // Having it wrap the Pager causes infinite height calculations and weird visual glitches.
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .background(color = MaterialTheme.colorScheme.background),
         ) {
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.meal_planner),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             Row(
                 verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.padding(horizontal = 10.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = headerText,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -187,7 +208,8 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back),
                             contentDescription = stringResource(R.string.desc_calendar_back),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -195,7 +217,8 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         Icon(
                             painter = painterResource(R.drawable.ic_calendar),
                             contentDescription = stringResource(R.string.desc_calendar_icon),
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(30.dp),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -208,7 +231,8 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_forward),
                             contentDescription = stringResource(R.string.desc_calendar_forward),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(
@@ -218,13 +242,14 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         Icon(
                             painter = painterResource(R.drawable.ic_repeat),
                             contentDescription = stringResource(R.string.desc_copy_daily_plan),
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(30.dp),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
             WeeklyDateCardRow(
                 weekDays = weekDays,
@@ -233,8 +258,21 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                 modifier = Modifier
             )
 
-            Spacer(Modifier.height(25.dp))
+            Spacer(Modifier.height(12.dp))
 
+            if (isNetworkAvailable) {
+                CalorieProgressBar(
+                    currentCalories = totalCaloriesForSelectedDate,
+                    maxCalories = 1800,
+                    onNavigateToProfile = { /* TODO : wait for profile */ }
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 2.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
@@ -249,6 +287,14 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                 }
 
                 val dailyPlanForThisPage = viewModel.mealPlansCache[pageDate]
+
+                // Formatted dynamic date string linked to this specific page's date context
+                val dailyBannerText = remember(pageDate) {
+                    val dayName = pageDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    val dayOfMonth = pageDate.dayOfMonth
+                    val monthName = pageDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                    "$dayName, $dayOfMonth $monthName"
+                }
 
                 val breakfastRecipes = dailyPlanForThisPage?.meals
                     ?.filter { it.mealType == MealType.BREAKFAST }
@@ -266,13 +312,6 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                     ?.filter { it.mealType == MealType.SNACK }
                     ?.flatMap { meal -> meal.recipes } ?: emptyList()
 
-                val totalCaloriesForPage = remember(dailyPlanForThisPage) {
-                    dailyPlanForThisPage?.meals
-                        ?.flatMap { it.recipes }
-                        ?.sumOf { it.calories } ?: 0
-                }
-
-                // 🌟 SCROLL FIX: Place the scrollState uniquely inside the layout of each child page canvas
                 val pageScrollState = rememberScrollState()
 
                 Box(
@@ -284,7 +323,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 32.dp, vertical = 60.dp),
+                                .padding(horizontal = 32.dp, vertical = 40.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -294,14 +333,14 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                                 tint = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(70.dp)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = stringResource(R.string.title_no_internet),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.desc_connect_internet_prompt),
                                 fontSize = 15.sp,
@@ -311,13 +350,14 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                         }
                     } else {
                         Column(modifier = Modifier.fillMaxWidth()) {
-                            CalorieProgressBar(
-                                currentCalories = totalCaloriesForPage,
-                                maxCalories = 1800,
-                                onNavigateToProfile = { /* TODO : wait for profile */ }
-                            )
 
-                            Spacer(Modifier.height(20.dp))
+                            Text(
+                                text = dailyBannerText,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(top = 8.dp, start = 16.dp)
+                            )
 
                             Card(
                                 modifier = Modifier
@@ -454,5 +494,12 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel, modifier: Modifier) {
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackBarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
     }
 }

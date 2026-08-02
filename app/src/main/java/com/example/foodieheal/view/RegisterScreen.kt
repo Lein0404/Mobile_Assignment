@@ -1,4 +1,4 @@
-package com.example.foodieheal.View
+package com.example.foodieheal.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(navController: NavController){
@@ -43,13 +43,15 @@ fun RegisterScreen(navController: NavController){
         Box(modifier = Modifier.fillMaxWidth()) {
             TextButton(
                 onClick = { navController.popBackStack() },
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
+                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
             ) {
                 Text("< Back")
             }
             Text(
                 text = "Register",
                 style = MaterialTheme.typography.headlineMedium,
+                color = Color.Black, // Force black color
                 modifier = Modifier.align(Alignment.Center)
             )
         }
@@ -67,7 +69,12 @@ fun RegisterScreen(navController: NavController){
                 if (email.isNotEmpty() && !isEmailValid) {
                     Text("Invalid email format")
                 }
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Black
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
@@ -81,7 +88,12 @@ fun RegisterScreen(navController: NavController){
                 if (password.isNotEmpty() && !isPasswordValid) {
                     Text("Password must be 6-20 characters")
                 }
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Black
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
@@ -95,7 +107,12 @@ fun RegisterScreen(navController: NavController){
                 if (confirmPassword.isNotEmpty() && !passwordsMatch) {
                     Text("Passwords do not match")
                 }
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                cursorColor = Color.Black
+            )
         )
         Spacer(modifier = Modifier.height(20.dp))
         
@@ -106,6 +123,10 @@ fun RegisterScreen(navController: NavController){
                 onClick = { viewModel.register(email, password) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 enabled = isFormValid,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                ),
                 border = if (!isFormValid) BorderStroke(1.dp, Color.Gray) else null
             ) {
                 Text("Submit")

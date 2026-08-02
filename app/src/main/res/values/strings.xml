@@ -47,6 +47,7 @@
     <string name="lunch">Lunch</string>
     <string name="dinner">Dinner</string>
     <string name="snack">Snack</string>
+    <string name="meal_planner">Meal Planner</string>
 
     <string name="success">Success!</string>
     <string name="meals_added_successfully">Your meals have been successfully added to your planner.</string>

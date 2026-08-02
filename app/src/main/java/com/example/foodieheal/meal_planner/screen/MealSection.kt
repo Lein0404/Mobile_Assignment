@@ -35,9 +35,11 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe
 import com.example.foodieheal.ui.theme.BreakfastColor
+import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor
 import com.example.foodieheal.ui.theme.LunchColor
 import com.example.foodieheal.ui.theme.SnackColor
+import com.example.foodieheal.ui.theme.TimerColor
 
 @Composable
 fun RecipeCard(
@@ -101,7 +103,8 @@ fun RecipeCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_fire),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
+                            tint = CaloriesColor
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))
@@ -117,7 +120,7 @@ fun RecipeCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_time),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
 
                         Spacer(modifier = Modifier.width(2.dp))

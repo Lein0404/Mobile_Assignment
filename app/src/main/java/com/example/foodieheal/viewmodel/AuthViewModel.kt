@@ -1,12 +1,12 @@
-package com.example.foodieheal.ViewModel
+package com.example.foodieheal.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.Model.User
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
