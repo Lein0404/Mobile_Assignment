@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.navigation.NavRoute
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import java.io.ByteArrayOutputStream
 
@@ -264,7 +264,7 @@ fun ProfileScreen(navController: NavController) {
                     Button(
                         onClick = {
                             viewModel.logout {
-                                navController.navigate(NavRoute.Login) {
+                                navController.navigate(Screen.Login.route) {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }

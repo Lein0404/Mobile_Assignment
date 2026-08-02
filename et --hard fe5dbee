@@ -1,0 +1,12 @@
+[33meb3b5a6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmeal_planner[m[33m, [m[1;31morigin/meal_planner[m[33m)[m HEAD@{0}: rebase (finish): returning to refs/heads/meal_planner
+[33meb3b5a6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmeal_planner[m[33m, [m[1;31morigin/meal_planner[m[33m)[m HEAD@{1}: rebase (start): checkout origin/meal_planner
+[33mfe5dbee[m HEAD@{2}: commit (amend): added dummy data and some display logic for meal plan
+[33meb3b5a6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmeal_planner[m[33m, [m[1;31morigin/meal_planner[m[33m)[m HEAD@{3}: commit (amend): Merge remote-tracking branch 'origin/meal_planner' into meal_planner
+[33mf4349c9[m HEAD@{4}: commit (merge): Merge remote-tracking branch 'origin/meal_planner' into meal_planner
+[33mf1ed279[m HEAD@{5}: commit (amend): added calendar function
+[33m87280cd[m HEAD@{6}: reset: moving to 87280cd8f78538c88c545ed56dfc56f8dcb5359a
+[33m4941c5a[m HEAD@{7}: commit (merge): Merge remote-tracking branch 'origin/meal_planner' into meal_planner
+[33m87280cd[m HEAD@{8}: commit (amend): added calendar function
+[33m710b740[m HEAD@{9}: commit (amend): first move, screen only.
+[33mb71d34a[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{10}: checkout: moving from master to meal_planner
+[33mb71d34a[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{11}: clone: from https://github.com/Lein0404/Mobile_Assignment.git

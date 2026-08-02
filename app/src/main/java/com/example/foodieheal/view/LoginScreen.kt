@@ -10,21 +10,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.navigation.*
 
 @Composable
 fun LoginScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
-    var email by remember{ mutableStateOf("") }
-    var password by remember{mutableStateOf("")}
-    
+    var email by remember{ mutableStateOf("zh@gmail.com") }
+    var password by remember{mutableStateOf("000000")}
+
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     LaunchedEffect(viewModel.loginSuccess) {
         if(viewModel.loginSuccess){
-            navController.navigate(NavRoute.Home) {
-                popUpTo(NavRoute.Login) { inclusive = true }
+            navController.navigate(Screen.Main.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
     }
@@ -73,7 +73,7 @@ fun LoginScreen(navController: NavController){
         )
 
         Spacer(modifier = Modifier.height(20.dp))
-        
+
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {
@@ -89,7 +89,7 @@ fun LoginScreen(navController: NavController){
             ){
                 Text("Login")
             }
-            
+
             TextButton(
                 onClick = { viewModel.forgotPassword(email) },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
@@ -101,7 +101,7 @@ fun LoginScreen(navController: NavController){
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(
             onClick = {
-                navController.navigate(NavRoute.Register)
+                navController.navigate(Screen.Register.route)
             },
             colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
         ) {
@@ -112,7 +112,7 @@ fun LoginScreen(navController: NavController){
             Spacer(modifier = Modifier.height(10.dp))
             val isSuccess = viewModel.errorMessage.contains("sent")
             Text(
-                text = viewModel.errorMessage, 
+                text = viewModel.errorMessage,
                 color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
             )
         }
