@@ -134,7 +134,7 @@ fun ExistingTabContent(
                     selected = uiState.selectedCategories.contains(category),
                     onClick = { viewModel.toggleCategory(category) },
                     label = { Text(category.categoryName) },
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(20.dp),
                 )
             }
         }

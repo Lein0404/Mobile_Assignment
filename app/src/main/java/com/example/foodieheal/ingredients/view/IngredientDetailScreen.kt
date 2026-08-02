@@ -131,7 +131,7 @@ fun IngredientDetailScreen(navController: NavController, ingredientId: String) {
                             color = MaterialTheme.colorScheme.primary
                         )
 
-                        Text("Note", fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
                         Text(
                             text = info.ingredient.ingredientDesc.ifEmpty { "No description available." },
                             color = Color.Black,
