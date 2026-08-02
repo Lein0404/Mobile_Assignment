@@ -12,9 +12,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.SupabaseClient.client
+import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.foodieheal.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -203,6 +205,8 @@ class chefRegisterViewModel : ViewModel() {
                     experience = experience.trim().toIntOrNull() ?: 0,
                     description = description.trim(),
                     profilePictureUrl = imageUrl,
+                    averagerating = null,
+                    Pricing = null,
                     status = "Pending"
                 )
 
@@ -225,6 +229,50 @@ class chefRegisterViewModel : ViewModel() {
                         "Chef account already created. Please login."
                     else -> msg.lines().firstOrNull() ?: msg
                 }
+            }
+        }
+    }
+
+    fun updateChefProfile(
+        context: Context,
+        updatedChef: Chef,
+        newImageUri: Uri?,
+        authViewModel: AuthViewModel,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val client = SupabaseClient.client
+                var finalImageUrl = updatedChef.profilePictureUrl.orEmpty()
+
+                // 1. Upload new image to Cloudinary if selected
+                if (newImageUri != null) {
+                    finalImageUrl = uploadImageToCloudinary(
+                        context = context,
+                        uri = newImageUri
+                    )
+                }
+
+                val chefToSave = updatedChef.copy(
+                    profilePictureUrl = finalImageUrl
+                )
+
+                // 2. Update Supabase record safely using filter block
+                client.postgrest.from("Chef").update(chefToSave) {
+                    filter {
+                        // 'eq' works cleanly inside the 'filter' block
+                        eq("chefId", chefToSave.chefId)
+                    }
+                }
+
+                // 3. Update AuthViewModel state (Replaces _currentChef)
+                authViewModel.updateLocalChef(chefToSave)
+
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("ChefUpdate", "Error updating profile", e)
+                onError(e.message ?: "Failed to update profile")
             }
         }
     }

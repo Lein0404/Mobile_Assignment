@@ -41,7 +41,14 @@ data class Chef(
     @SerialName("description")
     val description: String,
 
-    val profilePictureUrl: String? = "",
+    @SerialName("profilePictureUrl")
+    val profilePictureUrl: String? = null,
+
+    @SerialName("averagerating")
+    val averagerating: Double ? = null,
+
+    @SerialName("Pricing")
+    val Pricing : Double ? =null,
 
     @SerialName("Status")
     val status: String

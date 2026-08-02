@@ -12,6 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Admin.AdminApprovalScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefHomeScreen
+import com.example.foodieheal.Chef.ChefMainScreen
+import com.example.foodieheal.Chef.ChefProfileScreen
 import com.example.foodieheal.Chef.Register.ChefPictureScreen
 import com.example.foodieheal.Chef.Register.ChefWelcomeScreen
 import com.example.foodieheal.Chef.Register.addressInfo
@@ -26,6 +28,7 @@ import com.example.foodieheal.view.MainScreen
 import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.theme.FoodieHealTheme
+import com.example.mobileassignmentloginpart.Model.Chef
 
 
 class MainActivity : ComponentActivity() {
@@ -62,6 +65,10 @@ class MainActivity : ComponentActivity() {
                         AdminApprovalScreen(navController)
                     }
 
+                    composable(Screen.ChefMain.route) {
+                        ChefMainScreen(navController)
+                    }
+
                     composable(
                         "chefDetail/{chefId}"
                     ) { backStackEntry ->
@@ -70,10 +77,6 @@ class MainActivity : ComponentActivity() {
                                 ?.getString("chefId") ?: "",
                             navController = navController
                         )
-                    }
-
-                    composable(Screen.ChefHomeScreen.route) {
-                        ChefHomeScreen(navController)
                     }
 
                     navigation(

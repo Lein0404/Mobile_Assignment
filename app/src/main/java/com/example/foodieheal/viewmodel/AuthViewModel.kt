@@ -1,5 +1,6 @@
 package com.example.foodieheal.ViewModel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -38,6 +39,9 @@ class AuthViewModel : ViewModel() {
         private set
 
     var errorMessage by mutableStateOf("")
+        private set
+
+    var CheferrorMessage by mutableStateOf<String?>(null)
         private set
 
     init {
@@ -204,6 +208,10 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun updateLocalChef(chef: Chef) {
+        currentChef = chef
+    }
+
     fun fetchChefData() {
         val userId = client.auth.currentUserOrNull()?.id ?: return
         viewModelScope.launch {
@@ -216,42 +224,6 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Failed to fetch chef profile"
             }
-        }
-    }
-
-// Not using currently
-    private suspend fun fetchChefData(uid: String) {
-        try {
-            val chef = client
-                .postgrest
-                .from("Chef")
-                .select {
-                    filter {
-                        eq("chefId", uid)
-                    }
-                }
-                .decodeSingleOrNull<Chef>()
-            if (chef != null) {
-                when (chef.status) {
-                    "Approved" -> {
-                        isChef = true
-                    }
-                    "Pending" -> {
-                        errorMessage =
-                            "Your chef account is waiting for admin approval."
-                        client.auth.signOut()
-                    }
-                    "Rejected" -> {
-                        errorMessage =
-                            "Your chef registration has been rejected."
-                        client.auth.signOut()
-                    }
-                }
-            } else {
-                errorMessage = "Account not found."
-            }
-        } catch (e: Exception) {
-            errorMessage = e.message ?: "Failed to fetch chef data"
         }
     }
 

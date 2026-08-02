@@ -34,7 +34,7 @@ fun LoginScreen(navController: NavController){
                     }
                 }
                 viewModel.isChef -> {
-                    navController.navigate(Screen.ChefHomeScreen.route) {
+                    navController.navigate(Screen.ChefMain.route) {
                         popUpTo(0) {
                             inclusive = true
                         }

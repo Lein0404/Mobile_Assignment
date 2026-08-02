@@ -20,4 +20,8 @@ sealed class Screen(val route: String) {
     object AdminChefScreen : Screen("adminChefApproval")
     object ChefHomeScreen : Screen("chefHome")
     object ChefDetailScreen : Screen("chefDetail/{chefId}")
+    object ChefProfileScreen : Screen("chefProfile")
+    object HiringChefDetails : Screen("hiringChefDetails")
+    object ChefMain : Screen("chefMain")
+    object ChefEditProfile : Screen("chefEditProfile")
 }
