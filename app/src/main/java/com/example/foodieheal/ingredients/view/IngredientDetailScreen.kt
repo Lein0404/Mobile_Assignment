@@ -24,9 +24,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.foodieheal.ui.theme.MobileAssignmentTheme
-import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +73,7 @@ fun IngredientDetailScreen(navController: NavController, ingredientId: String) {
                         contentAlignment = Alignment.Center
                     ) {
                         if (!info.ingredient.ingredientImage.isNullOrEmpty()) {
+                            // TODO: Replace with AsyncImage?
                             SubcomposeAsyncImage(
                                 model = info.ingredient.ingredientImage,
                                 contentDescription = info.ingredient.ingredientName,

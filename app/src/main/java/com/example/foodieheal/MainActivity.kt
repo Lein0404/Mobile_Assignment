@@ -8,22 +8,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.ProfileScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.navigation.*
 import com.example.foodieheal.ingredients.view.IngredientsScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
-import com.example.foodieheal.ui.theme.MobileAssignmentTheme
-
+import com.example.foodieheal.view.MainScreen
+import com.example.foodieheal.view.AddRecipeScreen
+import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobileAssignmentTheme {
+            FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
 
                 NavHost(
@@ -34,16 +34,20 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(navController)
                     }
 
-                    composable<NavRoute.Home>{
-                        HomeScreen(navController)
-                    }
-
                     composable<NavRoute.Register>{
                         RegisterScreen(navController)
                     }
 
-                    composable<NavRoute.Profile>{
+                    composable<NavRoute.Profile> {
                         ProfileScreen(navController)
+                    }
+
+                    composable<NavRoute.Main> {
+                        MainScreen(navController)
+                    }
+
+                    composable<NavRoute.AddRecipe> {
+                        AddRecipeScreen(navController)
                     }
 
                     composable<NavRoute.Ingredients> {
@@ -59,5 +63,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
