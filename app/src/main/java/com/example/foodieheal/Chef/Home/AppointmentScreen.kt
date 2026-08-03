@@ -53,7 +53,7 @@ fun AppointmentsScreen() {
     val sampleList = listOf(
         AppointmentItem("Sarah Jenkins", "Private Dinner Party (6 Guests)", "7:00 PM - 10:00 PM", "Downtown Penthouse"),
         AppointmentItem("Mark Davis", "Cooking Workshop", "Tomorrow, 2:00 PM", "Community Kitchen Studio"),
-        AppointmentItem("Elena Rostova", "Corporate Catering Event", "Fri, 6:00 PM", "Tech Park Auditorium")
+        AppointmentItem("Elena Rost", "Corporate Catering Event", "Fri, 6:00 PM", "Tech Park Auditorium")
     )
 
     Column(
