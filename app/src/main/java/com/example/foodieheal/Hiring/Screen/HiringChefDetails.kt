@@ -42,7 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +52,7 @@ fun HiringChefDetails(
     userId: String,
     viewModel: BookmarkViewModel = viewModel(),
     onBackClick: () -> Unit,
-    onBookClick: (Chef) -> Unit = {}
+    onHireClick: (Chef) -> Unit
 ) {
 
     val AuthviewModel: AuthViewModel = viewModel()
@@ -113,7 +113,7 @@ fun HiringChefDetails(
                         )
                     }
                     Button(
-                        onClick = { onBookClick(chef) },
+                        onClick = { onHireClick(chef) },
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.height(48.dp)
                     ) {

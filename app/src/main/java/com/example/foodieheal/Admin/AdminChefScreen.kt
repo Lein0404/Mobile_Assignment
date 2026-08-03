@@ -49,10 +49,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
-import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

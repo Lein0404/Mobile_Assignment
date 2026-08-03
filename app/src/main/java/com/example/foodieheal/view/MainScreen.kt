@@ -22,17 +22,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.Hiring.Screen.HiringAppointment
 import com.example.foodieheal.Hiring.Screen.HiringChefDetails
 import com.example.foodieheal.Hiring.Screen.HiringScreen
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 
@@ -119,7 +120,8 @@ fun MainScreen(parentNavController: NavHostController) {
                         viewModel = profileViewModel,
                         onBackClick = {
                             navController.popBackStack()
-                        }
+                        },
+                        onHireClick = {chef ->  navController.navigate("HiringAppointment")}
                     )
                 } else {
                     LaunchedEffect(Unit) {
@@ -127,6 +129,16 @@ fun MainScreen(parentNavController: NavHostController) {
                     }
                 }
             }
+
+            composable("HiringAppointment{chefId}") {
+                HiringAppointment(
+                    onBackClick = { navController.popBackStack() },
+                    onAddAppointmentClick = {
+                        // Handle adding a new appointment slot
+                    }
+                )
+            }
+
             composable(Screen.Planner.route) {
                 val viewModel: MealPlannerViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
@@ -145,7 +157,6 @@ fun MainScreen(parentNavController: NavHostController) {
                     viewModel = viewModel,
                 )
             }
-            composable(Screen.Hiring.route) { HiringScreen() }
             composable(Screen.Profile.route) { ProfileScreen(parentNavController) }
         }
     }

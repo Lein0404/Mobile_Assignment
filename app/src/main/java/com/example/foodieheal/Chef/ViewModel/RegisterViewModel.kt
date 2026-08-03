@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.SupabaseClient.client
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email

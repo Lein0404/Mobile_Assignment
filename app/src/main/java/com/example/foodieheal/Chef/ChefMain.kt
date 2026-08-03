@@ -27,8 +27,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
 import com.example.foodieheal.R
-import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
 
 sealed class ChefNavigationItem(val route: String, val title: String, val iconRes: Int) {
     object Home : ChefNavigationItem("chef_home", "Home", R.drawable.ic_home)

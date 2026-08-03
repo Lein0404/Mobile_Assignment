@@ -56,7 +56,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
 
 

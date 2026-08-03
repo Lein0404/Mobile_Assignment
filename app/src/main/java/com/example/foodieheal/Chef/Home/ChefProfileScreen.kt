@@ -50,7 +50,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
 
 // Placeholder for Profile view

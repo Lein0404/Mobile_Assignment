@@ -56,7 +56,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
