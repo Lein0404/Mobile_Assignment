@@ -341,7 +341,7 @@ fun ProfileScreen(
                 )
                 BottomSheetMenuItem(
                     icon = R.drawable.ic_shopping_cart,
-                    label = "Shopping Cart",
+                    label = "Shopping List",
                     onClick = { /* Action empty */ }
                 )
                 BottomSheetMenuItem(
