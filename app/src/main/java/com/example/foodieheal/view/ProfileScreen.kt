@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,6 +15,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -34,6 +43,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import java.io.ByteArrayOutputStream
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
     val viewModel: AuthViewModel = viewModel()
@@ -45,6 +55,9 @@ fun ProfileScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var profilePicBase64 by remember { mutableStateOf("") }
+
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.isEmpty() || password.length >= 6
@@ -89,16 +102,17 @@ fun ProfileScreen(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_hamburger_menu),
-                    contentDescription = "Menu",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
+                IconButton(onClick = { showBottomSheet = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_hamburger_menu),
+                        contentDescription = "Menu",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
                 Text(
                     text = "Profile",
                     color = Color.White,
@@ -290,5 +304,90 @@ fun ProfileScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState,
+            containerColor = Color.White,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    text = "Menu",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_square_edit,
+                    label = "Edit Profile",
+                    onClick = { /* Action empty */ }
+                )
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_edit_body_status,
+                    label = "Edit Body Status",
+                    onClick = { /* Action empty */ }
+                )
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_ingredient_list,
+                    label = "View & Request Ingredients",
+                    onClick = {
+                        showBottomSheet = false
+                        navController.navigate(Screen.Ingredients.route)
+                    }
+                )
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_shopping_cart,
+                    label = "Shopping Cart",
+                    onClick = { /* Action empty */ }
+                )
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_register_as_chef,
+                    label = "Register as Chef",
+                    onClick = { /* Action empty */ }
+                )
+                BottomSheetMenuItem(
+                    icon = R.drawable.ic_history,
+                    label = "Appointment History",
+                    onClick = { /* Action empty */ }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomSheetMenuItem(
+    @DrawableRes icon: Int,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = label,
+            modifier = Modifier.size(24.dp),
+            tint = Color.Black
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Black
+        )
     }
 }

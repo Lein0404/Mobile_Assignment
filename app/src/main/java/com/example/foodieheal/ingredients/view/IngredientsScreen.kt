@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -25,9 +26,10 @@ import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
-import com.example.foodieheal.navigation.NavRoute.IngredientDetail
+import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.R
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 @Preview(showBackground = true)
@@ -166,7 +168,7 @@ fun ExistingTabContent(
                 // TODO: when logic is all done, improve the UI!
                 items(items) { item ->
                     IngredientCard(item) {
-                        navController.navigate(IngredientDetail(item.ingredient.ingredientId))
+                        navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
                     }
                 }
             }
@@ -208,7 +210,7 @@ fun IngredientCard(
                 )
             }
             IconButton(onClick = { /* Add to cart action */ }) {
-                Icon(Icons.Default.AddShoppingCart, contentDescription = "Add to cart", tint = Color.Black)
+                Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to cart", tint = Color.Black)
             }
         }
     }

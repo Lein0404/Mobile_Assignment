@@ -27,7 +27,10 @@ import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IngredientDetailScreen(navController: NavController, ingredientId: String) {
+fun IngredientDetailScreen(
+    navController: NavController,
+    ingredientId: String
+) {
     val viewModel: IngredientsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 

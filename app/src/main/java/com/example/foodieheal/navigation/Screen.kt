@@ -14,5 +14,7 @@ sealed class Screen(val route: String) {
 
     // Ingredients module
     object Ingredients : Screen("ingredients")
-    data class IngredientDetail(val id: String) : Screen("ingredient_detail")
+    object IngredientDetail : Screen("ingredient_detail/{id}") {
+        fun createRoute(id: String) = "ingredient_detail/$id"
+    }
 }
