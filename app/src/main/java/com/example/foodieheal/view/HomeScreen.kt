@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-
 import androidx.compose.ui.platform.LocalView
 import android.app.Activity
 import androidx.compose.ui.graphics.toArgb

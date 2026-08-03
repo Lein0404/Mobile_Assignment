@@ -1,6 +1,7 @@
 package com.example.foodieheal.view
 
 import android.app.Application
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.foodieheal.Hiring.Screen.HiringAppointment
+import com.example.foodieheal.Hiring.Screen.HiringChefDetails
+import com.example.foodieheal.Hiring.Screen.HiringScreen
+import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
@@ -30,6 +36,8 @@ import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 
 @Composable
@@ -38,6 +46,8 @@ fun MainScreen(parentNavController: NavHostController) {
 
     val context = LocalContext.current
     val application = context.applicationContext as Application
+
+    val HiringViewModel: HiringViewModel = viewModel()
 
     val items = listOf(
         NavigationItem(Screen.Home.route, "Home", R.drawable.ic_home),
@@ -80,7 +90,8 @@ fun MainScreen(parentNavController: NavHostController) {
                     )
                 }
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -89,6 +100,48 @@ fun MainScreen(parentNavController: NavHostController) {
         ) {
             composable(Screen.Home.route) { HomeScreen(navController) }
             composable(Screen.Recipes.route) { RecipesScreen(parentNavController) }
+            composable(Screen.Planner.route) { PlannerScreen() }
+
+            composable(Screen.Hiring.route) { HiringScreen(
+                HiringViewModel = HiringViewModel,
+                onChefClick = { chef ->
+                    HiringViewModel.selectChef(chef)
+                    navController.navigate("hiringChefDetails")
+                }
+            ) }
+
+            composable("hiringChefDetails") {
+                val authViewModel: AuthViewModel = viewModel()
+                val selectedChef = HiringViewModel.selectedChef
+                val currentUserId = authViewModel.currentUser?.id.orEmpty()
+                val profileViewModel: BookmarkViewModel = viewModel()
+
+                if (selectedChef != null) {
+                    HiringChefDetails(
+                        chef = selectedChef,
+                        userId = currentUserId,
+                        viewModel = profileViewModel,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onHireClick = {chef ->  navController.navigate("HiringAppointment")}
+                    )
+                } else {
+                    LaunchedEffect(Unit) {
+                        navController.popBackStack()
+                    }
+                }
+            }
+
+            composable("HiringAppointment{chefId}") {
+                HiringAppointment(
+                    onBackClick = { navController.popBackStack() },
+                    onAddAppointmentClick = {
+                        // Handle adding a new appointment slot
+                    }
+                )
+            }
+
             composable(Screen.Planner.route) {
                 val viewModel: MealPlannerViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
@@ -107,8 +160,6 @@ fun MainScreen(parentNavController: NavHostController) {
                     viewModel = viewModel,
                 )
             }
-            composable(Screen.Hiring.route) { HiringScreen() }
-            composable(Screen.Profile.route) { ProfileScreen(navController, parentNavController) }
 
             // Ingredients module nested under MainScreen to keep bottom bar
             composable(Screen.Ingredients.route) {
@@ -122,6 +173,8 @@ fun MainScreen(parentNavController: NavHostController) {
                 val id = backStackEntry.arguments?.getString("id") ?: ""
                 IngredientDetailScreen(navController, id)
             }
+
+            composable(Screen.Profile.route) { ProfileScreen(navController, parentNavController) }
         }
     }
 }

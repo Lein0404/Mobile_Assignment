@@ -1,7 +1,9 @@
 package com.example.foodieheal.ui.components
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -218,7 +221,8 @@ fun PasswordInputField(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(painterResource(id = visibilityIcon),
                         contentDescription = description,
-                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_xsm))
+                        modifier = Modifier
+                            .padding(dimensionResource(R.dimen.padding_xsm))
                             .padding(end = dimensionResource(R.dimen.padding_xsm))
                     )
                 }
@@ -246,9 +250,9 @@ fun PasswordInputField(
 fun DropDownList(
     @StringRes labelId: Int,
     @StringRes placeholderId: Int,
-    selectedValue: String?,
+    selectedValue: String,
     options: List<String>,
-    onOptionSelected: (String?) -> Unit,
+    onOptionSelected: (String) -> Unit,
     isError: Boolean = false,
     @StringRes errorMessageId: Int? = null
 ) {
@@ -269,13 +273,15 @@ fun DropDownList(
         ) {
             OutlinedTextField(
                 value = selectedValue ?: "",
-                onValueChange = onOptionSelected,
+                onValueChange = { },
                 readOnly = true,
                 placeholder = { Text(stringResource(placeholderId)) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
                 isError = isError
             )
             ExposedDropdownMenu(
@@ -320,6 +326,71 @@ fun ErrorMessageCard(
             style = MaterialTheme.typography.bodyMedium,
             modifier = modifier.padding(dimensionResource(R.dimen.padding_l))
         )
+    }
+}
+
+@Composable
+fun GenderDropdown(
+    gender: String,
+    onGenderChange: (String) -> Unit
+) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    val genders = listOf("Male", "Female")
+
+
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        OutlinedTextField(
+            value = gender,
+            onValueChange = {},
+            label = { Text("Gender") },
+            placeholder = { Text("Select Gender") },
+            readOnly = true,
+            enabled = true,
+            trailingIcon = {
+                Text("▼")
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+
+        // Click layer
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable {
+                    expanded = true
+                }
+        )
+
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            genders.forEach { option ->
+
+                DropdownMenuItem(
+                    text = {
+                        Text(option)
+                    },
+                    onClick = {
+                        onGenderChange(option)
+                        expanded = false
+                    }
+                )
+
+            }
+
+        }
     }
 }
 

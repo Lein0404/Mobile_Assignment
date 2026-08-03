@@ -16,15 +16,39 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
-    var email by remember{ mutableStateOf("zh@gmail.com") }
-    var password by remember{mutableStateOf("000000")}
-
+    var email by remember{ mutableStateOf("") }
+    var password by remember{mutableStateOf("")}
+    
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     LaunchedEffect(viewModel.loginSuccess) {
-        if(viewModel.loginSuccess){
-            navController.navigate(Screen.Main.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+
+        if (viewModel.loginSuccess) {
+            when {
+                viewModel.isAdmin -> {
+                    navController.navigate(Screen.AdminChefScreen.route) {
+                        popUpTo(0) { // Clear the back stack mean back to first page <Login page>
+                            inclusive = true
+                        }
+                        launchSingleTop = true //use to prevent create duplicate same screen
+                    }
+                }
+                viewModel.isChef -> {
+                    navController.navigate(Screen.ChefMain.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+                else -> {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                            launchSingleTop = true
+                    }
+                }
             }
         }
     }
@@ -40,7 +64,7 @@ fun LoginScreen(navController: NavController){
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Text(
-            text = "Login", 
+            text = "Login",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.Black // Force black color
         )
@@ -73,7 +97,7 @@ fun LoginScreen(navController: NavController){
         )
 
         Spacer(modifier = Modifier.height(20.dp))
-
+        
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {
@@ -106,6 +130,15 @@ fun LoginScreen(navController: NavController){
             colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
         ) {
             Text("Don't have an account? Register")
+        }
+
+        Spacer(modifier = Modifier.height(5.dp))
+        TextButton(
+            onClick = {
+                navController.navigate(Screen.Welcome.route)
+            }
+        ) {
+            Text("Register as a Chef")
         }
 
         if(viewModel.errorMessage.isNotEmpty()){
