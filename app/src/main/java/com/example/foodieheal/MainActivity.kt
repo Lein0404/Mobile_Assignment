@@ -13,8 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.foodieheal.ingredients.view.IngredientsScreen
-import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
@@ -87,18 +85,6 @@ class MainActivity : ComponentActivity() {
                             ),
                             onExecutionComplete = {navController.popBackStack()},
                         )
-                    }
-
-                    composable(Screen.Ingredients.route){
-                        IngredientsScreen(navController)
-                    }
-
-                    composable(
-                        route = Screen.IngredientDetail.route,
-                        arguments = listOf(navArgument("id") { type = NavType.StringType })
-                    ) { backStackEntry ->
-                        val id = backStackEntry.arguments?.getString("id") ?: ""
-                        IngredientDetailScreen(navController, id)
                     }
                 }
             }

@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -20,8 +21,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.ingredients.view.IngredientDetailScreen
+import com.example.foodieheal.ingredients.view.IngredientsScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
@@ -104,7 +108,20 @@ fun MainScreen(parentNavController: NavHostController) {
                 )
             }
             composable(Screen.Hiring.route) { HiringScreen() }
-            composable(Screen.Profile.route) { ProfileScreen(parentNavController) }
+            composable(Screen.Profile.route) { ProfileScreen(navController, parentNavController) }
+
+            // Ingredients module nested under MainScreen to keep bottom bar
+            composable(Screen.Ingredients.route) {
+                IngredientsScreen(navController)
+            }
+
+            composable(
+                route = Screen.IngredientDetail.route,
+                arguments = listOf(navArgument("id") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id") ?: ""
+                IngredientDetailScreen(navController, id)
+            }
         }
     }
 }
