@@ -26,6 +26,7 @@ sealed class Screen(val route: String) {
     object ChefMain : Screen("chefMain")
     object ChefEditProfile : Screen("chefEditProfile")
     object HiringAppointment : Screen("HiringAppointment")
+    object AddHiringAppointment : Screen("AddAppointment")
 
     // Ingredients module
     object Ingredients : Screen("ingredients")

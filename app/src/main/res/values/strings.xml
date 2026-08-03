@@ -26,6 +26,10 @@
     <string name="postcode">Postcode</string>">
     <string name="state">State</string>
     <string name="select_state">Choose your state</string>
+    <string name = "serving_size">Serving Size</string>
+    <string name = "select_size">Select Serving Size</string>
+    <string name = "health_pref_label">Health Preference</string>">
+    <string name = "select_health_pref">Select Health Preference</string>
 
     <!-- Error Messages -->
     <string name="error_fields_empty">Please fill in the input fields.</string>
