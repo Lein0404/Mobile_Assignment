@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.ViewModel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(navController: NavController){
@@ -113,7 +113,7 @@ fun LoginScreen(navController: NavController){
             ){
                 Text("Login")
             }
-            
+
             TextButton(
                 onClick = { viewModel.forgotPassword(email) },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
@@ -145,7 +145,7 @@ fun LoginScreen(navController: NavController){
             Spacer(modifier = Modifier.height(10.dp))
             val isSuccess = viewModel.errorMessage.contains("sent")
             Text(
-                text = viewModel.errorMessage, 
+                text = viewModel.errorMessage,
                 color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
             )
         }

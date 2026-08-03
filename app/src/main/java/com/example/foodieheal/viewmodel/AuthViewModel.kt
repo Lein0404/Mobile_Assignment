@@ -1,4 +1,4 @@
-package com.example.foodieheal.ViewModel
+package com.example.foodieheal.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.getValue

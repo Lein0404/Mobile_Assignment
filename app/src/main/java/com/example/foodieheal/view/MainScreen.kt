@@ -1,17 +1,23 @@
 package com.example.foodieheal.view
 
+import android.app.Application
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -23,14 +29,22 @@ import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ViewModel.AuthViewModel
+import com.example.foodieheal.meal_planner.data.MealPlannerRepository
+import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
+import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 
 @Composable
-fun MainScreen(parentNavController: NavController) {
+fun MainScreen(parentNavController: NavHostController) {
     val navController = rememberNavController()
+
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+
     val HiringViewModel: HiringViewModel = viewModel()
-    
+
     val items = listOf(
         NavigationItem(Screen.Home.route, "Home", R.drawable.ic_home),
         NavigationItem(Screen.Recipes.route, "Recipes", R.drawable.ic_recipe),
@@ -43,7 +57,7 @@ fun MainScreen(parentNavController: NavController) {
         containerColor = Color(0xFFF8F8F8), // Match the app background
         bottomBar = {
             NavigationBar(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -113,6 +127,25 @@ fun MainScreen(parentNavController: NavController) {
                     }
                 }
             }
+            composable(Screen.Planner.route) {
+                val viewModel: MealPlannerViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            val repository = MealPlannerRepository(
+                                postgrest = SupabaseClient.client.postgrest,
+                                supabaseClient = SupabaseClient.client
+                            )
+                            return MealPlannerViewModel(application, repository) as T
+                        }
+                    }
+                )
+
+                MealPlannerScreen(
+                    viewModel = viewModel,
+                )
+            }
+            composable(Screen.Hiring.route) { HiringScreen() }
             composable(Screen.Profile.route) { ProfileScreen(parentNavController) }
         }
     }
