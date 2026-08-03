@@ -265,7 +265,8 @@ fun DropDownList(
         Text(
             text = stringResource(labelId),
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -275,7 +276,10 @@ fun DropDownList(
                 value = selectedValue ?: "",
                 onValueChange = { },
                 readOnly = true,
-                placeholder = { Text(stringResource(placeholderId)) },
+                placeholder = {
+                    Text(stringResource(placeholderId),
+                    color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
+                ) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 },
