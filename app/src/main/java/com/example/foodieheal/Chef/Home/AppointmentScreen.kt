@@ -58,9 +58,9 @@ fun AppointmentsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(primaryColor) // Full top header orange background
+            .background(primaryColor)
     ) {
-        // 1. Top Header Section
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,7 +81,6 @@ fun AppointmentsScreen() {
             }
         }
 
-        // 2. White Surface Body
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(0.dp),
@@ -179,7 +178,6 @@ fun AppointmentCard(
     }
 }
 
-// Data class wrapper for cleaner item passing
 data class AppointmentItem(
     val clientName: String,
     val event: String,

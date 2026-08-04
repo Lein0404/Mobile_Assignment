@@ -22,11 +22,12 @@ sealed class Screen(val route: String) {
     object ChefHomeScreen : Screen("chefHome")
     object ChefDetailScreen : Screen("chefDetail/{chefId}")
     object ChefProfileScreen : Screen("chefProfile")
-    object HiringChefDetails : Screen("hiringChefDetails")
     object ChefMain : Screen("chefMain")
     object ChefEditProfile : Screen("chefEditProfile")
-    object HiringAppointment : Screen("HiringAppointment")
+    object HiringChefDetails : Screen("hiringChefDetails")
+    object HiringAppointment : Screen("hiringAppointment")
     object AddHiringAppointment : Screen("AddAppointment")
+    object AppointmentReview : Screen("appointmentReview")
 
     // Ingredients module
     object Ingredients : Screen("ingredients")

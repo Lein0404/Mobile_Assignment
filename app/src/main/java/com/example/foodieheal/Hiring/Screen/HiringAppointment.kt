@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
+import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.datetime.DayOfWeek
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -55,13 +56,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringAppointment(
+    chef: Chef,
     onBackClick: () -> Unit,
-    onAddAppointmentClick: () -> Unit = {}
+    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf(java.time.LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // 🟢 Calculate the 7 days of the current week (Monday to Sunday)
     val startOfWeek = remember(selectedDate) {
         selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
@@ -162,19 +163,21 @@ fun HiringAppointment(
             // Schedule slots section
             DayScheduleSection(
                 selectedDate = selectedDate,
-                onAddAppointmentClick = onAddAppointmentClick,
+                onAddAppointmentClick = {
+                    onAddAppointmentClick(selectedDate)
+                },
                 modifier = Modifier.weight(1f)
             )
         }
     }
 
-    // 🟢 YOUR REUSED MEAL DATE PICKER DIALOG
     if (showDatePicker) {
         MealDatePickerDialog(
             initialDate = selectedDate,
             titleText = "Select Appointment Date",
             onDateSelected = { newDate ->
                 selectedDate = newDate
+                showDatePicker = false
             },
             onDismiss = { showDatePicker = false }
         )

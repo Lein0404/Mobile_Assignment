@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,9 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -49,56 +46,63 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.Chef.ServingSize
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.Chef.healthPreferencesList
 import com.example.foodieheal.Hiring.ViewModel.AppointmentValidationError
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.ui.components.DropDownList
+import com.example.foodieheal.viewmodel.AuthViewModel
+import io.github.jan.supabase.auth.auth
 import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAppointmentFormScreen(
+    viewModel: HiringViewModel = viewModel(),
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
 
-    val viewModel : HiringViewModel = viewModel()
+    val selectedChef = viewModel.selectedChef
+    val chefId = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
+    val hourlyPrice = selectedChef?.Pricing ?: 0.0
+    val currentUserId = client.auth.currentUserOrNull()?.id.orEmpty()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    // Consecutive Time Pickers setup (Start Time -> End Time)
+    // Time Pickers setup (Start Time -> End Time)
     fun showTimeRangePickers() {
         val cal = Calendar.getInstance()
+        var startFormatted = ""
 
-        // 2. End Time Dialog
         val endPickerDialog = TimePickerDialog(
             context,
             { _, hour, minute ->
                 val formattedHour = if (hour % 12 == 0) 12 else hour % 12
                 val amPm = if (hour < 12) "AM" else "PM"
-                val endTimeFormatted = String.format("%02d:%02d %s", formattedHour, minute, amPm)
+                val endFormatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, minute, amPm)
 
-                // Combine Start & End time into the ViewModel state
-                viewModel.onAppointmentTimeChanged("${uiState.appointmentTime} - $endTimeFormatted")
+                // 🟢 Combine startFormatted + endFormatted cleanly
+                if (startFormatted.isNotBlank()) {
+                    viewModel.onAppointmentTimeChanged("$startFormatted - $endFormatted")
+                }
             },
-            cal.get(Calendar.HOUR_OF_DAY) + 1,
+            cal.get(Calendar.HOUR_OF_DAY) + 2, // Default 2 hours later
             cal.get(Calendar.MINUTE),
             false
         ).apply { setTitle("Select End Time") }
 
-        // 1. Start Time Dialog
         val startPickerDialog = TimePickerDialog(
             context,
             { _, hour, minute ->
                 val formattedHour = if (hour % 12 == 0) 12 else hour % 12
                 val amPm = if (hour < 12) "AM" else "PM"
-                val startTimeFormatted = String.format("%02d:%02d %s", formattedHour, minute, amPm)
+                startFormatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, minute, amPm)
 
-                viewModel.onAppointmentTimeChanged(startTimeFormatted)
                 endPickerDialog.show()
             },
             cal.get(Calendar.HOUR_OF_DAY),
@@ -265,7 +269,7 @@ fun AddAppointmentFormScreen(
                 )
             ) {
                 Text(
-                    text = "Confirm",
+                    text = "Next",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -326,7 +330,6 @@ private fun FormInputField(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Overlay box for handling click events when readOnly = true
         if (onClick != null) {
             Box(
                 modifier = Modifier
