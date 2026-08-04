@@ -9,11 +9,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.Recipe
+import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.navigation.Screen
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -96,6 +98,15 @@ class MealPlannerViewModel(
     }
 
     fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
+        // 1. Get current logged-in user ID
+        val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
+
+        if (currentUserId.isNullOrEmpty()) {
+            Log.w("MealPlannerVM", "Cannot load plan: No authenticated user found.")
+            mealPlansCache[date] = null
+            return
+        }
+
         lastActiveDate = date
 
         if (!forceRefresh && mealPlansCache.containsKey(date) && mealPlansCache[date] != null) return
@@ -105,7 +116,17 @@ class MealPlannerViewModel(
             val result = repository.getDailyPlan(date)
 
             result.onSuccess { plan ->
-                mealPlansCache[date] = plan
+                // 2. Validate that the loaded plan belongs to the logged-in user
+                if (plan != null && plan.user_id == currentUserId) {
+                    mealPlansCache[date] = plan
+                } else if (plan == null) {
+                    // No existing plan for this date yet
+                    mealPlansCache[date] = null
+                } else {
+                    // Security check failed: Plan belongs to another user
+                    Log.e("MealPlannerVM", "Security Mismatch: Loaded plan user_id (${plan.user_id}) does not match authenticated user ($currentUserId).")
+                    mealPlansCache[date] = null
+                }
             }.onFailure {
                 mealPlansCache[date] = null
             }

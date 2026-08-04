@@ -39,6 +39,7 @@ import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor
 import com.example.foodieheal.ui.theme.LunchColor
 import com.example.foodieheal.ui.theme.SnackColor
+import com.example.foodieheal.ui.theme.TimerColor
 
 @Composable
 fun RecipeCard(

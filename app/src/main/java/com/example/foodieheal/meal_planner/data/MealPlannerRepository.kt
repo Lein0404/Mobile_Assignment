@@ -11,6 +11,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -37,7 +38,6 @@ class MealPlannerRepository(
                 }
             )
 
-            // Upsert the validated DTO structure
             postgrest.from("daily_plans").upsert(dto)
             Unit
         }
@@ -45,27 +45,47 @@ class MealPlannerRepository(
 
     suspend fun getDailyPlan(date: LocalDate): Result<DailyPlan?> = withContext(Dispatchers.IO) {
         runCatching {
-            Log.d("MealPlannerDebug", "1. Starting fetch for date: $date")
+            // 🌟 1. AUTH CHECK: Get current user ID
+            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+                ?: throw Exception("No authenticated user session found.")
 
-            val response = supabaseClient.postgrest.from("daily_plans")
-                .select { filter { eq("date", date.toString()) } }
+            Log.d("MealPlannerDebug", "1. Starting fetch for date: $date for user: $currentUserId")
 
-            val rawPlan = response.decodeList<DailyPlanDTO>().firstOrNull()
-                ?: return@runCatching null
+            // 🌟 2. USER VALIDATION: Query daily_plans filtering by BOTH date AND user_id
+            val rawPlan = supabaseClient.postgrest.from("daily_plans")
+                .select {
+                    filter {
+                        eq("date", date.toString())
+                        eq("user_id", currentUserId) // Ensures only the current user's data is loaded!
+                    }
+                }
+                .decodeList<DailyPlanDTO>()
+                .firstOrNull() ?: return@runCatching null
 
+            // Extract all recipe IDs referenced in this specific daily plan
+            val recipeIds = rawPlan.meals?.flatMap { slot ->
+                slot.recipes.map { it.recipeId }
+            }?.distinct().orEmpty()
 
-            // 🛠️ DIAGNOSTIC STEP 3: Bypass filters to see what columns and rows actually exist!
-            Log.d("MealPlannerDebug", "🔍 DIAGNOSTIC: Fetching raw unfiltered table data...")
-            val diagnosticResponse = supabaseClient.postgrest.from("recipes").select()
+            // If there are no recipes assigned, return early with an empty plan
+            if (recipeIds.isEmpty()) {
+                return@runCatching DailyPlan(
+                    user_id = rawPlan.userId,
+                    date = rawPlan.date,
+                    meals = rawPlan.meals?.map { RealMealSlot(it.mealType, emptyList()) } ?: emptyList()
+                )
+            }
 
-            Log.d(
-                "MealPlannerDebug",
-                "🔍 DIAGNOSTIC: Raw JSON payload from recipes table: ${diagnosticResponse.data}"
-            )
+            // 🌟 3. EFFICIENT FETCH: Only fetch recipes present in this user's daily plan
+            val fetchedRecipes = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter {
+                        isIn("recipe_id", recipeIds) // Filter DB directly instead of downloading everything!
+                    }
+                }
+                .decodeList<Recipe>()
 
-            val fetchedRecipes = diagnosticResponse.decodeList<Recipe>()
-            Log.d("MealPlannerDebug", "6. Decoded ${fetchedRecipes.size} recipes from DB")
-
+            // Assemble and return domain model
             val finalPlan = DailyPlan(
                 user_id = rawPlan.userId,
                 date = rawPlan.date,
@@ -78,9 +98,10 @@ class MealPlannerRepository(
                     )
                 } ?: emptyList()
             )
+
             finalPlan
         }.onFailure { error ->
-            Log.e("MealPlannerDebug", "💥 CRASH/EXCEPTION in repository layer!", error)
+            Log.e("MealPlannerDebug", "💥 Exception in repository layer!", error)
         }
     }
 }
