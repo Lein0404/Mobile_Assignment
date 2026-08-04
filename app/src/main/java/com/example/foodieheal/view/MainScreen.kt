@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Hiring.Screen.AddAppointmentFormScreen
+import com.example.foodieheal.Hiring.Screen.AppointmentReviewScreen
 import com.example.foodieheal.Hiring.Screen.HiringAppointment
 import com.example.foodieheal.Hiring.Screen.HiringChefDetails
 import com.example.foodieheal.Hiring.Screen.HiringScreen
@@ -42,7 +43,7 @@ fun MainScreen(parentNavController: NavHostController) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    val HiringViewModel: HiringViewModel = viewModel()
+    val hiringViewModel: HiringViewModel = viewModel()
 
     val items = listOf(
         NavigationItem(Screen.Home.route, "Home", R.drawable.ic_home),
@@ -98,16 +99,15 @@ fun MainScreen(parentNavController: NavHostController) {
             composable(Screen.Planner.route) { PlannerScreen() }
 
             composable(Screen.Hiring.route) { HiringScreen(
-                HiringViewModel = HiringViewModel,
                 onChefClick = { chef ->
-                    HiringViewModel.selectChef(chef)
+                    hiringViewModel.selectChef(chef)
                     navController.navigate("hiringChefDetails")
                 }
             ) }
 
-            composable("hiringChefDetails") {
+            composable(Screen.HiringChefDetails.route) {
                 val authViewModel: AuthViewModel = viewModel()
-                val selectedChef = HiringViewModel.selectedChef
+                val selectedChef = hiringViewModel.selectedChef
                 val currentUserId = authViewModel.currentUser?.id.orEmpty()
                 val profileViewModel: BookmarkViewModel = viewModel()
 
@@ -119,7 +119,7 @@ fun MainScreen(parentNavController: NavHostController) {
                         onBackClick = {
                             navController.popBackStack()
                         },
-                        onHireClick = {chef ->  navController.navigate("HiringAppointment")}
+                        onHireClick = {navController.navigate(Screen.HiringAppointment.route)}
                     )
                 } else {
                     LaunchedEffect(Unit) {
@@ -128,24 +128,40 @@ fun MainScreen(parentNavController: NavHostController) {
                 }
             }
 
-            composable("HiringAppointment{chefId}") {
-                HiringAppointment(
+            composable(Screen.HiringAppointment.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.HiringChefDetails.route)
+                }
+                val chef = hiringViewModel.selectedChef
+
+                if (chef != null) {
+                    HiringAppointment(
+                        chef = chef,
+                        onBackClick = { navController.popBackStack() },
+                        onAddAppointmentClick = { chosenDate ->
+                            hiringViewModel.updateSelectedDate(chosenDate) // Update selected date (passing data)
+                            navController.navigate(Screen.AddHiringAppointment.route)
+                        }
+                    )
+                }
+            }
+
+            composable(Screen.AddHiringAppointment.route) {
+                AddAppointmentFormScreen(
+                    viewModel = hiringViewModel, // 🟢 PASS SHARED VIEWMODEL
                     onBackClick = { navController.popBackStack() },
-                    onAddAppointmentClick = {
-                        navController.navigate("AddAppointment")
+                    onSuccessConfirm = {
+                        navController.navigate(Screen.AppointmentReview.route)
                     }
                 )
             }
 
-            composable("AddAppointment") {
-
-                AddAppointmentFormScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    },
-                    onSuccessConfirm = {
-                        // Logic handled inside ViewModel, navigate back on success
-                        navController.popBackStack()
+            composable(Screen.AppointmentReview.route) {
+                AppointmentReviewScreen(
+                    viewModel = hiringViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onFinalConfirm = {
+                        navController.popBackStack(Screen.Home.route, inclusive = false)
                     }
                 )
             }

@@ -40,9 +40,11 @@ fun ChefPictureScreen(
     chefviewModel: chefRegisterViewModel
 ) {
 
+    //Photo picker launching
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
+        // Update the selected image URI in the ViewModel
         if (uri != null) {
             chefviewModel.updateImage(uri)
         }
@@ -90,6 +92,7 @@ fun ChefPictureScreen(
             )
             if (chefviewModel.selectedImageUri != null) {
                 AsyncImage(
+                    // IMPORTANT use it to read the image from the local context
                     model = chefviewModel.selectedImageUri,
                     contentDescription = "Chef Image",
                     modifier = Modifier
@@ -112,6 +115,7 @@ fun ChefPictureScreen(
                 }
             }
 
+            // Trigger photo picker after click
             Button(
                 onClick = {
                     launcher.launch(

@@ -117,7 +117,7 @@ fun EditChefProfileScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Profile Avatar Picker Card
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -172,7 +172,6 @@ fun EditChefProfileScreen(
                 }
             }
 
-            // 2. Personal Information Fields Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -230,7 +229,6 @@ fun EditChefProfileScreen(
                 }
             }
 
-            // 3. Contact & Address Fields Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -291,7 +289,6 @@ fun EditChefProfileScreen(
                 }
             }
 
-            // 4. Save & Cancel Action Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

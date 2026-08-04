@@ -1,4 +1,4 @@
-package com.example.foodieheal.Chef.ViewModel
+package com.example.foodieheal.Cloudinary
 
 object CloudinaryConfig {
 

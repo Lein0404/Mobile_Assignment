@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.time.LocalDate
 
 sealed interface AppointmentValidationError {
     object InvalidTime : AppointmentValidationError
@@ -32,7 +32,6 @@ sealed interface AppointmentValidationError {
     object InvalidDescription : AppointmentValidationError
 }
 
-// Immutable UI State Container
 data class AppointmentUiState(
     val appointmentTime: String = "",
     val address: String = "",
@@ -45,7 +44,7 @@ data class AppointmentUiState(
     val hasAttemptedSubmit: Boolean = false,
     val isSubmitting: Boolean = false
 ) {
-    // Dynamic validation checks
+
     val isTimeValid: Boolean get() = appointmentTime.isNotBlank()
     val isAddressValid: Boolean get() = address.isNotBlank()
     val isPostcodeValid: Boolean get() = postcode.matches(Regex("^[0-9]{5}$"))
@@ -74,11 +73,18 @@ class HiringViewModel : ViewModel() {
     var selectedChef by mutableStateOf<Chef?>(null)
         private set
 
+    var selectedDate by mutableStateOf<LocalDate>(LocalDate.now())
+        private set
+
     var isSubmitting by mutableStateOf(false)
         private set
 
     fun selectChef(chef: Chef) {
         selectedChef = chef
+    }
+
+    fun updateSelectedDate(date: LocalDate) {
+        selectedDate = date
     }
 
     fun clearSelectedChef() {
@@ -183,6 +189,35 @@ class HiringViewModel : ViewModel() {
         }
     }
 
+    fun calculateTotalPrice(): Double {
+        val hourlyRate = selectedChef?.Pricing ?: 0.0
+        val timeString = uiState.value.appointmentTime // e.g. "09:00 AM - 11:00 AM"
+
+        if (!timeString.contains(" - ")) return hourlyRate
+
+        val parts = timeString.split(" - ")
+        if (parts.size != 2) return hourlyRate
+
+        val sdf = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.US)
+        return try {
+            val startDate = sdf.parse(parts[0].trim())
+            val endDate = sdf.parse(parts[1].trim())
+
+            if (startDate != null && endDate != null) {
+                val diffInMillis = endDate.time - startDate.time
+                val hours = diffInMillis.toDouble() / (1000 * 60 * 60)
+
+                // Ensure at least 1 hour minimum multiplier
+                val actualHours = if (hours > 0) hours else 1.0
+                hourlyRate * actualHours
+            } else {
+                hourlyRate
+            }
+        } catch (e: Exception) {
+            hourlyRate
+        }
+    }
+
     fun createAppointment(
         userId: String,
         chefId: String,
@@ -190,23 +225,25 @@ class HiringViewModel : ViewModel() {
         startTime: String,
         endTime: String,
         totalPrice: Double,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
     ) {
-        if (userId.isBlank() || chefId.isBlank()) return
+        if (userId.isBlank() || chefId.isBlank()) {
+            onError("Invalid user or chef ID.")
+            return
+        }
 
         isSubmitting = true
         errorMessage = null
 
         val state = uiState.value
 
-        // 1. Generate Custom ID & parse serving size integer
+        // Put here first dont know need or not in future
         val randomNum = (100..999).random()
         val customAppointmentId = "A$randomNum"
         val parsedServingSize = state.servingSize.toIntOrNull() ?: 1
 
-        // 2. Build payload using state properties
         val newAppointment = Appointment(
-            AppointmentID = customAppointmentId,
             Date = selectedDate,
             Start_Time = startTime,
             End_Time = endTime,
@@ -218,7 +255,7 @@ class HiringViewModel : ViewModel() {
             Health_Preference = state.healthPreference,
             Total_Price = totalPrice,
             Status = "Pending",
-            rating = 0.0,
+            rating = null,
             chefId = chefId,
             userId = userId
         )
@@ -245,7 +282,11 @@ class HiringViewModel : ViewModel() {
                         "Appointment ID conflict. Please try again."
                     else -> msg.lines().firstOrNull() ?: msg
                 }
+                onError(e.message ?: "An error occurred")
             }
         }
     }
+
+    val currentChefId: String
+        get() = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
 }
