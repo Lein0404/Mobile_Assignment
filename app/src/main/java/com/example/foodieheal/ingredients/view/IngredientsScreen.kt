@@ -1,5 +1,6 @@
 package com.example.foodieheal.ingredients.view
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +46,7 @@ fun IngredientsScreen(navController: NavController) {
     val tabs = listOf("Existing", "Requests")
 
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -91,7 +94,15 @@ fun IngredientsScreen(navController: NavController) {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (selectedTab == 0) {
-                ExistingTabContent(viewModel, uiState, navController)
+                ExistingTabContent(
+                    viewModel = viewModel,
+                    uiState = uiState,
+                    navController = navController,
+                    onAddToCart = { ingredient ->
+                        viewModel.addToShoppingList(ingredient)
+                        Toast.makeText(context, "${ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                    }
+                )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Requests feature coming soon")
@@ -105,7 +116,8 @@ fun IngredientsScreen(navController: NavController) {
 fun ExistingTabContent(
     viewModel: IngredientsViewModel,
     uiState: IngredientsUiState,
-    navController: NavController
+    navController: NavController,
+    onAddToCart: (com.example.foodieheal.ingredients.model.Ingredients) -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,9 +175,13 @@ fun ExistingTabContent(
                 }
                 // TODO: when logic is all done, improve the UI!
                 items(items) { item ->
-                    IngredientCard(item) {
-                        navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
-                    }
+                    IngredientCard(
+                        item = item,
+                        onClick = {
+                            navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
+                        },
+                        onAddToCart = { onAddToCart(item.ingredient) }
+                    )
                 }
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -176,7 +192,8 @@ fun ExistingTabContent(
 @Composable
 fun IngredientCard(
     item: IngredientItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onAddToCart: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -205,8 +222,8 @@ fun IngredientCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            IconButton(onClick = { /* Add to cart action */ }) { //TODO
-                Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to cart", tint = Color.Black)
+            IconButton(onClick = { onAddToCart() }) {
+                Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to shopping list", tint = Color.Black)
             }
         }
     }

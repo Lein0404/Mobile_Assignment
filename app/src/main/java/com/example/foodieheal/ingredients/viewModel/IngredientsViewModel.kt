@@ -3,9 +3,13 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
+import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
+import com.example.foodieheal.ingredients.repo.ShoppingListRepository
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -13,6 +17,7 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
 
     private val database = IngredientsDatabase.getInstance(application)
     private val repository = IngredientsRepository(database.ingredientsDao())
+    private val shoppingRepo = ShoppingListRepository(database.shoppingListDao())
 
     private val _uiState = MutableStateFlow(IngredientsUiState())
     val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()
@@ -112,6 +117,21 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
             } finally {
                 updateLoading(false)
             }
+        }
+    }
+
+    fun addToShoppingList(ingredient: Ingredients) {
+        viewModelScope.launch {
+            val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+            if (userId.isEmpty()) return@launch
+
+            val entity = ShoppingListEntity(
+                userId = userId,
+                ingredientId = ingredient.ingredientId,
+                ingredientName = ingredient.ingredientName,
+                isChecked = false
+            )
+            shoppingRepo.insertItem(entity)
         }
     }
 }

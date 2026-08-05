@@ -2,6 +2,9 @@ package com.example.foodieheal.ingredients.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +41,7 @@ fun IngredientDetailScreen(
 ) {
     val viewModel: IngredientsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(ingredientId) {
         viewModel.fetchIngredientDetail(ingredientId)
@@ -122,10 +127,13 @@ fun IngredientDetailScreen(
                                     fontSize = 14.sp
                                 )
                             }
-                            IconButton(onClick = { /* Add to cart */ }) { //TODO
+                            IconButton(onClick = {
+                                viewModel.addToShoppingList(info.ingredient)
+                                Toast.makeText(context, "${info.ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                            }) { //TODO
                                 Icon(
                                     painter = painterResource(R.drawable.ic_add_to_shopping_cart),
-                                    contentDescription = "Add to cart",
+                                    contentDescription = "Add to shopping list",
                                     tint = Color.Black
                                 )
                             }
