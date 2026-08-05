@@ -13,9 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.Hiring.Screen.HiringAppointment
+import com.example.foodieheal.Hiring.Screen.HiringChefDetails
+import com.example.foodieheal.Hiring.Screen.HiringScreen
+import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModelFactory
@@ -25,6 +31,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.RegisterScreen
+import com.example.foodieheal.viewmodel.AuthViewModel
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
