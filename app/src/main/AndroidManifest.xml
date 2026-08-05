@@ -33,14 +33,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!--Existing Password Reset Deep Link -->
+            <!-- Password Reset / Custom Scheme Deep Link -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="foodieheal" android:host="reset" />
+
+                <data android:scheme="foodieheal" android:host="share" />
             </intent-filter>
 
+            <!-- App Links (HTTPS Domain Routing) -->
             <intent-filter android:autoVerify="true" android:label="Share Meal Plan">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

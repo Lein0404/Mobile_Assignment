@@ -71,6 +71,11 @@ class MealPlannerViewModel(
         }
     }
 
+    // Function to update current tab manually when user taps bottom bar items
+    fun onTabSelected(route: String) {
+        selectedTabRoute = route
+    }
+
     fun clearDeepLinkState() {
         deepLinkSourceDays = null
     }
