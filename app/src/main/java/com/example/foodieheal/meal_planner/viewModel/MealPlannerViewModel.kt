@@ -71,11 +71,6 @@ class MealPlannerViewModel(
         }
     }
 
-    // Function to update current tab manually when user taps bottom bar items
-    fun onTabSelected(route: String) {
-        selectedTabRoute = route
-    }
-
     fun clearDeepLinkState() {
         deepLinkSourceDays = null
     }
@@ -109,14 +104,29 @@ class MealPlannerViewModel(
 
         lastActiveDate = date
 
-        if (!forceRefresh && mealPlansCache.containsKey(date) && mealPlansCache[date] != null) return
+        // 2. Validate cache ownership before using it
+        val cachedPlan = mealPlansCache[date]
+        if (!forceRefresh && mealPlansCache.containsKey(date)) {
+            if (cachedPlan == null) {
+                // Already fetched previously and confirmed no plan exists for this date
+                return
+            }
+            if (cachedPlan.user_id == currentUserId) {
+                // Cache belongs to current user, safe to reuse
+                return
+            } else {
+                // Cache belongs to another user (e.g., previous login), clear it
+                Log.w("MealPlannerVM", "Evicting stale cache from another user for date: $date")
+                mealPlansCache.remove(date)
+            }
+        }
 
         viewModelScope.launch {
             isLoading = true
             val result = repository.getDailyPlan(date)
 
             result.onSuccess { plan ->
-                // 2. Validate that the loaded plan belongs to the logged-in user
+                // 3. Validate that the loaded plan belongs to the logged-in user
                 if (plan != null && plan.user_id == currentUserId) {
                     mealPlansCache[date] = plan
                 } else if (plan == null) {
