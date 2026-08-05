@@ -342,7 +342,10 @@ fun ProfileScreen(
                 BottomSheetMenuItem(
                     icon = R.drawable.ic_shopping_cart,
                     label = "Shopping List",
-                    onClick = { /* Action empty */ }
+                    onClick = {
+                        showBottomSheet = false
+                        navController.navigate(Screen.ShoppingList.route)
+                    }
                 )
                 BottomSheetMenuItem(
                     icon = R.drawable.ic_register_as_chef,

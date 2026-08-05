@@ -1,15 +1,18 @@
 package com.example.foodieheal.ingredients.viewModel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class IngredientsViewModel(
-    private val repository: IngredientsRepository = IngredientsRepository()
-) : ViewModel() {
+class IngredientsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val database = IngredientsDatabase.getInstance(application)
+    private val repository = IngredientsRepository(database.ingredientsDao())
 
     private val _uiState = MutableStateFlow(IngredientsUiState())
     val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()
@@ -37,7 +40,7 @@ class IngredientsViewModel(
                     IngredientItem(ingredient, summary)
                 }
 
-                _uiState.update { it.copy(ingredients = ingredientItems) }
+                _uiState.update { it.copy(ingredients = ingredientItems, errorMessage = null) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -112,3 +115,4 @@ class IngredientsViewModel(
         }
     }
 }
+

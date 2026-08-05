@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
+import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,9 +122,9 @@ fun IngredientDetailScreen(
                                     fontSize = 14.sp
                                 )
                             }
-                            IconButton(onClick = { /* Add to cart */ }) {
+                            IconButton(onClick = { /* Add to cart */ }) { //TODO
                                 Icon(
-                                    Icons.Default.AddShoppingCart, 
+                                    painter = painterResource(R.drawable.ic_add_to_shopping_cart),
                                     contentDescription = "Add to cart",
                                     tint = Color.Black
                                 )

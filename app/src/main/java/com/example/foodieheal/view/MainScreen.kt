@@ -30,8 +30,10 @@ import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientsScreen
+import com.example.foodieheal.ingredients.view.ShoppingListScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
@@ -172,6 +174,14 @@ fun MainScreen(parentNavController: NavHostController) {
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id") ?: ""
                 IngredientDetailScreen(navController, id)
+            }
+
+            composable(Screen.ShoppingList.route) {
+                ShoppingListScreen(navController)
+            }
+
+            composable(Screen.AddShoppingListItem.route) {
+                AddShoppingListItemScreen(navController)
             }
 
             composable(Screen.Profile.route) { ProfileScreen(navController, parentNavController) }

@@ -7,11 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +16,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
@@ -30,6 +25,7 @@ import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.R
+import com.example.foodieheal.ingredients.model.IngredientsUiState
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 @Preview(showBackground = true)
@@ -108,7 +104,7 @@ fun IngredientsScreen(navController: NavController) {
 @Composable
 fun ExistingTabContent(
     viewModel: IngredientsViewModel,
-    uiState: com.example.foodieheal.ingredients.model.IngredientsUiState,
+    uiState: IngredientsUiState,
     navController: NavController
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -119,7 +115,7 @@ fun ExistingTabContent(
             placeholder = { Text("Search community ingredients here") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            trailingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -155,7 +151,7 @@ fun ExistingTabContent(
         }
         if (uiState.filteredIngredients.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No ingredients found.")
+                Text(text = "No ingredients match your search.")
             }
         }
 
@@ -209,7 +205,7 @@ fun IngredientCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            IconButton(onClick = { /* Add to cart action */ }) {
+            IconButton(onClick = { /* Add to cart action */ }) { //TODO
                 Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to cart", tint = Color.Black)
             }
         }
