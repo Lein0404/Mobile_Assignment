@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
@@ -48,25 +50,40 @@ fun IngredientsScreen(navController: NavController) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.background(MaterialTheme.colorScheme.primary)) {
-                Spacer(modifier = Modifier.statusBarsPadding())
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F8F8))
+    ) {
+        // Top Bar & Tabs Header (Matching HiringScreen style)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
+            Column(
+                modifier = Modifier.statusBarsPadding()
+            ) {
                 Text(
                     text = "Ingredients",
-                    style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
-                    modifier = Modifier.padding(16.dp)
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
                 )
-                PrimaryTabRow(
+
+                TabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
                     contentColor = Color.White,
-                    indicator = {
-                        TabRowDefaults.PrimaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(selectedTab, matchContentSize = true),
-                            color = Color.White
-                        )
+                    indicator = { tabPositions ->
+                        if (selectedTab < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                height = 3.dp,
+                                color = Color.White
+                            )
+                        }
                     },
                     divider = {}
                 ) {
@@ -74,24 +91,25 @@ fun IngredientsScreen(navController: NavController) {
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { 
+                            text = {
                                 Text(
-                                    title, 
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.7f)
-                                ) 
+                                    text = title,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                )
                             }
                         )
                     }
                 }
             }
         }
-    ) { paddingValues ->
-        Column(
+
+        // Tab Content Area
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .weight(1f)
         ) {
             if (selectedTab == 0) {
                 ExistingTabContent(
@@ -105,7 +123,7 @@ fun IngredientsScreen(navController: NavController) {
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Requests feature coming soon")
+                    Text("Requests feature coming soon", color = Color.Gray)
                 }
             }
         }
@@ -161,7 +179,7 @@ fun ExistingTabContent(
                 Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
             }
         }
-        if (uiState.filteredIngredients.isEmpty()) {
+        if (uiState.filteredIngredients.isEmpty() && !uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "No ingredients match your search.")
             }

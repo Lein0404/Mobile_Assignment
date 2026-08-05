@@ -3,14 +3,8 @@ package com.example.foodieheal.ingredients.view
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,11 +44,18 @@ fun IngredientDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("View Ingredient", color = Color.White) },
+                title = {
+                    Text(
+                        text = "View Ingredient",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = "Back", 
                             tint = Color.White
                         )
@@ -173,7 +174,7 @@ fun IngredientDetailScreen(
 fun ImagePlaceholder() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(
-            imageVector = Icons.Default.ImageNotSupported,
+            painter = painterResource(R.drawable.ic_no_image_available),
             contentDescription = null,
             modifier = Modifier.size(64.dp),
             tint = Color.Gray
