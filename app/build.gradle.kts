@@ -77,4 +77,6 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    implementation("com.github.Breens-Mbaka:Searchable-Dropdown-Menu-Jetpack-Compose:1.1.0")
 }

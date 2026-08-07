@@ -20,6 +20,9 @@ firebaseDataconnect = "17.3.2"
 room = "2.7.1"
 ksp = "2.2.10-2.0.2"
 
+# Searchable-Dropdown-Menu-Jetpack-Compose version
+searchable-dropdown-menu-jetpack-compose = "1.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -52,6 +55,9 @@ firebase-dataconnect = { group = "com.google.firebase", name = "firebase-datacon
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# Searchable-Dropdown-Menu-Jetpack-Compose library entry
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
