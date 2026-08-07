@@ -38,16 +38,20 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Surface
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
+import com.example.foodieheal.model.Status
+import androidx.compose.ui.graphics.Color
 
 /**
  * Common is a helper class with composable templates such as Buttons, Carousels, Lists configured
  * to our app's colors.
  */
+
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
@@ -398,6 +402,36 @@ fun GenderDropdown(
     }
 }
 
+@Composable
+fun StatusBadge(status: Status) {
+    val (color, text) = when (status) {
+        Status.APPROVED -> Color(0xFFB1E0C0) to Status.APPROVED.statusName
+        Status.PENDING -> MaterialTheme.colorScheme.secondaryContainer to Status.PENDING.statusName
+        Status.REJECTED -> MaterialTheme.colorScheme.errorContainer to Status.REJECTED.statusName
+    }
+
+    val textColor = when (status) {
+        Status.APPROVED -> Color(0xFF008000)
+        Status.PENDING -> MaterialTheme.colorScheme.onSecondaryContainer
+        Status.REJECTED -> MaterialTheme.colorScheme.onErrorContainer
+    }
+
+    Surface(
+        color = color,
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(
+                horizontal = dimensionResource(R.dimen.padding_md),
+                vertical = dimensionResource(R.dimen.padding_xsm)
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
 
 /*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
