@@ -16,8 +16,8 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(navController: NavController){
     val viewModel: AuthViewModel = viewModel()
-    var email by remember{ mutableStateOf("") }
-    var password by remember{mutableStateOf("")}
+    var email by remember{ mutableStateOf("user@gmail.com") }
+    var password by remember{mutableStateOf("user1234")}
     
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 

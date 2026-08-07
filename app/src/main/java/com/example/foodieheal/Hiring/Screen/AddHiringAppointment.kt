@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -66,8 +67,16 @@ fun AddAppointmentFormScreen(
     onSuccessConfirm: () -> Unit
 ) {
 
+    val chefId = viewModel.currentChefId
+
+    LaunchedEffect(chefId, viewModel.selectedDate) {
+        if (chefId.isNotBlank()) {
+            viewModel.fetchAppointmentsForChef(chefId)
+        }
+    }
+
     val selectedChef = viewModel.selectedChef
-    val chefId = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
+
     val hourlyPrice = selectedChef?.Pricing ?: 0.0
     val currentUserId = client.auth.currentUserOrNull()?.id.orEmpty()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -152,6 +161,7 @@ fun AddAppointmentFormScreen(
             FormLabel("Appointment Time")
             FormInputField(
                 value = uiState.appointmentTime,
+                onValueChange = { viewModel.onAppointmentTimeChanged(it) },
                 placeholder = "Select Time Range (e.g. 09:00 AM - 11:00 AM)",
                 readOnly = true,
                 onClick = { showTimeRangePickers() },
@@ -164,10 +174,15 @@ fun AddAppointmentFormScreen(
                     }
                 }
             )
+
             AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(
-                    AppointmentValidationError.InvalidTime),
+                visible = uiState.hasAttemptedSubmit && uiState.hasInvalidTimeError,
                 message = "Please select an appointment time range."
+            )
+
+            AnimatedErrorMessage(
+                visible = uiState.hasAttemptedSubmit && uiState.hasTimeSlotOccupiedError,
+                message = "This time slot is already booked for this chef. Please select another time."
             )
 
             FormLabel("Address")
@@ -227,7 +242,6 @@ fun AddAppointmentFormScreen(
                 message = "Please enter a valid serving size."
             )
 
-            // 6. Health Preference Dropdown
             DropDownList(
                 labelId = R.string.health_pref_label,
                 placeholderId = R.string.select_health_pref,
@@ -236,7 +250,6 @@ fun AddAppointmentFormScreen(
                 onOptionSelected = { viewModel.onHealthPreferenceChanged(it) }
             )
 
-            // 7. Description / Note
             FormLabel("Description")
             FormInputField(
                 value = uiState.description,
@@ -278,7 +291,6 @@ fun AddAppointmentFormScreen(
     }
 }
 
-// Clean Form Label Helper
 @Composable
 private fun FormLabel(text: String) {
     Text(

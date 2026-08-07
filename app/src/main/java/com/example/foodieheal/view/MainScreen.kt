@@ -94,7 +94,19 @@ fun MainScreen(parentNavController: NavHostController) {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreen(navController) }
+
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    navController = navController,
+                    chefViewModel = hiringViewModel,
+                    onChefClick = { chef ->
+                        hiringViewModel.selectChef(chef)
+                        navController.navigate(Screen.HiringChefDetails.route) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
             composable(Screen.Recipes.route) { RecipesScreen(parentNavController) }
             composable(Screen.Planner.route) { PlannerScreen() }
 

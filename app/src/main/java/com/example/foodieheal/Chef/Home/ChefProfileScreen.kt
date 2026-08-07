@@ -51,7 +51,6 @@ import com.example.foodieheal.R
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.navigation.Screen
 
-// Placeholder for Profile view
 @Composable
 fun ChefProfileScreen(
     navController: NavController,
@@ -84,9 +83,8 @@ fun ChefProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(primaryColor) // Full top header background
+            .background(primaryColor)
     ) {
-        // 1. Top Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,7 +105,6 @@ fun ChefProfileScreen(
             }
         }
 
-        // 2. White Sheet Body Container
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(0.dp),
@@ -120,7 +117,6 @@ fun ChefProfileScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Main Header Avatar & Basic Info Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -193,7 +189,6 @@ fun ChefProfileScreen(
                     }
                 }
 
-                // Professional Information Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -251,7 +246,6 @@ fun ChefProfileScreen(
                     }
                 }
 
-                // Contact Information Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -297,7 +291,6 @@ fun ChefProfileScreen(
                     }
                 }
 
-                // Action Buttons Section
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

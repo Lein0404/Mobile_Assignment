@@ -23,6 +23,9 @@ sealed class Screen(val route: String) {
     object ChefDetailScreen : Screen("chefDetail/{chefId}")
     object ChefProfileScreen : Screen("chefProfile")
     object ChefMain : Screen("chefMain")
+    object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
+    }
     object ChefEditProfile : Screen("chefEditProfile")
     object HiringChefDetails : Screen("hiringChefDetails")
     object HiringAppointment : Screen("hiringAppointment")

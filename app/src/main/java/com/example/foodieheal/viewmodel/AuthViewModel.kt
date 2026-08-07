@@ -12,10 +12,15 @@ import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 class AuthViewModel : ViewModel() {
     private val client = SupabaseClient.client
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     var currentUser by mutableStateOf<User?>(null)
         private set
@@ -47,7 +52,7 @@ class AuthViewModel : ViewModel() {
     init {
         val user = client.auth.currentUserOrNull()
         if (user != null) {
-            viewModelScope.launch {
+            applicationScope.launch {
                 fetchUserData(user.id)
                 loginSuccess = true
             }
@@ -188,7 +193,6 @@ class AuthViewModel : ViewModel() {
     }
 
     private suspend fun fetchUserData(uid: String) {
-
         try {
             val user = client.postgrest.from("users").select {
                 filter { eq("id", uid) }
@@ -197,12 +201,13 @@ class AuthViewModel : ViewModel() {
             if (user != null) {
                 currentUser = user
             } else {
-                // If row doesn't exist, create a local placeholder with the user's email
                 val authEmail = client.auth.currentUserOrNull()?.email ?: ""
                 currentUser = User(id = uid, customId = "U001", email = authEmail, name = "New User")
             }
+        } catch (e: CancellationException) {
+            // 3. Rethrow cancellation cleanly
+            throw e
         } catch (e: Exception) {
-            // If data is missing or NULL, fallback to a default user instead of showing ERROR
             val authEmail = client.auth.currentUserOrNull()?.email ?: ""
             currentUser = User(id = uid, customId = "U001", email = authEmail, name = "User")
         }

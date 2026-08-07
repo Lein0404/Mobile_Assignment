@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,9 +43,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
+import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
+import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
+import com.example.foodieheal.model.Appointment
 import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.datetime.DayOfWeek
 import java.text.SimpleDateFormat
@@ -58,10 +66,35 @@ import java.util.Locale
 fun HiringAppointment(
     chef: Chef,
     onBackClick: () -> Unit,
-    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit
+    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit,
+    viewModel: ChefPortalViewModel = viewModel()
 ) {
+    val hiringViewModel: HiringViewModel = viewModel()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
+
+    val apptUiState by viewModel.appointmentsUiState.collectAsState()
+
+    LaunchedEffect(chef.chefId) {
+        chef.chefId?.let { id ->
+            hiringViewModel.fetchAppointmentsForChef(id)
+        }
+    }
+
+    val chefAppointments by hiringViewModel.chefAppointmentsState.collectAsState()
+
+    // Filter appointments for the selected date
+    val chefAppointmentsForSelectedDate = remember(chefAppointments, selectedDate) {
+        val formattedSelectedDate = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val altFormattedSelectedDate =
+            selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
+        chefAppointments.filter { appointment ->
+            // Matches if date strings match in standard YYYY-MM-DD or DD/MM/YYYY
+            appointment.Date.contains(formattedSelectedDate) ||
+                    appointment.Date.contains(altFormattedSelectedDate)
+        }
+    }
 
     val startOfWeek = remember(selectedDate) {
         selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -150,7 +183,6 @@ fun HiringAppointment(
                 }
             }
 
-            //Reuse ZH method
             WeeklyDateCardRow(
                 weekDays = weekDays,
                 selectedDate = selectedDate,
@@ -160,9 +192,10 @@ fun HiringAppointment(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Schedule slots section
+            // Pass real appointments to DayScheduleSection
             DayScheduleSection(
                 selectedDate = selectedDate,
+                appointments = chefAppointmentsForSelectedDate,
                 onAddAppointmentClick = {
                     onAddAppointmentClick(selectedDate)
                 },
@@ -187,6 +220,7 @@ fun HiringAppointment(
 @Composable
 private fun DayScheduleSection(
     selectedDate: LocalDate,
+    appointments: List<Appointment>,
     onAddAppointmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -207,32 +241,64 @@ private fun DayScheduleSection(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Text(
-                    text = formattedTitle,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formattedTitle,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    // Button to add new booking for this day
+                    IconButton(onClick = onAddAppointmentClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_add_circle_outline),
+                            contentDescription = "Add Booking",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             }
 
-            // Booked Slot
-            item {
-                AppointmentCard(
-                    title = "9:00am - 11:00am",
-                    statusText = "Booked",
-                    showAddIcon = false
-                )
-            }
+            // If no appointments found for this date
+            if (appointments.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No appointments booked for this date.",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+            } else {
+                // Dynamically display all appointments booked for this day
+                items(appointments) { appointment ->
+                    // 🟢 Format time as "Start_Time - End_Time"
+                    val timeSlotText = if (!appointment.Start_Time.isNullOrBlank() && !appointment.End_Time.isNullOrBlank()) {
+                        "${appointment.Start_Time} - ${appointment.End_Time}"
+                    } else if (!appointment.Start_Time.isNullOrBlank()) {
+                        appointment.Start_Time
+                    } else {
+                        "Appointment"
+                    }
 
-            // Empty Slot
-            item {
-                AppointmentCard(
-                    title = "Appointment",
-                    statusText = "Empty",
-                    showAddIcon = true,
-                    onAddClick = onAddAppointmentClick
-                )
+                    AppointmentCard(
+                        title = timeSlotText,
+                        statusText = appointment.Status,
+                        showAddIcon = false
+                    )
+                }
             }
         }
     }
@@ -245,10 +311,25 @@ private fun AppointmentCard(
     showAddIcon: Boolean = false,
     onAddClick: (() -> Unit)? = null
 ) {
+    // Dynamic status color
+    val statusBgColor = when (statusText.lowercase()) {
+        "confirmed", "accepted" -> Color(0xFFE8F5E9) // Light Green
+        "rejected", "cancelled" -> Color(0xFFFFEBEE) // Light Red
+        "pending" -> Color(0xFFFFF8E1) // Light Yellow
+        else -> Color.White
+    }
+
+    val statusTextColor = when (statusText.lowercase()) {
+        "confirmed", "accepted" -> Color(0xFF2E7D32)
+        "rejected", "cancelled" -> Color(0xFFC62828)
+        "pending" -> Color(0xFFF57F17)
+        else -> Color.Black
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.LightGray, shape = RoundedCornerShape(16.dp))
+            .background(Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -258,7 +339,7 @@ private fun AppointmentCard(
         ) {
             Text(
                 text = title,
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -280,16 +361,16 @@ private fun AppointmentCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp))
-                .background(Color.White, shape = RoundedCornerShape(20.dp))
+                .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
+                .background(statusBgColor, shape = RoundedCornerShape(20.dp))
                 .padding(vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = statusText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
+                text = statusText.uppercase(),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = statusTextColor
             )
         }
     }

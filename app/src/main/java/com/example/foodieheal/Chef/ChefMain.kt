@@ -1,6 +1,8 @@
 package com.example.foodieheal.Chef
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,7 +13,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -21,11 +25,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.foodieheal.Chef.Home.AppointmentDetailScreen
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
+import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
+import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
+import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
@@ -42,6 +52,7 @@ fun ChefMainScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val chefNavController = rememberNavController()
+    val homeViewModel: ChefPortalViewModel = viewModel()
 
     // Ensure chef data is loaded upon entry
     LaunchedEffect(Unit) {
@@ -106,27 +117,78 @@ fun ChefMainScreen(
             startDestination = ChefNavigationItem.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // 1. Chef Home Tab
-            composable(ChefNavigationItem.Home.route) {
-                ChefHomeScreen(
-                    navController = parentNavController,
-                    onNavigateToAppointments = {
-                        chefNavController.navigate(ChefNavigationItem.Appointments.route) {
-                            popUpTo(chefNavController.graph.startDestinationId) {
-                                saveState = true
+
+                composable(ChefNavigationItem.Home.route) {
+                    ChefHomeScreen(
+                        navController = parentNavController,
+                        homeViewModel = homeViewModel,
+                        onNavigateToAppointments = {
+                            chefNavController.navigate(ChefNavigationItem.Appointments.route) {
+                                popUpTo(chefNavController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        },
+                        onCardClick = { appointment ->
+
+                            homeViewModel.selectAppointment(appointment)
+                            chefNavController.navigate(Screen.AppointmentDetails.route)
                         }
+                    )
+                }
+
+            composable(ChefNavigationItem.Appointments.route) {
+                AppointmentsScreen(
+                    viewModel = homeViewModel,
+                    onCardClick = { appointment ->
+                        homeViewModel.selectAppointment(appointment)
+                        chefNavController.navigate(Screen.AppointmentDetails.route)
                     }
                 )
             }
-            // 2. Chef Appointments Tab
-            composable(ChefNavigationItem.Appointments.route) {
-                AppointmentsScreen()
+
+            composable(Screen.AppointmentDetails.route) {
+
+                val appointment = homeViewModel.selectedAppointment
+
+                if (appointment != null) {
+                    val apptUiState by homeViewModel.appointmentsUiState.collectAsState()
+                    val homeUiState by homeViewModel.homeUiState.collectAsState()
+
+                    val usersMap = (apptUiState as? AppointmentsUiState.Success)?.usersMap
+                        ?: (homeUiState as? HomeUiState.Success)?.usersMap
+                        ?: emptyMap()
+
+                    val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
+
+                    AppointmentDetailScreen(
+                        appointment = appointment,
+                        userName = userName,
+                        onBackClick = { chefNavController.popBackStack() },
+                        onStatusChange = { newStatus, rejectionReason ->
+                            val id = appointment.AppointmentID.orEmpty()
+                            if (id.isNotBlank()) {
+                                homeViewModel.updateAppointmentStatus(
+                                    appointmentId = id,
+                                    newStatus = newStatus,
+                                    rejectionReason = rejectionReason
+                                )
+                                chefNavController.popBackStack()
+                            }
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No appointment selected", color = Color.Gray)
+                    }
+                }
             }
 
-            // 3. Chef Profile Tab
             composable(ChefNavigationItem.Profile.route) {
                 ChefProfileScreen(
                     navController = parentNavController, // Pass parent controller to allow complete logout back to root/login graph
