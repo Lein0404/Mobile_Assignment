@@ -1,15 +1,13 @@
 package com.example.foodieheal.ingredients.view
 
+import android.app.Application
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import android.widget.Toast
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -22,31 +20,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModelFactory
+import com.example.foodieheal.model.Status
+import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.PrimaryButton
+import com.example.foodieheal.ui.components.StatusBadge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngredientDetailScreen(
     navController: NavController,
-    ingredientId: String
+    ingredientId: String,
+    isRequest: Boolean = false
 ) {
-    val viewModel: IngredientsViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val application = context.applicationContext as Application
 
-    LaunchedEffect(ingredientId) {
-        viewModel.fetchIngredientDetail(ingredientId)
+    val ingredientsViewModel: IngredientsViewModel = viewModel()
+    val requestViewModel: IngredientRequestViewModel = viewModel(
+        factory = IngredientRequestViewModelFactory(application)
+    )
+    
+    val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
+    val requestDetail by requestViewModel.requestDetail.collectAsState()
+    val requestUiState by requestViewModel.uiState.collectAsState()
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(ingredientId, isRequest) {
+        if (isRequest) {
+            requestViewModel.fetchRequestDetail(ingredientId)
+        } else {
+            ingredientsViewModel.fetchIngredientDetail(ingredientId)
+        }
     }
+
+    val isLoading = if (isRequest) requestUiState.isLoading else ingredientsUiState.isLoading
+    val name = if (isRequest) requestDetail?.request?.ingredientName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientName
+    val category = if (isRequest) requestDetail?.request?.ingredientCategory?.categoryName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientCategory?.categoryName
+    val image = if (isRequest) requestDetail?.request?.ingredientImage else ingredientsUiState.ingredientDetail?.ingredient?.ingredientImage
+    val description = if (isRequest) requestDetail?.request?.ingredientDesc else ingredientsUiState.ingredientDetail?.ingredient?.ingredientDesc
+    val calorieInfo = if (isRequest) requestDetail?.calorieSummary else ingredientsUiState.ingredientDetail?.calorieSummary
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "View Ingredient",
+                        text = if (isRequest) "View Request" else "View Ingredient",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
@@ -65,12 +90,12 @@ fun IngredientDetailScreen(
             )
         }
     ) { paddingValues ->
-        if (uiState.isLoading) {
+        if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-            uiState.ingredientDetail?.let { info ->
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -86,19 +111,16 @@ fun IngredientDetailScreen(
                             .background(Color(0xFFE0E0E0)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (!info.ingredient.ingredientImage.isNullOrEmpty()) {
-                            // TODO: Replace with AsyncImage?
+                        if (!image.isNullOrEmpty()) {
                             SubcomposeAsyncImage(
-                                model = info.ingredient.ingredientImage,
-                                contentDescription = info.ingredient.ingredientName,
+                                model = image,
+                                contentDescription = name,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
                                 loading = {
                                     CircularProgressIndicator(modifier = Modifier.scale(0.5f))
                                 },
-                                error = {
-                                    ImagePlaceholder()
-                                }
+                                error = { ImagePlaceholder() }
                             )
                         } else {
                             ImagePlaceholder()
@@ -117,26 +139,40 @@ fun IngredientDetailScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = info.ingredient.ingredientName, 
+                                    text = name ?: "", 
                                     style = MaterialTheme.typography.headlineMedium, 
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black
                                 )
                                 Text(
-                                    text = info.ingredient.ingredientCategory?.categoryName ?: "Others", 
+                                    text = category ?: "Others", 
                                     color = Color.Gray,
                                     fontSize = 14.sp
                                 )
+                                
+                                if (isRequest) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    StatusBadge(status = requestDetail?.request?.requestStatus ?: Status.PENDING)
+                                }
                             }
-                            IconButton(onClick = {
-                                viewModel.addToShoppingList(info.ingredient)
-                                Toast.makeText(context, "${info.ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
-                            }) { //TODO
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_add_to_shopping_cart),
-                                    contentDescription = "Add to shopping list",
-                                    tint = Color.Black
-                                )
+                            
+                            if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
+                                IconButton(onClick = {
+                                    if (isRequest) {
+                                        // Accepted request logic
+                                    } else {
+                                        ingredientsUiState.ingredientDetail?.ingredient?.let {
+                                            ingredientsViewModel.addToShoppingList(it)
+                                            Toast.makeText(context, "${it.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_add_to_shopping_cart),
+                                        contentDescription = "Add to shopping list",
+                                        tint = Color.Black
+                                    )
+                                }
                             }
                         }
 
@@ -148,7 +184,7 @@ fun IngredientDetailScreen(
 
                         Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
                         Text(
-                            text = info.ingredient.ingredientDesc.ifEmpty { "No description available." },
+                            text = description?.ifEmpty { "No description available." } ?: "No description available.",
                             color = Color.Black,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -158,15 +194,73 @@ fun IngredientDetailScreen(
                         Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = info.calorieSummary.ifEmpty { "No calorie information available." },
+                            text = calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
                             color = Color.Black
+                        )
+
+                        if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = requestDetail?.request?.rejectedReason ?: "Unspecified.",
+                                color = Color.Black,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(120.dp))
+                    }
+                }
+
+                // Action Buttons for Pending Request (only when online)
+                if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable /*requestViewModel.isNetworkAvailable*/) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        PrimaryButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { showDeleteDialog = true },
+                            textID = R.string.delete_request
+                        )
+                        PrimaryButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { 
+                                navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
+                            },
+                            textID = R.string.update_request
                         )
                     }
                 }
-            } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ingredient not found")
             }
         }
+    }
+
+    if (showDeleteDialog && isRequest) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Request") },
+            text = { Text("Are you sure you want to delete this request?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    requestViewModel.deleteRequest(ingredientId) {
+                        Toast.makeText(context, "Request deleted", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    }
+                    showDeleteDialog = false
+                }) {
+                    Text("Yes", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
     }
 }
 

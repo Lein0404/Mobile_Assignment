@@ -39,8 +39,8 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
                     val summary = unitsForIngredient.joinToString(", ") { iu ->
                         val unit = allUnits[iu.unitID]
                         val qty = unit?.defaultQuantity?.toInt() ?: 0
-                        val name = unit?.unitName ?: ""
-                        "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${name}"
+                        val display = unit?.unitDisplay ?: ""
+                        "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${display}"
                     }
                     IngredientItem(ingredient, summary)
                 }
@@ -102,7 +102,7 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
                             CalorieEntry(
                                 calories = iu.caloriesPerDefaultQuantity,
                                 quantity = unit.defaultQuantity,
-                                unitName = unit.unitName
+                                unitName = unit.unitDisplay
                             )
                         }
                     }

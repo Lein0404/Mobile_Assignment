@@ -42,7 +42,8 @@ data class IngredientUnitsEntity(
 data class UnitsEntity(
     @PrimaryKey
     @ColumnInfo(name = "unit_id") val unitId: String,
-    @ColumnInfo(name = "unit_display") val unitName: String = "",
+    @ColumnInfo(name = "unit_name") val unitName: String = "",
+    @ColumnInfo(name = "unit_display") val unitDisplay: String = "",
     @ColumnInfo(name = "default_quantity") val defaultQuantity: Double = 1.0,
 )
 
@@ -87,11 +88,13 @@ fun IngredientUnitsEntity.toDomain() = IngredientUnits(
 fun Units.toEntity() = UnitsEntity(
     unitId = unitID,
     unitName = unitName,
+    unitDisplay = unitDisplay,
     defaultQuantity = defaultQuantity,
 )
 
 fun UnitsEntity.toDomain() = Units(
     unitID = unitId,
     unitName = unitName,
+    unitDisplay = unitDisplay,
     defaultQuantity = defaultQuantity,
 )

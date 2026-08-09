@@ -33,7 +33,8 @@ import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
-import com.example.foodieheal.ingredients.view.IngredientsScreen
+import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
+import com.example.foodieheal.ingredients.view.IngredientsMainScreen
 import com.example.foodieheal.ingredients.view.ShoppingListScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
@@ -193,15 +194,19 @@ fun MainScreen(parentNavController: NavHostController) {
 
             // Ingredients module nested under MainScreen to keep bottom bar
             composable(Screen.Ingredients.route) {
-                IngredientsScreen(navController)
+                IngredientsMainScreen(navController)
             }
 
             composable(
                 route = Screen.IngredientDetail.route,
-                arguments = listOf(navArgument("id") { type = NavType.StringType })
+                arguments = listOf(
+                    navArgument("id") { type = NavType.StringType },
+                    navArgument("isRequest") { type = NavType.BoolType }
+                )
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id") ?: ""
-                IngredientDetailScreen(navController, id)
+                val isRequest = backStackEntry.arguments?.getBoolean("isRequest") ?: false
+                IngredientDetailScreen(navController, id, isRequest)
             }
 
             composable(Screen.ShoppingList.route) {
@@ -210,6 +215,18 @@ fun MainScreen(parentNavController: NavHostController) {
 
             composable(Screen.AddShoppingListItem.route) {
                 AddShoppingListItemScreen(navController)
+            }
+
+            composable(
+                route = Screen.IngredientRequestForm.route,
+                arguments = listOf(navArgument("id") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                })
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id")
+                IngredientRequestFormScreen(navController, requestId = id)
             }
 
             composable(Screen.Profile.route) { ProfileScreen(navController, parentNavController) }

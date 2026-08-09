@@ -45,8 +45,7 @@ fun CloudinaryUploadScreen(
     ) {
         Text(
             text = stringResource(R.string.image),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
 
@@ -58,7 +57,7 @@ fun CloudinaryUploadScreen(
                 model = imageModel,
                 contentDescription = if (state.selectedImageUri != null) "Selected Image" else "Uploaded Image",
                 modifier = Modifier
-                    .height(150.dp)
+                    .height(250.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .border(2.dp, Color.Gray, RoundedCornerShape(12.dp)),

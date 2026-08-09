@@ -25,7 +25,8 @@ data class IngredientUnits(
 @Serializable
 data class Units(
     @SerialName("unit_id") val unitID: String = "",
-    @SerialName("unit_display") val unitName: String = "",
+    @SerialName("unit_name") val unitName: String = "",
+    @SerialName("unit_display") val unitDisplay: String = "",
     @SerialName("default_quantity") val defaultQuantity: Double = 1.0
 )
 
