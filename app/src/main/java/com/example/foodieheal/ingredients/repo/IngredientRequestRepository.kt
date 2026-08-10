@@ -90,5 +90,35 @@ class IngredientRequestRepository {
             SupabaseClient.client.from("ingredient_units_request").insert(unitRequests)
         }
     }
+
+    suspend fun updateIngredientRequest(
+        request: IngredientRequest,
+        unitRequests: List<IngredientUnitsRequest>
+    ) = withContext(Dispatchers.IO) {
+        // 1. Update the main request (excluding datetime_created)
+        SupabaseClient.client.from("ingredient_request").update(
+            {
+                set("ing_name", request.ingredientName)
+                set("ing_category", request.ingredientCategory)
+                set("ing_description", request.ingredientDesc)
+                set("ing_image", request.ingredientImage)
+                set("request_status", request.requestStatus)
+            }
+        ) {
+            filter {
+                eq("ingredient_request_id", request.ingredientRequestId)
+            }
+        }
+
+        // 2. Refresh associated unit requests
+        // Delete old units
+        SupabaseClient.client.from("ingredient_units_request")
+            .delete { filter { eq("ingredient_request_id", request.ingredientRequestId) } }
+        
+        // Insert new units
+        if (unitRequests.isNotEmpty()) {
+            SupabaseClient.client.from("ingredient_units_request").insert(unitRequests)
+        }
+    }
 }
 

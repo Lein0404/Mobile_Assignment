@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +15,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -213,7 +216,7 @@ fun IngredientDetailScreen(
                 }
 
                 // Action Buttons for Pending Request (only when online)
-                if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable /*requestViewModel.isNetworkAvailable*/) {
+                if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable) {
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -221,17 +224,25 @@ fun IngredientDetailScreen(
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        PrimaryButton(
-                            modifier = Modifier.weight(1f),
+                        Button(
                             onClick = { showDeleteDialog = true },
-                            textID = R.string.delete_request
-                        )
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ),
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                        ) {
+                            Text(
+                                text = stringResource(R.string.delete_request),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                         PrimaryButton(
                             modifier = Modifier.weight(1f),
                             onClick = { 
                                 navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
                             },
-                            textID = R.string.update_request
+                            textID = R.string.edit_request
                         )
                     }
                 }

@@ -315,12 +315,12 @@ class IngredientRequestViewModel(
                     )
                 }
 
-                // If editing, delete old data first
+                // If editing, use update function
                 if (state.requestId != null) {
-                    repository.deleteIngredientRequest(state.requestId)
+                    repository.updateIngredientRequest(request, unitRequests)
+                } else {
+                    repository.submitIngredientRequest(request, unitRequests)
                 }
-                
-                repository.submitIngredientRequest(request, unitRequests)
 
                 _formState.value = IngredientRequestFormUiState() // Reset
                 fetchRequests() // Refresh

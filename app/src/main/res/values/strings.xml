@@ -162,5 +162,6 @@
     <string name="calorie_information">Calorie Information</string>
     <string name="request_new_ingredient">REQUEST NEW INGREDIENT</string>
     <string name="delete_request">DELETE REQUEST</string>
+    <string name="edit_request">EDIT REQUEST</string>
     <string name="update_request">UPDATE REQUEST</string>
 </resources>
