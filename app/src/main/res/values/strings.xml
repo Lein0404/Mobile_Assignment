@@ -164,4 +164,6 @@
     <string name="delete_request">DELETE REQUEST</string>
     <string name="edit_request">EDIT REQUEST</string>
     <string name="update_request">UPDATE REQUEST</string>
+    <string name="reject">REJECT</string>
+    <string name="review_approve">REVIEW &amp; APPROVE</string>
 </resources>

@@ -299,7 +299,7 @@ fun IngredientRequestCard(item: IngredientRequestItem, onClick: () -> Unit) {
                 Text(item.calorieSummary, color = Color.Gray, fontSize = 14.sp)
             }
             
-            StatusBadge(status = item.request.requestStatus ?: Status.PENDING)
+            StatusBadge(status = item.request.requestStatus)
         }
     }
 }

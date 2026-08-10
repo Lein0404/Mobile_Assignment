@@ -4,10 +4,9 @@ import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.local.IngredientsDao
 import com.example.foodieheal.ingredients.local.toDomain
 import com.example.foodieheal.ingredients.local.toEntity
-import com.example.foodieheal.ingredients.model.IngredientUnits
-import com.example.foodieheal.ingredients.model.Ingredients
-import com.example.foodieheal.ingredients.model.Units
+import com.example.foodieheal.ingredients.model.*
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -100,6 +99,44 @@ class IngredientsRepository(private val dao: IngredientsDao) {
             remote
         } catch (_: Exception) {
             cached
+        }
+    }
+
+    suspend fun insertIngredient(ingredient: Ingredients) = withContext(Dispatchers.IO) {
+        SupabaseClient.client.from("ingredients").insert(ingredient)
+        dao.insertAllIngredients(listOf(ingredient.toEntity()))
+    }
+
+    suspend fun insertIngredientUnits(units: List<IngredientUnits>) = withContext(Dispatchers.IO) {
+        if (units.isNotEmpty()) {
+            SupabaseClient.client.from("ingredient_units").insert(units)
+            dao.insertAllIngredientUnits(units.map { it.toEntity() })
+        }
+    }
+
+    suspend fun getNextIngredientId(): String = withContext(Dispatchers.IO) {
+        val existing = SupabaseClient.client.from("ingredients")
+            .select { order("ingredient_id", Order.DESCENDING) }
+            .decodeList<Ingredients>()
+
+        val maxNum = existing
+            .mapNotNull { it.ingredientId.removePrefix("ING").toIntOrNull() }
+            .maxOrNull() ?: 0
+
+        "ING${(maxNum + 1).toString().padStart(4, '0')}"
+    }
+
+    suspend fun getNextIngredientUnitIds(count: Int): List<String> = withContext(Dispatchers.IO) {
+        val existing = SupabaseClient.client.from("ingredient_units")
+            .select { order("ingredient_unit_id", Order.DESCENDING) }
+            .decodeList<IngredientUnits>()
+
+        val maxNum = existing
+            .mapNotNull { it.ingredientUnitId.removePrefix("IGU").toIntOrNull() }
+            .maxOrNull() ?: 0
+
+        (1..count).map { i ->
+            "IGU${(maxNum + i).toString().padStart(4, '0')}"
         }
     }
 }

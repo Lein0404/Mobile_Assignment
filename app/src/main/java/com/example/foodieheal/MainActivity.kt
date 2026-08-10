@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -15,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Admin.AdminApprovalScreen
+import com.example.foodieheal.Admin.AdminIngredientDetailScreen
+import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefHomeScreen
 import com.example.foodieheal.Chef.ChefMainScreen
@@ -38,8 +39,6 @@ import com.example.foodieheal.view.MainScreen
 import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.theme.FoodieHealTheme
-import com.example.foodieheal.view.LoginScreen
-import com.example.foodieheal.view.RegisterScreen
 import io.github.jan.supabase.postgrest.postgrest
 
 class MainActivity : ComponentActivity() {
@@ -74,6 +73,22 @@ class MainActivity : ComponentActivity() {
                     //Ivan part (admin site)
                     composable(Screen.AdminChefScreen.route) {
                         AdminApprovalScreen(navController)
+                    }
+
+                    composable(
+                        route = Screen.AdminIngredientDetail.route,
+                        arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("id") ?: ""
+                        AdminIngredientDetailScreen(navController, id)
+                    }
+
+                    composable(
+                        route = Screen.AdminIngredientReview.route,
+                        arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("id") ?: ""
+                        AdminIngredientRequestFormScreen(navController, id)
                     }
 
                     composable(Screen.ChefMain.route) {

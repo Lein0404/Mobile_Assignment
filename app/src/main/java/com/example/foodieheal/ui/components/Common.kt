@@ -406,13 +406,13 @@ fun GenderDropdown(
 fun StatusBadge(status: Status) {
     val (color, text) = when (status) {
         Status.APPROVED -> Color(0xFFB1E0C0) to Status.APPROVED.statusName
-        Status.PENDING -> MaterialTheme.colorScheme.secondaryContainer to Status.PENDING.statusName
+        Status.PENDING -> Color(0xFFFFF3E0) to Status.PENDING.statusName
         Status.REJECTED -> MaterialTheme.colorScheme.errorContainer to Status.REJECTED.statusName
     }
 
     val textColor = when (status) {
         Status.APPROVED -> Color(0xFF008000)
-        Status.PENDING -> MaterialTheme.colorScheme.onSecondaryContainer
+        Status.PENDING -> Color(0xFFFF9800)
         Status.REJECTED -> MaterialTheme.colorScheme.onErrorContainer
     }
 

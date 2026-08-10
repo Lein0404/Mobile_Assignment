@@ -2,6 +2,7 @@ package com.example.foodieheal.ingredients.repo
 
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.model.Status
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +13,12 @@ class IngredientRequestRepository {
     suspend fun getIngredientRequests(userId: String): List<IngredientRequest> = withContext(Dispatchers.IO) {
         SupabaseClient.client.from("ingredient_request")
             .select { filter { eq("user_id", userId) } }
+            .decodeList<IngredientRequest>()
+    }
+
+    suspend fun getAllIngredientRequests(): List<IngredientRequest> = withContext(Dispatchers.IO) {
+        SupabaseClient.client.from("ingredient_request")
+            .select()
             .decodeList<IngredientRequest>()
     }
 
@@ -103,6 +110,7 @@ class IngredientRequestRepository {
                 set("ing_description", request.ingredientDesc)
                 set("ing_image", request.ingredientImage)
                 set("request_status", request.requestStatus)
+                set("rejected_reason", request.rejectedReason)
             }
         ) {
             filter {
@@ -118,6 +126,19 @@ class IngredientRequestRepository {
         // Insert new units
         if (unitRequests.isNotEmpty()) {
             SupabaseClient.client.from("ingredient_units_request").insert(unitRequests)
+        }
+    }
+
+    suspend fun updateRequestStatus(requestId: String, status: Status, rejectedReason: String? = null) = withContext(Dispatchers.IO) {
+        SupabaseClient.client.from("ingredient_request").update(
+            {
+                set("request_status", status)
+                set("rejected_reason", rejectedReason)
+            }
+        ) {
+            filter {
+                eq("ingredient_request_id", requestId)
+            }
         }
     }
 }
