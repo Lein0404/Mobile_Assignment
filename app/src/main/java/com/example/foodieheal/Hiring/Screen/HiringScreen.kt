@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Appointment
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +53,8 @@ fun HiringScreen(
     hiringViewModel: HiringViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel(),
-    onChefClick: (Chef) -> Unit
+    onChefClick: (Chef) -> Unit,
+    onAppointmentClick: (Appointment) -> Unit
 ) {
     val currentUser = authViewModel.currentUser
     val currentUserId = currentUser?.id.orEmpty()
@@ -59,10 +62,9 @@ fun HiringScreen(
     val isLoading = hiringViewModel.isProcessing
     val errorMessage = hiringViewModel.errorMessage
 
-    // 🟢 Top-level collected state for Tab 1
     val appointmentState by hiringViewModel.userAppointmentsState.collectAsState()
 
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Popular", "Appointment", "Bookmarks")
 
     // Fetch all chefs on initial screen launch
@@ -74,8 +76,11 @@ fun HiringScreen(
 
     // Automatically fetch bookmarked chefs whenever switching to Tab 2 (Bookmarks)
     LaunchedEffect(selectedTabIndex, currentUserId) {
-        if (selectedTabIndex == 2 && currentUserId.isNotEmpty()) {
-            bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
+        if (currentUserId.isNotEmpty()) {
+            when (selectedTabIndex) {
+                1 -> hiringViewModel.fetchAppointmentsForCurrentUser()
+                2 -> bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
+            }
         }
     }
 
@@ -272,12 +277,16 @@ fun HiringScreen(
                                     }
 
                                     items(currentState.appointments) { appointment ->
+
                                         val chefUser = currentState.usersMap[appointment.chefId]
                                         val chefName = chefUser?.name ?: "Chef"
+                                        val chefPicture = chefUser?.profilePicUrl ?: ""
 
                                         UserAppointmentCard(
                                             appointment = appointment,
-                                            chefName = chefName
+                                            chefName = chefName,
+                                            chefPicture = chefPicture,
+                                            onClick = { onAppointmentClick(appointment) }
                                         )
                                     }
                                 }
@@ -435,14 +444,24 @@ fun ChefHireItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val rating = chef.averagerating
-                val ratingDisplay = if (rating != null && rating > 0.0) "★ %.1f".format(rating) else "★ N/A"
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_star), // 👈 Your star drawable
+                        contentDescription = "Rating Star",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
 
-                Text(
-                    text = ratingDisplay,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                    Text(
+                        text = if (rating != null && rating > 0.0) "%.1f".format(rating) else "N/A",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 chef.Pricing?.let { price ->
                     Text(
@@ -460,123 +479,165 @@ fun ChefHireItem(
 @Composable
 fun UserAppointmentCard(
     appointment: Appointment,
-    chefName: String
+    chefName: String,
+    chefPicture: String?,
+    onClick: () -> Unit
 ) {
     Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header: Chef Name & Status Badge
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // --- 1. Chef Profile Header ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Chef Avatar
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!chefPicture.isNullOrBlank()) {
+                        AsyncImage(
+                            model = chefPicture,
+                            contentDescription = "$chefName Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                           painter = painterResource(R.drawable.ic_outline_account_circle),
+                            contentDescription = "Chef Placeholder",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Chef Name & Role
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = chefName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Private Chef",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Appointment Status Badge
+                AppointmentStatusBadge(status = appointment.Status)
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+            // --- 2. Appointment Schedule & Price Details ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Chef",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = chefName,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black
-                    )
-                }
-
-                val statusText = appointment.Status.orEmpty().ifBlank { "Pending" }
-                val statusLower = statusText.lowercase()
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = when (statusLower) {
-                        "pending" -> Color(0xFFFFF3E0)
-                        "confirmed" -> Color(0xFFE8F5E9)
-                        "cancelled" -> Color(0xFFFFEBEE)
-                        else -> Color(0xFFEEEEEE)
+                // Schedule Info
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                           painter = painterResource(R.drawable.ic_planner),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = appointment.Date,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                ) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_clock),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (appointment.Start_Time.isNotBlank() && appointment.End_Time.isNotBlank()) {
+                                "${appointment.Start_Time} - ${appointment.End_Time}"
+                            } else {
+                                "Time no set"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Total Price
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = statusText,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = when (statusLower) {
-                            "pending" -> Color(0xFFE65100)
-                            "confirmed" -> Color(0xFF2E7D32)
-                            "cancelled" -> Color(0xFFC62828)
-                            else -> Color.DarkGray
-                        }
+                        text = "Total Price",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = String.format(Locale.US, "RM %.2f", appointment.Total_Price),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Details: Serving Size & Health Preference
-            val dietText = appointment.Health_Preference.orEmpty().ifBlank { "None" }
-            Text(
-                text = "Servings: ${appointment.Serving_Size ?: 0} Pax  |  Diet: $dietText",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.DarkGray
-            )
-
-            val noteText = appointment.Note.orEmpty()
-            if (noteText.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Note: $noteText",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Date & Time
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_clock),
-                    contentDescription = "Time",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "${appointment.Date.orEmpty()} (${appointment.Start_Time.orEmpty()} - ${appointment.End_Time.orEmpty()})",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Location
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.location),
-                    contentDescription = "Location",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                val locationText = listOfNotNull(
-                    appointment.Address?.takeIf { it.isNotBlank() },
-                    appointment.State?.takeIf { it.isNotBlank() }
-                ).joinToString(", ")
-
-                Text(
-                    text = locationText.ifBlank { "Address not specified" },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
             }
         }
+    }
+}
+
+// Helper composable for Status Badge
+@Composable
+private fun AppointmentStatusBadge(status: String) {
+    val (backgroundColor, textColor) = when (status.lowercase()) {
+        "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+        "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
+        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor
+    ) {
+        Text(
+            text = status.ifBlank { "Confirmed" }.replaceFirstChar { it.uppercase() },
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
     }
 }
 

@@ -42,7 +42,10 @@ data class Appointment(
     val Status : String,
 
     @SerialName("rating")
-    val rating : Double ?= null,
+    val rating : Int ?= null,
+
+    @SerialName("Comment")
+    val Comment : String ?= null,
 
     @SerialName("Reject_Reason")
     val Reject_Reason : String ?= null,

@@ -16,15 +16,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.foodieheal.Hiring.Screen.AddAppointmentFormScreen
 import com.example.foodieheal.Hiring.Screen.AppointmentReviewScreen
 import com.example.foodieheal.Hiring.Screen.HiringAppointment
 import com.example.foodieheal.Hiring.Screen.HiringChefDetails
 import com.example.foodieheal.Hiring.Screen.HiringScreen
+import com.example.foodieheal.Hiring.Screen.RateChefScreen
+import com.example.foodieheal.Hiring.Screen.RescheduleAppointmentScreen
+import com.example.foodieheal.Hiring.Screen.UserAppointmentDetailScreen
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
@@ -114,8 +119,66 @@ fun MainScreen(parentNavController: NavHostController) {
                 onChefClick = { chef ->
                     hiringViewModel.selectChef(chef)
                     navController.navigate("hiringChefDetails")
-                }
-            ) }
+                },
+                onAppointmentClick = { appointment ->
+
+                    val appointmentId = appointment.AppointmentID?.ifEmpty { appointment.AppointmentID.orEmpty() }
+                    navController.navigate("appointmentDetail/$appointmentId")
+                    }
+                )
+            }
+
+            composable(
+                route = "appointmentDetail/{appointmentId}",
+                arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
+
+                UserAppointmentDetailScreen(
+                    appointmentId = appointmentId,
+                    viewModel = hiringViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onRescheduleClick = { appointment ->
+                        navController.navigate("rescheduleAppointment/${appointment.AppointmentID}")
+                    },
+                    onRatingClick = { targetAppointmentId ->
+                        navController.navigate(Screen.RateChef.createRoute(targetAppointmentId))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.RateChef.route,
+                arguments = listOf(
+                    navArgument("appointmentId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
+
+                RateChefScreen(
+                    appointmentId = appointmentId,
+                    viewModel = hiringViewModel,
+                    onSubmitSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "rescheduleAppointment/{appointmentId}",
+                arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
+
+                RescheduleAppointmentScreen(
+                    appointmentId = appointmentId,
+                    viewModel = hiringViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onRescheduleSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
 
             composable(Screen.HiringChefDetails.route) {
                 val authViewModel: AuthViewModel = viewModel()
@@ -130,6 +193,7 @@ fun MainScreen(parentNavController: NavHostController) {
                         viewModel = profileViewModel,
                         onBackClick = {
                             navController.popBackStack()
+                            hiringViewModel.clearData()
                         },
                         onHireClick = {navController.navigate(Screen.HiringAppointment.route)}
                     )

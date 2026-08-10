@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -63,11 +64,16 @@ fun ChefDetailScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF7F8FC),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("Chef Details", fontWeight = FontWeight.Bold) },
+                    Text(
+                        text = "Chef Details",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                        },
 
                 navigationIcon = {
                     IconButton(
@@ -75,11 +81,14 @@ fun ChefDetailScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                }
-
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { padding ->
@@ -92,7 +101,7 @@ fun ChefDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
@@ -108,7 +117,7 @@ fun ChefDetailScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     elevation = CardDefaults.cardElevation(5.dp)
                 ) {
@@ -128,7 +137,7 @@ fun ChefDetailScreen(
                                 Icon(
                                     painter = painterResource(R.drawable.ic_outline_account_circle),
                                     contentDescription = "Default Profile",
-                                    tint = Color(0xFFFF9800),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else {
@@ -150,7 +159,8 @@ fun ChefDetailScreen(
                         Text(
                             text = chef!!.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(
@@ -212,14 +222,17 @@ fun ChefDetailScreen(
                     )
                     Text(
                         text = "Description",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(
                         modifier = Modifier.height(6.dp)
                     )
                     Text(
                         text = chef!!.description,
-                        color = Color.DarkGray
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -236,7 +249,8 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
@@ -250,7 +264,10 @@ fun ChefDetailScreen(
                         Spacer(
                             Modifier.width(8.dp)
                         )
-                        Text("Approve")
+                        Text(
+                            "Approve",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     Button(
@@ -258,7 +275,8 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935)
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
@@ -272,7 +290,9 @@ fun ChefDetailScreen(
                         Spacer(
                             Modifier.width(8.dp)
                         )
-                        Text("Reject")
+                        Text(
+                            "Reject",
+                            fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -287,7 +307,7 @@ fun DetailSectionCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(4.dp)
@@ -301,7 +321,8 @@ fun DetailSectionCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             HorizontalDivider()
@@ -324,7 +345,7 @@ fun DetailRow(
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
         Spacer(
@@ -334,11 +355,13 @@ fun DetailRow(
             Text(
                 text = label,
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }

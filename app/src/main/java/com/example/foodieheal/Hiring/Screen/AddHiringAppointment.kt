@@ -1,6 +1,7 @@
 package com.example.foodieheal.Hiring.Screen
 
 import android.app.TimePickerDialog
+import android.widget.TimePicker
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,16 +27,22 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -66,7 +74,6 @@ fun AddAppointmentFormScreen(
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
-
     val chefId = viewModel.currentChefId
 
     LaunchedEffect(chefId, viewModel.selectedDate) {
@@ -76,50 +83,25 @@ fun AddAppointmentFormScreen(
     }
 
     val selectedChef = viewModel.selectedChef
-
     val hourlyPrice = selectedChef?.Pricing ?: 0.0
     val currentUserId = client.auth.currentUserOrNull()?.id.orEmpty()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    // Time Pickers setup (Start Time -> End Time)
-    fun showTimeRangePickers() {
-        val cal = Calendar.getInstance()
-        var startFormatted = ""
+    // Local states for Start & End Time (Parsed from uiState or default)
+    var startTimeFormatted by remember { mutableStateOf("09:00 AM") }
+    var endTimeFormatted by remember { mutableStateOf("11:00 AM") }
 
-        val endPickerDialog = TimePickerDialog(
-            context,
-            { _, hour, minute ->
-                val formattedHour = if (hour % 12 == 0) 12 else hour % 12
-                val amPm = if (hour < 12) "AM" else "PM"
-                val endFormatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, minute, amPm)
+    // Dialog Visibility States
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
 
-                // 🟢 Combine startFormatted + endFormatted cleanly
-                if (startFormatted.isNotBlank()) {
-                    viewModel.onAppointmentTimeChanged("$startFormatted - $endFormatted")
-                }
-            },
-            cal.get(Calendar.HOUR_OF_DAY) + 2, // Default 2 hours later
-            cal.get(Calendar.MINUTE),
-            false
-        ).apply { setTitle("Select End Time") }
-
-        val startPickerDialog = TimePickerDialog(
-            context,
-            { _, hour, minute ->
-                val formattedHour = if (hour % 12 == 0) 12 else hour % 12
-                val amPm = if (hour < 12) "AM" else "PM"
-                startFormatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, minute, amPm)
-
-                endPickerDialog.show()
-            },
-            cal.get(Calendar.HOUR_OF_DAY),
-            cal.get(Calendar.MINUTE),
-            false
-        ).apply { setTitle("Select Start Time") }
-
-        startPickerDialog.show()
+    // Helper to update ViewModel time slot
+    fun updateAppointmentTimeSlot(start: String, end: String) {
+        startTimeFormatted = start
+        endTimeFormatted = end
+        viewModel.onAppointmentTimeChanged("$start - $end")
     }
 
     Scaffold(
@@ -157,23 +139,55 @@ fun AddAppointmentFormScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
 
-            // 1. Appointment Time
+            // Appointment Time Range
             FormLabel("Appointment Time")
-            FormInputField(
-                value = uiState.appointmentTime,
-                onValueChange = { viewModel.onAppointmentTimeChanged(it) },
-                placeholder = "Select Time Range (e.g. 09:00 AM - 11:00 AM)",
-                readOnly = true,
-                onClick = { showTimeRangePickers() },
-                trailingIcon = {
-                    IconButton(onClick = { showTimeRangePickers() }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_time),
-                            contentDescription = "Select Time Range"
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Start Time Card
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    onClick = { showStartTimePicker = true },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Start Time",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = startTimeFormatted,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
-            )
+
+                // End Time Card
+                OutlinedCard(
+                    modifier = Modifier.weight(1f),
+                    onClick = { showEndTimePicker = true },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "End Time",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = endTimeFormatted,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
 
             AnimatedErrorMessage(
                 visible = uiState.hasAttemptedSubmit && uiState.hasInvalidTimeError,
@@ -185,6 +199,7 @@ fun AddAppointmentFormScreen(
                 message = "This time slot is already booked for this chef. Please select another time."
             )
 
+            // Address Fields
             FormLabel("Address")
             FormInputField(
                 value = uiState.address,
@@ -224,8 +239,8 @@ fun AddAppointmentFormScreen(
                 message = "Please select a state."
             )
 
+            // Serving Size & Preferences
             FormLabel("Serving Size")
-
             FormInputField(
                 value = uiState.servingSize,
                 onValueChange = { newValue ->
@@ -289,10 +304,50 @@ fun AddAppointmentFormScreen(
             }
         }
     }
+
+    // Start Time Picker Dialog
+    if (showStartTimePicker) {
+        val timePickerState = rememberTimePickerState(is24Hour = false)
+        TimePickerDialog(
+            onDismissRequest = { showStartTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val formattedHour = if (timePickerState.hour % 12 == 0) 12 else timePickerState.hour % 12
+                    val amPm = if (timePickerState.hour < 12) "AM" else "PM"
+                    val formatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, timePickerState.minute, amPm)
+
+                    updateAppointmentTimeSlot(formatted, endTimeFormatted)
+                    showStartTimePicker = false
+                }) { Text("Select") }
+            }
+        ) {
+            TimePicker(state = timePickerState)
+        }
+    }
+
+    // End Time Picker Dialog
+    if (showEndTimePicker) {
+        val timePickerState = rememberTimePickerState(is24Hour = false)
+        TimePickerDialog(
+            onDismissRequest = { showEndTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val formattedHour = if (timePickerState.hour % 12 == 0) 12 else timePickerState.hour % 12
+                    val amPm = if (timePickerState.hour < 12) "AM" else "PM"
+                    val formatted = String.format(Locale.US, "%02d:%02d %s", formattedHour, timePickerState.minute, amPm)
+
+                    updateAppointmentTimeSlot(startTimeFormatted, formatted)
+                    showEndTimePicker = false
+                }) { Text("Select") }
+            }
+        ) {
+            TimePicker(state = timePickerState)
+        }
+    }
 }
 
 @Composable
-private fun FormLabel(text: String) {
+fun FormLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,

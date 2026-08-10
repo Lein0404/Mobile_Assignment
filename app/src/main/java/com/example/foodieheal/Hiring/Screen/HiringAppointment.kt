@@ -73,7 +73,7 @@ fun HiringAppointment(
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val apptUiState by viewModel.appointmentsUiState.collectAsState()
+    val chefAppointmentsUiState by hiringViewModel.chefAppointmentsState.collectAsState()
 
     LaunchedEffect(chef.chefId) {
         chef.chefId?.let { id ->
@@ -81,21 +81,27 @@ fun HiringAppointment(
         }
     }
 
-    val chefAppointments by hiringViewModel.chefAppointmentsState.collectAsState()
+    val chefAppointments = chefAppointmentsUiState.appointments
 
     // Filter appointments for the selected date
     val chefAppointmentsForSelectedDate = remember(chefAppointments, selectedDate) {
         val formattedSelectedDate = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val altFormattedSelectedDate =
-            selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        val altFormattedSelectedDate = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        val altFormattedSelectedDate2 = selectedDate.format(DateTimeFormatter.ofPattern("d/M/yyyy"))
 
         chefAppointments.filter { appointment ->
-            // Matches if date strings match in standard YYYY-MM-DD or DD/MM/YYYY
-            appointment.Date.contains(formattedSelectedDate) ||
-                    appointment.Date.contains(altFormattedSelectedDate)
+            val apptDate = appointment.Date.trim()
+            val status = appointment.Status.lowercase(Locale.US)
+            val isActive = status !in listOf("cancelled", "rejected")
+
+            isActive && (
+                    apptDate.contains(formattedSelectedDate) ||
+                            apptDate.contains(altFormattedSelectedDate) ||
+                            apptDate.contains(altFormattedSelectedDate2) ||
+                            apptDate == selectedDate.toString()
+                    )
         }
     }
-
     val startOfWeek = remember(selectedDate) {
         selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }

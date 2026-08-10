@@ -154,6 +154,8 @@ class chefRegisterViewModel : ViewModel() {
                 // Save to supabase that all
                 client.postgrest.from("Chef").insert(newChef)
 
+                client.auth.signOut()
+
                 isSubmitting = false
                 clearData()
                 onSuccess()
@@ -208,7 +210,7 @@ class chefRegisterViewModel : ViewModel() {
                     }
                 }
 
-                // 3. Update AuthViewModel state
+                // Update AuthViewModel state
                 authViewModel.updateLocalChef(chefToSave)
 
                 onSuccess()

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -29,7 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,14 +75,15 @@ fun AdminApprovalScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF7F8FC),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
                             text = "Admin Management",
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     },
                     navigationIcon = {
@@ -94,39 +99,54 @@ fun AdminApprovalScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back"
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
                 TabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 ) {
                     Tab(
                         selected = selectedTab == 0,
-                        onClick = {
-                            selectedTab = 0
-                        },
+                        onClick = { selectedTab = 0 },
+                        selectedContentColor = MaterialTheme.colorScheme.primary,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         text = {
-                            Text("Chef Approval")
+                            Text(
+                                "Chef Approval",
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                            )
                         },
                         icon = {
                             Icon(
-                                painter = painterResource(
-                                    R.drawable.ic_outline_account_circle
-                                ),
+                                painter = painterResource(R.drawable.ic_outline_account_circle),
                                 contentDescription = null
                             )
                         }
                     )
                     Tab(
                         selected = selectedTab == 1,
-                        onClick = {
-                            selectedTab = 1
-                        },
+                        onClick = { selectedTab = 1 },
+                        selectedContentColor = MaterialTheme.colorScheme.primary,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         text = {
-                            Text("Ingredients")
+                            Text(
+                                "Ingredients",
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                            )
                         },
                         icon = {
                             Icon(
@@ -158,7 +178,7 @@ fun AdminApprovalScreen(
                                 painter = painterResource(R.drawable.ic_outline_account_circle),
                                 contentDescription = null,
                                 modifier = Modifier.size(60.dp),
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
                             Spacer(
@@ -168,7 +188,7 @@ fun AdminApprovalScreen(
                             Text(
                                 "No pending applications",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -211,7 +231,7 @@ fun ChefApprovalCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 5.dp
@@ -234,7 +254,7 @@ fun ChefApprovalCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_outline_account_circle),
                             contentDescription = "Default Profile",
-                            tint = Color(0xFFFF9800),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(75.dp)
                         )
                     } else {
@@ -259,7 +279,8 @@ fun ChefApprovalCard(
                     Text(
                         text = chef.name,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(
@@ -276,7 +297,7 @@ fun ChefApprovalCard(
                 modifier = Modifier.height(20.dp)
             )
 
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.tertiary)
 
             Spacer(
                 modifier = Modifier.height(15.dp)
@@ -306,7 +327,11 @@ fun ChefApprovalCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_view),
@@ -331,7 +356,7 @@ fun StatusChip(
 ) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = Color(0xFFFFF3E0)
+        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
     ) {
         Text(
             text = status,
@@ -339,7 +364,7 @@ fun StatusChip(
                 horizontal = 12.dp,
                 vertical = 6.dp
             ),
-            color = Color(0xFFFF9800),
+            color = MaterialTheme.colorScheme.secondary,
             fontWeight = FontWeight.Medium,
             style = MaterialTheme.typography.labelMedium
         )
@@ -361,7 +386,7 @@ fun ChefInfoRow(
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
 
@@ -371,7 +396,7 @@ fun ChefInfoRow(
 
         Text(
             text = text,
-            color = Color.DarkGray,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium
         )
     }

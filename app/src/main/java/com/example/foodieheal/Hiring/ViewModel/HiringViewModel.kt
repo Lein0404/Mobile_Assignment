@@ -2,6 +2,7 @@ package com.example.foodieheal.Hiring.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,7 @@ import com.example.mobileassignmentloginpart.Model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.coroutines.cancellation.CancellationException
@@ -42,6 +46,13 @@ sealed interface UserAppointmentsUiState {
     ) : UserAppointmentsUiState
     data class Error(val message: String) : UserAppointmentsUiState
 }
+
+data class ChefAppointmentsUiState(
+    val isLoading: Boolean = false,
+    val appointments: List<Appointment> = emptyList(),
+    val chefUser: User? = null,
+    val errorMessage: String? = null
+)
 
 data class AppointmentUiState(
     val appointmentTime: String = "",
@@ -85,10 +96,18 @@ class HiringViewModel : ViewModel() {
     private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
     val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
 
-    private val _chefAppointmentsState = MutableStateFlow<List<Appointment>>(emptyList())
-    val chefAppointmentsState: StateFlow<List<Appointment>> = _chefAppointmentsState.asStateFlow()
+    private val _chefAppointmentsState = MutableStateFlow(ChefAppointmentsUiState())
+    val chefAppointmentsState: StateFlow<ChefAppointmentsUiState> = _chefAppointmentsState.asStateFlow()
     val uiState: StateFlow<AppointmentUiState> = _uiState.asStateFlow()
 
+    private val _averageRating = MutableStateFlow(0.0)
+    val averageRating: StateFlow<Double> = _averageRating.asStateFlow()
+
+    private val _totalReviews = MutableStateFlow(0)
+    val totalReviews: StateFlow<Int> = _totalReviews.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     var chefList by mutableStateOf<List<Chef>>(emptyList())
         private set
 
@@ -109,6 +128,13 @@ class HiringViewModel : ViewModel() {
 
     var isSubmitting by mutableStateOf(false)
         private set
+
+    var selectedTabIndex by mutableIntStateOf(0)
+        private set
+
+    fun onTabSelected(index: Int) {
+        selectedTabIndex = index
+    }
 
     init {
         fetchAppointmentsForCurrentUser()
@@ -149,7 +175,11 @@ class HiringViewModel : ViewModel() {
         }
     }
 
-    private fun checkTimeSlotOverlap(timeSlot: String): Boolean {
+    private fun checkTimeSlotOverlap(
+        timeSlot: String,
+        targetDateStr: String? = null,
+        currentAppointmentId: String? = null
+    ): Boolean {
         if (!timeSlot.contains(" - ")) return false
         val parts = timeSlot.split(" - ")
         if (parts.size != 2) return false
@@ -162,28 +192,35 @@ class HiringViewModel : ViewModel() {
             return false
         }
 
-        val existingAppointments = _chefAppointmentsState.value
+        val existingAppointments: List<Appointment> = when (val state = _chefAppointmentsState.value) {
+            is List<*> -> state.filterIsInstance<Appointment>()
+            is ChefAppointmentsUiState -> state.appointments
+            else -> emptyList()
+        }
         Log.d("OverlapCheck", "Checking against ${existingAppointments.size} loaded appointments for current chef.")
 
-        val formattedSelectedDate = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val altSelectedDate = selectedDate.format(DateTimeFormatter.ofPattern("d/M/yyyy"))
-        val altSelectedDate2 = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        // Determine target date string for comparison
+        val targetDate = targetDateStr?.trim() ?: selectedDate.toString()
 
         return existingAppointments.any { appt ->
+            // Ignore the appointment that be reschedule so it does not confict with it own
+            if (currentAppointmentId != null && appt.AppointmentID == currentAppointmentId) {
+                return@any false
+            }
+
             // Ignore cancelled or rejected bookings
             val status = appt.Status?.lowercase(java.util.Locale.US) ?: ""
             val isActive = status !in listOf("cancelled", "rejected")
 
-            // Date matching
+            // Date Matching (Handles both direct String comparison and LocalDate formats)
             val apptDate = appt.Date?.trim().orEmpty()
-            val isSameDate = apptDate.contains(formattedSelectedDate) ||
-                    apptDate.contains(altSelectedDate) ||
-                    apptDate.contains(altSelectedDate2) ||
-                    apptDate == selectedDate.toString()
+            val isSameDate = apptDate.equals(targetDate, ignoreCase = true) ||
+                    apptDate.contains(targetDate) ||
+                    targetDate.contains(apptDate)
 
             // Extract Start & End Time
-            val rawStart = appt.Start_Time ?: appt.Start_Time
-            val rawEnd = appt.End_Time ?: appt.End_Time
+            val rawStart = appt.Start_Time
+            val rawEnd = appt.End_Time
 
             val existingStart = parseTimeToMinutes(rawStart)
             val existingEnd = parseTimeToMinutes(rawEnd)
@@ -276,21 +313,58 @@ class HiringViewModel : ViewModel() {
     }
 
     // Single source of validation logic
-    fun validateAndSubmit(onSuccess: () -> Unit) {
-        val currentState = _uiState.value
+    fun validateFormValues(
+        appointmentTime: String,
+        address: String,
+        postcode: String,
+        state: String,
+        servingSize: String,
+        description: String,
+        targetDate: String? = null,
+        currentAppointmentId: String? = null,
+        isTimeValid: Boolean = appointmentTime.isNotBlank(),
+        isAddressValid: Boolean = address.isNotBlank(),
+        isPostcodeValid: Boolean = postcode.matches(Regex("^[0-9]{5}$")),
+        isStateValid: Boolean = state.isNotBlank(),
+        isServingSizeValid: Boolean = (servingSize.toIntOrNull() ?: 0) > 0,
+        isDescriptionValid: Boolean = description.isNotBlank()
+    ): Set<AppointmentValidationError> {
         val newErrors = mutableSetOf<AppointmentValidationError>()
 
-        if (currentState.appointmentTime.isBlank()) {
+        // Time Validation
+        if (appointmentTime.isBlank()) {
             newErrors.add(AppointmentValidationError.InvalidTime)
-        } else if (checkTimeSlotOverlap(currentState.appointmentTime)) {
+        } else if (checkTimeSlotOverlap(appointmentTime, targetDate, currentAppointmentId)) {
             newErrors.add(AppointmentValidationError.TimeSlotOccupied)
         }
-        if (!currentState.isTimeValid) newErrors.add(AppointmentValidationError.InvalidTime)
-        if (!currentState.isAddressValid) newErrors.add(AppointmentValidationError.InvalidAddress)
-        if (!currentState.isPostcodeValid) newErrors.add(AppointmentValidationError.InvalidPostcode)
-        if (!currentState.isStateValid) newErrors.add(AppointmentValidationError.InvalidState)
-        if (!currentState.isServingSizeValid) newErrors.add(AppointmentValidationError.InvalidServingSize)
-        if (!currentState.isDescriptionValid) newErrors.add(AppointmentValidationError.InvalidDescription)
+
+        if (!isTimeValid) newErrors.add(AppointmentValidationError.InvalidTime)
+        if (!isAddressValid) newErrors.add(AppointmentValidationError.InvalidAddress)
+        if (!isPostcodeValid) newErrors.add(AppointmentValidationError.InvalidPostcode)
+        if (!isStateValid) newErrors.add(AppointmentValidationError.InvalidState)
+        if (!isServingSizeValid) newErrors.add(AppointmentValidationError.InvalidServingSize)
+        if (!isDescriptionValid) newErrors.add(AppointmentValidationError.InvalidDescription)
+
+        return newErrors
+    }
+
+    fun validateAndSubmit(onSuccess: () -> Unit) {
+        val currentState = _uiState.value
+
+        val newErrors = validateFormValues(
+            appointmentTime = currentState.appointmentTime,
+            address = currentState.address,
+            postcode = currentState.postcode,
+            state = currentState.state,
+            servingSize = currentState.servingSize,
+            description = currentState.description,
+            isTimeValid = currentState.isTimeValid,
+            isAddressValid = currentState.isAddressValid,
+            isPostcodeValid = currentState.isPostcodeValid,
+            isStateValid = currentState.isStateValid,
+            isServingSizeValid = currentState.isServingSizeValid,
+            isDescriptionValid = currentState.isDescriptionValid
+        )
 
         _uiState.update {
             it.copy(
@@ -311,6 +385,53 @@ class HiringViewModel : ViewModel() {
         }
     }
 
+    fun validateAndReschedule(
+        appointmentId: String,
+        newDate: String,
+        newStartTime: String,
+        newEndTime: String,
+        newAddress: String,
+        newPostcode: String,
+        newState: String,
+        newServingSize: String,
+        newDescription: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ): Set<AppointmentValidationError> {
+        val timeRangeString = "$newStartTime - $newEndTime"
+
+        // Pass targetDate and currentAppointmentId to check overlaps against the new date
+        // and ignore self-conflicts
+        val errors = validateFormValues(
+            appointmentTime = timeRangeString,
+            address = newAddress,
+            postcode = newPostcode,
+            state = newState,
+            servingSize = newServingSize,
+            description = newDescription,
+            targetDate = newDate,
+            currentAppointmentId = appointmentId
+        )
+
+        if (errors.isEmpty()) {
+            rescheduleAppointment(
+                appointmentId = appointmentId,
+                newDate = newDate,
+                newStartTime = newStartTime,
+                newEndTime = newEndTime,
+                newAddress = newAddress,
+                newPostcode = newPostcode,
+                newState = newState,
+                newServingSize = newServingSize.toIntOrNull() ?: 1,
+                newDescription = newDescription,
+                onSuccess = onSuccess,
+                onError = onError
+            )
+        }
+
+        return errors
+    }
+
     fun fetchAllChefs() {
         viewModelScope.launch {
             isProcessing = true
@@ -326,8 +447,37 @@ class HiringViewModel : ViewModel() {
                     }
                     .decodeList<Chef>()
 
+                val ratedAppointments = client.postgrest["Appointment"]
+                    .select {
+                        filter {
+                            gt("rating", 0)
+                        }
+                    }
+                    .decodeList<Appointment>()
+
+                val processedChefs = chefs
+                    .filter { chef ->
+                        // Ensure Pricing is not null
+                        chef.Pricing != null && chef.Pricing >= 0
+                    }
+                    .map { chef ->
+                        val idToMatch = chef.chefId.ifEmpty { chef.id }
+
+                        // Calculate average rating for this specific chef
+                        val chefRatings = ratedAppointments
+                            .filter { it.chefId == idToMatch }
+                            .mapNotNull { it.rating }
+
+                        val avgRating = if (chefRatings.isNotEmpty()) {
+                            (chefRatings.average() * 10).toInt() / 10.0
+                        } else null
+
+                        // Return chef copy with calculated rating
+                        chef.copy(averagerating = avgRating)
+                    }
+
                 Log.d("SupabaseChef", "Successfully loaded ${chefs.size} chefs.")
-                chefList = chefs
+                chefList = processedChefs
 
             } catch (e: CancellationException) {
                 // Re-throw so Kotlin can cleanly handle coroutine cancellation
@@ -354,21 +504,39 @@ class HiringViewModel : ViewModel() {
                         }
                         .decodeList<Appointment>()
                 }
-                _chefAppointmentsState.value = appointments
+
+                val chefUser = withContext(Dispatchers.IO) {
+                    client.from("users") //
+                        .select {
+                            filter {
+                                eq("id", chefId)
+                            }
+                        }
+                        .decodeSingleOrNull<User>()
+                }
+
+                _chefAppointmentsState.value = ChefAppointmentsUiState(
+                    isLoading = false,
+                    appointments = appointments,
+                    chefUser = chefUser
+                )
                 Log.d(
                     "HiringViewModel",
                     "Loaded ${appointments.size} appointments for chef: $chefId"
                 )
             } catch (e: Exception) {
                 Log.e("HiringViewModel", "Error fetching appointments for chef $chefId", e)
-                _chefAppointmentsState.value = emptyList()
+                _chefAppointmentsState.value = ChefAppointmentsUiState(
+                    isLoading = false,
+                    errorMessage = e.localizedMessage ?: "Failed to load details"
+                )
             }
         }
     }
 
     fun calculateTotalPrice(): Double {
         val hourlyRate = selectedChef?.Pricing ?: 0.0
-        val timeString = uiState.value.appointmentTime // e.g. "09:00 AM - 11:00 AM"
+        val timeString = uiState.value.appointmentTime
 
         if (!timeString.contains(" - ")) return hourlyRate
 
@@ -406,17 +574,18 @@ class HiringViewModel : ViewModel() {
                     return@launch
                 }
 
+                // Fetch appointments where current user is the client
                 val appointments = withContext(Dispatchers.IO) {
                     client.from("Appointment")
                         .select {
                             filter {
-                                eq("userId", currentUserId) // Filters by logged-in User ID
+                                eq("userId", currentUserId)
                             }
                         }
                         .decodeList<Appointment>()
                 }
 
-                // 🟢 Batch fetch associated Chef profiles using chefId
+                // Batch fetch associated Chef profiles mapped by appointment.chefId
                 val chefsMap = fetchChefsForAppointments(appointments)
 
                 _userAppointmentsState.value = UserAppointmentsUiState.Success(
@@ -433,24 +602,34 @@ class HiringViewModel : ViewModel() {
         }
     }
 
-    // Batch fetch Chef details from 'users' table using chefId
+    // Maps appointment.chefId directly to User object
     private suspend fun fetchChefsForAppointments(appointments: List<Appointment>): Map<String, User> {
+        // 1. Grab all unique chefIds from appointments
         val chefIds = appointments.mapNotNull { it.chefId }.distinct().filter { it.isNotBlank() }
         if (chefIds.isEmpty()) return emptyMap()
 
         return try {
             withContext(Dispatchers.IO) {
-                client.from("users")
+
+                val chefRecords = client.from("Chef")
                     .select {
-                        filter {
-                            isIn("id", chefIds)
-                        }
+                        filter { isIn("chefId", chefIds) }
                     }
-                    .decodeList<User>()
-                    .associateBy { it.id ?: "" } // Map ID -> User for fast O(1) lookup
+                    .decodeList<Chef>()
+
+                // Map chefId -> User UI object directly from Chef table fields
+                chefRecords.associate { chef ->
+                    val key = chef.chefId.ifEmpty { chef.id }
+
+                    key to User(
+                        id = key,
+                        name = chef.name,
+                        profilePicUrl = chef.profilePictureUrl ?: ""
+                    )
+                }
             }
         } catch (e: Exception) {
-            Log.e("HiringViewModel", "Error batch-fetching chefs", e)
+            Log.e("HiringViewModel", "Error fetching chefs from Chef table", e)
             emptyMap()
         }
     }
@@ -493,6 +672,7 @@ class HiringViewModel : ViewModel() {
             Total_Price = totalPrice,
             Status = "Pending",
             rating = null,
+            Comment = null,
             Reject_Reason = null,
             chefId = chefId,
             userId = userId
@@ -500,7 +680,7 @@ class HiringViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // 3. Insert record into Supabase
+                // Insert record into Supabase
                 client.from("Appointment").insert(newAppointment)
 
                 isSubmitting = false
@@ -522,6 +702,162 @@ class HiringViewModel : ViewModel() {
                 }
                 onError(e.message ?: "An error occurred")
             }
+        }
+    }
+
+    fun cancelAppointment(
+        appointmentId: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        updateAppointmentStatus(
+            appointmentId = appointmentId,
+            newStatus = "Cancelled",
+            onSuccess = onSuccess,
+            onError = { rawError ->
+                val ErrorMessage = "Failed to cancel appointment: $rawError"
+                onError(ErrorMessage)
+            }
+        )
+    }
+
+    fun updateAppointmentStatus(
+        appointmentId: String,
+        newStatus: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val updateData = buildJsonObject {
+                        put("Status", newStatus)
+                    }
+
+                    client.from("Appointment")
+                        .update(updateData) {
+                            filter {
+                                eq("AppointmentID", appointmentId)
+                            }
+                        }
+                }
+
+                // Refresh user appointments list
+                fetchAppointmentsForCurrentUser()
+
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                Log.e("HiringViewModel", "Error updating status", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.localizedMessage ?: "Failed to update appointment status")
+                }
+            }
+        }
+    }
+    fun rescheduleAppointment(
+        appointmentId: String,
+        newDate: String,
+        newStartTime: String,
+        newEndTime: String,
+        newAddress: String,
+        newPostcode: String,
+        newState: String,
+        newServingSize: Int,
+        newDescription: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    // Build a JsonObject instead of Map<String, Any>
+                    val updateData = buildJsonObject {
+                        put("Date", newDate)
+                        put("Start_Time", newStartTime)
+                        put("End_Time", newEndTime)
+                        put("Address", newAddress)
+                        put("Postcode", newPostcode)
+                        put("State", newState)
+                        put("Serving_Size", newServingSize)
+                        put("Note", newDescription)
+                        put("Status", "Pending") // Require re-approval from Chef after reschedule
+                    }
+
+                    client.from("Appointment")
+                        .update(updateData) {
+                            filter {
+                                eq("AppointmentID", appointmentId)
+                            }
+                        }
+                }
+
+                // Refresh appointments list
+                fetchAppointmentsForCurrentUser()
+
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                Log.e("HiringViewModel", "Error rescheduling appointment", e)
+                withContext(Dispatchers.Main) {
+                    onError(e.localizedMessage ?: "Failed to reschedule appointment")
+                }
+            }
+        }
+    }
+
+    fun submitReview(
+        appointmentId: String,
+        rating: Int,
+        comment: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                // Update Rating, Comment, and set Status to Completed
+                val updateData = buildJsonObject {
+                    put("rating", rating)
+                    put("Comment", comment)
+                }
+
+                client.from("Appointment")
+                    .update(updateData) {
+                        filter {
+                            eq("AppointmentID", appointmentId) // Use "AppointmentID" if that's your primary key column name
+                        }
+                    }
+
+                // Refresh the user's appointment list so the UI reflects updated rating & comment
+                fetchAppointmentsForCurrentUser()
+
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                Log.e("HiringViewModel", "Error submitting review: ${e.localizedMessage}")
+                withContext(Dispatchers.Main) {
+                    onError(e.localizedMessage ?: "Failed to submit review. Please try again.")
+                }
+            }
+        }
+    }
+
+    fun clearAppointmentForm() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                appointmentTime = "",
+                address = "",
+                postcode = "",
+                state = "",
+                servingSize = "",
+                healthPreference = "",
+                description = "",
+                hasAttemptedSubmit = false,
+                errors = emptySet() // 🟢 Fixed: set to emptySet() instead of emptyList()
+            )
         }
     }
 

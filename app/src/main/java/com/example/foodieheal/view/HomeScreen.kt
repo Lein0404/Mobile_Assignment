@@ -218,7 +218,7 @@ fun ChefCard(
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick, // 🔑 Using built-in Card onClick for proper touch ripples & events
+        onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -291,7 +291,7 @@ fun ChefCard(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "${chef.averagerating ?: "4.5"}",
+                            text = "${chef.averagerating ?: "N/A"}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF424242)

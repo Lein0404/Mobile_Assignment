@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
@@ -55,6 +57,7 @@ fun HiringChefDetails(
     onHireClick: (Chef) -> Unit
 ) {
 
+    val hiringViewModel : HiringViewModel = viewModel()
     val AuthviewModel: AuthViewModel = viewModel()
     val user = AuthviewModel.currentUser
     val currentChefId = chef.chefId.ifEmpty { chef.id }
@@ -63,6 +66,12 @@ fun HiringChefDetails(
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
             viewModel.fetchBookmarkedChefs(userId)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            hiringViewModel.clearAppointmentForm()
         }
     }
 
