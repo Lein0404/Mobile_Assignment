@@ -1,15 +1,16 @@
-package com.example.foodieheal.Admin
+package com.example.foodieheal.Admin.ViewModel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.repo.UserRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AdminIngredientRequestUiState(

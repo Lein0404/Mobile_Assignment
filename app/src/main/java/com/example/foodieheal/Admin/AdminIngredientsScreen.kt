@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestItem
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.view.IngredientRequestCard
 import com.example.foodieheal.ui.components.StatusBadge
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen

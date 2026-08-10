@@ -1,17 +1,25 @@
-package com.example.foodieheal.Admin
+package com.example.foodieheal.Admin.ViewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
-import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.model.IngredientRequestFormUiState
+import com.example.foodieheal.ingredients.model.IngredientUnits
+import com.example.foodieheal.ingredients.model.Ingredients
+import com.example.foodieheal.ingredients.model.UnitRowState
+import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.repo.UserRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
+import kotlin.collections.plus
 
 class AdminIngredientActionViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -45,7 +53,7 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
                     val user = userRepository.getUserById(request.createdByUserId)
                     val allUnits = repository.getUnits().associateBy { it.unitID }
                     val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
-                    
+
                     val summary = unitRequests.joinToString("\n") { ur ->
                         val unit = allUnits[ur.unitID]
                         val qty = unit?.defaultQuantity?.toInt() ?: 100
@@ -149,11 +157,11 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
                         caloriesPerDefaultQuantity = row.calories.toDoubleOrNull() ?: 0.0
                     )
                 }
-                
+
                 if (units.any { it.unitID.isEmpty() }) {
                     throw Exception("One or more serving units are not selected")
                 }
-                
+
                 productionRepository.insertIngredientUnits(units)
 
                 // 4. Update Request Status to APPROVED
