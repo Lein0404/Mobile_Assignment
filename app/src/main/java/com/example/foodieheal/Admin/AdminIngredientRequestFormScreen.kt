@@ -40,6 +40,16 @@ fun AdminIngredientRequestFormScreen(
     val availableUnits by viewModel.availableUnits.collectAsState()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    // TODO
+    val errorMessage = formState.errorMessage
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            showErrorDialog = true
+        }
+    }
     
     var showApproveDialog by remember { mutableStateOf(false) }
 
@@ -209,11 +219,11 @@ fun AdminIngredientRequestFormScreen(
             text = { Text("Ingredient Request that is approved cannot be edited anymore. Are you sure?") },
             confirmButton = {
                 TextButton(onClick = {
+                    showApproveDialog = false // Close dialog immediately
                     viewModel.approveRequest(
                         imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
                         onComplete = {
                             Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
-                            showApproveDialog = false
                             navController.navigate(Screen.AdminChefScreen.route) {
                                 popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
                             }
@@ -226,6 +236,31 @@ fun AdminIngredientRequestFormScreen(
             dismissButton = {
                 TextButton(onClick = { showApproveDialog = false }) {
                     Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
+    }
+
+    // TODO
+    if (showErrorDialog && errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showErrorDialog = false
+                viewModel.clearError()
+            },
+            title = { Text("Approval Failed", fontWeight = FontWeight.Bold) },
+            text = { 
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showErrorDialog = false
+                    viewModel.clearError()
+                }) {
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )

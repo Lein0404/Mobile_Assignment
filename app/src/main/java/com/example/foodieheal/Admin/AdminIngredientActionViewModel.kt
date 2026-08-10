@@ -117,8 +117,13 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
 
     fun approveRequest(imageUrl: String?, onComplete: () -> Unit) {
         val state = _formState.value
+        if (state.requestId == null) {
+            _formState.update { it.copy(errorMessage = "Error: Request ID is missing") }
+            return
+        }
+
         viewModelScope.launch {
-            _formState.update { it.copy(isSubmitting = true) }
+            _formState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
                 // 1. Generate IDs
                 val ingredientId = productionRepository.getNextIngredientId()
@@ -140,21 +145,25 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
                     IngredientUnits(
                         ingredientUnitId = unitIds[index],
                         ingredientID = ingredientId,
-                        unitID = row.selectedUnit!!.unitID,
+                        unitID = row.selectedUnit?.unitID ?: "",
                         caloriesPerDefaultQuantity = row.calories.toDoubleOrNull() ?: 0.0
                     )
                 }
+                
+                if (units.any { it.unitID.isEmpty() }) {
+                    throw Exception("One or more serving units are not selected")
+                }
+                
                 productionRepository.insertIngredientUnits(units)
 
                 // 4. Update Request Status to APPROVED
-                if (state.requestId != null) {
-                    repository.updateRequestStatus(state.requestId, Status.APPROVED)
-                }
+                repository.updateRequestStatus(state.requestId, Status.APPROVED)
 
+                _formState.update { it.copy(isSubmitting = false) }
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _formState.update { it.copy(isSubmitting = false, errorMessage = e.message) }
+                _formState.update { it.copy(isSubmitting = false, errorMessage = "Approval failed: ${e.localizedMessage}") }
             }
         }
     }
@@ -175,6 +184,10 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
             newList.removeAt(index)
             state.copy(unitRows = newList)
         } else state
+    }
+
+    fun clearError() {
+        _formState.update { it.copy(errorMessage = null) }
     }
 
     private fun fetchUnits() {

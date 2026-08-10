@@ -102,14 +102,14 @@ class IngredientRequestRepository {
         request: IngredientRequest,
         unitRequests: List<IngredientUnitsRequest>
     ) = withContext(Dispatchers.IO) {
-        // 1. Update the main request (excluding datetime_created)
+        // 1. Update the main request
         SupabaseClient.client.from("ingredient_request").update(
             {
                 set("ing_name", request.ingredientName)
-                set("ing_category", request.ingredientCategory)
+                set("ing_category", request.ingredientCategory?.name)
                 set("ing_description", request.ingredientDesc)
                 set("ing_image", request.ingredientImage)
-                set("request_status", request.requestStatus)
+                set("request_status", request.requestStatus.name)
                 set("rejected_reason", request.rejectedReason)
             }
         ) {
@@ -119,11 +119,9 @@ class IngredientRequestRepository {
         }
 
         // 2. Refresh associated unit requests
-        // Delete old units
         SupabaseClient.client.from("ingredient_units_request")
             .delete { filter { eq("ingredient_request_id", request.ingredientRequestId) } }
         
-        // Insert new units
         if (unitRequests.isNotEmpty()) {
             SupabaseClient.client.from("ingredient_units_request").insert(unitRequests)
         }
@@ -132,7 +130,7 @@ class IngredientRequestRepository {
     suspend fun updateRequestStatus(requestId: String, status: Status, rejectedReason: String? = null) = withContext(Dispatchers.IO) {
         SupabaseClient.client.from("ingredient_request").update(
             {
-                set("request_status", status)
+                set("request_status", status.name)
                 set("rejected_reason", rejectedReason)
             }
         ) {
