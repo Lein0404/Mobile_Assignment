@@ -1,13 +1,17 @@
 package com.example.foodieheal.view
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.navigation.Screen
@@ -15,38 +19,31 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(navController: NavController){
-    val viewModel: AuthViewModel = viewModel()
+    // 🌟 Share ViewModel with MainActivity
+    val viewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    
     var email by remember{ mutableStateOf("") }
     var password by remember{mutableStateOf("")}
     
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
+    // 🌟 FIX: Navigate to specific tab routes instead of "main" (which was removed)
     LaunchedEffect(viewModel.loginSuccess) {
-
         if (viewModel.loginSuccess) {
             when {
                 viewModel.isAdmin -> {
                     navController.navigate(Screen.AdminChefScreen.route) {
-                        popUpTo(0) { // Clear the back stack mean back to first page <Login page>
-                            inclusive = true
-                        }
-                        launchSingleTop = true //use to prevent create duplicate same screen
+                        popUpTo(0) { inclusive = true }
                     }
                 }
                 viewModel.isChef -> {
                     navController.navigate(Screen.ChefMain.route) {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
+                        popUpTo(0) { inclusive = true }
                     }
                 }
                 else -> {
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
-                            launchSingleTop = true
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             }
@@ -66,7 +63,7 @@ fun LoginScreen(navController: NavController){
         Text(
             text = "Login",
             style = MaterialTheme.typography.headlineMedium,
-            color = Color.Black // Force black color
+            color = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -97,7 +94,7 @@ fun LoginScreen(navController: NavController){
         )
 
         Spacer(modifier = Modifier.height(20.dp))
-        
+
         if (viewModel.isProcessing) {
             CircularProgressIndicator()
         } else {

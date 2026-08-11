@@ -1,0 +1,28 @@
+package com.example.foodieheal.database
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "local_recipes")
+data class RecipeEntity(
+    @PrimaryKey val recipe_id: String,
+    val author_id: String?,
+    val recipeName: String,
+    val recipeDescription: String,
+    val recipeCourse: String,
+    val time: Int,
+    val calories: Int,
+    val cookingSkill: String,
+    val estimatedBudget: String,
+    val recipeStep: String,
+    val recipeImageUrl: String?,
+    val ingredientsJson: String // Stored as encoded JSON string
+)
+
+@Entity(tableName = "local_ingredients")
+data class IngredientEntity(
+    @PrimaryKey val id: String,
+    val name: String?,
+    val kcal: Double?,
+    val defaultUnit: String?
+)
