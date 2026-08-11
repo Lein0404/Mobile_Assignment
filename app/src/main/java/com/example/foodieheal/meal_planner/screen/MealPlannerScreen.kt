@@ -371,6 +371,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                         title = stringResource(R.string.breakfast),
                                         recipes = breakfastRecipes,
                                         onAddClick = {
+                                            /*
                                             val sampleRecipe = Recipe(
                                                 recipe_id = "R999",
                                                 recipeName = "Oatmeal",
@@ -383,6 +384,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                                 recipeStep = "Cook oats in milk or water."
                                             )
                                             viewModel.addRecipeToMeal(pageDate, MealType.BREAKFAST, sampleRecipe)
+                                            */
                                         },
                                         onDeleteClick = { recipe ->
                                             viewModel.deleteRecipeFromMeal(pageDate, MealType.BREAKFAST, recipe)
@@ -393,6 +395,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                         title = stringResource(R.string.lunch),
                                         recipes = lunchRecipes,
                                         onAddClick = {
+                                            /*
                                             val sampleRecipe = Recipe(
                                                 recipe_id = "R011",
                                                 recipeName = "Chicken Wrap",
@@ -405,6 +408,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                                 recipeStep = "Grill chicken, fill tortilla, roll."
                                             )
                                             viewModel.addRecipeToMeal(pageDate, MealType.LUNCH, sampleRecipe)
+                                            */
                                         },
                                         onDeleteClick = { recipe ->
                                             viewModel.deleteRecipeFromMeal(pageDate, MealType.LUNCH, recipe)
@@ -415,6 +419,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                         title = stringResource(R.string.dinner),
                                         recipes = dinnerRecipes,
                                         onAddClick = {
+                                            /*
                                             val sampleRecipe = Recipe(
                                                 recipe_id = "R015",
                                                 recipeName = "Thai Green Curry",
@@ -427,6 +432,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                                 recipeStep = "Fry curry paste, add coconut milk, simmer."
                                             )
                                             viewModel.addRecipeToMeal(pageDate, MealType.DINNER, sampleRecipe)
+                                            */
                                         },
                                         onDeleteClick = { recipe ->
                                             viewModel.deleteRecipeFromMeal(pageDate, MealType.DINNER, recipe)
@@ -437,6 +443,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                         title = stringResource(R.string.snack),
                                         recipes = snackRecipes,
                                         onAddClick = {
+                                            /*
                                             val sampleRecipe = Recipe(
                                                 recipe_id = "R002",
                                                 recipeName = "Fluffy Buttermilk Pancakes",
@@ -449,6 +456,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                                 recipeStep = "Mix ingredients, cook on griddle."
                                             )
                                             viewModel.addRecipeToMeal(pageDate, MealType.SNACK, sampleRecipe)
+                                            */
                                         },
                                         onDeleteClick = { recipe ->
                                             viewModel.deleteRecipeFromMeal(pageDate, MealType.SNACK, recipe)
