@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+.artifacts/
+hs_err_pid18804.log
+replay_pid18804.log

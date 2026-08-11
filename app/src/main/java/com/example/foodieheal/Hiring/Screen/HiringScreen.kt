@@ -71,7 +71,7 @@ fun HiringScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Top Bar & Tabs Header
         Box(
@@ -112,7 +112,7 @@ fun HiringScreen(
                             text = {
                                 Text(
                                     text = title,
-                                    fontSize = 15.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
                                     color = if (selectedTabIndex == index) Color.White else Color.White.copy(alpha = 0.8f)
                                 )
@@ -168,7 +168,7 @@ fun HiringScreen(
                                             text = "Chef",
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.Black,
+                                            color = MaterialTheme.colorScheme.onBackground,
                                             modifier = Modifier.padding(bottom = 4.dp)
                                         )
                                     }

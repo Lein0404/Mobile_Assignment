@@ -74,7 +74,7 @@ fun HiringChefDetails(
                         text = "Chef Profile",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.White
                     )
                 },
                 navigationIcon = {
@@ -82,7 +82,7 @@ fun HiringChefDetails(
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.White
                         )
                     }
                 },
@@ -94,7 +94,7 @@ fun HiringChefDetails(
         bottomBar = {
             Surface(
                 shadowElevation = 8.dp,
-                color = Color.White
+                color = MaterialTheme.colorScheme.background
             ) {
                 Row(
                     modifier = Modifier

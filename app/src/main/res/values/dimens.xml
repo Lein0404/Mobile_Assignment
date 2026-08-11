@@ -9,4 +9,7 @@
     <dimen name="padding_xxsm">2dp</dimen> <!-- new -->
     <dimen name="corner_radius_sm">12dp</dimen>
     <dimen name="bottom_nav_icon_size">24dp</dimen>
+    <dimen name="icon_large_size">24dp</dimen>
+    <dimen name="icon_medium_size">20dp</dimen>
+    <dimen name="icon_small_size">16dp</dimen>
 </resources>

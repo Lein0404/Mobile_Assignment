@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
@@ -117,20 +118,7 @@ fun addressInfo(
                 labelId = R.string.state,
                 placeholderId = R.string.select_state,
                 selectedValue = chefviewModel.state,
-                options = listOf(
-                    "Pulau Pinang",
-                    "Kedah",
-                    "Perak",
-                    "Perlis",
-                    "Selangor",
-                    "Negeri Sembilan",
-                    "Johor",
-                    "Melaka",
-                    "Pahang",
-                    "Terengganu",
-                    "Sabah",
-                    "Sarawak"
-                ),
+                options = States,
                 onOptionSelected = {
                     chefviewModel.updateState(it)
                 }

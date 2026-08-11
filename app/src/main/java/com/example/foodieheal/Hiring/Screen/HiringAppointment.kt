@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Surface
@@ -39,28 +41,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
+import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
+import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
+import com.example.mobileassignmentloginpart.Model.Chef
+import kotlinx.datetime.DayOfWeek
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-// Primary Theme Colors matching your UI
-private val BrandOrange = Color(0xFFE65100)
-private val LightGreyBackground = Color(0xFFE5E5E5)
-private val BorderOrange = Color(0xFFE65100)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringAppointment(
+    chef: Chef,
     onBackClick: () -> Unit,
-    onAddAppointmentClick: () -> Unit = {}
+    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf(Date()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    val weekStartDate = remember(selectedDate) { selectedDate.getStartOfWeek() }
-    val weekEndDate = remember(weekStartDate) { weekStartDate.addDays(6) }
+    val startOfWeek = remember(selectedDate) {
+        selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    }
+
+    val weekDays = remember(startOfWeek) {
+        (0..6).map { startOfWeek.plusDays(it.toLong()) }
+    }
+
+    val endOfWeek = weekDays.last()
+    val weekRangeText = "${startOfWeek.dayOfMonth} - ${endOfWeek.dayOfMonth} ${endOfWeek.format(DateTimeFormatter.ofPattern("MMM yyyy"))}"
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -80,7 +95,7 @@ fun HiringAppointment(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandOrange)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         }
     ) { innerPadding ->
@@ -88,133 +103,97 @@ fun HiringAppointment(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            WeekHeaderSection(
-                startDate = weekStartDate,
-                endDate = weekEndDate,
+            // Header Row (Week range text + Navigation controls)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = weekRangeText,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Previous Week
+                    IconButton(onClick = { selectedDate = selectedDate.minusWeeks(1) }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = "Previous Week",
+                            tint = Color.Black
+                        )
+                    }
+
+                    // Calendar Picker Trigger
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_planner),
+                            contentDescription = "Pick Date",
+                            tint = Color.Black
+                        )
+                    }
+
+                    // Next Week
+                    IconButton(onClick = { selectedDate = selectedDate.plusWeeks(1) }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_right),
+                            contentDescription = "Next Week",
+                            tint = Color.Black
+                        )
+                    }
+                }
+            }
+
+            //Reuse ZH method
+            WeeklyDateCardRow(
+                weekDays = weekDays,
                 selectedDate = selectedDate,
                 onDateSelected = { selectedDate = it },
-                onPreviousWeek = { selectedDate = selectedDate.addDays(-7) },
-                onNextWeek = { selectedDate = selectedDate.addDays(7) }
+                modifier = Modifier.padding(vertical = 8.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Schedule slots section
             DayScheduleSection(
                 selectedDate = selectedDate,
-                onAddAppointmentClick = onAddAppointmentClick,
+                onAddAppointmentClick = {
+                    onAddAppointmentClick(selectedDate)
+                },
                 modifier = Modifier.weight(1f)
             )
         }
     }
-}
 
-@Composable
-private fun WeekHeaderSection(
-    startDate: Date,
-    endDate: Date,
-    selectedDate: Date,
-    onDateSelected: (Date) -> Unit,
-    onPreviousWeek: () -> Unit,
-    onNextWeek: () -> Unit
-) {
-    val weekRangeText = "${startDate.formatTo("d")} - ${endDate.formatTo("d MMM yyyy")}"
-
-    Column(modifier = Modifier.padding(top = 12.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = weekRangeText,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onPreviousWeek) {
-                    Icon(painter = painterResource(R.drawable.ic_arrowback), contentDescription = "Previous Week", tint = Color.Black)
-                }
-                Icon(
-                    painter = painterResource(R.drawable.ic_clock),
-                    contentDescription = "Calendar",
-                    tint = Color.Black,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-                IconButton(onClick = onNextWeek) {
-                    Icon(painter = painterResource(R.drawable.ic_arrow_right), contentDescription = "Next Week", tint = Color.Black)
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            (0..6).forEach { dayOffset ->
-                val date = startDate.addDays(dayOffset)
-                val isSelected = date.isSameDay(selectedDate)
-
-                DayChip(
-                    date = date,
-                    isSelected = isSelected,
-                    onClick = { onDateSelected(date) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DayChip(
-    date: Date,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .width(48.dp)
-            .height(64.dp)
-            .border(
-                width = 1.5.dp,
-                color = if (isSelected) BrandOrange else BorderOrange,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .background(
-                color = if (isSelected) BrandOrange else Color.White,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = date.formatTo("EEE"),
-            fontSize = 12.sp,
-            color = if (isSelected) Color.White else Color.DarkGray
-        )
-        Text(
-            text = date.formatTo("d"),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) Color.White else Color.Black
+    if (showDatePicker) {
+        MealDatePickerDialog(
+            initialDate = selectedDate,
+            titleText = "Select Appointment Date",
+            onDateSelected = { newDate ->
+                selectedDate = newDate
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
         )
     }
 }
 
 @Composable
 private fun DayScheduleSection(
-    selectedDate: Date,
+    selectedDate: LocalDate,
     onAddAppointmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val formattedTitle = remember(selectedDate) {
+        selectedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMM"))
+    }
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -229,7 +208,7 @@ private fun DayScheduleSection(
         ) {
             item {
                 Text(
-                    text = selectedDate.formatTo("EEEE, d MMM"),
+                    text = formattedTitle,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -237,6 +216,7 @@ private fun DayScheduleSection(
                 )
             }
 
+            // Booked Slot
             item {
                 AppointmentCard(
                     title = "9:00am - 11:00am",
@@ -245,6 +225,7 @@ private fun DayScheduleSection(
                 )
             }
 
+            // Empty Slot
             item {
                 AppointmentCard(
                     title = "Appointment",
@@ -267,7 +248,7 @@ private fun AppointmentCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(LightGreyBackground, shape = RoundedCornerShape(16.dp))
+            .background(Color.LightGray, shape = RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -285,7 +266,7 @@ private fun AppointmentCard(
             if (showAddIcon) {
                 IconButton(onClick = { onAddClick?.invoke() }) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_outline_add),
+                        painter = painterResource(R.drawable.ic_add_circle_outline),
                         contentDescription = "Add Appointment",
                         tint = Color.Black,
                         modifier = Modifier.size(28.dp)
@@ -300,11 +281,6 @@ private fun AppointmentCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp))
-                .border(
-                    width = 1.dp,
-                    color = BrandOrange,
-                    shape = RoundedCornerShape(20.dp)
-                )
                 .background(Color.White, shape = RoundedCornerShape(20.dp))
                 .padding(vertical = 8.dp),
             contentAlignment = Alignment.Center
@@ -317,36 +293,4 @@ private fun AppointmentCard(
             )
         }
     }
-}
-
-fun Date.formatTo(pattern: String): String {
-    val formatter = SimpleDateFormat(pattern, Locale.getDefault())
-    return formatter.format(this)
-}
-
-// Get Monday of the current week
-fun Date.getStartOfWeek(): Date {
-    val cal = Calendar.getInstance().apply {
-        time = this@getStartOfWeek
-        firstDayOfWeek = Calendar.MONDAY
-        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-    }
-    return cal.time
-}
-
-// Add/Subtract days
-fun Date.addDays(days: Int): Date {
-    val cal = Calendar.getInstance().apply {
-        time = this@addDays
-        add(Calendar.DAY_OF_YEAR, days)
-    }
-    return cal.time
-}
-
-// Compare two dates (ignoring time)
-fun Date.isSameDay(other: Date): Boolean {
-    val cal1 = Calendar.getInstance().apply { time = this@isSameDay }
-    val cal2 = Calendar.getInstance().apply { time = other }
-    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
