@@ -31,6 +31,7 @@ import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.RegisterScreen
 import androidx.navigation.navArgument
+import com.example.foodieheal.Admin.AdminIngredientsScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
@@ -73,6 +74,10 @@ class MainActivity : ComponentActivity() {
                     //Ivan part (admin site)
                     composable(Screen.AdminChefScreen.route) {
                         AdminApprovalScreen(navController)
+                    }
+
+                    composable(Screen.AdminIngredient.route){
+                        AdminIngredientsScreen(navController)
                     }
 
                     composable(

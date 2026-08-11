@@ -52,7 +52,7 @@ fun MainScreen(parentNavController: NavHostController) {
 
     val hiringViewModel: HiringViewModel = viewModel()
 
-    val items = listOf(
+    val items = listOf<NavigationItem>(
         NavigationItem(Screen.Home.route, "Home", R.drawable.ic_home),
         NavigationItem(Screen.Recipes.route, "Recipes", R.drawable.ic_recipe),
         NavigationItem(Screen.Planner.route, "Planner", R.drawable.ic_planner),
