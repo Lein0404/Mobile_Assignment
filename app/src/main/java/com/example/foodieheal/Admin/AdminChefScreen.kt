@@ -51,6 +51,7 @@ import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
+import com.example.foodieheal.Admin.AdminIngredientsScreen
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
@@ -195,7 +196,7 @@ fun AdminApprovalScreen(
             }
             // Ingredient Management Page
             1 -> {
-                //IngredientAdminScreen
+                AdminIngredientsScreen(navController)
             }
         }
     }

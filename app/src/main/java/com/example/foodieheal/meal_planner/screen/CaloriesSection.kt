@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
+import com.example.foodieheal.model.User
 import com.example.foodieheal.ui.theme.Green
 import com.example.foodieheal.ui.theme.Orange
 import com.example.foodieheal.ui.theme.Red
@@ -45,7 +46,7 @@ fun CalorieProgressBar(
     currentCalories: Int,
     maxCalories: Int,
     onNavigateToProfile: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showHelpDialog by remember { mutableStateOf(false) }
 
@@ -202,8 +203,10 @@ fun CalorieProgressBar(
             },
             confirmButton = {
                 TextButton(onClick = { showHelpDialog = false }) {
-                    Text(stringResource(R.string.btn_close),
-                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        stringResource(R.string.btn_close),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         )
@@ -241,5 +244,32 @@ private fun CalorieGuideRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+ fun calculateSuggestedDailyCalories(user: User?): Int {
+    if (user == null) return 2000 // Generic baseline value if profile isn't cached yet
+
+    val weight = user.weight ?: 70.0 // kg
+    val height = user.height ?: 170.0 // cm
+    val age = user.age ?: 25
+    val gender = user.gender?.lowercase() ?: "male"
+    val bmi = user.bmi ?: 22.0
+
+    // 1. Calculate Basal Metabolic Rate (BMR) using Mifflin-St Jeor Formula
+    val bmr = if (gender == "male") {
+        (10 * weight) + (6.25 * height) - (5 * age) + 5
+    } else {
+        (10 * weight) + (6.25 * height) - (5 * age) - 161
+    }
+
+    // 2. Add assumed baseline activity multiplier (1.2 = Sedentary lifestyle baseline)
+    val tdee = bmr * 1.2
+
+    // 3. Apply caloric adjustment modifications derived from the user's BMI tier category
+    return when {
+        bmi < 18.5 -> (tdee + 400).toInt()                 // Underweight: Surplus to gain
+        bmi in 25.0..<30.0 -> (tdee - 300).toInt()  // Overweight: Safe light deficit
+        bmi >= 30.0 -> (tdee - 500).toInt()                // Obese: Steady weight loss target
+        else -> tdee.toInt()                               // Normal Range: Maintenance level
     }
 }

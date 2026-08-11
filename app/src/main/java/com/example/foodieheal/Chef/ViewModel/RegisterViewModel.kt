@@ -9,14 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.Cloudinary.CloudinaryConfig
+import com.example.foodieheal.Cloudinary.uploadImageToCloudinary
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,88 +53,39 @@ class chefRegisterViewModel : ViewModel() {
     var experience by mutableStateOf("")
     var description by mutableStateOf("")
 
-    var selectedImageUri by mutableStateOf<Uri?>(null)
-        private set
-
     var isSubmitting by mutableStateOf(false)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+// UPLOAD IMAGE FLOW
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+        private set
+
     fun updateImage(uri: Uri?) {
+        // OOP set
         selectedImageUri = uri
     }
 
-    private suspend fun uploadImageToCloudinary(
-        context: Context,
-        uri: Uri
-    ): String {
-
-        return withContext(Dispatchers.IO) {
-
-            val inputStream = context.contentResolver.openInputStream(uri)
-                ?: throw Exception("Cannot open image")
-
-            val file = File(
-                context.cacheDir,
-                "chef_profile_${System.currentTimeMillis()}.jpg"
-            )
-
-            inputStream.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            val uploadUrl =
-                "https://api.cloudinary.com/v1_1/${CloudinaryConfig.CLOUD_NAME}/image/upload"
-
-            val requestBody = MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart(
-                    "upload_preset",
-                    CloudinaryConfig.UPLOAD_PRESET
-                )
-                .addFormDataPart(
-                    "file",
-                    file.name,
-                    file.asRequestBody(
-                        "image/*".toMediaType()
-                    )
-                )
-                .build()
-
-            val request = Request.Builder()
-                .url(uploadUrl)
-                .post(requestBody)
-                .build()
-
-            val client = OkHttpClient()
-
-            val response = client.newCall(request).execute()
-
-            if (!response.isSuccessful) {
-                throw Exception(
-                    "Cloudinary upload failed: ${response.message}"
-                )
-            }
-            val responseBody =
-                response.body?.string()
-                    ?: throw Exception("Empty Cloudinary response")
-            val json = JSONObject(responseBody)
-            json.getString("secure_url")
-        }
+    fun canProceedReviewPage(): Boolean {
+        // Form validation before proceeding to the next page
+        // Just ensure user have select image
+        return selectedImageUri != null
     }
+
     fun registerChef(
-        context : Context,
-        onSuccess: () -> Unit) {
+        context: Context,
+        onSuccess: () -> Unit
+    ) {
         isSubmitting = true
         errorMessage = null
+
         viewModelScope.launch {
             try {
                 val client = SupabaseClient.client
 
+               //Authenticate with Supabase first but my one is register so much thing to do
                 try {
                     client.auth.signUpWith(Email) {
                         email = this@chefRegisterViewModel.email
@@ -143,7 +93,6 @@ class chefRegisterViewModel : ViewModel() {
                     }
                 } catch (signUpException: Exception) {
                     Log.w("ChefRegister", "signUpWith exception: ${signUpException.message}")
-                    // If user is already registered in Auth, attempt signInWith
                     try {
                         client.auth.signInWith(Email) {
                             email = this@chefRegisterViewModel.email
@@ -168,29 +117,21 @@ class chefRegisterViewModel : ViewModel() {
                 }
 
                 val authId = user?.id ?: UUID.randomUUID().toString()
-
-                val randomNum = (100..999).random()
-                val customId = "C$randomNum"
+                val customId = "C${(100..999).random()}"
                 var imageUrl = ""
 
-                if (selectedImageUri != null) {
+                // Upload image to Cloudinary if selected log just ignore la just view debug result only
+                selectedImageUri?.let { uri ->
+                    Log.d("ChefRegister", "Start Cloudinary upload: $uri")
 
-                    Log.d(
-                        "ChefRegister",
-                        "Start Cloudinary upload: $selectedImageUri"
-                    )
+                    // CALLING THE EXTENSION FUNCTION HERE !!!!!!!!!!!!!
+                    // if no call god also cant save you
+                    imageUrl = context.uploadImageToCloudinary(uri)
 
-                    imageUrl = uploadImageToCloudinary(
-                        context = context,
-                        uri = selectedImageUri!!
-                    )
-
-                    Log.d(
-                        "ChefRegister",
-                        "Cloudinary URL: $imageUrl"
-                    )
+                    Log.d("ChefRegister", "Cloudinary URL: $imageUrl")
                 }
 
+                // This one just put the data class created to here and remember the image url variable
                 val newChef = Chef(
                     id = customId,
                     chefId = authId,
@@ -210,22 +151,27 @@ class chefRegisterViewModel : ViewModel() {
                     status = "Pending"
                 )
 
-                //Insert record
+                // Save to supabase that all
                 client.postgrest.from("Chef").insert(newChef)
 
                 isSubmitting = false
                 clearData()
                 onSuccess()
+
+                // can ingore these much log because I have many issue during the process
             } catch (e: Exception) {
                 Log.e("ChefRegister", "Registration error trace", e)
                 isSubmitting = false
                 val msg = e.message ?: "Registration failed. Please try again."
                 errorMessage = when {
-                    msg.contains("row-level security", ignoreCase = true) || msg.contains("violates row-level security policy", ignoreCase = true) ->
+                    msg.contains("row-level security", ignoreCase = true) ||
+                            msg.contains("violates row-level security policy", ignoreCase = true) ->
                         "Supabase RLS Error: Please add an INSERT policy or disable RLS on the 'Chef' table in Supabase Dashboard."
-                    msg.contains("already registered", ignoreCase = true) || msg.contains("already exists", ignoreCase = true) ->
+                    msg.contains("already registered", ignoreCase = true) ||
+                            msg.contains("already exists", ignoreCase = true) ->
                         "This email is already registered. Please login instead."
-                    msg.contains("duplicate key", ignoreCase = true) || msg.contains("unique constraint", ignoreCase = true) ->
+                    msg.contains("duplicate key", ignoreCase = true) ||
+                            msg.contains("unique constraint", ignoreCase = true) ->
                         "Chef account already created. Please login."
                     else -> msg.lines().firstOrNull() ?: msg
                 }
@@ -246,27 +192,23 @@ class chefRegisterViewModel : ViewModel() {
                 val client = SupabaseClient.client
                 var finalImageUrl = updatedChef.profilePictureUrl.orEmpty()
 
-                // 1. Upload new image to Cloudinary if selected
-                if (newImageUri != null) {
-                    finalImageUrl = uploadImageToCloudinary(
-                        context = context,
-                        uri = newImageUri
-                    )
+                // Upload new image using the extension function if selected
+                newImageUri?.let { uri ->
+                    finalImageUrl = context.uploadImageToCloudinary(uri)
                 }
 
                 val chefToSave = updatedChef.copy(
                     profilePictureUrl = finalImageUrl
                 )
 
-                // 2. Update Supabase record safely using filter block
+                // Update Supabase record safely using filter block
                 client.postgrest.from("Chef").update(chefToSave) {
                     filter {
-                        // 'eq' works cleanly inside the 'filter' block
                         eq("chefId", chefToSave.chefId)
                     }
                 }
 
-                // 3. Update AuthViewModel state (Replaces _currentChef)
+                // 3. Update AuthViewModel state
                 authViewModel.updateLocalChef(chefToSave)
 
                 onSuccess()
@@ -411,10 +353,6 @@ class chefRegisterViewModel : ViewModel() {
     fun canProceedDescriptionInfo(): Boolean {
         return experience.isNotBlank() &&
                 description.isNotBlank()
-    }
-
-    fun canProceedReviewPage(): Boolean {
-        return selectedImageUri != null
     }
 
     // Validation of data field after click next button

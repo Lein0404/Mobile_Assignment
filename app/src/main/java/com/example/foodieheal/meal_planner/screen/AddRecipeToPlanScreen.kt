@@ -49,9 +49,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
-import com.example.foodieheal.Recipe
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.MealType
+import com.example.foodieheal.viewmodel.AuthViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -62,19 +63,38 @@ import java.util.Locale
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddRecipeToPlanScreen(
-    recipe: Recipe,
-    viewModel: MealPlannerViewModel,
+    recipe: Recipe?,
+    mealPlannerViewModel: MealPlannerViewModel,
+    authViewModel: AuthViewModel,
     onExecutionComplete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToProfile:()-> Unit
 ) {
+    LaunchedEffect(recipe) {
+        if (recipe == null) {
+            onExecutionComplete()
+        }
+    }
+
+    // Return an empty canvas or loading frame while the pop-back animation finishes executing
+    if (recipe == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            // Optional: CircularProgressIndicator()
+        }
+        return // Prevents running the rest of the layout logic below on a null reference
+    }
+
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    val isNetworkAvailable = viewModel.isNetworkAvailable
+    val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
 
     LaunchedEffect(selectedDate) {
         if (isNetworkAvailable) {
-            viewModel.loadPlanForDate(selectedDate)
+            mealPlannerViewModel.loadPlanForDate(selectedDate)
         }
     }
 
@@ -82,7 +102,7 @@ fun AddRecipeToPlanScreen(
         mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
     }
 
-    val weekDays = viewModel.getCurrentWeekDays(currentWeekStart)
+    val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${weekEndDate.month.getDisplayName(
         TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
@@ -91,7 +111,7 @@ fun AddRecipeToPlanScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collect { message ->
+        mealPlannerViewModel.uiEvent.collect { message ->
             snackBarHostState.showSnackbar(message = message)
         }
     }
@@ -151,7 +171,7 @@ fun AddRecipeToPlanScreen(
                         selectedSlots.forEach { (savedDateStr, mealTypesList) ->
                             val targetDateParsed = LocalDate.parse(savedDateStr)
                             mealTypesList.forEach { mealType ->
-                                viewModel.addRecipeToMeal(targetDateParsed, mealType, recipe)
+                                mealPlannerViewModel.addRecipeToMeal(targetDateParsed, mealType, recipe)
                             }
                         }
                         showSuccessDialog = true
@@ -267,15 +287,15 @@ fun AddRecipeToPlanScreen(
 
                 LaunchedEffect(pageDate) {
                     if (isNetworkAvailable) {
-                        viewModel.loadPlanForDate(pageDate)
+                        mealPlannerViewModel.loadPlanForDate(pageDate)
                     }
                 }
 
                 // 🌟 FIX: Pull layout state safely from the dictionary cache map instead of deleted global variable
-                val dailyPlanForThisPage = viewModel.mealPlansCache[pageDate]
+                val dailyPlanForThisPage = mealPlannerViewModel.mealPlansCache[pageDate]
                 val activeSelectionsForThisPage = selectedSlots[pageDateStr] ?: emptySet()
 
-                val totalCaloriesForPage = remember(dailyPlanForThisPage, isNetworkAvailable) {
+                val totalCaloriesForSelectedDate = remember(dailyPlanForThisPage, isNetworkAvailable) {
                     if (!isNetworkAvailable) 0 else {
                         dailyPlanForThisPage?.meals
                             ?.flatMap { meal -> meal.recipes }
@@ -322,10 +342,13 @@ fun AddRecipeToPlanScreen(
                         }
                     } else {
                         Column(modifier = Modifier.fillMaxWidth()) {
+                            val currentUser = authViewModel.currentUser
+                            val maxCalories = calculateSuggestedDailyCalories(currentUser)
+
                             CalorieProgressBar(
-                                currentCalories = totalCaloriesForPage,
-                                maxCalories = 1800,
-                                onNavigateToProfile = {/*TODO*/},
+                                currentCalories = totalCaloriesForSelectedDate,
+                                maxCalories = maxCalories,
+                                onNavigateToProfile = { onNavigateToProfile() },
                             )
 
                             Spacer(Modifier.height(20.dp))

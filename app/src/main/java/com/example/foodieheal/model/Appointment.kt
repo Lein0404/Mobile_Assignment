@@ -1,10 +1,12 @@
 package com.example.foodieheal.model
 
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Appointment(
     @SerialName("AppointmentID")
-    val AppointmentID : String,
+    val AppointmentID : String? = null,
 
     @SerialName("Date")
     val Date : String,
@@ -40,5 +42,12 @@ data class Appointment(
     val Status : String = "Pending",
 
     @SerialName("rating")
-    val rating : Double
+    val rating : Double ?= null,
+
+    @SerialName("chefId")
+    val chefId : String,
+
+    @SerialName("userId")
+    val userId : String
 )
+

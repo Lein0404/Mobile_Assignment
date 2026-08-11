@@ -32,14 +32,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.Recipe
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.ui.theme.BreakfastColor
 import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor
 import com.example.foodieheal.ui.theme.LunchColor
 import com.example.foodieheal.ui.theme.SnackColor
-import com.example.foodieheal.ui.theme.TimerColor
 
 @Composable
 fun RecipeCard(
@@ -47,7 +47,7 @@ fun RecipeCard(
     onDeleteClick: () -> Unit,
     onClick: () -> Unit,
     color: Color,
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
 ) {
     Card(
         modifier = Modifier
@@ -56,16 +56,16 @@ fun RecipeCard(
             .padding(end = 16.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(color)
+        colors = CardDefaults.cardColors(color),
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(90.dp)
-                .padding(start = 5.5.dp),
+                .padding(start = 5.5.dp)
+                .clickable(enabled = !isSelectionMode, onClick = {onClick()}),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp),
-            onClick = onClick,
             colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
         ) {
             Row(
@@ -74,14 +74,26 @@ fun RecipeCard(
                     .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(recipe.recipeImage),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(76.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                if (!recipe.recipeImageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = recipe.recipeImageUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.ic_image),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                        alpha = 0.3f
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(10.dp))
 
@@ -103,7 +115,7 @@ fun RecipeCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_fire),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.calories),
                             modifier = Modifier.size(18.dp),
                             tint = CaloriesColor
                         )
@@ -121,7 +133,7 @@ fun RecipeCard(
 
                         Icon(
                             painter = painterResource(R.drawable.ic_time),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.minutes),
                             modifier = Modifier.size(18.dp),
                         )
 
@@ -156,9 +168,10 @@ fun MealSection(
     recipes: List<Recipe>,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
-    onSelectionChange: (Boolean) -> Unit = {},
-    onAddClick: () -> Unit = {},
-    onDeleteClick: (Recipe) -> Unit = {},
+    onSelectionChange: (Boolean) -> Unit = {},//empty lambda bcz in normal meal planner screen no need use, only in addRecipeToMealPlannerScreen
+    onAddClick: () -> Unit ={} ,//only in normal meal planner
+    onDeleteClick: (Recipe) -> Unit = {},//only in normal meal planner
+    onRecipeDetails:(String)-> Unit = {}//only in normal meal planner
 ) {
     val color: Color = when (title) {
         stringResource(R.string.meal_title_breakfast) -> BreakfastColor
@@ -248,9 +261,9 @@ fun MealSection(
                                 onDeleteClick(recipeItem)
                             }
                         },
-                        onClick = { /*TODO: Recipe details*/ },
+                        onClick = {onRecipeDetails(recipeItem.recipe_id?:"")},
                         color = color,
-                        isSelectionMode = isSelectionMode
+                        isSelectionMode = isSelectionMode,
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }

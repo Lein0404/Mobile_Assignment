@@ -8,12 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.Recipe
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.channels.Channel
@@ -64,10 +64,10 @@ class MealPlannerViewModel(
         deepLinkSourceDays = getCurrentWeekDays(sourceWeekStart)
 
         // Set the active tab to Planner when deep link is processed
-        selectedTabRoute = Screen.Planner.route
+        selectedTabRoute = Screen.Home.route
 
         viewModelScope.launch {
-            _navigationChannel.send(Screen.Main.route)
+            _navigationChannel.send(Screen.Planner.route)
         }
     }
 

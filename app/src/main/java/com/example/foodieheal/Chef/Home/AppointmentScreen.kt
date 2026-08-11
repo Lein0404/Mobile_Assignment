@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,9 +58,9 @@ fun AppointmentsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(primaryColor) // Full top header orange background
+            .background(primaryColor)
     ) {
-        // 1. Top Header Section
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -82,7 +81,6 @@ fun AppointmentsScreen() {
             }
         }
 
-        // 2. White Surface Body
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(0.dp),
@@ -180,7 +178,6 @@ fun AppointmentCard(
     }
 }
 
-// Data class wrapper for cleaner item passing
 data class AppointmentItem(
     val clientName: String,
     val event: String,

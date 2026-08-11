@@ -2,31 +2,41 @@ package com.example.foodieheal.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(navController: NavController){
-    val viewModel : AuthViewModel = viewModel()
+    // 🌟 Share ViewModel with MainActivity
+    val viewModel : AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
     val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    val isPasswordValid = password.length in 6..20
+    val isPasswordValid = password.length in 8..20
     val passwordsMatch = password == confirmPassword
     val isFormValid = isEmailValid && isPasswordValid && passwordsMatch && !viewModel.isProcessing
 
     LaunchedEffect(viewModel.registerSuccess) {
         if (viewModel.registerSuccess) {
-            navController.popBackStack()
+            // Navigate to Body Status screen after registration
+            navController.navigate(com.example.foodieheal.navigation.Screen.EditBodyStatus.route + "?fromRegister=true") {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
 
@@ -51,7 +61,7 @@ fun RegisterScreen(navController: NavController){
             Text(
                 text = "Register",
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.Black, // Force black color
+                color = Color.Black,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
@@ -86,7 +96,7 @@ fun RegisterScreen(navController: NavController){
             isError = password.isNotEmpty() && !isPasswordValid,
             supportingText = {
                 if (password.isNotEmpty() && !isPasswordValid) {
-                    Text("Password must be 6-20 characters")
+                    Text("Password must be 8-20 characters")
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
@@ -134,8 +144,32 @@ fun RegisterScreen(navController: NavController){
         }
 
         if (viewModel.errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = viewModel.errorMessage, color = Color.Red)
+            val isAlreadyRegistered = viewModel.errorMessage.contains("already registered", ignoreCase = true)
+            Spacer(modifier = Modifier.height(16.dp))
+            Surface(
+                color = if (isAlreadyRegistered) Color(0xFFE3F2FD) else Color(0xFFFFEBEE),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = if (isAlreadyRegistered) com.example.foodieheal.R.drawable.ic_help else com.example.foodieheal.R.drawable.cancel),
+                        contentDescription = null,
+                        tint = if (isAlreadyRegistered) Color(0xFF1976D2) else Color(0xFFD32F2F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = viewModel.errorMessage,
+                        color = if (isAlreadyRegistered) Color(0xFF1976D2) else Color(0xFFD32F2F),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
