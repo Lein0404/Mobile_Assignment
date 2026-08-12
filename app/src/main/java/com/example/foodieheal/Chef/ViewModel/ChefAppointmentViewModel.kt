@@ -43,11 +43,11 @@ class ChefPortalViewModel : ViewModel() {
 
     private val client = SupabaseClient.client
 
-// Appointments screen state flow
+    // Appointments screen state flow
     private val _appointmentsUiState = MutableStateFlow<AppointmentsUiState>(AppointmentsUiState.Loading)
     val appointmentsUiState: StateFlow<AppointmentsUiState> = _appointmentsUiState.asStateFlow()
 
-// Home screen state flow
+    // Home screen state flow
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 

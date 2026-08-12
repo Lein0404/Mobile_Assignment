@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -34,24 +35,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.Surface
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Status
-import androidx.compose.ui.graphics.Color
 
 /**
  * Common is a helper class with composable templates such as Buttons, Carousels, Lists configured
  * to our app's colors.
  */
-
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
@@ -141,7 +140,9 @@ fun CommonInputField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isError: Boolean = false,
-    leadingIconRes: Int? = null, // Drawable resource ID
+    supportingText: @Composable (() -> Unit)? = null,
+    leadingIconRes: Int? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -149,7 +150,8 @@ fun CommonInputField(
     maxLines: Int = 1,
     minLines: Int = 1,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    // Modifier is applied ONLY to the parent container
+    Column(modifier = modifier) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -159,15 +161,20 @@ fun CommonInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier, // Apply modifier directly
+            modifier = Modifier.fillMaxWidth(), // Inner field always takes full container width
             enabled = enabled,
             placeholder = placeholder?.let { { Text(it) } },
             leadingIcon = leadingIconRes?.let {
-                { Icon(painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier.padding(dimensionResource(R.dimen.padding_md)))
+                {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_md))
+                    )
                 }
             },
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
             isError = isError,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -184,15 +191,15 @@ fun CommonInputField(
         )
     }
 }
-
 @Composable
 fun PasswordInputField(
     value: String,
     onValueChange: (String) -> Unit,
     textId: Int, // string resource for label
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier, // Removed default fillMaxWidth here to avoid confusion
     enabled: Boolean = true,
     isError: Boolean = false,
+    supportingText: @Composable (() -> Unit)? = null, // Added supportingText slot
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -201,7 +208,9 @@ fun PasswordInputField(
     minLines: Int = 1
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    Column(modifier = modifier) {
+
+    // Modifier applied ONLY to outer Column
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -211,7 +220,7 @@ fun PasswordInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(), // Inner field always fills container width
             enabled = enabled,
             textStyle = MaterialTheme.typography.bodyLarge,
             placeholder = placeholder?.let { { Text(it) } },
@@ -223,7 +232,8 @@ fun PasswordInputField(
                     stringResource(id = R.string.show_password)
                 }
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(painterResource(id = visibilityIcon),
+                    Icon(
+                        painter = painterResource(id = visibilityIcon),
                         contentDescription = description,
                         modifier = Modifier
                             .padding(dimensionResource(R.dimen.padding_xsm))
@@ -232,6 +242,7 @@ fun PasswordInputField(
                 }
             },
             isError = isError,
+            supportingText = supportingText,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -248,7 +259,6 @@ fun PasswordInputField(
         )
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
@@ -282,8 +292,8 @@ fun DropDownList(
                 readOnly = true,
                 placeholder = {
                     Text(stringResource(placeholderId),
-                    color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
-                ) },
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
+                    ) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 },
@@ -432,6 +442,7 @@ fun StatusBadge(status: Status) {
         )
     }
 }
+
 
 /*@OptIn(ExperimentalMaterial3Api::class)
 @Composable

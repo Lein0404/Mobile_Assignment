@@ -82,11 +82,11 @@ data class AppointmentUiState(
 
     val canSubmit: Boolean
         get() = isTimeValid &&
-                    isAddressValid &&
-                    isPostcodeValid &&
-                    isStateValid &&
-                    isServingSizeValid &&
-                    isDescriptionValid
+                isAddressValid &&
+                isPostcodeValid &&
+                isStateValid &&
+                isServingSizeValid &&
+                isDescriptionValid
 
 }
 

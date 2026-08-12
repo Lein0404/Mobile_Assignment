@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,7 @@ fun ChefWelcomeScreen(
     navController: NavController,
     chefRegisterViewModel: chefRegisterViewModel
 ) {
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -33,11 +35,11 @@ fun ChefWelcomeScreen(
                     IconButton(
                         onClick = {
                             navController.popBackStack()
-                            chefRegisterViewModel.clearData()
+                            chefRegisterViewModel.resetRegistrationFlow()
                         }
                     ) {
                         Icon(
-                           painter = painterResource(R.drawable.ic_arrowback),
+                            painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = "Back to Login",
                             tint = MaterialTheme.colorScheme.onBackground
                         )
@@ -138,7 +140,7 @@ fun ChefWelcomeScreen(
                 TextButton(
                     onClick = {
                         navController.popBackStack()
-                        chefRegisterViewModel.clearData()
+                        chefRegisterViewModel.resetRegistrationFlow()
                     }
                 ) {
                     Text(
