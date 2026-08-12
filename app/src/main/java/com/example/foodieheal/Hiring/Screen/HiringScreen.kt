@@ -621,6 +621,7 @@ fun UserAppointmentCard(
 @Composable
 private fun AppointmentStatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
+        "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
         "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
         "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
         "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)

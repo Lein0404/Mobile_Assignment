@@ -203,6 +203,7 @@ fun AppointmentCard(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = when (appointment.Status.lowercase()) {
+                            "completed" -> Color(0xFF1565C0)
                             "pending" -> Color(0xFFE65100)
                             "confirmed" -> Color(0xFF2E7D32)
                             "cancelled" -> Color(0xFFC62828)
