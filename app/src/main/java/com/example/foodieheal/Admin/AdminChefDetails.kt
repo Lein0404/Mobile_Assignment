@@ -49,6 +49,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.DetailRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -328,40 +329,6 @@ fun DetailSectionCard(
 
             content()
 
-        }
-    }
-}
-
-@Composable
-fun DetailRow(
-    painter: Painter,
-    label: String,
-    value: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(
-            Modifier.width(12.dp)
-        )
-        Column {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }

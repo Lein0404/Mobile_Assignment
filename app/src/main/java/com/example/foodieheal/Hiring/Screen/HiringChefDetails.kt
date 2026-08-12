@@ -2,6 +2,7 @@ package com.example.foodieheal.Hiring.Screen
 
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,11 +63,10 @@ fun HiringChefDetails(
     onBackClick: () -> Unit,
     onHireClick: (Chef) -> Unit
 ) {
-
     val context = LocalContext.current
-    val hiringViewModel : HiringViewModel = viewModel()
-    val AuthviewModel: AuthViewModel = viewModel()
-    val user = AuthviewModel.currentUser
+    val hiringViewModel: HiringViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
+    val user = authViewModel.currentUser
     val currentChefId = chef.chefId.ifEmpty { chef.id }
     val isBookmarked = viewModel.isChefBookmarked(currentChefId)
 
@@ -85,18 +87,18 @@ fun HiringChefDetails(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Chef Profile",
+                        text = stringResource(R.string.chef_profile_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back",
-                            tint = Color.White
+                            contentDescription = stringResource(R.string.back_button),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -108,7 +110,8 @@ fun HiringChefDetails(
         bottomBar = {
             Surface(
                 shadowElevation = 8.dp,
-                color = MaterialTheme.colorScheme.background
+                color = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 Row(
                     modifier = Modifier
@@ -118,9 +121,15 @@ fun HiringChefDetails(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(text = "Rate", fontSize = 12.sp, color = Color.Gray)
                         Text(
-                            text = chef.Pricing?.let { "$${it.toInt()}/hr" } ?: "N/A",
+                            text = stringResource(R.string.label_rate),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = chef.Pricing?.let {
+                                stringResource(R.string.rate_per_hour, it.toInt())
+                            } ?: stringResource(R.string.not_available),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -131,7 +140,10 @@ fun HiringChefDetails(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.height(48.dp)
                     ) {
-                        Text("Hire This Chef", fontSize = 16.sp)
+                        Text(
+                            text = stringResource(R.string.btn_hire_this_chef),
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
@@ -141,7 +153,7 @@ fun HiringChefDetails(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -149,7 +161,7 @@ fun HiringChefDetails(
             // Header Profile Card
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -159,32 +171,31 @@ fun HiringChefDetails(
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Profile Image can use in every module like this
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         if (chef.profilePictureUrl.isNullOrEmpty()) {
                             Text(
-                                text = chef.name?.take(1)?.uppercase() ?: "C",
+                                text = chef.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
                                 style = MaterialTheme.typography.headlineLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.Center)
-                                                    .size(150.dp)
-                                                    .clip(CircleShape)
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(150.dp)
+                                    .clip(CircleShape)
                             )
                         } else {
                             AsyncImage(
                                 model = chef.profilePictureUrl,
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.align(Alignment.Center)
-                                                    .size(150.dp)
-                                                    .clip(CircleShape),
+                                contentDescription = stringResource(R.string.profile_picture),
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(150.dp)
+                                    .clip(CircleShape),
                                 contentScale = ContentScale.Crop
                             )
                         }
 
-                        //Bookmark button
+                        // Bookmark Button
                         IconButton(
                             onClick = {
                                 viewModel.onBookmarkToggled(
@@ -199,8 +210,9 @@ fun HiringChefDetails(
                                     if (isBookmarked) R.drawable.bookmark_fill
                                     else R.drawable.bookmark
                                 ),
-                                contentDescription = "Bookmark Chef",
-                                tint = if (isBookmarked) Color(0xFFE65127) else Color.Gray,
+                                contentDescription = stringResource(R.string.bookmark_chef),
+                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -209,10 +221,10 @@ fun HiringChefDetails(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = chef.name.ifBlank { "Unknown Chef" },
+                        text = chef.name.ifBlank { stringResource(R.string.unknown_chef) },
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -222,16 +234,19 @@ fun HiringChefDetails(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         DetailChip(
-                            label = "Rating",
-                            value = chef.averagerating?.let { "★ %.1f".format(it) } ?: "★ N/A"
+                            label = stringResource(R.string.label_rating),
+                            value = chef.averagerating?.let { "%.1f".format(it) }
+                                ?: stringResource(R.string.not_available),
+                            iconRes = R.drawable.ic_star,
+                            iconTint = Color(0xFFFFB300) // Star Gold
                         )
                         DetailChip(
-                            label = "Experience",
-                            value = "${chef.experience ?: 0} Years"
+                            label = stringResource(R.string.label_experience),
+                            value = stringResource(R.string.years_experience, chef.experience ?: 0)
                         )
                         DetailChip(
-                            label = "Gender",
-                            value = chef.gender?.capitalized() ?: "N/A"
+                            label = stringResource(R.string.label_gender),
+                            value = chef.gender?.capitalized() ?: stringResource(R.string.not_available)
                         )
                     }
                 }
@@ -239,23 +254,23 @@ fun HiringChefDetails(
 
             // About Section
             if (!chef.description.isNullOrBlank()) {
-                DetailSectionCard(title = "About Chef") {
+                DetailSectionCard(title = stringResource(R.string.title_about_chef)) {
                     Text(
                         text = chef.description,
                         fontSize = 14.sp,
-                        color = Color.DarkGray,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                         lineHeight = 20.sp
                     )
                 }
             }
 
             // Contact Info Section
-            DetailSectionCard(title = "Contact Information") {
+            DetailSectionCard(title = stringResource(R.string.title_contact_info)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val phoneNumber = chef.phoneNumber?.ifBlank { null }
                     InfoRow(
-                        label = "Phone",
-                        value = phoneNumber ?: "N/A",
+                        label = stringResource(R.string.label_phone),
+                        value = phoneNumber ?: stringResource(R.string.not_available),
                         isClickable = phoneNumber != null,
                         onClick = {
                             phoneNumber?.let {
@@ -269,8 +284,8 @@ fun HiringChefDetails(
 
                     val emailAddress = chef.email.ifBlank { null }
                     InfoRow(
-                        label = "Email",
-                        value = emailAddress ?: "N/A",
+                        label = stringResource(R.string.label_email),
+                        value = emailAddress ?: stringResource(R.string.not_available),
                         isClickable = emailAddress != null,
                         onClick = {
                             emailAddress?.let {
@@ -281,7 +296,6 @@ fun HiringChefDetails(
                             }
                         }
                     )
-
                     val fullAddress = listOfNotNull(
                         chef.address?.ifBlank { null },
                         chef.postcode?.ifBlank { null },
@@ -289,8 +303,8 @@ fun HiringChefDetails(
                     ).joinToString(", ")
 
                     InfoRow(
-                        label = "Address",
-                        value = fullAddress.ifBlank { "N/A" }
+                        label = stringResource(R.string.label_address),
+                        value = fullAddress.ifBlank { stringResource(R.string.not_available) }
                     )
                 }
             }
@@ -299,10 +313,38 @@ fun HiringChefDetails(
 }
 
 @Composable
-private fun DetailChip(label: String, value: String) {
+private fun DetailChip(
+    label: String,
+    value: String,
+    @DrawableRes iconRes: Int? = null,
+    iconTint: Color = MaterialTheme.colorScheme.primary
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
-        Text(text = label, fontSize = 12.sp, color = Color.Gray)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(
+                text = value,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
 }
 
@@ -310,7 +352,7 @@ private fun DetailChip(label: String, value: String) {
 private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -319,7 +361,7 @@ private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
                 text = title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             content()
@@ -347,13 +389,13 @@ private fun InfoRow(
         Text(
             text = label,
             fontSize = 13.sp,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         Text(
             text = value,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = if (isClickable) MaterialTheme.colorScheme.primary else Color.Black
+            color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -71,6 +71,7 @@ import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.repository.RecipeRepository
 import com.example.foodieheal.ui.theme.FoodieHealTheme
+import com.example.foodieheal.view.AppointmentHistoryScreen
 import com.example.foodieheal.view.ChangePasswordScreen
 import com.example.foodieheal.view.EditBodyStatusScreen
 import com.example.foodieheal.view.EditProfileScreen
@@ -275,25 +276,29 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                composable(Screen.Hiring.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
-                                        HiringScreen(
-                                            onChefClick = { chef ->
-                                                hiringViewModel.selectChef(chef)
-                                                navController.navigate(Screen.HiringChefDetails.route)
-                                            },
-                                            onAppointmentClick = { appointment ->
-                                                // Handle appointment click / navigation here
-                                                // e.g., navController.navigate(Screen.AppointmentDetails.createRoute(appointment.id))
-                                            }
-                                        )
-                                    }
-                                }
                                 composable(Screen.Profile.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController) }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---
+                                composable(Screen.Hiring.route) {
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
+                                        HiringScreen(
+                                            hiringViewModel = hiringViewModel,
+                                            authViewModel = sharedAuthViewModel,
+                                            onChefClick = { chef ->
+                                                hiringViewModel.selectChef(chef)
+                                                navController.navigate(Screen.HiringChefDetails.route)
+                                            },
+                                            onAppointmentClick = { appointment ->
+                                                val id = appointment.AppointmentID.orEmpty()
+                                                android.util.Log.d("HiringNav", "Click detected! ID: $id")
+                                                navController.navigate(Screen.UserAppointmentDetail.createRoute(id))
+                                            }
+                                        )
+                                    }
+                                }
+
                                 composable(Screen.HiringChefDetails.route) {
                                     val userId = sharedAuthViewModel.currentUser?.id.orEmpty()
                                     val profileVM: BookmarkViewModel = viewModel()
@@ -345,24 +350,6 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                composable(Screen.HiringAppointment.route) { backStackEntry ->
-                                    val parentEntry = remember(backStackEntry) {
-                                        navController.getBackStackEntry(Screen.HiringChefDetails.route)
-                                    }
-                                    val chef = hiringViewModel.selectedChef
-
-                                    if (chef != null) {
-                                        HiringAppointment(
-                                            chef = chef,
-                                            onBackClick = { navController.popBackStack() },
-                                            onAddAppointmentClick = { chosenDate ->
-                                                hiringViewModel.updateSelectedDate(chosenDate) // Update selected date (passing data)
-                                                navController.navigate(Screen.AddHiringAppointment.route)
-                                            }
-                                        )
-                                    }
-                                }
-
                                 composable(
                                     route = "appointmentDetail/{appointmentId}",
                                     arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
@@ -374,7 +361,7 @@ class MainActivity : ComponentActivity() {
                                         viewModel = hiringViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onRescheduleClick = { appointment ->
-                                            navController.navigate("rescheduleAppointment/${appointment.AppointmentID}")
+                                            navController.navigate(Screen.RescheduleAppointment.createRoute(appointment.AppointmentID.orEmpty()))
                                         },
                                         onRatingClick = { targetAppointmentId ->
                                             navController.navigate(Screen.RateChef.createRoute(targetAppointmentId))
@@ -400,7 +387,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(
-                                    route = "rescheduleAppointment/{appointmentId}",
+                                    route = Screen.RescheduleAppointment.route,
                                     arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
                                 ) { backStackEntry ->
                                     val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
@@ -418,6 +405,17 @@ class MainActivity : ComponentActivity() {
 
                                 composable(Screen.AddRecipe.route) { AddRecipeScreen(navController) }
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
+
+                                composable(Screen.AppoinmtmentHistory.route) {
+                                    AppointmentHistoryScreen(
+                                        viewModel = hiringViewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onAppointmentClick = { appointmentId ->
+                                            navController.navigate(Screen.UserAppointmentDetail.createRoute(appointmentId))
+                                        }
+                                    )
+                                }
+
                                 composable(Screen.ChangePassword.route) { ChangePasswordScreen(navController) }
                                 composable(
                                     route = Screen.EditBodyStatus.route + "?fromRegister={fromRegister}",

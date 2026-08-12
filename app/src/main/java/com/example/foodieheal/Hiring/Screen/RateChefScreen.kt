@@ -3,6 +3,7 @@ package com.example.foodieheal.Hiring.Screen
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,10 +27,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -74,11 +79,19 @@ fun RateChefScreen(
     var isSubmitting by remember { mutableStateOf(false) }
 
     val maxCommentLength = 300
+    val defaultChefName = stringResource(R.string.private_chef_name)
+    val defaultBookingDate = stringResource(R.string.this_booking)
+    val successToastMsg = stringResource(R.string.toast_rating_success)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Rate Your Experience", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.rate_experience),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -97,6 +110,7 @@ fun RateChefScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
+            // Chef Profile Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -112,7 +126,7 @@ fun RateChefScreen(
                 ) {
                     AsyncImage(
                         model = chefUser?.profilePicUrl,
-                        contentDescription = "Chef Picture",
+                        contentDescription = stringResource(R.string.chef_picture),
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
@@ -124,13 +138,16 @@ fun RateChefScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = chefUser?.name ?: "Private Chef",
+                            text = chefUser?.name ?: defaultChefName,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "How was your experience on ${appointment?.Date ?: "this booking"}?",
+                            text = stringResource(
+                                R.string.How_experience_on_date,
+                                appointment?.Date ?: defaultBookingDate
+                            ),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,7 +170,7 @@ fun RateChefScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Overall Rating",
+                        text = stringResource(R.string.label_overall_rating),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -169,11 +186,12 @@ fun RateChefScreen(
                     // Dynamic text description based on star count
                     Text(
                         text = when (rating) {
-                            1 -> "Poor"
-                            2 -> "Fair"
-                            3 -> "Good"
-                            4 -> "Very Good"
-                            else -> "Excellent!"
+                            1 -> stringResource(R.string.rating_poor)
+                            2 -> stringResource(R.string.rating_fair)
+                            3 -> stringResource(R.string.rating_good)
+                            4 -> stringResource(R.string.rating_very_good)
+                            5 -> stringResource(R.string.rating_excellent)
+                            else -> stringResource(R.string.rating_select_prompt)
                         },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
@@ -182,6 +200,7 @@ fun RateChefScreen(
                 }
             }
 
+            // Feedback Text Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -193,7 +212,7 @@ fun RateChefScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Write your feedback",
+                        text = stringResource(R.string.label_write_feedback),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -205,14 +224,18 @@ fun RateChefScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp),
-                        placeholder = { Text("Share details about the dishes, service, cleanliness, etc.") },
+                        placeholder = { Text(stringResource(R.string.placeholder_feedback_hint)) },
                         shape = RoundedCornerShape(12.dp),
-                        maxLines = 5
+                        maxLines = 5,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
 
                     // Character count indicator
                     Text(
-                        text = "${comment.length} / $maxCommentLength",
+                        text = stringResource(R.string.char_count_format, comment.length, maxCommentLength),
                         modifier = Modifier.align(Alignment.End),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -222,7 +245,7 @@ fun RateChefScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // 🔘 Submit Button
+            // Submit Button
             Button(
                 onClick = {
                     if (appointment == null || rating == 0) return@Button
@@ -234,7 +257,7 @@ fun RateChefScreen(
                         comment = comment.trim(),
                         onSuccess = {
                             isSubmitting = false
-                            Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
                             onSubmitSuccess()
                         },
                         onError = { err ->
@@ -256,7 +279,11 @@ fun RateChefScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Submit Review", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = stringResource(R.string.submit_review),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
@@ -278,15 +305,22 @@ fun StarRatingBar(
     ) {
         for (i in 1..maxStars) {
             val isSelected = i <= rating
+            val starContentDescription = stringResource(R.string.star_rating_number, i)
+
             Icon(
                 painter = painterResource(
                     if (isSelected) R.drawable.ic_star else R.drawable.ic_outline_star
                 ),
-                contentDescription = "Star $i",
+                contentDescription = starContentDescription,
                 tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 modifier = Modifier
                     .size(starSize)
-                    .clickable { onRatingChanged(i) }
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        // 👇 Use the new Material 3 ripple() API here
+                        indication = ripple(bounded = false, radius = starSize / 1.5f),
+                        onClick = { onRatingChanged(i) }
+                    )
             )
         }
     }

@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,8 +120,8 @@ fun HiringAppointment(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Appointment",
-                        color = Color.White,
+                        text = stringResource(R.string.title_appointment),
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -129,8 +130,8 @@ fun HiringAppointment(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back",
-                            tint = Color.White
+                            contentDescription = stringResource(R.string.back_button),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -156,7 +157,7 @@ fun HiringAppointment(
                     text = weekRangeText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -164,8 +165,8 @@ fun HiringAppointment(
                     IconButton(onClick = { selectedDate = selectedDate.minusWeeks(1) }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Previous Week",
-                            tint = Color.Black
+                            contentDescription = stringResource(R.string.cd_previous_week),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -173,8 +174,8 @@ fun HiringAppointment(
                     IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_planner),
-                            contentDescription = "Pick Date",
-                            tint = Color.Black
+                            contentDescription = stringResource(R.string.cd_pick_date),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -182,8 +183,8 @@ fun HiringAppointment(
                     IconButton(onClick = { selectedDate = selectedDate.plusWeeks(1) }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_right),
-                            contentDescription = "Next Week",
-                            tint = Color.Black
+                            contentDescription = stringResource(R.string.cd_next_week),
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -198,7 +199,6 @@ fun HiringAppointment(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Pass real appointments to DayScheduleSection
             DayScheduleSection(
                 selectedDate = selectedDate,
                 appointments = chefAppointmentsForSelectedDate,
@@ -213,7 +213,7 @@ fun HiringAppointment(
     if (showDatePicker) {
         MealDatePickerDialog(
             initialDate = selectedDate,
-            titleText = "Select Appointment Date",
+            titleText = stringResource(R.string.title_select_appointment_date),
             onDateSelected = { newDate ->
                 selectedDate = newDate
                 showDatePicker = false
@@ -237,7 +237,7 @@ private fun DayScheduleSection(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         LazyColumn(
@@ -256,14 +256,13 @@ private fun DayScheduleSection(
                         text = formattedTitle,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    // Button to add new booking for this day
                     IconButton(onClick = onAddAppointmentClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_add_circle_outline),
-                            contentDescription = "Add Booking",
+                            contentDescription = stringResource(R.string.cd_add_booking),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(32.dp)
                         )
@@ -271,7 +270,6 @@ private fun DayScheduleSection(
                 }
             }
 
-            // If no appointments found for this date
             if (appointments.isEmpty()) {
                 item {
                     Box(
@@ -281,22 +279,20 @@ private fun DayScheduleSection(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No appointments booked for this date.",
-                            color = Color.Gray,
+                            text = stringResource(R.string.empty_no_appointments_for_date),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 16.sp
                         )
                     }
                 }
             } else {
-                // Dynamically display all appointments booked for this day
                 items(appointments) { appointment ->
-                    // 🟢 Format time as "Start_Time - End_Time"
                     val timeSlotText = if (!appointment.Start_Time.isNullOrBlank() && !appointment.End_Time.isNullOrBlank()) {
-                        "${appointment.Start_Time} - ${appointment.End_Time}"
+                        stringResource(R.string.time_range_format, appointment.Start_Time, appointment.End_Time)
                     } else if (!appointment.Start_Time.isNullOrBlank()) {
                         appointment.Start_Time
                     } else {
-                        "Appointment"
+                        stringResource(R.string.label_appointment)
                     }
 
                     AppointmentCard(
@@ -317,25 +313,26 @@ private fun AppointmentCard(
     showAddIcon: Boolean = false,
     onAddClick: (() -> Unit)? = null
 ) {
-    // Dynamic status color
     val statusBgColor = when (statusText.lowercase()) {
-        "confirmed", "accepted" -> Color(0xFFE8F5E9) // Light Green
-        "rejected", "cancelled" -> Color(0xFFFFEBEE) // Light Red
-        "pending" -> Color(0xFFFFF8E1) // Light Yellow
-        else -> Color.White
+        "completed", "finished" -> Color(0xFFE3F2FD)
+        "confirmed", "accepted" -> Color(0xFFE8F5E9)
+        "rejected", "cancelled" -> Color(0xFFFFEBEE)
+        "pending" -> Color(0xFFFFF8E1)
+        else -> MaterialTheme.colorScheme.surface
     }
 
     val statusTextColor = when (statusText.lowercase()) {
+        "completed", "finished" -> Color(0xFF1565C0)
         "confirmed", "accepted" -> Color(0xFF2E7D32)
         "rejected", "cancelled" -> Color(0xFFC62828)
         "pending" -> Color(0xFFF57F17)
-        else -> Color.Black
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -347,15 +344,15 @@ private fun AppointmentCard(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onTertiary
             )
 
             if (showAddIcon) {
                 IconButton(onClick = { onAddClick?.invoke() }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_add_circle_outline),
-                        contentDescription = "Add Appointment",
-                        tint = Color.Black,
+                        contentDescription = stringResource(R.string.add_appointment),
+                        tint = MaterialTheme.colorScheme.onTertiary,
                         modifier = Modifier.size(28.dp)
                     )
                 }

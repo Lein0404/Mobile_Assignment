@@ -210,7 +210,7 @@ class HiringViewModel : ViewModel() {
 
             // Ignore cancelled or rejected bookings
             val status = appt.Status?.lowercase(java.util.Locale.US) ?: ""
-            val isActive = status !in listOf("cancelled", "rejected")
+            val isActive = status !in listOf("cancelled", "rejected", "completed")
 
             // Date Matching (Handles both direct String comparison and LocalDate formats)
             val apptDate = appt.Date?.trim().orEmpty()
@@ -324,7 +324,7 @@ class HiringViewModel : ViewModel() {
         currentAppointmentId: String? = null,
         isTimeValid: Boolean = appointmentTime.isNotBlank(),
         isAddressValid: Boolean = address.isNotBlank(),
-        isPostcodeValid: Boolean = postcode.matches(Regex("^[0-9]{5}$")),
+        isPostcodeValid: Boolean = postcode.isNotBlank(),
         isStateValid: Boolean = state.isNotBlank(),
         isServingSizeValid: Boolean = (servingSize.toIntOrNull() ?: 0) > 0,
         isDescriptionValid: Boolean = description.isNotBlank()
@@ -489,6 +489,10 @@ class HiringViewModel : ViewModel() {
                 isProcessing = false
             }
         }
+    }
+
+    fun refreshUserAppointments() {
+        fetchAppointmentsForCurrentUser()
     }
 
     fun fetchAppointmentsForChef(chefId: String) {

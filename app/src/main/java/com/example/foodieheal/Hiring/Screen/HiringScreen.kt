@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +46,7 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,10 +64,12 @@ fun HiringScreen(
     val isLoading = hiringViewModel.isProcessing
     val errorMessage = hiringViewModel.errorMessage
 
-    val appointmentState by hiringViewModel.userAppointmentsState.collectAsState()
-
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-    val tabs = listOf("Popular", "Appointment", "Bookmarks")
+    val tabs = listOf(
+        stringResource(R.string.tab_popular),
+        stringResource(R.string.tab_appointment),
+        stringResource(R.string.tab_bookmarks)
+    )
 
     // Fetch all chefs on initial screen launch
     LaunchedEffect(Unit) {
@@ -74,7 +78,7 @@ fun HiringScreen(
         }
     }
 
-    // Automatically fetch bookmarked chefs whenever switching to Tab 2 (Bookmarks)
+    // Automatically fetch data whenever switching tabs
     LaunchedEffect(selectedTabIndex, currentUserId) {
         if (currentUserId.isNotEmpty()) {
             when (selectedTabIndex) {
@@ -99,8 +103,8 @@ fun HiringScreen(
                 modifier = Modifier.statusBarsPadding()
             ) {
                 Text(
-                    text = "Hiring",
-                    color = Color.White,
+                    text = stringResource(R.string.title_hiring),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
@@ -109,13 +113,13 @@ fun HiringScreen(
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     indicator = { tabPositions ->
                         if (selectedTabIndex < tabPositions.size) {
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                                 height = 3.dp,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     },
@@ -130,7 +134,11 @@ fun HiringScreen(
                                     text = title,
                                     fontSize = 12.sp,
                                     fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTabIndex == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                    color = if (selectedTabIndex == index) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else {
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                    }
                                 )
                             }
                         )
@@ -164,7 +172,7 @@ fun HiringScreen(
                                 onClick = { hiringViewModel.fetchAllChefs() },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
-                                Text("Retry")
+                                Text(stringResource(R.string.btn_retry))
                             }
                         }
                     } else if (chefs.isNotEmpty()) {
@@ -177,7 +185,7 @@ fun HiringScreen(
                         ) {
                             item(span = { GridItemSpan(2) }) {
                                 Text(
-                                    text = "Chef",
+                                    text = stringResource(R.string.header_chef),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground,
@@ -186,8 +194,6 @@ fun HiringScreen(
                             }
 
                             items(chefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
-                                val chefId = chef.chefId.ifEmpty { chef.id }
-                                val isBookmarked = bookmarkViewModel.isChefBookmarked(chefId)
                                 ChefHireItem(
                                     chef = chef,
                                     onClick = { onChefClick(chef) }
@@ -196,9 +202,9 @@ fun HiringScreen(
                         }
                     } else {
                         Text(
-                            text = "No chef profiles found.",
+                            text = stringResource(R.string.empty_no_chefs_found),
                             modifier = Modifier.align(Alignment.Center),
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -232,14 +238,21 @@ fun HiringScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Button(onClick = { hiringViewModel.fetchAppointmentsForCurrentUser() }) {
-                                        Text("Retry")
+                                        Text(stringResource(R.string.btn_retry))
                                     }
                                 }
                             }
                         }
 
                         is UserAppointmentsUiState.Success -> {
-                            if (currentState.appointments.isEmpty()) {
+                            val activeAppointments = remember(currentState.appointments) {
+                                currentState.appointments.filter { appointment ->
+                                    val status = appointment.Status.orEmpty().lowercase(Locale.US)
+                                    status == "pending" || status == "confirmed"
+                                }
+                            }
+
+                            if (activeAppointments.isEmpty()) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
@@ -247,16 +260,16 @@ fun HiringScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_clock),
-                                            contentDescription = "No Appointments",
-                                            tint = Color.Gray,
+                                            contentDescription = stringResource(R.string.no_appointments),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(48.dp)
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "No Appointments Found",
+                                            text = stringResource(R.string.empty_no_appointments_found),
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Medium,
-                                            color = Color.Gray
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -268,7 +281,7 @@ fun HiringScreen(
                                 ) {
                                     item {
                                         Text(
-                                            text = "My Bookings (${currentState.appointments.size})",
+                                            text = stringResource(R.string.header_my_bookings, activeAppointments.size),
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onBackground,
@@ -276,10 +289,12 @@ fun HiringScreen(
                                         )
                                     }
 
-                                    items(currentState.appointments) { appointment ->
-
+                                    items(
+                                        items = activeAppointments,
+                                        key = { it.AppointmentID ?: it.hashCode().toString() }
+                                    ) { appointment ->
                                         val chefUser = currentState.usersMap[appointment.chefId]
-                                        val chefName = chefUser?.name ?: "Chef"
+                                        val chefName = chefUser?.name ?: stringResource(R.string.default_chef_name)
                                         val chefPicture = chefUser?.profilePicUrl ?: ""
 
                                         UserAppointmentCard(
@@ -309,10 +324,10 @@ fun HiringScreen(
                         ) {
                             item(span = { GridItemSpan(2) }) {
                                 Text(
-                                    text = "Bookmarked Chefs (${bookmarkedChefs.size})",
+                                    text = stringResource(R.string.header_bookmarked_chefs, bookmarkedChefs.size),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
@@ -321,8 +336,6 @@ fun HiringScreen(
                                 items = bookmarkedChefs,
                                 key = { it.chefId.ifEmpty { it.id } }
                             ) { chef ->
-                                val chefId = chef.chefId.ifEmpty { chef.id }
-                                val isBookmarked = bookmarkViewModel.isChefBookmarked(chefId)
                                 ChefHireItem(
                                     chef = chef,
                                     onClick = { onChefClick(chef) }
@@ -336,22 +349,22 @@ fun HiringScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.bookmark),
-                                contentDescription = "No Bookmarks",
-                                tint = Color.Gray,
+                                contentDescription = stringResource(R.string.no_bookmarks),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No Bookmarked Chefs",
+                                text = stringResource(R.string.empty_no_bookmarked_chefs),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Chefs you bookmark will appear here.",
+                                text = stringResource(R.string.empty_bookmarked_chefs_sub),
                                 fontSize = 12.sp,
-                                color = Color.Gray.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -364,12 +377,12 @@ fun HiringScreen(
 @Composable
 fun ChefHireItem(
     chef: Chef,
-    onClick : () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -382,20 +395,20 @@ fun ChefHireItem(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray),
+                    .background(MaterialTheme.colorScheme.tertiary),
                 contentAlignment = Alignment.Center
             ) {
                 if (chef.profilePictureUrl.isNullOrEmpty()) {
                     Text(
-                        text = chef.name?.take(1)?.uppercase() ?: "C",
+                        text = chef.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onTertiary,
                         fontWeight = FontWeight.Bold
                     )
                 } else {
                     AsyncImage(
                         model = chef.profilePictureUrl,
-                        contentDescription = "Profile Picture",
+                        contentDescription = stringResource(R.string.profile_picture),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape),
@@ -408,21 +421,22 @@ fun ChefHireItem(
 
             // Chef Name
             Text(
-                text = chef.name.ifEmpty { "Unknown Chef" },
+                text = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
             // Experience & Location
-            val expText = "${chef.experience ?: 0} yrs exp"
-            val locationText = chef.state?.takeIf { it.isNotBlank() }?.let { "$it" } ?: ""
+            val expText = stringResource(R.string.experience_years_short, chef.experience ?: 0)
+            val locationText = chef.state?.takeIf { it.isNotBlank() }.orEmpty()
+
             Text(
                 text = expText,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -430,7 +444,7 @@ fun ChefHireItem(
             Text(
                 text = locationText,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -449,14 +463,14 @@ fun ChefHireItem(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_star), // 👈 Your star drawable
-                        contentDescription = "Rating Star",
-                        tint = MaterialTheme.colorScheme.primary,
+                        painter = painterResource(R.drawable.ic_star),
+                        contentDescription = stringResource(R.string.rating_star),
+                        tint = Color(0xFFFFB300), // Gold Star Color
                         modifier = Modifier.size(14.dp)
                     )
 
                     Text(
-                        text = if (rating != null && rating > 0.0) "%.1f".format(rating) else "N/A",
+                        text = if (rating != null && rating > 0.0) "%.1f".format(rating) else stringResource(R.string.not_available),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -465,10 +479,10 @@ fun ChefHireItem(
 
                 chef.Pricing?.let { price ->
                     Text(
-                        text = "$${price.toInt()}/hr",
+                        text = stringResource(R.string.rate_per_hour, price.toInt()),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -484,8 +498,9 @@ fun UserAppointmentCard(
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -498,7 +513,7 @@ fun UserAppointmentCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // --- 1. Chef Profile Header ---
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -509,27 +524,26 @@ fun UserAppointmentCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(MaterialTheme.colorScheme.tertiary),
                     contentAlignment = Alignment.Center
                 ) {
                     if (!chefPicture.isNullOrBlank()) {
                         AsyncImage(
                             model = chefPicture,
-                            contentDescription = "$chefName Profile Picture",
+                            contentDescription = stringResource(R.string.chef_profile_picture_format, chefName),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         Icon(
-                           painter = painterResource(R.drawable.ic_outline_account_circle),
-                            contentDescription = "Chef Placeholder",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            painter = painterResource(R.drawable.ic_outline_account_circle),
+                            contentDescription = stringResource(R.string.chef_placeholder),
+                            tint = MaterialTheme.colorScheme.onTertiary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 }
 
-                // Chef Name & Role
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = chefName,
@@ -538,7 +552,7 @@ fun UserAppointmentCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Private Chef",
+                        text = stringResource(R.string.role_private_chef),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -550,7 +564,6 @@ fun UserAppointmentCard(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-            // --- 2. Appointment Schedule & Price Details ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -563,7 +576,7 @@ fun UserAppointmentCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                           painter = painterResource(R.drawable.ic_planner),
+                            painter = painterResource(R.drawable.ic_planner),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
@@ -588,9 +601,9 @@ fun UserAppointmentCard(
                         )
                         Text(
                             text = if (appointment.Start_Time.isNotBlank() && appointment.End_Time.isNotBlank()) {
-                                "${appointment.Start_Time} - ${appointment.End_Time}"
+                                stringResource(R.string.time_range_format, appointment.Start_Time, appointment.End_Time)
                             } else {
-                                "Time no set"
+                                stringResource(R.string.time_not_set)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -601,12 +614,12 @@ fun UserAppointmentCard(
                 // Total Price
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Total Price",
+                        text = stringResource(R.string.label_total_price),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = String.format(Locale.US, "RM %.2f", appointment.Total_Price),
+                        text = String.format(Locale.US, stringResource(R.string.price_currency_format), appointment.Total_Price),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -617,30 +630,6 @@ fun UserAppointmentCard(
     }
 }
 
-// Helper composable for Status Badge
-@Composable
-private fun AppointmentStatusBadge(status: String) {
-    val (backgroundColor, textColor) = when (status.lowercase()) {
-        "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
-        "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
-        "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = backgroundColor
-    ) {
-        Text(
-            text = status.ifBlank { "Confirmed" }.replaceFirstChar { it.uppercase() },
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
-    }
-}
 
 private val sampleChef = Chef(
     chefId = "chef_123",

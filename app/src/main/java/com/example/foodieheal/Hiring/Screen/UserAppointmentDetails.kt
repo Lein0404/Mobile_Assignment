@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +56,7 @@ import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.DetailRow
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,7 @@ fun UserAppointmentDetailScreen(
 
     // Extract appointment and users map from State
     val successState = appointmentsState as? UserAppointmentsUiState.Success
-    val appointment = successState?.appointments?.find { it.AppointmentID == appointmentId }
+    val appointment = successState?.appointments?.find { it.AppointmentID?.trim() == appointmentId.trim() }
 
     // Grab matching Chef User details from usersMap
     val chefUser = appointment?.let { successState?.usersMap?.get(it.chefId) }
@@ -90,13 +92,24 @@ fun UserAppointmentDetailScreen(
     val isConfirmed = appointment.Status.equals("confirmed", ignoreCase = true)
     val isCompleted = appointment.Status.equals("completed", ignoreCase = true)
 
+    val completedToast = stringResource(R.string.toast_booking_completed)
+    val cancelledToast = stringResource(R.string.toast_appointment_cancelled)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Booking Details", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Column {
+                        Text(stringResource(R.string.booking_details), fontWeight = FontWeight.Bold)
+                        Text("ID: $appointmentId", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(painterResource(R.drawable.ic_arrowback), contentDescription = "Back")
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -133,7 +146,7 @@ fun UserAppointmentDetailScreen(
                 ) {
                     AsyncImage(
                         model = chefUser?.profilePicUrl,
-                        contentDescription = "Chef Picture",
+                        contentDescription = stringResource(R.string.chef_picture),
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
@@ -145,13 +158,13 @@ fun UserAppointmentDetailScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = chefUser?.name ?: "Private Chef",
+                            text = chefUser?.name ?: stringResource(R.string.private_chef_name),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Professional Chef",
+                            text = stringResource(R.string.professional_chef),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -176,7 +189,7 @@ fun UserAppointmentDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Status",
+                            text = stringResource(R.string.label_status),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
@@ -185,17 +198,27 @@ fun UserAppointmentDetailScreen(
 
                     HorizontalDivider()
 
-                    DetailRow(label = "Date", value = appointment.Date)
                     DetailRow(
-                        label = "Time Slot",
-                        value = "${appointment.Start_Time} - ${appointment.End_Time}"
+                        label = stringResource(R.string.label_date),
+                        value = appointment.Date
                     )
                     DetailRow(
-                        label = "Serving Size",
-                        value = "${appointment.Serving_Size ?: "N/A"} pax"
+                        label = stringResource(R.string.label_time_slot),
+                        value = stringResource(
+                            R.string.time_slot_format,
+                            appointment.Start_Time,
+                            appointment.End_Time
+                        )
                     )
                     DetailRow(
-                        label = "Total Price",
+                        label = stringResource(R.string.label_serving_size),
+                        value = stringResource(
+                            R.string.serving_size_format,
+                            appointment.Serving_Size ?: stringResource(R.string.not_available)
+                        )
+                    )
+                    DetailRow(
+                        label = stringResource(R.string.label_total_price),
                         value = String.format(Locale.US, "RM %.2f", appointment.Total_Price)
                     )
                 }
@@ -213,7 +236,7 @@ fun UserAppointmentDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Service Location",
+                        text = stringResource(R.string.label_service_location),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -221,13 +244,17 @@ fun UserAppointmentDetailScreen(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     Text(
-                        text = appointment.Address ?: "Address not providedS",
+                        text = appointment.Address ?: stringResource(R.string.address_not_provided),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
                     if (!appointment.Postcode.isNullOrEmpty() || !appointment.State.isNullOrEmpty()) {
                         Text(
-                            text = "${appointment.Postcode.orEmpty()}, ${appointment.State.orEmpty()}",
+                            text = stringResource(
+                                R.string.city_state_format,
+                                appointment.Postcode.orEmpty(),
+                                appointment.State.orEmpty()
+                            ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
@@ -248,7 +275,7 @@ fun UserAppointmentDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Notes & Requirements",
+                            text = stringResource(R.string.label_notes_requirements),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -270,7 +297,7 @@ fun UserAppointmentDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Complete Booking" Button
+                // "Complete Booking" Button
                 if (isConfirmed) {
                     Button(
                         onClick = { showCompleteDialog = true },
@@ -284,10 +311,14 @@ fun UserAppointmentDetailScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_check),
-                            contentDescription = "Complete",
+                            contentDescription = stringResource(R.string.complete),
                             modifier = Modifier.padding(end = 8.dp)
                         )
-                        Text("Complete Booking", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(
+                            text = stringResource(R.string.complete_booking),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
                     }
                 }
 
@@ -306,7 +337,7 @@ fun UserAppointmentDetailScreen(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Cancel Booking", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.cancel_booking), fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -319,7 +350,7 @@ fun UserAppointmentDetailScreen(
                                 containerColor = if (isConfirmed) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Text("Reschedule", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.reschedule), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -330,8 +361,8 @@ fun UserAppointmentDetailScreen(
     if (showCompleteDialog) {
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
-            title = { Text("Complete Booking?", fontWeight = FontWeight.Bold) },
-            text = { Text("Has the chef completed the service to your satisfaction?") },
+            title = { Text(stringResource(R.string.dialog_complete_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.dialog_complete_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -340,7 +371,7 @@ fun UserAppointmentDetailScreen(
                             appointmentId = appointment.AppointmentID.orEmpty(),
                             newStatus = "Completed",
                             onSuccess = {
-                                Toast.makeText(context, "Booking marked as completed!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, completedToast, Toast.LENGTH_SHORT).show()
                                 onRatingClick(appointment.AppointmentID.orEmpty())
                             },
                             onError = { err ->
@@ -349,12 +380,12 @@ fun UserAppointmentDetailScreen(
                         )
                     }
                 ) {
-                    Text("Yes, Complete")
+                    Text(stringResource(R.string.yes_complete))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showCompleteDialog = false }) {
-                    Text("Not Yet")
+                    Text(stringResource(R.string.not_yet))
                 }
             }
         )
@@ -363,8 +394,8 @@ fun UserAppointmentDetailScreen(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancel Appointment?", fontWeight = FontWeight.Bold) },
-            text = { Text("Are you sure you want to cancel this booking? This action cannot be undone.") },
+            title = { Text(stringResource(R.string.dialog_cancel_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.dialog_cancel_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -372,7 +403,7 @@ fun UserAppointmentDetailScreen(
                         viewModel.cancelAppointment(
                             appointmentId = appointment.AppointmentID.orEmpty(),
                             onSuccess = {
-                                Toast.makeText(context, "Appointment cancelled", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, cancelledToast, Toast.LENGTH_SHORT).show()
                                 onBackClick()
                             },
                             onError = { errorMessage ->
@@ -382,12 +413,12 @@ fun UserAppointmentDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Yes, Cancel")
+                    Text(stringResource(R.string.yes_cancel))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showCancelDialog = false }) {
-                    Text("Keep Booking")
+                    Text(stringResource(R.string.keep_booking))
                 }
             }
         )
@@ -397,10 +428,11 @@ fun UserAppointmentDetailScreen(
 @Composable
 private fun StatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
-        "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
-        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+        "confirmed" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+        "pending" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        "cancelled" -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        "completed" -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Surface(
@@ -414,16 +446,5 @@ private fun StatusBadge(status: String) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }

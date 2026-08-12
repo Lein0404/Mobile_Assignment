@@ -28,6 +28,12 @@ sealed class Screen(val route: String) {
     object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
         fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
     }
+    object UserAppointmentDetail : Screen("appointmentDetail/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "appointmentDetail/$appointmentId"
+    }
+    object RescheduleAppointment : Screen("rescheduleAppointment/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "rescheduleAppointment/$appointmentId"
+    }
     object ChefEditProfile : Screen("chefEditProfile")
     object HiringAppointment : Screen("HiringAppointment")
     object HiringChefDetails : Screen("hiringChefDetails")
@@ -35,6 +41,7 @@ sealed class Screen(val route: String) {
         fun createRoute(appointmentId: String) = "rateChef/$appointmentId"
     }
     object EditProfile : Screen("editProfile")
+    object AppoinmtmentHistory : Screen("appointmentHistory")
     object ChangePassword : Screen("changePassword")
     object EditBodyStatus : Screen("editBodyStatus")
 

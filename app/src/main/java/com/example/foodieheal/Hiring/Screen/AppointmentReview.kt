@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,27 +73,26 @@ fun AppointmentReviewScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    val chef = viewModel.selectedChef
     val selectedChef = viewModel.selectedChef
     val chefId = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
     val chefPicture = selectedChef?.profilePictureUrl.orEmpty()
-    val chefName = selectedChef?.name ?: "Selected Chef"
-    val appointmentTime = uiState.appointmentTime.ifBlank { "Not Selected" }
-    val address = uiState.address.ifBlank { "Not Provided" }
+    val chefName = selectedChef?.name ?: stringResource(R.string.default_selected_chef_name)
+    val appointmentTime = uiState.appointmentTime.ifBlank { stringResource(R.string.not_selected) }
+    val address = uiState.address.ifBlank { stringResource(R.string.not_provided) }
 
     val location = listOf(uiState.postcode, uiState.state)
         .filter { it.isNotBlank() }
         .joinToString(", ")
-        .ifBlank { "Not Provided" }
+        .ifBlank { stringResource(R.string.not_provided) }
 
     val servingSize = uiState.servingSize.ifBlank { "0" }
-    val healthPref = uiState.healthPreference.ifBlank { "None" }
-    val description = uiState.description.ifBlank { "None" }
+    val healthPref = uiState.healthPreference.ifBlank { stringResource(R.string.none_selected) }
+    val description = uiState.description.ifBlank { stringResource(R.string.none_selected) }
     val hourlyRate = selectedChef?.Pricing ?: 0.0
 
     val currentUserId = authViewModel.currentUser?.id.orEmpty()
 
-    // Extract the start time, end time and selected date
+    // Extract time details
     val selectedDateString = viewModel.selectedDate.toString()
     val timeRange = uiState.appointmentTime.split(" - ")
     val startTime = timeRange.getOrNull(0).orEmpty()
@@ -100,12 +100,15 @@ fun AppointmentReviewScreen(
 
     val totalPrice = viewModel.calculateTotalPrice()
 
+    val processingToastMsg = stringResource(R.string.toast_processing_booking)
+    val successToastMsg = stringResource(R.string.toast_booking_success)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Review Booking",
+                        text = stringResource(R.string.review_booking),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -114,7 +117,7 @@ fun AppointmentReviewScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -134,7 +137,7 @@ fun AppointmentReviewScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Chef Profile Card
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -158,14 +161,14 @@ fun AppointmentReviewScreen(
                         if (chefPicture.isNotBlank()) {
                             AsyncImage(
                                 model = chefPicture,
-                                contentDescription = "Profile Picture",
+                                contentDescription = stringResource(R.string.profile_picture),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
                         } else {
                             Icon(
                                 painter = painterResource(R.drawable.ic_outline_account_circle),
-                                contentDescription = "Default Profile",
+                                contentDescription = stringResource(R.string.default_profile),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(28.dp)
                             )
@@ -173,7 +176,7 @@ fun AppointmentReviewScreen(
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Selected Chef",
+                            text = stringResource(R.string.label_selected_chef),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -184,7 +187,7 @@ fun AppointmentReviewScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = String.format(Locale.US, "RM %.2f / hour", hourlyRate),
+                            text = stringResource(R.string.currency_hourly_rate_format, hourlyRate),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -193,47 +196,44 @@ fun AppointmentReviewScreen(
                 }
             }
 
-            // 2. Schedule Details Card
-            ReviewSectionCard(title = "Date & Time") {
+            ReviewSectionCard(title = stringResource(R.string.section_date_and_time)) {
                 ReviewDetailItem(
-                   painter = painterResource(R.drawable.ic_planner),
-                    label = "Date",
+                    painter = painterResource(R.drawable.ic_planner),
+                    label = stringResource(R.string.label_date),
                     value = selectedDateString
                 )
                 ReviewDetailItem(
                     painter = painterResource(R.drawable.ic_clock),
-                    label = "Time Slot",
+                    label = stringResource(R.string.label_time_slot),
                     value = "$startTime - $endTime"
                 )
             }
 
-            // 3. Location & Requirements Card
-            ReviewSectionCard(title = "Location & Event Details") {
+            ReviewSectionCard(title = stringResource(R.string.section_location_and_event)) {
                 ReviewDetailItem(
                     painter = painterResource(R.drawable.location),
-                    label = "Address",
+                    label = stringResource(R.string.label_address),
                     value = "$address, $location"
                 )
                 ReviewDetailItem(
                     painter = painterResource(R.drawable.serving_size),
-                    label = "Serving Size",
-                    value = "$servingSize Pax"
+                    label = stringResource(R.string.label_serving_size),
+                    value = stringResource(R.string.serving_pax_format, servingSize)
                 )
                 ReviewDetailItem(
                     painter = painterResource(R.drawable.health_preference),
-                    label = "Health Preference",
+                    label = stringResource(R.string.label_health_preference),
                     value = healthPref
                 )
-                if (description.isNotBlank() && description != "None") {
+                if (description.isNotBlank() && description != stringResource(R.string.none_selected)) {
                     ReviewDetailItem(
                         painter = painterResource(id = R.drawable.note),
-                        label = "Notes / Special Requests",
+                        label = stringResource(R.string.label_notes_special_requests),
                         value = description
                     )
                 }
             }
 
-            // 4. Payment Breakdown Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -245,7 +245,7 @@ fun AppointmentReviewScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Payment Breakdown",
+                        text = stringResource(R.string.section_payment_breakdown),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -254,8 +254,8 @@ fun AppointmentReviewScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                     PriceSummaryRow(
-                        label = "Hourly Rate",
-                        value = String.format(Locale.US, "RM %.2f", hourlyRate)
+                        label = stringResource(R.string.label_hourly_rate),
+                        value = stringResource(R.string.currency_rm_format, hourlyRate)
                     )
 
                     HorizontalDivider(
@@ -269,13 +269,13 @@ fun AppointmentReviewScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Total Price",
+                            text = stringResource(R.string.label_total_price),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = String.format(Locale.US, "RM %.2f", totalPrice),
+                            text = stringResource(R.string.currency_rm_format, totalPrice),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -299,7 +299,7 @@ fun AppointmentReviewScreen(
                 )
             ) {
                 Text(
-                    text = "Confirm & Book",
+                    text = stringResource(R.string.confirm_and_book),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -307,12 +307,13 @@ fun AppointmentReviewScreen(
         }
     }
 
+    // Confirmation Dialog
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
             title = {
                 Text(
-                    text = "Confirm Booking",
+                    text = stringResource(R.string.confirm_booking),
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -324,7 +325,7 @@ fun AppointmentReviewScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Please double check your appointment details before confirming:",
+                        text = stringResource(R.string.confirm_booking_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -334,13 +335,21 @@ fun AppointmentReviewScreen(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
 
-                    // Compact Dialog Summary
-                    BookingDetailRow(label = "Chef", value = chefName)
-                    BookingDetailRow(label = "Date", value = selectedDateString)
-                    BookingDetailRow(label = "Time", value = appointmentTime)
                     BookingDetailRow(
-                        label = "Total Price",
-                        value = String.format(Locale.US, "RM %.2f", totalPrice),
+                        label = stringResource(R.string.label_chef),
+                        value = chefName
+                    )
+                    BookingDetailRow(
+                        label = stringResource(R.string.label_date),
+                        value = selectedDateString
+                    )
+                    BookingDetailRow(
+                        label = stringResource(R.string.label_time),
+                        value = appointmentTime
+                    )
+                    BookingDetailRow(
+                        label = stringResource(R.string.label_total_price),
+                        value = stringResource(R.string.currency_rm_format, totalPrice),
                         isHighlight = true
                     )
                 }
@@ -349,7 +358,7 @@ fun AppointmentReviewScreen(
                 Button(
                     onClick = {
                         showConfirmationDialog = false
-                        Toast.makeText(context, "Processing your booking...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, processingToastMsg, Toast.LENGTH_SHORT).show()
 
                         viewModel.createAppointment(
                             userId = currentUserId,
@@ -359,7 +368,7 @@ fun AppointmentReviewScreen(
                             endTime = endTime,
                             totalPrice = totalPrice,
                             onSuccess = {
-                                Toast.makeText(context, "Booking confirmed successfully!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, successToastMsg, Toast.LENGTH_LONG).show()
                                 onFinalConfirm()
                             },
                             onError = { errorMsg ->
@@ -374,7 +383,7 @@ fun AppointmentReviewScreen(
                     )
                 ) {
                     Text(
-                        text = "Confirm & Pay",
+                        text = stringResource(R.string.confirm_and_pay),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -384,19 +393,12 @@ fun AppointmentReviewScreen(
                     onClick = { showConfirmationDialog = false },
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             shape = RoundedCornerShape(16.dp),
             containerColor = MaterialTheme.colorScheme.surface
         )
-    }
-}
-@Composable
-private fun ReviewRow(label: String, value: String) {
-    Column {
-        Text(text = label, fontSize = 12.sp, color = Color.Gray)
-        Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
     }
 }
 

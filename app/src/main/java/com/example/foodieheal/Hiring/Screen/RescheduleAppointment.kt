@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -53,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,6 +67,7 @@ import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DropDownList
+import com.example.foodieheal.ui.components.TimePickerDialog
 import java.util.TimeZone
 import java.text.SimpleDateFormat
 import java.time.ZoneId
@@ -91,14 +94,14 @@ fun RescheduleAppointmentScreen(
 
     if (appointment == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
         return
     }
 
     LaunchedEffect(appointment.chefId) {
         appointment.chefId?.let { chefId ->
-            viewModel.fetchAppointmentsForChef(chefId) // Ensure to loads _chefAppointmentsState
+            viewModel.fetchAppointmentsForChef(chefId)
         }
     }
 
@@ -123,6 +126,8 @@ fun RescheduleAppointmentScreen(
     val isTimeSlotOccupied = validationErrors.contains(AppointmentValidationError.TimeSlotOccupied)
     val isInvalidTime = validationErrors.contains(AppointmentValidationError.InvalidTime)
 
+    val successToastMsg = stringResource(R.string.toast_reschedule_success)
+
     LaunchedEffect(selectedDate, startTime, endTime) {
         if (hasAttemptedSubmit) {
             val errors = viewModel.validateFormValues(
@@ -142,10 +147,18 @@ fun RescheduleAppointmentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reschedule Booking", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.reschedule_booking),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(painterResource(R.drawable.ic_arrowback), contentDescription = "Back")
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back_button)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -176,7 +189,7 @@ fun RescheduleAppointmentScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Current Booking Details",
+                        text = stringResource(R.string.label_current_booking_details),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -184,13 +197,14 @@ fun RescheduleAppointmentScreen(
                     Text(
                         text = "${appointment.Date} | ${appointment.Start_Time} - ${appointment.End_Time}",
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             // Select Date
-            FormLabel("Date")
+            FormLabel(stringResource(R.string.label_date))
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { showDatePickerDialog = true },
@@ -204,15 +218,28 @@ fun RescheduleAppointmentScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Date", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
-                        Text(selectedDate, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.label_date),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                        Text(
+                            text = selectedDate,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Icon(painterResource(R.drawable.ic_calendar), contentDescription = "Select Date")
+                    Icon(
+                        painter = painterResource(R.drawable.ic_calendar),
+                        contentDescription = stringResource(R.string.cd_select_date),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
             // Time Slot Pickers
-            FormLabel("Time Range")
+            FormLabel(stringResource(R.string.label_time_range))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -223,9 +250,18 @@ fun RescheduleAppointmentScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Start Time", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = stringResource(R.string.label_start_time),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.outline
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(startTime, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = startTime,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
 
@@ -235,9 +271,18 @@ fun RescheduleAppointmentScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("End Time", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = stringResource(R.string.label_end_time),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.outline
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(endTime, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = endTime,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -254,12 +299,12 @@ fun RescheduleAppointmentScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_help), // Ensure ic_warning exists, or use Material Icons
-                            contentDescription = "Warning",
+                            painter = painterResource(R.drawable.ic_help),
+                            contentDescription = stringResource(R.string.cd_warning),
                             tint = MaterialTheme.colorScheme.error
                         )
                         Text(
-                            text = "This time slot is already booked. Please pick a different time or date.",
+                            text = stringResource(R.string.error_time_slot_occupied_reschedule),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
@@ -268,33 +313,41 @@ fun RescheduleAppointmentScreen(
                 }
             } else if (isInvalidTime) {
                 Text(
-                    text = "Please enter a valid start and end time.",
+                    text = stringResource(R.string.error_invalid_time_range),
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp
                 )
             }
 
             // Location Details
-            FormLabel("Address")
+            FormLabel(stringResource(R.string.label_address))
             OutlinedTextField(
                 value = address,
                 onValueChange = { address = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Address") },
+                placeholder = { Text(stringResource(R.string.placeholder_address)) },
                 shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
-            FormLabel("Postcode")
+            FormLabel(stringResource(R.string.label_postcode))
             OutlinedTextField(
                 value = postcode,
                 onValueChange = { if (it.all { char -> char.isDigit() }) postcode = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Postcode (e.g. 10000)") },
+                placeholder = { Text(stringResource(R.string.placeholder_postcode_hint)) },
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -306,32 +359,40 @@ fun RescheduleAppointmentScreen(
                 onOptionSelected = { selectedState = it }
             )
 
-            // Serving Size & Description / Notes
-            FormLabel("Serving Size (Pax)")
+            // Serving Size & Notes
+            FormLabel(stringResource(R.string.label_serving_size_pax))
             OutlinedTextField(
                 value = servingSize,
                 onValueChange = { if (it.all { char -> char.isDigit() }) servingSize = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter number of pax") },
+                placeholder = { Text(stringResource(R.string.placeholder_serving_size)) },
                 shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
-            FormLabel("Notes / Special Requirements")
+            FormLabel(stringResource(R.string.label_notes_requirements))
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp),
-                placeholder = { Text("Add any notes or dietary preferences...") },
+                placeholder = { Text(stringResource(R.string.placeholder_notes_hint)) },
                 shape = RoundedCornerShape(12.dp),
-                maxLines = 4
+                maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔘 Submit Button
+            // Submit Button
             Button(
                 onClick = {
                     hasAttemptedSubmit = true
@@ -347,7 +408,7 @@ fun RescheduleAppointmentScreen(
                         newServingSize = servingSize,
                         newDescription = description,
                         onSuccess = {
-                            Toast.makeText(context, "Rescheduled successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
                             onRescheduleSuccess()
                         },
                         onError = { errorMsg ->
@@ -368,7 +429,11 @@ fun RescheduleAppointmentScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Confirm Reschedule", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = stringResource(R.string.confirm_reschedule),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
@@ -388,10 +453,12 @@ fun RescheduleAppointmentScreen(
                         selectedDate = formatter.format(Date(millis))
                     }
                     showDatePickerDialog = false
-                }) { Text("Select") }
+                }) { Text(stringResource(R.string.select)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePickerDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePickerDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -409,7 +476,12 @@ fun RescheduleAppointmentScreen(
                     val amPm = if (timePickerState.hour < 12) "AM" else "PM"
                     startTime = String.format(Locale.US, "%02d:%02d %s", formattedHour, timePickerState.minute, amPm)
                     showStartTimePicker = false
-                }) { Text("Select") }
+                }) { Text(stringResource(R.string.select)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartTimePicker = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         ) {
             TimePicker(state = timePickerState)
@@ -427,27 +499,15 @@ fun RescheduleAppointmentScreen(
                     val amPm = if (timePickerState.hour < 12) "AM" else "PM"
                     endTime = String.format(Locale.US, "%02d:%02d %s", formattedHour, timePickerState.minute, amPm)
                     showEndTimePicker = false
-                }) { Text("Select") }
+                }) { Text(stringResource(R.string.select)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndTimePicker = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         ) {
             TimePicker(state = timePickerState)
         }
     }
-}
-
-// Reusable TimePickerDialog Wrapper for Compose
-@Composable
-fun TimePickerDialog(
-    onDismissRequest: () -> Unit,
-    confirmButton: @Composable () -> Unit,
-    content: @Composable () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = confirmButton,
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) { Text("Cancel") }
-        },
-        text = { content() }
-    )
 }
