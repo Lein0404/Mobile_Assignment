@@ -33,11 +33,24 @@ sealed class Screen(val route: String) {
     // 🌟 Added routes from your design
     object AddHiringAppointment : Screen("addHiringAppointment")
     object AppointmentReview : Screen("appointmentReview")
+
+    // Ingredients module
     object Ingredients : Screen("ingredients")
-    object IngredientDetail : Screen("ingredientDetail/{id}/{isRequest}")
-    object ShoppingList : Screen("shoppingList")
-    object AddShoppingListItem : Screen("addShoppingListItem")
-    object IngredientRequestForm : Screen("ingredientRequestForm")
-    object AdminIngredientDetail : Screen("adminIngredientDetail/{id}")
-    object AdminIngredientReview : Screen("adminIngredientReview/{id}")
+    object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {
+        fun createRoute(id: String, isRequest: Boolean = false) = "ingredient_detail/$id/$isRequest"
+    }
+    object IngredientRequestForm : Screen("ingredient_request_form?id={id}") {
+        fun createRoute(id: String? = null) = if (id != null) "ingredient_request_form?id=$id" else "ingredient_request_form"
+    }
+
+    object ShoppingList : Screen("shopping_list")
+    object AddShoppingListItem : Screen("add_shopping_list_item")
+
+    object AdminIngredient: Screen("admin_ingredient")
+    object AdminIngredientDetail : Screen("admin_ingredient_detail/{id}") {
+        fun createRoute(id: String) = "admin_ingredient_detail/$id"
+    }
+    object AdminIngredientReview : Screen("admin_ingredient_review/{id}") {
+        fun createRoute(id: String) = "admin_ingredient_review/$id"
+    }
 }

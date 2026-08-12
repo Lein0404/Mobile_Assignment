@@ -26,6 +26,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.foodieheal.Admin.AdminApprovalScreen
+import com.example.foodieheal.Admin.AdminIngredientDetailScreen
+import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
+import com.example.foodieheal.Admin.AdminIngredientsScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
 import com.example.foodieheal.Chef.Register.*
@@ -35,6 +38,11 @@ import com.example.foodieheal.Hiring.Screen.HiringChefDetails
 import com.example.foodieheal.Hiring.Screen.HiringScreen
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
+import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
+import com.example.foodieheal.ingredients.view.IngredientDetailScreen
+import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
+import com.example.foodieheal.ingredients.view.IngredientsMainScreen
+import com.example.foodieheal.ingredients.view.ShoppingListScreen
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
@@ -181,8 +189,23 @@ class MainActivity : ComponentActivity() {
                                         HiringChefDetails(chef = chef, userId = userId, viewModel = profileVM, onBackClick = { navController.popBackStack() }, onHireClick = { navController.navigate(Screen.HiringAppointment.route) })
                                     }
                                 }
-                                composable(Screen.HiringAppointment.route) {
-                                    HiringAppointment(onBackClick = { navController.popBackStack() }, onAddAppointmentClick = { })
+
+                                composable(Screen.HiringAppointment.route) { backStackEntry ->
+                                    val parentEntry = remember(backStackEntry) {
+                                        navController.getBackStackEntry(Screen.HiringChefDetails.route)
+                                    }
+                                    val chef = hiringViewModel.selectedChef
+
+                                    if (chef != null) {
+                                        HiringAppointment(
+                                            chef = chef,
+                                            onBackClick = { navController.popBackStack() },
+                                            onAddAppointmentClick = { chosenDate ->
+                                                hiringViewModel.updateSelectedDate(chosenDate) // Update selected date (passing data)
+                                                navController.navigate(Screen.AddHiringAppointment.route)
+                                            }
+                                        )
+                                    }
                                 }
 
                                 composable(Screen.AddRecipe.route) { AddRecipeScreen(navController) }
@@ -197,7 +220,30 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // --- ADMIN & CHEF ---
-                                composable(Screen.AdminChefScreen.route) { AdminApprovalScreen(navController) }
+                                composable(Screen.AdminChefScreen.route) {
+                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel)
+                                }
+
+                                composable(Screen.AdminIngredient.route){
+                                    AdminIngredientsScreen(navController)
+                                }
+
+                                composable(
+                                    route = Screen.AdminIngredientDetail.route,
+                                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                                    AdminIngredientDetailScreen(navController, id)
+                                }
+
+                                composable(
+                                    route = Screen.AdminIngredientReview.route,
+                                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                                    AdminIngredientRequestFormScreen(navController, id)
+                                }
+
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
                                 composable("chefDetail/{chefId}") {
                                     ChefDetailScreen(it.arguments?.getString("chefId") ?: "", navController)
@@ -210,6 +256,43 @@ class MainActivity : ComponentActivity() {
                                     composable(Screen.Description.route) { descriptionInfo(navController, chefviewModel) }
                                     composable(Screen.ChefPicture.route) { ChefPictureScreen(navController, chefviewModel) }
                                     composable(Screen.Review.route) { reviewInfo(navController, chefviewModel) }
+                                }
+
+                                // Ingredients module
+                                composable(Screen.Ingredients.route) {
+                                    IngredientsMainScreen(navController)
+                                }
+
+                                composable(
+                                    route = Screen.IngredientDetail.route,
+                                    arguments = listOf(
+                                        navArgument("id") { type = NavType.StringType },
+                                        navArgument("isRequest") { type = NavType.BoolType }
+                                    )
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                                    val isRequest = backStackEntry.arguments?.getBoolean("isRequest") ?: false
+                                    IngredientDetailScreen(navController, id, isRequest)
+                                }
+
+                                composable(
+                                    route = Screen.IngredientRequestForm.route,
+                                    arguments = listOf(navArgument("id") {
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    })
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id")
+                                    IngredientRequestFormScreen(navController, requestId = id)
+                                }
+
+                                composable(Screen.ShoppingList.route) {
+                                    ShoppingListScreen(navController)
+                                }
+
+                                composable(Screen.AddShoppingListItem.route) {
+                                    AddShoppingListItemScreen(navController)
                                 }
                             }
                         }

@@ -3,6 +3,7 @@ package com.example.foodieheal.view
 import android.app.Activity
 import android.graphics.BitmapFactory
 import android.util.Base64
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -116,8 +117,12 @@ fun ProfileScreen(
                             navController.navigate(Screen.EditBodyStatus.route)
                         }
                     }
-                    DrawerItem("View & Request Ingredients", R.drawable.ic_recipe) { }
-                    DrawerItem("Shopping Cart", R.drawable.ic_recipe) { }
+                    DrawerItem("View & Request Ingredients", R.drawable.ic_ingredient_list) {
+                        navController.navigate(Screen.Ingredients.route)
+                    }
+                    DrawerItem("Shopping List", R.drawable.ic_shopping_cart) {
+                        navController.navigate(Screen.ShoppingList.route)
+                    }
                     DrawerItem("Register as Chef", R.drawable.ic_hiring) {
                         navController.navigate(Screen.Welcome.route)
                     }
@@ -442,7 +447,11 @@ fun ProfileScreen(
 }
 
 @Composable
-fun DrawerItem(label: String, iconRes: Int, onClick: () -> Unit) {
+fun DrawerItem(
+    label: String,
+    @DrawableRes iconRes: Int,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
