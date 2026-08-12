@@ -18,10 +18,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController){
-    // 🌟 Share ViewModel with MainActivity
-    val viewModel : AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
-    
+fun RegisterScreen(navController: NavController, viewModel: AuthViewModel){
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -35,7 +32,7 @@ fun RegisterScreen(navController: NavController){
         if (viewModel.registerSuccess) {
             // Navigate to Body Status screen after registration
             navController.navigate(com.example.foodieheal.navigation.Screen.EditBodyStatus.route + "?fromRegister=true") {
-                popUpTo(0) { inclusive = true }
+                popUpTo(com.example.foodieheal.navigation.Screen.Register.route) { inclusive = true }
             }
         }
     }

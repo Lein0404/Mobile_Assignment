@@ -38,8 +38,8 @@ import com.example.foodieheal.viewmodel.RecipeViewModel
 @Composable
 fun RecipesScreen(
     parentNavController: NavController,
-    viewModel: RecipeViewModel = viewModel(viewModelStoreOwner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner),
-    authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    viewModel: RecipeViewModel,
+    authViewModel: AuthViewModel
 ) {
     val selectedTab = viewModel.activeTab
     val tabs = listOf("Popular", "My Recipes", "Bookmarks")
