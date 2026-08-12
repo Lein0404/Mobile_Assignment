@@ -53,6 +53,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Admin.AdminIngredientDetailScreen
 import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
 import com.example.foodieheal.Admin.AdminIngredientsScreen
+import com.example.foodieheal.Hiring.Screen.AddAppointmentFormScreen
+import com.example.foodieheal.Hiring.Screen.AppointmentReviewScreen
+import com.example.foodieheal.Hiring.Screen.RateChefScreen
+import com.example.foodieheal.Hiring.Screen.RescheduleAppointmentScreen
+import com.example.foodieheal.Hiring.Screen.UserAppointmentDetailScreen
 import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
@@ -444,7 +449,6 @@ class MainActivity : ComponentActivity() {
                                     AdminIngredientRequestFormScreen(navController, id)
                                 }
 
-                                composable(Screen.AdminChefScreen.route) { AdminApprovalScreen(navController) }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
                                 composable("chefDetail/{chefId}") {
                                     ChefDetailScreen(it.arguments?.getString("chefId") ?: "", navController)

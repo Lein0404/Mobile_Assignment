@@ -1,6 +1,9 @@
 package com.example.foodieheal.Hiring.Screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -57,6 +61,7 @@ fun HiringChefDetails(
     onHireClick: (Chef) -> Unit
 ) {
 
+    val context = LocalContext.current
     val hiringViewModel : HiringViewModel = viewModel()
     val AuthviewModel: AuthViewModel = viewModel()
     val user = AuthviewModel.currentUser
@@ -210,18 +215,6 @@ fun HiringChefDetails(
                         color = Color.Black
                     )
 
-                    val location = listOfNotNull(chef.state, chef.postcode)
-                        .filter { it.isNotBlank() }
-                        .joinToString(", ")
-
-                    if (location.isNotEmpty()) {
-                        Text(
-                            text = location,
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
@@ -259,9 +252,46 @@ fun HiringChefDetails(
             // Contact Info Section
             DetailSectionCard(title = "Contact Information") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    InfoRow(label = "Phone", value = chef.phoneNumber ?: "N/A")
-                    InfoRow(label = "Email", value = chef.email.ifBlank { "N/A" })
-                    InfoRow(label = "Address", value = chef.address?.ifBlank { "N/A" } ?: "N/A")
+                    val phoneNumber = chef.phoneNumber?.ifBlank { null }
+                    InfoRow(
+                        label = "Phone",
+                        value = phoneNumber ?: "N/A",
+                        isClickable = phoneNumber != null,
+                        onClick = {
+                            phoneNumber?.let {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:$it")
+                                }
+                                context.startActivity(intent)
+                            }
+                        }
+                    )
+
+                    val emailAddress = chef.email.ifBlank { null }
+                    InfoRow(
+                        label = "Email",
+                        value = emailAddress ?: "N/A",
+                        isClickable = emailAddress != null,
+                        onClick = {
+                            emailAddress?.let {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:$it")
+                                }
+                                context.startActivity(intent)
+                            }
+                        }
+                    )
+
+                    val fullAddress = listOfNotNull(
+                        chef.address?.ifBlank { null },
+                        chef.postcode?.ifBlank { null },
+                        chef.state?.ifBlank { null }
+                    ).joinToString(", ")
+
+                    InfoRow(
+                        label = "Address",
+                        value = fullAddress.ifBlank { "N/A" }
+                    )
                 }
             }
         }
@@ -298,13 +328,33 @@ private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+    isClickable: Boolean = false,
+    onClick: () -> Unit = {}
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isClickable) Modifier.clickable { onClick() }
+                else Modifier
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, fontSize = 13.sp, color = Color.Gray)
-        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = if (isClickable) MaterialTheme.colorScheme.primary else Color.Black
+        )
     }
 }
 

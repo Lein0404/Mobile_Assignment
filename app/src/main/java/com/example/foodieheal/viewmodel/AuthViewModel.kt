@@ -416,6 +416,7 @@ class AuthViewModel : ViewModel() {
         currentUser = null
         currentChef = null
         isChef = false
+        isAdmin = false
         loginSuccess = false
         registerSuccess = false
         errorMessage = ""

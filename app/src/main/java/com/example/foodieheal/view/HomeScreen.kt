@@ -43,6 +43,10 @@ fun HomeScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    LaunchedEffect(Unit) {
+        chefViewModel.fetchAllChefs()
+    }
+
     // Set Status Bar color to match the orange header
     SideEffect {
         val window = (view.context as Activity).window
