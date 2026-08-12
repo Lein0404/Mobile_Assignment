@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe
 import com.example.foodieheal.ui.theme.BreakfastColor
@@ -74,14 +75,26 @@ fun RecipeCard(
                     .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(recipe.recipeImage),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(76.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                if (!recipe.recipeImageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = recipe.recipeImageUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.ic_image),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                        alpha = 0.3f
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(10.dp))
 

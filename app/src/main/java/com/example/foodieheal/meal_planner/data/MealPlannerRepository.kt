@@ -31,7 +31,7 @@ class MealPlannerRepository(
                     MealSlotDTO(
                         mealType = domainSlot.mealType,
                         recipes = domainSlot.recipes.map { recipe ->
-                            RecipeReference(recipeId = recipe.recipe_id)
+                            RecipeReference(recipeId = recipe.recipe_id ?: "")
                         }
                     )
                 }

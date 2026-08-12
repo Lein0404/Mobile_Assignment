@@ -7,7 +7,7 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Recipes : Screen("recipes")
     object Planner : Screen("planner")
-    object AddRecipeToPlanner: Screen("add_recipe_to_planner")
+    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}")
     object Hiring : Screen("hiring")
     object Profile : Screen("profile")
     object AddRecipe : Screen("add_recipe")
@@ -24,13 +24,19 @@ sealed class Screen(val route: String) {
         fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
     }
     object ChefEditProfile : Screen("chefEditProfile")
-    object HiringChefDetails : Screen("hiringChefDetails")
-    object HiringAppointment : Screen("hiringAppointment")
-    object AddHiringAppointment : Screen("AddAppointment")
-    object AppointmentReview : Screen("appointmentReview")
-    object UserAppointmentsDetails : Screen("userAppointmentDetails")
+    object HiringAppointment : Screen("HiringAppointment")
+    object EditProfile : Screen("editProfile")
+    object ChangePassword : Screen("changePassword")
+    object EditBodyStatus : Screen("editBodyStatus")
 
-    object RateChef : Screen("rate_chef/{appointmentId}") {
-        fun createRoute(appointmentId: String) = "rate_chef/$appointmentId"
-    }
+    // 🌟 Added routes from your design
+    object AddHiringAppointment : Screen("addHiringAppointment")
+    object AppointmentReview : Screen("appointmentReview")
+    object Ingredients : Screen("ingredients")
+    object IngredientDetail : Screen("ingredientDetail/{id}/{isRequest}")
+    object ShoppingList : Screen("shoppingList")
+    object AddShoppingListItem : Screen("addShoppingListItem")
+    object IngredientRequestForm : Screen("ingredientRequestForm")
+    object AdminIngredientDetail : Screen("adminIngredientDetail/{id}")
+    object AdminIngredientReview : Screen("adminIngredientReview/{id}")
 }

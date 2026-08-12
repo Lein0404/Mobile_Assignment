@@ -41,9 +41,11 @@
     <string name="nav_logout">Logout</string>
 
     <!-- Image related -->
+    <string name="image">Image</string>
     <string name="select_image">Select Image</string>
     <string name="change_image">Change Image</string>
     <string name="image_unavailable">No image available</string>"
+    <string name="upload_failed">Failed to upload image.</string>
 
     <!-- Common Dialog Buttons -->
     <string name="dialog_done">Done</string>
@@ -150,4 +152,18 @@
 
     <!-- Empty State Placeholders -->
     <string name="placeholder_empty_plan">Planning Something?</string>
+
+    <!-- Ingredient Request -->
+    <string name="ingredient_name">Ingredient Name</string>
+    <string name="category">Category</string>
+    <string name="add_ingredient">Add Ingredient</string>
+    <string name="serving_unit">Serving Unit</string>
+    <string name="calories">Calories</string>
+    <string name="calorie_information">Calorie Information</string>
+    <string name="request_new_ingredient">REQUEST NEW INGREDIENT</string>
+    <string name="delete_request">DELETE REQUEST</string>
+    <string name="edit_request">EDIT REQUEST</string>
+    <string name="update_request">UPDATE REQUEST</string>
+    <string name="reject">REJECT</string>
+    <string name="review_approve">REVIEW &amp; APPROVE</string>
 </resources>
