@@ -119,6 +119,8 @@
     <string name="dialog_title_select_date_view">Select Date to View</string>
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
     <string name="dialog_title_choose_weekly_repeat_date">Choose any day within target week to repeat your weekly plan!</string>
+    <string name="daily_success_notify">Daily plan copied successfully!</string>
+    <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
     <!-- Content Descriptions -->
     <string name="desc_calendar_back">Calendar Back</string>
@@ -168,4 +170,13 @@
     <string name="update_request">UPDATE REQUEST</string>
     <string name="reject">REJECT</string>
     <string name="review_approve">REVIEW &amp; APPROVE</string>
+
+    <!-- Meal Planner Categories -->
+    <string name="category_high_protein">High Protein</string>
+    <string name="category_quick_easy">Quick &amp; Easy</string>
+    <string name="category_balanced">Balanced</string>
+    <string name="category_ketogenic">Ketogenic</string>
+    <string name="category_low_carb">Low-carbohydrate</string>
+    <string name="category_cost_friendly">Cost Friendly</string>
+    <string name="category_others">Others</string>
 </resources>
