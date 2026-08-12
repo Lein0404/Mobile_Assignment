@@ -38,6 +38,8 @@ sealed class Screen(val route: String) {
     // 🌟 Added routes from your design
     object AddHiringAppointment : Screen("addHiringAppointment")
     object AppointmentReview : Screen("appointmentReview")
+
+    // Ingredients module
     object Ingredients : Screen("ingredients")
     object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {
         fun createRoute(id: String, isRequest: Boolean = false) = "ingredient_detail/$id/$isRequest"
