@@ -3,7 +3,6 @@ package com.example.foodieheal.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
-    object Main : Screen("main")
     object Home : Screen("home")
     object Recipes : Screen("recipes")
     object RecipeDetails : Screen("recipe_details/{recipeId}") {
@@ -13,6 +12,7 @@ sealed class Screen(val route: String) {
     object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
         fun createRoute(id: String) = "add_recipe_to_planner/$id"
     }
+
     object Hiring : Screen("hiring")
     object Profile : Screen("profile")
     object AddRecipe : Screen("add_recipe")
@@ -41,6 +41,7 @@ sealed class Screen(val route: String) {
     // 🌟 Added routes from your design
     object AddHiringAppointment : Screen("addHiringAppointment")
     object AppointmentReview : Screen("appointmentReview")
+
     // Ingredients module
     object Ingredients : Screen("ingredients")
     object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {

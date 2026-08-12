@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
@@ -30,19 +29,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.Recipe
-import com.example.foodieheal.IngredientItem
-import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.repository.RecipeRepository
+import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.model.IngredientItem
+import com.example.foodieheal.model.Ingredient
 import com.example.foodieheal.viewmodel.RecipeViewModel
 import com.example.foodieheal.viewmodel.AuthViewModel
 import java.io.InputStream
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -448,7 +443,7 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
 @Composable
 fun IngredientRow(
     item: IngredientInputState,
-    availableIngredients: List<com.example.foodieheal.Ingredient>,
+    availableIngredients: List<Ingredient>,
     onRemove: () -> Unit,
     onUpdate: (IngredientInputState) -> Unit
 ) {

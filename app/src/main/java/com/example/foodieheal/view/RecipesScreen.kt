@@ -25,16 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.Recipe
-import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.repository.RecipeRepository
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
 
@@ -307,7 +303,7 @@ fun RecipesScreen(
                         },
                         onAddClick = {
                             recipe.recipe_id?.let { id ->
-                                parentNavController.navigate("add_recipe_to_planner/$id")
+                                parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
                             }
                         }
                     )

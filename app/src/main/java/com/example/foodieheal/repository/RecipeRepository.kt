@@ -1,16 +1,13 @@
 package com.example.foodieheal.repository
 
-import android.content.Context
-import com.example.foodieheal.Recipe
-import com.example.foodieheal.Ingredient
+import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.model.Ingredient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 class RecipeRepository(
     private val supabaseClient: SupabaseClient
@@ -103,6 +100,17 @@ class RecipeRepository(
                 filter { eq("recipe_id", recipeId) }
             }
             Unit
+        }
+    }
+
+    suspend fun getRecipeById(recipeId: String): Result<Recipe> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter { eq("recipe_id", recipeId) }
+                }
+            // decodeSingle() handles throwing an exception if the row doesn't exist
+            response.decodeSingle<Recipe>()
         }
     }
 

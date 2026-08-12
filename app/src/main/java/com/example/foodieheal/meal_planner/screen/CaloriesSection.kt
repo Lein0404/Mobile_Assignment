@@ -246,7 +246,7 @@ private fun CalorieGuideRow(
         }
     }
 }
-fun calculateSuggestedDailyCalories(user: User?): Int {
+ fun calculateSuggestedDailyCalories(user: User?): Int {
     if (user == null) return 2000 // Generic baseline value if profile isn't cached yet
 
     val weight = user.weight ?: 70.0 // kg

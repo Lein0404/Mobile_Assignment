@@ -39,4 +39,7 @@ interface RecipeDao {
 
     @Query("DELETE FROM local_bookmarks WHERE userId = :userId")
     suspend fun clearBookmarks(userId: String)
+
+    @Query("SELECT * FROM local_recipes WHERE recipe_id = :recipeId LIMIT 1")
+    suspend fun getRecipeById(recipeId: String): RecipeEntity?
 }

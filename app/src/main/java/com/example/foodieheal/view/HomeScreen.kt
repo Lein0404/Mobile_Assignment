@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import android.app.Activity
 import androidx.compose.ui.graphics.toArgb
@@ -28,38 +27,21 @@ import androidx.core.view.WindowCompat
 import coil.compose.AsyncImage
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
-import java.util.Calendar
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    chefViewModel: HiringViewModel,
-    onChefClick: (Chef) -> Unit,
-    bookmarkViewModel: BookmarkViewModel = viewModel(),
+    onChefClick : (Chef) -> Unit
 ) {
 
-    val viewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    val bookmarkViewModel: BookmarkViewModel = viewModel()
+    val chefViewModel : HiringViewModel = viewModel()
+    val viewModel: AuthViewModel = viewModel()
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
-
-    LaunchedEffect(Unit) {
-        if (chefViewModel.chefList.isEmpty()) {
-            chefViewModel.fetchAllChefs()
-        }
-    }
-
-    val greeting = remember {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        when (hour) {
-            in 0..11 -> "Good Morning"
-            in 12..16 -> "Good Afternoon"
-            else -> "Good Evening"
-        }
-    }
 
     // Set Status Bar color to match the orange header
     SideEffect {
@@ -68,109 +50,95 @@ fun HomeScreen(
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
-    Scaffold(
-        containerColor = Color(0xFFF8F8F8),
-        topBar = {
-            // Top Bar & Tabs Header (Consistent size with Recipes)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, start = 20.dp, end = 16.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = user?.name ?: "Username",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    // Mimic the size and position of TabRow in RecipesScreen
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(start = 20.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = greeting,
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary) // Full header orange
+    ) {
+        // 1. Top Header (Orange Background)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 48.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
+        ) {
+            Column {
+                Text(text = "Good Morning", color = Color.White, fontSize = 14.sp)
+                Text(
+                    text = user?.name ?: "Username",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = 24.dp)
+
+        // 2. White Sheet (Flat top, no radius)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(0.dp), // Removed radius
+            color = Color(0xFFF8F8F8)
         ) {
-            // Chef Section
-            Text(
-                text = "Chef",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 20.dp),
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            ChefListSection(
-                chefs = chefViewModel.chefList,
-                isLoading = chefViewModel.isProcessing,
-                errorMessage = chefViewModel.errorMessage,
-                bookmarkViewModel = bookmarkViewModel,
-                onChefClick = onChefClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Promo Banner
-            PromoBanner()
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Popular Recipes Section
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 24.dp)
             ) {
+                // Chef Section
                 Text(
-                    text = "Popular Recipes",
+                    text = "Chef",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color.Black
                 )
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                    modifier = Modifier.height(32.dp)
+
+                Spacer(modifier = Modifier.height(12.dp))
+                ChefListSection(
+                    chefs = chefViewModel.chefList,
+                    isLoading = chefViewModel.isProcessing,
+                    errorMessage = chefViewModel.errorMessage,
+                    bookmarkViewModel = bookmarkViewModel,
+                    onChefClick = onChefClick
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Promo Banner
+                PromoBanner()
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Popular Recipes Section
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("See All", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Popular Recipes",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Button(
+                        onClick = { },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text("See All", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
+
+                CategoryChips()
+                RecipeGrid()
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            CategoryChips()
-            RecipeGrid()
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

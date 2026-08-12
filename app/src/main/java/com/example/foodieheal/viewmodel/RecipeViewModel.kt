@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.Recipe
-import com.example.foodieheal.Ingredient
-import com.example.foodieheal.IngredientItem
+import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.model.Ingredient
+import com.example.foodieheal.model.IngredientItem
 import com.example.foodieheal.MainActivity
 import com.example.foodieheal.database.AppDatabase
 import com.example.foodieheal.database.RecipeEntity
@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import androidx.compose.runtime.mutableIntStateOf
+import kotlin.onFailure
 
 class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
     
@@ -60,6 +61,9 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     private var isFetchingIngredients = false
     private var isFetchingAll = false
+
+    var selectedRecipe by mutableStateOf<Recipe?>(null)
+        private set
 
     init {
         viewModelScope.launch {
@@ -111,6 +115,41 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                 json.decodeFromString<List<IngredientItem>>(entity.ingredientsJson)
             } catch (e: Exception) { emptyList() }
         )
+    }
+
+    fun fetchRecipeById(recipeId: String) {
+        // 1. Quick Check: If it's already in our memory cache, load it instantly
+        val cachedRecipe = recipeList.find { it.recipe_id == recipeId }
+        if (cachedRecipe != null) {
+            selectedRecipe = cachedRecipe
+            return
+        }
+
+        // 2. Fallback: If not found in memory, query database/repository asynchronously
+        viewModelScope.launch {
+            isLoading = true
+            val dao = getDao()
+
+            try {
+                val localEntity = dao?.getRecipeById(recipeId) // Assumes you have this in RecipeDao
+                if (localEntity != null) {
+                    selectedRecipe = mapEntityToRecipe(localEntity)
+                } else {
+                    // If missing locally, pull from the network repository
+                    repository.getRecipeById(recipeId) // Assumes you have this in Repository
+                        .onSuccess { recipe ->
+                            selectedRecipe = recipe
+                        }
+                        .onFailure { e ->
+                            errorMessage = "Recipe not found: ${e.message}"
+                        }
+                }
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     fun fetchAllRecipes(force: Boolean = false) {

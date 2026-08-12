@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel

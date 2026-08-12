@@ -1,13 +1,13 @@
 package com.example.foodieheal.meal_planner.data
 
 import android.util.Log
-import com.example.foodieheal.Recipe
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.DailyPlanDTO
 import com.example.foodieheal.meal_planner.model.MealSlotDTO
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.RecipeReference
+import com.example.foodieheal.model.Recipe
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest

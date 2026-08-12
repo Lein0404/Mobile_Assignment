@@ -1,4 +1,4 @@
-package com.example.foodieheal
+package com.example.foodieheal.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,7 +12,7 @@ data class Recipe(
     @SerialName("recipe_course") val recipeCourse: String, // Breakfast, Lunch, Dinner
     @SerialName("recipe_time") val time: Int, // In minutes
     @SerialName("recipe_calories") val calories: Int,
-    @SerialName("cooking_skill") val cookingSkill: String, // Beginner, Intermediate, Master/Expert
+    @SerialName("cooking_skill") val cookingSkill: String, // Beginner, Intermediate, Expert
     @SerialName("estimated_budget") val estimatedBudget: String,
     @SerialName("recipe_steps") val recipeStep: String,
     @SerialName("recipe_image_url") val recipeImageUrl: String? = null,
