@@ -215,35 +215,24 @@ fun AdminIngredientRequestFormScreen(
     }
 
     if (showApproveDialog) {
-        AlertDialog(
-            onDismissRequest = { showApproveDialog = false },
-            title = { Text("Approve Request") },
-            text = { Text("Ingredient Request that is approved cannot be edited anymore. Are you sure?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showApproveDialog = false // Close dialog immediately
-                    viewModel.approveRequest(
-                        imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
-                        onComplete = {
-                            Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
-                            navController.navigate(Screen.AdminChefScreen.route) {
-                                popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
-                            }
+        ApproveRequestDialog(
+            onDismiss = { showApproveDialog = false },
+            onConfirm = { adminNote ->
+                showApproveDialog = false
+                viewModel.approveRequest(
+                    imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
+                    adminNote = if (adminNote.isBlank()) null else adminNote,
+                    onComplete = {
+                        Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
+                        navController.navigate(Screen.AdminChefScreen.route) {
+                            popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
                         }
-                    )
-                }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showApproveDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
-                }
+                    }
+                )
             }
         )
     }
 
-    // TODO
     if (showErrorDialog && errorMessage != null) {
         AlertDialog(
             onDismissRequest = { 
@@ -267,4 +256,41 @@ fun AdminIngredientRequestFormScreen(
             }
         )
     }
+}
+
+@Composable
+fun ApproveRequestDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var adminNote by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Approve Request", fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = adminNote,
+                    onValueChange = { adminNote = it },
+                    placeholder = { Text("Note (Optional)") },
+                    modifier = Modifier.fillMaxWidth().height(120.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(adminNote)
+            }) {
+                Text("Approve", color = MaterialTheme.colorScheme.primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.Gray)
+            }
+        }
+    )
 }

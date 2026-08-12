@@ -210,6 +210,16 @@ fun IngredientDetailScreen(
                                 modifier = Modifier.padding(top = 4.dp)
                             )
                         }
+
+                        if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = requestDetail?.request?.adminNote ?: "",
+                                color = Color.Black,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                         
                         Spacer(modifier = Modifier.height(120.dp))
                     }

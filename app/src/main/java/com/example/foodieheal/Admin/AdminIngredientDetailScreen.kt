@@ -172,6 +172,16 @@ fun AdminIngredientDetailScreen(
                                 )
                             }
 
+                            if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(
+                                    text = request.adminNote,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 16.dp), 
                                 thickness = 1.dp, 

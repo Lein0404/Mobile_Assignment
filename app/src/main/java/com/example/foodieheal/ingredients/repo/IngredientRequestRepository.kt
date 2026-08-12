@@ -111,6 +111,7 @@ class IngredientRequestRepository {
                 set("ing_image", request.ingredientImage)
                 set("request_status", request.requestStatus.name)
                 set("rejected_reason", request.rejectedReason)
+                set("admin_note", request.adminNote)
             }
         ) {
             filter {
@@ -127,11 +128,17 @@ class IngredientRequestRepository {
         }
     }
 
-    suspend fun updateRequestStatus(requestId: String, status: Status, rejectedReason: String? = null) = withContext(Dispatchers.IO) {
+    suspend fun updateRequestStatus(
+        requestId: String,
+        status: Status,
+        rejectedReason: String? = null,
+        adminNote: String? = null
+    ) = withContext(Dispatchers.IO) {
         SupabaseClient.client.from("ingredient_request").update(
             {
                 set("request_status", status.name)
                 set("rejected_reason", rejectedReason)
+                set("admin_note", adminNote)
             }
         ) {
             filter {

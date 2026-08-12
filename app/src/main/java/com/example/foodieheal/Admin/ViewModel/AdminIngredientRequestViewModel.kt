@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.model.IngredientRequestFormUiState
 import com.example.foodieheal.ingredients.model.IngredientUnits
 import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.collections.plus
 
 class AdminIngredientRequestViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -76,7 +76,11 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
         }
     }
 
-    fun rejectRequest(requestId: String, reason: String, onComplete: () -> Unit) {
+    fun rejectRequest(
+        requestId: String,
+        reason: String,
+        onComplete: () -> Unit
+    ) {
         if (reason.isBlank()) return
         viewModelScope.launch {
             _isLoading.value = true
@@ -139,7 +143,11 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
         }
     }
 
-    fun approveRequest(imageUrl: String?, onComplete: () -> Unit) {
+    fun approveRequest(
+        imageUrl: String?,
+        adminNote: String?,
+        onComplete: () -> Unit
+    ) {
         val state = _formState.value
         if (state.requestId == null) {
             _formState.update { it.copy(errorMessage = "Error: Request ID is missing") }
@@ -192,7 +200,8 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
                     ingredientDesc = state.description,
                     ingredientImage = imageUrl,
                     requestStatus = Status.APPROVED,
-                    rejectedReason = null // Clear if it was previously rejected
+                    rejectedReason = null, // Clear if it was previously rejected
+                    adminNote = adminNote
                 )
 
                 val unitRequestIds = repository.getNextUnitRequestIds(state.unitRows.size)
