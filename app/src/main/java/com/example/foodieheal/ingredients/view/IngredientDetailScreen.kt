@@ -121,7 +121,7 @@ fun IngredientDetailScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
                                 loading = {
-                                    CircularProgressIndicator(modifier = Modifier.scale(0.5f))
+                                    CircularProgressIndicator(modifier = Modifier.scale(0.5f)) // TODO: make the CPI smaller
                                 },
                                 error = { ImagePlaceholder() }
                             )

@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientActionViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.Cloudinary.CloudinaryUploadScreen
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
@@ -34,13 +34,14 @@ import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 fun AdminIngredientRequestFormScreen(
     navController: NavController,
     requestId: String,
-    viewModel: AdminIngredientActionViewModel = viewModel(),
+    viewModel: AdminIngredientRequestViewModel = viewModel(),
     cloudinaryViewModel: CloudinaryUploadViewModel = viewModel()
 ) {
     val formState by viewModel.formState.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
+    val requestDetail by viewModel.requestDetail.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
 
     // TODO
     val errorMessage = formState.errorMessage
@@ -96,7 +97,7 @@ fun AdminIngredientRequestFormScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
                 // 1. Cloudinary Upload
@@ -198,9 +199,9 @@ fun AdminIngredientRequestFormScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            enabled = !formState.isSubmitting
+            enabled = !formState.isSubmitting && requestDetail != null && !isLoading
         ) {
-            if (formState.isSubmitting) {
+            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
                 Text(

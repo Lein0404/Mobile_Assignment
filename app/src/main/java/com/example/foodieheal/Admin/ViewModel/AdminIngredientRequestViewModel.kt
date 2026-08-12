@@ -7,6 +7,7 @@ import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequestFormUiState
 import com.example.foodieheal.ingredients.model.IngredientUnits
+import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
 import com.example.foodieheal.ingredients.model.Ingredients
 import com.example.foodieheal.ingredients.model.UnitRowState
 import com.example.foodieheal.ingredients.model.Units
@@ -21,7 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.collections.plus
 
-class AdminIngredientActionViewModel(application: Application) : AndroidViewModel(application) {
+class AdminIngredientRequestViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = IngredientRequestRepository()
     private val userRepository = UserRepository()
@@ -99,6 +100,21 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
                 val allUnits = repository.getUnits().associateBy { it.unitID }
 
                 if (request != null) {
+                    // Populate requestDetail for later use in approveRequest
+                    val user = userRepository.getUserById(request.createdByUserId)
+                    val summary = unitRequests.joinToString("\n") { ur ->
+                        val unit = allUnits[ur.unitID]
+                        val qty = unit?.defaultQuantity?.toInt() ?: 100
+                        val display = unit?.unitDisplay ?: ""
+                        "${ur.caloriesPerDefaultQuantity.toInt()} kcal / ${qty} ${display}"
+                    }
+                    _requestDetail.value = AdminIngredientRequestItem(
+                        request = request,
+                        requesterName = user?.name ?: "Unknown",
+                        requesterCustomId = user?.customId ?: "Unknown",
+                        calorieSummary = summary
+                    )
+
                     _formState.update { state ->
                         state.copy(
                             requestId = request.ingredientRequestId,
@@ -164,8 +180,32 @@ class AdminIngredientActionViewModel(application: Application) : AndroidViewMode
 
                 productionRepository.insertIngredientUnits(units)
 
-                // 4. Update Request Status to APPROVED
-                repository.updateRequestStatus(state.requestId, Status.APPROVED)
+                // 4. Synchronize and Update Request History (Original request records)
+                val originalRequest = _requestDetail.value?.request
+                if (originalRequest == null) {
+                    throw Exception("Original request metadata missing. Please try again.")
+                }
+
+                val updatedRequestRecord = originalRequest.copy(
+                    ingredientName = state.ingredientName,
+                    ingredientCategory = state.category,
+                    ingredientDesc = state.description,
+                    ingredientImage = imageUrl,
+                    requestStatus = Status.APPROVED,
+                    rejectedReason = null // Clear if it was previously rejected
+                )
+
+                val unitRequestIds = repository.getNextUnitRequestIds(state.unitRows.size)
+                val updatedUnitRequests = state.unitRows.mapIndexed { index, row ->
+                    IngredientUnitsRequest(
+                        ingredientUnitsRequestId = unitRequestIds[index],
+                        ingredientRequestId = state.requestId,
+                        unitID = row.selectedUnit?.unitID ?: "",
+                        caloriesPerDefaultQuantity = row.calories.toDoubleOrNull() ?: 0.0
+                    )
+                }
+
+                repository.updateIngredientRequest(updatedRequestRecord, updatedUnitRequests)
 
                 _formState.update { it.copy(isSubmitting = false) }
                 onComplete()

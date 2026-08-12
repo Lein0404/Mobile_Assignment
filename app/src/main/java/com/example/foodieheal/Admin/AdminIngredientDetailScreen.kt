@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientActionViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.view.ImagePlaceholder
 import com.example.foodieheal.model.Status
@@ -39,7 +39,7 @@ import java.time.format.DateTimeFormatter
 fun AdminIngredientDetailScreen(
     navController: NavController,
     requestId: String,
-    viewModel: AdminIngredientActionViewModel = viewModel()
+    viewModel: AdminIngredientRequestViewModel = viewModel()
 ) {
     val requestItem by viewModel.requestDetail.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -109,7 +109,7 @@ fun AdminIngredientDetailScreen(
                                     contentDescription = request.ingredientName,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
-                                    loading = { CircularProgressIndicator(modifier = Modifier.scale(0.5f)) },
+                                    loading = { CircularProgressIndicator(modifier = Modifier.scale(0.5f)) }, // TODO: make the CPI smaller
                                     error = { ImagePlaceholder() }
                                 )
                             } else {

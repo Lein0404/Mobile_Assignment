@@ -85,7 +85,7 @@ fun AdminIngredientsScreen(
             Text("Filter by Status:", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             
             var expanded by remember { mutableStateOf(false) }
-            val statusOptions = listOf("All", "Pending", "Accepted", "Rejected")
+            val statusOptions = listOf("All", "Pending", "Approved", "Rejected")
             
             ExposedDropdownMenuBox(
                 expanded = expanded,
