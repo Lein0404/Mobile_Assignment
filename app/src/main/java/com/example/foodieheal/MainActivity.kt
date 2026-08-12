@@ -66,6 +66,7 @@ import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
     private val mealPlannerViewModel: MealPlannerViewModel by viewModels {
@@ -88,19 +89,24 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val lifecycleOwner = LocalLifecycleOwner.current
 
-                // 🌟 1. Listen for navigation events from ViewModel (Cold & Warm start safe!)
                 LaunchedEffect(lifecycleOwner) {
                     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                         mealPlannerViewModel.navigationEvent.collect { route ->
-                            val hasLoginOnStack = navController.currentBackStackEntry?.destination?.route == Screen.Login.route
+                            // 1. Prevent the crash: If NavHost isn't ready, wait until the graph is attached
+                            while (runCatching { navController.graph }.isFailure) {
+                                kotlinx.coroutines.delay(50.milliseconds)
+                            }
+
+                            val currentDest = navController.currentBackStackEntry?.destination?.route
+                            val hasLoginOnStack = currentDest == Screen.Login.route
 
                             navController.navigate(route) {
                                 if (hasLoginOnStack) {
-                                    // Cold start: clear login screen off stack
-                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                    // Cold start handling: wipe the placeholder/login screens out completely
+                                    popUpTo(0) { inclusive = true }
                                 } else {
-                                    // Warm start: keep user session, bring Main screen to top
-                                    popUpTo(navController.graph.startDestinationId) {
+                                    // Warm start handling: preserve user stack state safely
+                                    popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
                                 }
