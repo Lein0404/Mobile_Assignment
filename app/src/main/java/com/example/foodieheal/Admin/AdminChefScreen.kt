@@ -1,5 +1,6 @@
 package com.example.foodieheal.Admin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,29 +18,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,172 +46,184 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
+import com.example.foodieheal.NavigationItem
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
-import com.example.foodieheal.Admin.AdminIngredientsScreen
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminApprovalScreen(
-    navController: NavController,
-    viewModel: AdminApprovalViewModel = viewModel()
+    parentNavController: NavHostController,
+    viewModel: AdminApprovalViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
+    val navController = rememberNavController()
+    // Using the passed-in authViewModel instead of creating a local one
+    // to ensure we share login state with MainActivity
 
-    // Set chef approval as deault screen
-    var selectedTab by remember { mutableIntStateOf(0)
-    }
-    val AuthviewModel: AuthViewModel = viewModel()
+    val items = listOf(
+        NavigationItem(Screen.AdminChefScreen.route, "Chef Approval", R.drawable.ic_outline_account_circle),
+        NavigationItem(Screen.AdminIngredient.route, "Ingredients", R.drawable.ingredient)
+    )
 
     LaunchedEffect(Unit) {
         viewModel.loadPendingChefs()
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFFF7F8FC),
         topBar = {
-            Column {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = "Admin Management",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                // use it as logout
-                                AuthviewModel.logout {
-                                    navController.navigate(Screen.Login.route) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                Column(modifier = Modifier.statusBarsPadding()) {
+                    Text(
+                        text = if (currentRoute == Screen.AdminIngredient.route) "Ingredient Requests" else "Chef Approval",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
+                    )
+                }
+            }
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+
+                items.forEach { item ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = item.icon),
+                                contentDescription = item.label,
+                                modifier = if (item.label == "Ingredients") Modifier.size(20.dp) else Modifier
+                            )
+                        },
+                        label = { Text(item.label, fontSize = 10.sp) },
+                        selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray,
+                            indicatorColor = Color.Transparent
+                        ),
+                        onClick = {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
-                )
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        text = {
-                            Text(
-                                "Chef Approval",
-                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_outline_account_circle),
-                                contentDescription = null
-                            )
-                        }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        text = {
-                            Text(
-                                "Ingredients",
-                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ingredient),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
                         }
                     )
                 }
+
+                // Logout Item
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_logout),
+                            contentDescription = "Logout"
+                        )
+                    },
+                    label = { Text("Logout", fontSize = 10.sp) },
+                    selected = false,
+                    colors = NavigationBarItemDefaults.colors(
+                        unselectedIconColor = Color.Gray,
+                        unselectedTextColor = Color.Gray
+                    ),
+                    onClick = {
+                        // 🌟 FIX: Just call logout. MainActivity will swap screens automatically.
+                        authViewModel.logout { }
+                    }
+                )
             }
         }
     ) { padding ->
-
-        when(selectedTab) {
-            // Chef Approval Page (default)
-            0 -> {
-                if (viewModel.pendingChefs.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_outline_account_circle),
-                                contentDescription = null,
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Spacer(
-                                modifier = Modifier.height(12.dp)
-                            )
-
-                            Text(
-                                "No pending applications",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(16.dp)
-                    ) {
-                        items(viewModel.pendingChefs) { chef ->
-                            ChefApprovalCard(
-                                chef = chef,
-                                onViewClick = {
-                                    navController.navigate(
-                                        "chefDetail/${chef.chefId}"
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
+        NavHost(
+            navController = navController,
+            startDestination = Screen.AdminChefScreen.route,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(Screen.AdminChefScreen.route) {
+                AdminChefApprovalContent(viewModel, parentNavController)
             }
-            // Ingredient Management Page
-            1 -> {
-                AdminIngredientsScreen(navController)
+            composable(Screen.AdminIngredient.route) {
+                AdminIngredientsScreen(parentNavController)
+            }
+        }
+    }
+}
+
+@Composable
+fun AdminChefApprovalContent(
+    viewModel: AdminApprovalViewModel,
+    navController: NavController
+) {
+    if (viewModel.pendingChefs.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_outline_account_circle),
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = Color.Gray
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                Text(
+                    "No pending applications",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Gray
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            items(viewModel.pendingChefs) { chef ->
+                ChefApprovalCard(
+                    chef = chef,
+                    onViewClick = {
+                        navController.navigate(
+                            "chefDetail/${chef.chefId}"
+                        )
+                    }
+                )
             }
         }
     }
@@ -232,7 +239,7 @@ fun ChefApprovalCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 5.dp
@@ -255,7 +262,7 @@ fun ChefApprovalCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_outline_account_circle),
                             contentDescription = "Default Profile",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = Color(0xFFFF9800),
                             modifier = Modifier.size(75.dp)
                         )
                     } else {
@@ -280,8 +287,7 @@ fun ChefApprovalCard(
                     Text(
                         text = chef.name,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Bold
                     )
 
                     Spacer(
@@ -298,7 +304,7 @@ fun ChefApprovalCard(
                 modifier = Modifier.height(20.dp)
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.tertiary)
+            HorizontalDivider()
 
             Spacer(
                 modifier = Modifier.height(15.dp)
@@ -328,11 +334,7 @@ fun ChefApprovalCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_view),
@@ -357,7 +359,7 @@ fun StatusChip(
 ) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
+        color = Color(0xFFFFF3E0)
     ) {
         Text(
             text = status,
@@ -365,7 +367,7 @@ fun StatusChip(
                 horizontal = 12.dp,
                 vertical = 6.dp
             ),
-            color = MaterialTheme.colorScheme.secondary,
+            color = Color(0xFFFF9800),
             fontWeight = FontWeight.Medium,
             style = MaterialTheme.typography.labelMedium
         )
@@ -387,7 +389,7 @@ fun ChefInfoRow(
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = Color.Gray,
             modifier = Modifier.size(20.dp)
         )
 
@@ -397,7 +399,7 @@ fun ChefInfoRow(
 
         Text(
             text = text,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.DarkGray,
             style = MaterialTheme.typography.bodyMedium
         )
     }

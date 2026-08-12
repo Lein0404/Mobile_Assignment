@@ -1,6 +1,9 @@
 package com.example.foodieheal
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,6 +29,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.foodieheal.Admin.AdminApprovalScreen
+import com.example.foodieheal.Admin.AdminIngredientDetailScreen
+import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
+import com.example.foodieheal.Admin.AdminIngredientsScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
 import com.example.foodieheal.Chef.Register.*
@@ -51,8 +57,13 @@ import com.example.foodieheal.view.*
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.datetime.LocalDate
 
 class MainActivity : ComponentActivity() {
+
+    private val mealPlannerViewModel: MealPlannerViewModel by viewModels {
+        MealPlannerViewModelFactory(application)
+    }
     companion object {
         var appContext: android.content.Context? = null
             private set
@@ -324,6 +335,27 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // --- ADMIN & CHEF ---
+                                composable(Screen.AdminChefScreen.route) {
+                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel)
+                                }
+                                composable(Screen.AdminIngredient.route){
+                                    AdminIngredientsScreen(navController)
+                                }
+                                composable(
+                                    route = Screen.AdminIngredientDetail.route,
+                                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                                    AdminIngredientDetailScreen(navController, id)
+                                }
+                                composable(
+                                    route = Screen.AdminIngredientReview.route,
+                                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                                    AdminIngredientRequestFormScreen(navController, id)
+                                }
+
                                 composable(Screen.AdminChefScreen.route) { AdminApprovalScreen(navController) }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
                                 composable("chefDetail/{chefId}") {
@@ -352,6 +384,33 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent) // Update activity intent
+    intent.data?.let { uri ->
+        processDeepLink(uri)
+    }
+}
+
+private fun processDeepLink(uri: Uri) {
+    Log.d("DeepLink", "Processing URI: $uri")
+
+    val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io" && uri.path?.startsWith("/share") == true
+    val isCustomScheme = uri.scheme == "foodieheal" && uri.host == "share"
+
+    if (isHttpsLink || isCustomScheme) {
+        uri.getQueryParameter("sourceStart")?.let { dateStr ->
+            runCatching {
+                LocalDate.parse(dateStr)
+            }.onSuccess { startDate ->
+                mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
+            }.onFailure { e ->
+                Log.e("DeepLink", "Failed to parse date: $dateStr", e)
+                }
+            }
+        }
+    }
 }
 
 data class NavigationItem(val route: String, val label: String, val icon: Int)
@@ -359,7 +418,9 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 @Composable
 fun SplashLogoOverlay() {
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.White),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

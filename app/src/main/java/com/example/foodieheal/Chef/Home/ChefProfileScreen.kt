@@ -55,9 +55,10 @@ import com.example.foodieheal.navigation.Screen
 fun ChefProfileScreen(
     navController: NavController,
     chef: Chef?,
-    onEditClick: () -> Unit
+    viewModel: AuthViewModel,
+    onEditClick: () -> Unit,
+    onLogoutSuccess: () -> Unit
 ) {
-    val viewModel: AuthViewModel = viewModel()
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -313,9 +314,7 @@ fun ChefProfileScreen(
                     Button(
                         onClick = {
                             viewModel.logout {
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
+                                onLogoutSuccess()
                             }
                         },
                         modifier = Modifier

@@ -9,13 +9,17 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.Recipe
+import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
-import com.example.foodieheal.util.NetworkMonitor
+import com.example.foodieheal.navigation.Screen
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -45,7 +49,40 @@ class MealPlannerViewModel(
     init {
         observeNetworkStatus()
     }
+    var deepLinkSourceDays by mutableStateOf<List<LocalDate>?>(null)
+        private set
 
+    // Channels ensure one-time UI event delivery (like navigation) without missing signals
+    // 1. Change SharedFlow to a Channel to prevent dropping cold-start events
+    private val _navigationChannel = Channel<String>(Channel.BUFFERED)
+    val navigationEvent = _navigationChannel.receiveAsFlow()
+
+    var selectedTabRoute by mutableStateOf(Screen.Home.route)
+        private set
+
+    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate) {
+        deepLinkSourceDays = getCurrentWeekDays(sourceWeekStart)
+
+        // Set the active tab to Planner when deep link is processed
+        selectedTabRoute = Screen.Home.route
+
+        viewModelScope.launch {
+            _navigationChannel.send(Screen.Planner.route)
+        }
+    }
+
+    // Function to update current tab manually when user taps bottom bar items
+    fun onTabSelected(route: String) {
+        selectedTabRoute = route
+    }
+
+    fun clearDeepLinkState() {
+        deepLinkSourceDays = null
+    }
+
+    fun generateShareLink(currentWeekStart: LocalDate): String {
+        return "https://tzh652.github.io/share?sourceStart=$currentWeekStart"
+    }
     private fun observeNetworkStatus() {
         viewModelScope.launch {
             networkMonitor.isConnected.collect { connected ->
@@ -60,18 +97,51 @@ class MealPlannerViewModel(
         }
     }
 
-    // 🌟 FIXED: Added forceRefresh parameter to bypass cache check when structural data changes
     fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
+        // 1. Get current logged-in user ID
+        val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
+
+        if (currentUserId.isNullOrEmpty()) {
+            Log.w("MealPlannerVM", "Cannot load plan: No authenticated user found.")
+            mealPlansCache[date] = null
+            return
+        }
+
         lastActiveDate = date
 
-        if (!forceRefresh && mealPlansCache.containsKey(date) && mealPlansCache[date] != null) return
+        // 2. Validate cache ownership before using it
+        val cachedPlan = mealPlansCache[date]
+        if (!forceRefresh && mealPlansCache.containsKey(date)) {
+            if (cachedPlan == null) {
+                // Already fetched previously and confirmed no plan exists for this date
+                return
+            }
+            if (cachedPlan.user_id == currentUserId) {
+                // Cache belongs to current user, safe to reuse
+                return
+            } else {
+                // Cache belongs to another user (e.g., previous login), clear it
+                Log.w("MealPlannerVM", "Evicting stale cache from another user for date: $date")
+                mealPlansCache.remove(date)
+            }
+        }
 
         viewModelScope.launch {
             isLoading = true
             val result = repository.getDailyPlan(date)
 
             result.onSuccess { plan ->
-                mealPlansCache[date] = plan
+                // 3. Validate that the loaded plan belongs to the logged-in user
+                if (plan != null && plan.user_id == currentUserId) {
+                    mealPlansCache[date] = plan
+                } else if (plan == null) {
+                    // No existing plan for this date yet
+                    mealPlansCache[date] = null
+                } else {
+                    // Security check failed: Plan belongs to another user
+                    Log.e("MealPlannerVM", "Security Mismatch: Loaded plan user_id (${plan.user_id}) does not match authenticated user ($currentUserId).")
+                    mealPlansCache[date] = null
+                }
             }.onFailure {
                 mealPlansCache[date] = null
             }

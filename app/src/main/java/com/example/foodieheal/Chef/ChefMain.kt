@@ -193,7 +193,14 @@ fun ChefMainScreen(
                 ChefProfileScreen(
                     navController = parentNavController, // Pass parent controller to allow complete logout back to root/login graph
                     chef = currentChef,
-                    onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) }
+                    viewModel = authViewModel,
+                    onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) },
+                    onLogoutSuccess = {
+                        // Navigate using parent controller at the top level
+                        parentNavController.navigate(Screen.Login.route) {
+                            popUpTo(parentNavController.graph.id) { inclusive = true }
+                        }
+                    }
                 )
             }
 

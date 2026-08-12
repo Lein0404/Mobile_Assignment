@@ -420,7 +420,14 @@ class AuthViewModel : ViewModel() {
         registerSuccess = false
         errorMessage = ""
         viewModelScope.launch {
-            try { client.auth.signOut() } catch (e: Exception) { }
+            try {
+                // Clear Room cache
+                val dao = getDao()
+                dao?.deleteUser()
+                dao?.deleteChef()
+
+                client.auth.signOut()
+            } catch (e: Exception) { }
             isProcessing = false
             onComplete()
         }

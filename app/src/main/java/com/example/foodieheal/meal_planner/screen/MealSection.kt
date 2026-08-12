@@ -40,7 +40,6 @@ import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor
 import com.example.foodieheal.ui.theme.LunchColor
 import com.example.foodieheal.ui.theme.SnackColor
-import com.example.foodieheal.ui.theme.TimerColor
 
 @Composable
 fun RecipeCard(
@@ -48,7 +47,7 @@ fun RecipeCard(
     onDeleteClick: () -> Unit,
     onClick: () -> Unit,
     color: Color,
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
 ) {
     Card(
         modifier = Modifier
@@ -57,16 +56,16 @@ fun RecipeCard(
             .padding(end = 16.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(color)
+        colors = CardDefaults.cardColors(color),
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(90.dp)
-                .padding(start = 5.5.dp),
+                .padding(start = 5.5.dp)
+                .clickable(enabled = !isSelectionMode, onClick = {onClick()}),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp),
-            onClick = onClick,
             colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
         ) {
             Row(
@@ -106,6 +105,7 @@ fun RecipeCard(
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +115,7 @@ fun RecipeCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_fire),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.calories),
                             modifier = Modifier.size(18.dp),
                             tint = CaloriesColor
                         )
@@ -125,14 +125,15 @@ fun RecipeCard(
                         Text(
                             text = stringResource(R.string.format_recipe_calories, recipe.calories),
                             fontSize = 14.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Icon(
                             painter = painterResource(R.drawable.ic_time),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.minutes),
                             modifier = Modifier.size(18.dp),
                         )
 
@@ -141,7 +142,8 @@ fun RecipeCard(
                         Text(
                             text = stringResource(R.string.format_recipe_duration, recipe.time),
                             fontSize = 14.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -166,9 +168,10 @@ fun MealSection(
     recipes: List<Recipe>,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
-    onSelectionChange: (Boolean) -> Unit = {},
-    onAddClick: () -> Unit = {},
-    onDeleteClick: (Recipe) -> Unit = {},
+    onSelectionChange: (Boolean) -> Unit = {},//empty lambda bcz in normal meal planner screen no need use, only in addRecipeToMealPlannerScreen
+    onAddClick: () -> Unit ={} ,//only in normal meal planner
+    onDeleteClick: (Recipe) -> Unit = {},//only in normal meal planner
+    onRecipeDetails:(String)-> Unit = {}//only in normal meal planner
 ) {
     val color: Color = when (title) {
         stringResource(R.string.meal_title_breakfast) -> BreakfastColor
@@ -193,7 +196,7 @@ fun MealSection(
             )
             .clickable(enabled = isSelectionMode) { onSelectionChange(!isSelected) },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -215,7 +218,8 @@ fun MealSection(
                 text = title,
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onTertiary
             )
 
             if (!isSelectionMode) {
@@ -223,7 +227,8 @@ fun MealSection(
                     Icon(
                         painter = painterResource(R.drawable.ic_add_circle_outline),
                         contentDescription = stringResource(R.string.desc_add_recipe),
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(34.dp),
+                        tint = MaterialTheme.colorScheme.onTertiary
                     )
                 }
             } else {
@@ -256,9 +261,9 @@ fun MealSection(
                                 onDeleteClick(recipeItem)
                             }
                         },
-                        onClick = { /*TODO*/ },
+                        onClick = {onRecipeDetails(recipeItem.recipe_id?:"")},
                         color = color,
-                        isSelectionMode = isSelectionMode
+                        isSelectionMode = isSelectionMode,
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }

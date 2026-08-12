@@ -6,8 +6,13 @@ sealed class Screen(val route: String) {
     object Main : Screen("main")
     object Home : Screen("home")
     object Recipes : Screen("recipes")
+    object RecipeDetails : Screen("recipe_details/{recipeId}") {
+        fun createRoute(recipeId: String): String = "recipe_details/$recipeId"
+    }
     object Planner : Screen("planner")
-    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}")
+    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
+        fun createRoute(id: String) = "add_recipe_to_planner/$id"
+    }
     object Hiring : Screen("hiring")
     object Profile : Screen("profile")
     object AddRecipe : Screen("add_recipe")
@@ -36,6 +41,7 @@ sealed class Screen(val route: String) {
     // 🌟 Added routes from your design
     object AddHiringAppointment : Screen("addHiringAppointment")
     object AppointmentReview : Screen("appointmentReview")
+    // Ingredients module
     object Ingredients : Screen("ingredients")
     object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {
         fun createRoute(id: String, isRequest: Boolean = false) = "ingredient_detail/$id/$isRequest"
@@ -43,8 +49,9 @@ sealed class Screen(val route: String) {
     object IngredientRequestForm : Screen("ingredient_request_form?id={id}") {
         fun createRoute(id: String? = null) = if (id != null) "ingredient_request_form?id=$id" else "ingredient_request_form"
     }
-    object ShoppingList : Screen("shoppingList")
-    object AddShoppingListItem : Screen("addShoppingListItem")
+    object ShoppingList : Screen("shopping_list")
+    object AddShoppingListItem : Screen("add_shopping_list_item")
+    object AdminIngredient: Screen("admin_ingredient")
     object AdminIngredientDetail : Screen("admin_ingredient_detail/{id}") {
         fun createRoute(id: String) = "admin_ingredient_detail/$id"
     }
