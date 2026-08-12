@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -68,23 +70,18 @@ fun AddRecipeToPlanScreen(
     authViewModel: AuthViewModel,
     onExecutionComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateToProfile:()-> Unit
+    onNavigateToProfile: () -> Unit
 ) {
-    LaunchedEffect(recipe) {
-        if (recipe == null) {
-            onExecutionComplete()
-        }
-    }
-
-    // Return an empty canvas or loading frame while the pop-back animation finishes executing
     if (recipe == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // Optional: CircularProgressIndicator()
+            androidx.compose.material3.CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
         }
-        return // Prevents running the rest of the layout logic below on a null reference
+        return
     }
 
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -160,12 +157,37 @@ fun AddRecipeToPlanScreen(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // 🌟 CANCEL BUTTON: Discard selections and return back
+                OutlinedButton(
+                    onClick = {
+                        selectedSlots.clear()
+                        onExecutionComplete()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                ) {
+                    Text(
+                        text = stringResource(android.R.string.cancel),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Button(
                     onClick = {
                         selectedSlots.forEach { (savedDateStr, mealTypesList) ->
@@ -178,7 +200,7 @@ fun AddRecipeToPlanScreen(
                     },
                     enabled = totalSelectionsCount > 0,
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .weight(1.5f)
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -279,9 +301,8 @@ fun AddRecipeToPlanScreen(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                beyondViewportPageCount = 1 // 🌟 Preload adjacent frames
+                beyondViewportPageCount = 1
             ) { page ->
-                // 🌟 FIX: Calculate localized configuration for each specific page block inside the pager loop
                 val pageDate = remember(page) { anchorDate.plusDays(page.toLong()) }
                 val pageDateStr = pageDate.toString()
 
@@ -291,68 +312,72 @@ fun AddRecipeToPlanScreen(
                     }
                 }
 
-                // 🌟 FIX: Pull layout state safely from the dictionary cache map instead of deleted global variable
                 val dailyPlanForThisPage = mealPlannerViewModel.mealPlansCache[pageDate]
                 val activeSelectionsForThisPage = selectedSlots[pageDateStr] ?: emptySet()
 
-                val totalCaloriesForSelectedDate = remember(dailyPlanForThisPage, isNetworkAvailable) {
+                // 🌟 REMEMBER UPDATE: Listens to checkbox selections to compute transient preview calories
+                val totalCaloriesForSelectedDate = remember(dailyPlanForThisPage, activeSelectionsForThisPage, isNetworkAvailable) {
                     if (!isNetworkAvailable) 0 else {
-                        dailyPlanForThisPage?.meals
+                        val existingCalories = dailyPlanForThisPage?.meals
                             ?.flatMap { meal -> meal.recipes }
                             ?.sumOf { r: Recipe -> r.calories } ?: 0
+
+                        val pendingSelectionsCalories = activeSelectionsForThisPage.size * recipe.calories
+                        existingCalories + pendingSelectionsCalories
                     }
                 }
 
                 val pageScrollState = rememberScrollState()
 
-                // 🌟 SCROLL FIX: Each page canvas handles its own vertical scroll independently
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(pageScrollState)
-                ) {
-                    if (!isNetworkAvailable) {
+                if (!isNetworkAvailable) {
+                    // Offline layout remain unchanged...
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp, vertical = 60.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.no_network),
+                            tint = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(70.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.no_internet_connection),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.connect_to_internet_message),
+                            fontSize = 15.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        val currentUser = authViewModel.currentUser
+                        val maxCalories = calculateSuggestedDailyCalories(currentUser)
+
+                        CalorieProgressBar(
+                            currentCalories = totalCaloriesForSelectedDate,
+                            maxCalories = maxCalories,
+                            onNavigateToProfile = { onNavigateToProfile() },
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 32.dp, vertical = 60.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                                .weight(1f) // Ensures the scroll area fills remaining space cleanly
+                                .verticalScroll(pageScrollState)
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.wifi_off),
-                                contentDescription = stringResource(R.string.no_network),
-                                tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(70.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = stringResource(R.string.no_internet_connection),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.connect_to_internet_message),
-                                fontSize = 15.sp,
-                                color = Color.Gray,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            val currentUser = authViewModel.currentUser
-                            val maxCalories = calculateSuggestedDailyCalories(currentUser)
-
-                            CalorieProgressBar(
-                                currentCalories = totalCaloriesForSelectedDate,
-                                maxCalories = maxCalories,
-                                onNavigateToProfile = { onNavigateToProfile() },
-                            )
-
-                            Spacer(Modifier.height(20.dp))
-
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -360,21 +385,34 @@ fun AddRecipeToPlanScreen(
                                 elevation = CardDefaults.cardElevation(4.dp),
                                 colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                             ) {
-                                val breakfastRecipes = dailyPlanForThisPage?.meals
-                                    ?.filter { it.mealType == MealType.BREAKFAST }
-                                    ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                // 🌟 PREVIEW FIX: Dynamically append the recipe if the corresponding slot layout checkbox is checked
+                                val breakfastRecipes = remember(dailyPlanForThisPage, activeSelectionsForThisPage) {
+                                    val baseline = dailyPlanForThisPage?.meals
+                                        ?.filter { it.mealType == MealType.BREAKFAST }
+                                        ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                    if (activeSelectionsForThisPage.contains(MealType.BREAKFAST)) baseline + recipe else baseline
+                                }
 
-                                val lunchRecipes = dailyPlanForThisPage?.meals
-                                    ?.filter { it.mealType == MealType.LUNCH }
-                                    ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                val lunchRecipes = remember(dailyPlanForThisPage, activeSelectionsForThisPage) {
+                                    val baseline = dailyPlanForThisPage?.meals
+                                        ?.filter { it.mealType == MealType.LUNCH }
+                                        ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                    if (activeSelectionsForThisPage.contains(MealType.LUNCH)) baseline + recipe else baseline
+                                }
 
-                                val dinnerRecipes = dailyPlanForThisPage?.meals
-                                    ?.filter { it.mealType == MealType.DINNER }
-                                    ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                val dinnerRecipes = remember(dailyPlanForThisPage, activeSelectionsForThisPage) {
+                                    val baseline = dailyPlanForThisPage?.meals
+                                        ?.filter { it.mealType == MealType.DINNER }
+                                        ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                    if (activeSelectionsForThisPage.contains(MealType.DINNER)) baseline + recipe else baseline
+                                }
 
-                                val snackRecipes = dailyPlanForThisPage?.meals
-                                    ?.filter { it.mealType == MealType.SNACK }
-                                    ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                val snackRecipes = remember(dailyPlanForThisPage, activeSelectionsForThisPage) {
+                                    val baseline = dailyPlanForThisPage?.meals
+                                        ?.filter { it.mealType == MealType.SNACK }
+                                        ?.flatMap { meal -> meal.recipes } ?: emptyList()
+                                    if (activeSelectionsForThisPage.contains(MealType.SNACK)) baseline + recipe else baseline
+                                }
 
                                 Column {
                                     MealSection(

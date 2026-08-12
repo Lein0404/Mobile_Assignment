@@ -71,7 +71,7 @@ fun AdminApprovalScreen(
     val navController = rememberNavController()
     // Using the passed-in authViewModel instead of creating a local one
     // to ensure we share login state with MainActivity
-    
+
     val items = listOf(
         NavigationItem(Screen.AdminChefScreen.route, "Chef Approval", R.drawable.ic_outline_account_circle),
         NavigationItem(Screen.AdminIngredient.route, "Ingredients", R.drawable.ingredient)
