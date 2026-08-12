@@ -50,8 +50,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: RecipeViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner),
-    authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner),
+    viewModel: RecipeViewModel,
+    authViewModel: AuthViewModel,
     bookmarkViewModel: BookmarkViewModel = viewModel()
 ) {
     val user = authViewModel.currentUser
