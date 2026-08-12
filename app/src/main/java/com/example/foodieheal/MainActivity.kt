@@ -221,7 +221,8 @@ class MainActivity : ComponentActivity() {
                                             Screen.RecipeDetails.createRoute(recipeId)))},
                                     )
                                 }
-                                composable("${Screen.AddRecipeToPlanner.route}/{recipeId}") { backStackEntry ->
+
+                                composable(Screen.AddRecipeToPlanner.route) { backStackEntry ->
                                     val recipeId = backStackEntry.arguments?.getString("recipeId")
 
                                     // Trigger fetch only if the ID is valid
@@ -243,7 +244,7 @@ class MainActivity : ComponentActivity() {
                                             authViewModel = sharedAuthViewModel,
                                             onExecutionComplete = { navController.popBackStack() },
                                             recipe = recipe,
-                                            onNavigateToProfile = {navController.navigate(Screen.EditProfile.route)}
+                                            onNavigateToProfile = { navController.navigate(Screen.EditProfile.route) }
                                         )
                                     }
                                 }
