@@ -3,6 +3,7 @@ package com.example.foodieheal.Chef
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,10 +42,10 @@ import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
-sealed class ChefNavigationItem(val route: String, val title: String, val iconRes: Int) {
-    object Home : ChefNavigationItem("chef_home", "Home", R.drawable.ic_home)
-    object Appointments : ChefNavigationItem("chef_appointments", "Appointments", R.drawable.ic_planner)
-    object Profile : ChefNavigationItem("chef_profile", "Profile", R.drawable.ic_outline_account_circle)
+sealed class ChefNavigationItem(val route: String, val titleRes: Int, val iconRes: Int) {
+    object Home : ChefNavigationItem("chef_home", R.string.nav_home, R.drawable.ic_home)
+    object Appointments : ChefNavigationItem("chef_appointments", R.string.nav_appointments, R.drawable.ic_planner)
+    object Profile : ChefNavigationItem("chef_profile", R.string.nav_profile, R.drawable.ic_outline_account_circle)
 }
 
 @Composable
@@ -73,22 +75,23 @@ fun ChefMainScreen(
         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         bottomBar = {
             NavigationBar(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                tonalElevation = 8.dp
+                windowInsets = WindowInsets.navigationBars
             ) {
                 val navBackStackEntry by chefNavController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
                 items.forEach { item ->
+                    val labelText = stringResource(id = item.titleRes)
                     NavigationBarItem(
                         icon = {
                             Icon(
                                 painter = painterResource(id = item.iconRes),
-                                contentDescription = item.title
+                                contentDescription = labelText
                             )
                         },
-                        label = { Text(text = item.title, fontSize = 10.sp) },
+                        label = { Text(labelText, fontSize = 10.sp) },
                         selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,

@@ -51,6 +51,7 @@ import coil.compose.AsyncImage
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
@@ -252,7 +253,7 @@ fun HiringChefDetails(
                 }
             }
 
-            // About Section
+            // About Section (Reusing DetailSectionCard)
             if (!chef.description.isNullOrBlank()) {
                 DetailSectionCard(title = stringResource(R.string.title_about_chef)) {
                     Text(
@@ -264,7 +265,7 @@ fun HiringChefDetails(
                 }
             }
 
-            // Contact Info Section
+            // Contact Info Section (Reusing DetailSectionCard)
             DetailSectionCard(title = stringResource(R.string.title_contact_info)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val phoneNumber = chef.phoneNumber?.ifBlank { null }
@@ -296,6 +297,7 @@ fun HiringChefDetails(
                             }
                         }
                     )
+
                     val fullAddress = listOfNotNull(
                         chef.address?.ifBlank { null },
                         chef.postcode?.ifBlank { null },
@@ -345,27 +347,6 @@ private fun DetailChip(
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
-    }
-}
-
-@Composable
-private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            content()
-        }
     }
 }
 

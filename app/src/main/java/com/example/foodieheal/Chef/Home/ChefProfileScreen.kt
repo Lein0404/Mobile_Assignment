@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -34,22 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.Home.DetailRow
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.DetailSectionCard
 
 @Composable
 fun ChefProfileScreen(
@@ -73,7 +70,7 @@ fun ChefProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F8F8)),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = primaryColor)
@@ -86,6 +83,7 @@ fun ChefProfileScreen(
             .fillMaxSize()
             .background(primaryColor)
     ) {
+        // Header Section
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -93,13 +91,13 @@ fun ChefProfileScreen(
         ) {
             Column {
                 Text(
-                    text = "Account Settings",
-                    color = Color.White.copy(alpha = 0.9f),
+                    text = stringResource(R.string.account_settings),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "Chef Profile",
-                    color = Color.White,
+                    text = stringResource(R.string.chef_profile),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -109,7 +107,7 @@ fun ChefProfileScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(0.dp),
-            color = Color(0xFFF8F8F8)
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier
@@ -118,10 +116,11 @@ fun ChefProfileScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Header Profile Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -139,7 +138,7 @@ fun ChefProfileScreen(
                         ) {
                             if (chef.profilePictureUrl.isNullOrEmpty()) {
                                 Text(
-                                    text = chef.name?.take(1)?.uppercase() ?: "C",
+                                    text = chef.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
                                     style = MaterialTheme.typography.headlineLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     fontWeight = FontWeight.Bold
@@ -147,7 +146,7 @@ fun ChefProfileScreen(
                             } else {
                                 AsyncImage(
                                     model = chef.profilePictureUrl,
-                                    contentDescription = "Profile Picture",
+                                    contentDescription = stringResource(R.string.profile_picture),
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .clip(CircleShape),
@@ -159,139 +158,116 @@ fun ChefProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = chef.name ?: "Unknown Chef",
+                            text = chef.name ?: stringResource(R.string.unknown_chef),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Text(
-                            text = chef.email ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
+                        if (!chef.email.isNullOrBlank()) {
+                            Text(
+                                text = chef.email,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Approval Status Badge
                         val isApproved = chef.status?.equals("approved", ignoreCase = true) == true
+                        val badgeBg = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+                        val badgeText = if (isApproved) Color(0xFF2E7D32) else Color(0xFFE65100)
+
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+                            color = badgeBg
                         ) {
                             Text(
-                                text = chef.status?.replaceFirstChar { it.uppercase() } ?: "Pending",
+                                text = chef.status?.replaceFirstChar { it.uppercase() }
+                                    ?: stringResource(R.string.status_pending),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = if (isApproved) Color(0xFF2E7D32) else Color(0xFFE65100),
+                                color = badgeText,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                // Professional Information Section (reusing DetailSectionCard)
+                DetailSectionCard(title = stringResource(R.string.professional_info)) {
+                    DetailRow(
+                        iconRes = R.drawable.ic_clock,
+                        label = stringResource(R.string.label_experience),
+                        value = stringResource(R.string.years_experience, chef.experience ?: 0)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DetailRow(
+                        iconRes = R.drawable.dollar_symbol,
+                        label = stringResource(R.string.label_price),
+                        value = stringResource(R.string.rate_per_hour, (chef.Pricing ?: 0.0).toInt())
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DetailRow(
+                        iconRes = R.drawable.ic_outline_account_circle,
+                        label = stringResource(R.string.label_chef_id),
+                        value = chef.id.ifBlank { stringResource(R.string.not_available) }
+                    )
+
+                    if (!chef.description.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
-                            text = "Professional Info",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            text = stringResource(R.string.label_bio_description),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.ic_clock),
-                            label = "Experience",
-                            value = "${chef.experience ?: 0} Years"
-                        )
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.dollar_symbol),
-                            label = "Price",
-                            value = "RM ${chef.Pricing ?: 0.0}"
-                        )
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.ic_outline_account_circle),
-                            label = "Chef ID",
-                            value = chef.id ?: "N/A"
-                        )
-
-                        if (!chef.description.isNullOrBlank()) {
-                            Column(modifier = Modifier.padding(top = 4.dp)) {
-                                Text(
-                                    text = "Bio / Description",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = chef.description,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.DarkGray
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Contact Information",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.telephone),
-                            label = "Phone Number",
-                            value = chef.phoneNumber?.takeIf { it.isNotBlank() } ?: "Not provided"
-                        )
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.mail),
-                            label = "Email Address",
-                            value = chef.email?.takeIf { it.isNotBlank() } ?: "Not provided"
-                        )
-
-                        val fullAddress = listOfNotNull(chef.address, chef.postcode, chef.state)
-                            .filter { it.isNotBlank() }
-                            .joinToString(", ")
-
-                        ProfileInfoRow(
-                            painter = painterResource(R.drawable.location),
-                            label = "Location",
-                            value = fullAddress.ifEmpty { "Not provided" }
+                            text = chef.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
+                // Contact Information Section (reusing DetailSectionCard)
+                DetailSectionCard(title = stringResource(R.string.contact_info)) {
+                    DetailRow(
+                        iconRes = R.drawable.telephone,
+                        label = stringResource(R.string.label_phone),
+                        value = chef.phoneNumber?.takeIf { it.isNotBlank() } ?: stringResource(R.string.not_provided)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DetailRow(
+                        iconRes = R.drawable.mail,
+                        label = stringResource(R.string.label_email),
+                        value = chef.email?.takeIf { it.isNotBlank() } ?: stringResource(R.string.not_provided)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val fullAddress = listOfNotNull(chef.address, chef.postcode, chef.state)
+                        .filter { it.isNotBlank() }
+                        .joinToString(", ")
+
+                    DetailRow(
+                        iconRes = R.drawable.location,
+                        label = stringResource(R.string.label_location),
+                        value = fullAddress.ifEmpty { stringResource(R.string.not_provided) }
+                    )
+                }
+
+                // Action Buttons
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -299,14 +275,14 @@ fun ChefProfileScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
-                        onClick = onEditClick ,
+                        onClick = onEditClick,
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Edit Profile",
+                            text = stringResource(R.string.edit_profile),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -326,8 +302,8 @@ fun ChefProfileScreen(
                         )
                     ) {
                         Text(
-                            text = "Logout",
-                            color = Color.White,
+                            text = stringResource(R.string.logout),
+                            color = MaterialTheme.colorScheme.onError,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -339,38 +315,6 @@ fun ChefProfileScreen(
     }
 }
 
-@Composable
-private fun ProfileInfoRow(
-    painter: Painter,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
-        }
-    }
-}
 //@Preview(showBackground = true)
 //@Composable
 //fun Preview(){

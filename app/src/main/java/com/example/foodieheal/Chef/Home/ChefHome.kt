@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -38,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,8 +64,6 @@ fun ChefHomeScreen(
     onCardClick: (Appointment) -> Unit = {}
 ) {
     val authViewModel: AuthViewModel = viewModel()
-
-    var query by remember { mutableStateOf("") }
     val homeUiState by homeViewModel.homeUiState.collectAsState()
 
     // Refresh chef info and appointment data on initial launch
@@ -88,10 +89,12 @@ fun ChefHomeScreen(
             .fillMaxSize()
             .background(primaryColor)
     ) {
+        // Header Section
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 48.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
+                .statusBarsPadding()
+                .padding(top = 16.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -100,13 +103,13 @@ fun ChefHomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "Good Morning 👋",
-                        color = Color.White.copy(alpha = 0.9f),
+                        text = stringResource(R.string.greeting_good_morning),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                         fontSize = 14.sp
                     )
                     Text(
-                        text = chef?.name ?: "Chef",
-                        color = Color.White,
+                        text = chef?.name ?: stringResource(R.string.default_chef_name),
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -114,10 +117,11 @@ fun ChefHomeScreen(
             }
         }
 
+        // Main Surface Content
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = Color(0xFFF8F8F8)
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -125,35 +129,13 @@ fun ChefHomeScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Search Input Field this one can ignore, useless
-                item {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text("Search dishes, events, clients...") },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_vertical_more),
-                                contentDescription = "Search"
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White
-                        )
-                    )
-                }
 
-                // Dynamic Summary Schedule Banner
+                // Responsive & Flexible Summary Schedule Banner
                 item {
                     val appointmentCountText = when (val state = homeUiState) {
-                        is HomeUiState.Success -> "${state.totalCount} Appointments"
-                        is HomeUiState.Loading -> "Loading..."
-                        is HomeUiState.Error -> "0 Appointments"
+                        is HomeUiState.Success -> stringResource(R.string.banner_appointment_count_format, state.totalCount)
+                        is HomeUiState.Loading -> stringResource(R.string.msg_loading)
+                        is HomeUiState.Error -> stringResource(R.string.banner_zero_appointments)
                     }
 
                     Card(
@@ -164,31 +146,41 @@ fun ChefHomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 12.dp)
+                            ) {
                                 Text(
-                                    text = "Your Schedule",
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    text = stringResource(R.string.banner_title_schedule),
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                                     style = MaterialTheme.typography.labelLarge
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = appointmentCountText,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
+
                             Button(
                                 onClick = onNavigateToAppointments,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.widthIn(min = 90.dp)
                             ) {
                                 Text(
-                                    text = "View All",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    text = stringResource(R.string.view_all),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
@@ -198,10 +190,10 @@ fun ChefHomeScreen(
                 // Next Appointment Title
                 item {
                     Text(
-                        text = "Next Appointment",
+                        text = stringResource(R.string.next_appointment),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -221,9 +213,9 @@ fun ChefHomeScreen(
 
                         is HomeUiState.Error -> {
                             Text(
-                                text = "Unable to load appointments.",
+                                text = stringResource(R.string.error_loading_appointments),
                                 color = MaterialTheme.colorScheme.error,
-                                fontSize = 14.sp
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
 
@@ -231,26 +223,25 @@ fun ChefHomeScreen(
                             val nextAppointment = state.nextAppointment
 
                             if (nextAppointment != null) {
-
-                                val chef_User = state.usersMap[nextAppointment.userId]
-                                val userName = chef_User?.name ?: "Unknown Client"
+                                val chefUser = state.usersMap[nextAppointment.userId]
+                                val userName = chefUser?.name ?: stringResource(R.string.unknown_client)
 
                                 AppointmentCard(
                                     appointment = nextAppointment,
                                     userName = userName,
                                     onCardClick = { onCardClick(nextAppointment) }
-
                                 )
                             } else {
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    shape = RoundedCornerShape(16.dp)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                                 ) {
                                     Text(
-                                        text = "No upcoming appointments scheduled.",
+                                        text = stringResource(R.string.no_upcoming_appointments),
                                         modifier = Modifier.padding(20.dp),
-                                        color = Color.Gray,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }

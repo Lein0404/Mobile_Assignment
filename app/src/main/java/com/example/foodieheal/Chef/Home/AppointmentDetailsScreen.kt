@@ -46,21 +46,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.DetailSectionCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentDetailScreen(
     appointment: Appointment,
     userName: String,
-    userPhone: String = "", // Need add on user model
+    userPhone: String = "",
     onBackClick: () -> Unit,
     onStatusChange: (newStatus: String, rejectionReason: String?) -> Unit = { _, _ -> }
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
 
     var showAcceptDialog by remember { mutableStateOf(false) }
@@ -68,22 +69,30 @@ fun AppointmentDetailScreen(
     var rejectionReason by remember { mutableStateOf("") }
     var rejectionReasonError by remember { mutableStateOf(false) }
 
+    val acceptedToastMsg = stringResource(R.string.booking_accepted)
+    val declinedToastMsg = stringResource(R.string.booking_declined)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Booking Details", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.booking_details),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primaryColor,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -92,17 +101,16 @@ fun AppointmentDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            // User name and  status
+            // Client Header & Status Card
             Card(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -113,30 +121,30 @@ fun AppointmentDetailScreen(
                     ) {
                         Text(
                             text = userName,
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color.Black
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         // Status Badge
+                        val (badgeContainerColor, badgeContentColor) = when (appointment.Status.lowercase()) {
+                            "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
+                            "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+                            "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
+                            "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+                            else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = when (appointment.Status.lowercase()) {
-                                "pending" -> Color(0xFFFFF3E0)
-                                "confirmed" -> Color(0xFFE8F5E9)
-                                "cancelled" -> Color(0xFFFFEBEE)
-                                else -> Color(0xFFEEEEEE)
-                            }
+                            color = badgeContainerColor
                         ) {
                             Text(
                                 text = appointment.Status.replaceFirstChar { it.uppercase() },
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = when (appointment.Status.lowercase()) {
-                                    "pending" -> Color(0xFFE65100)
-                                    "confirmed" -> Color(0xFF2E7D32)
-                                    "cancelled" -> Color(0xFFC62828)
-                                    else -> Color.DarkGray
-                                }
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = badgeContentColor
                             )
                         }
                     }
@@ -144,48 +152,52 @@ fun AppointmentDetailScreen(
                     if (userPhone.isNotBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Contact: $userPhone",
+                            text = stringResource(R.string.label_contact_format, userPhone),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
             // Schedule & Time Section
-            DetailSectionCard(title = "Date & Time") {
+            DetailSectionCard(title = stringResource(R.string.date_time)) {
                 DetailRow(
                     iconRes = R.drawable.ic_clock,
-                    label = "Date",
+                    label = stringResource(R.string.label_date),
                     value = appointment.Date
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailRow(
                     iconRes = R.drawable.ic_clock,
-                    label = "Time Slot",
-                    value = "${appointment.Start_Time} - ${appointment.End_Time}"
+                    label = stringResource(R.string.label_time_slot),
+                    value = stringResource(
+                        R.string.time_slot_format,
+                        appointment.Start_Time,
+                        appointment.End_Time
+                    )
                 )
             }
 
             // Location & Navigation Section
-            DetailSectionCard(title = "Event Location") {
+            DetailSectionCard(title = stringResource(R.string.event_location)) {
                 DetailRow(
                     iconRes = R.drawable.location,
-                    label = "Address",
-                    value = "${appointment.Address}, ${appointment.State}"
+                    label = stringResource(R.string.label_address),
+                    value = stringResource(
+                        R.string.appointment_address_format,
+                        appointment.Address,
+                        appointment.State
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Open Maps Button
                 OutlinedButton(
                     onClick = {
-                        val mapUri =
-                            Uri.parse("geo:0,0?q=${Uri.encode("${appointment.Address}, ${appointment.State}")}")
-                        val mapIntent = Intent(Intent.ACTION_VIEW, mapUri).apply {
-                            setPackage("com.google.android.apps.maps") //Navigate to google maps
-                        }
-                        context.startActivity(mapIntent)
+                        val mapUri = Uri.parse("geo:0,0?q=${Uri.encode("${appointment.Address}, ${appointment.State}")}")
+                        val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
+                        context.startActivity(Intent.createChooser(mapIntent, "Open with Maps"))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
@@ -195,39 +207,39 @@ fun AppointmentDetailScreen(
             }
 
             // Dietary & Booking Details Section
-            DetailSectionCard(title = "Booking Details") {
+            DetailSectionCard(title = stringResource(R.string.section_booking_details)) {
                 DetailRow(
                     iconRes = R.drawable.ic_clock,
-                    label = "Party Size",
-                    value = "${appointment.Serving_Size} Pax"
+                    label = stringResource(R.string.label_party_size),
+                    value = stringResource(R.string.party_size_format, appointment.Serving_Size)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailRow(
                     iconRes = R.drawable.ic_clock,
-                    label = "Dietary Preference",
-                    value = appointment.Health_Preference.ifBlank { "None Specified" }
+                    label = stringResource(R.string.label_dietary_preference),
+                    value = appointment.Health_Preference.ifBlank { stringResource(R.string.none_specified) }
                 )
 
                 if (appointment.Note.isNotBlank()) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Special Notes:",
+                        text = stringResource(R.string.label_special_notes),
                         style = MaterialTheme.typography.labelLarge,
-                        color = Color.DarkGray
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = appointment.Note,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // Action Buttons for Chef (Accept/Cancel)
-            if (appointment.Status.lowercase() == "pending") {
+            // Action Buttons
+            if (appointment.Status.equals("pending", ignoreCase = true)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -239,79 +251,90 @@ fun AppointmentDetailScreen(
                             showDeclineDialog = true
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
                     ) {
-                        Text("Decline")
+                        Text(stringResource(R.string.decline))
                     }
 
                     Button(
                         onClick = { showAcceptDialog = true },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("Accept Booking")
+                        Text(stringResource(R.string.accept_booking))
                     }
                 }
             }
         }
     }
 
+    // Accept Confirmation Dialog
     if (showAcceptDialog) {
         AlertDialog(
             onDismissRequest = { showAcceptDialog = false },
             title = {
                 Text(
-                    text = "Accept Booking?",
+                    text = stringResource(R.string.accept_title),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to accept this appointment for $userName on ${appointment.Date}?"
+                    text = stringResource(
+                        R.string.accept_body_format,
+                        userName,
+                        appointment.Date
+                    )
                 )
             },
             confirmButton = {
                 Button(
                     onClick = {
                         showAcceptDialog = false
-                        Toast.makeText(
-                            context,
-                            "Booking accepted successfully!",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, acceptedToastMsg, Toast.LENGTH_SHORT).show()
                         onStatusChange("Confirmed", null)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
                 ) {
-                    Text("Confirm Accept")
+                    Text(stringResource(R.string.confirm_accept))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAcceptDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             },
             shape = RoundedCornerShape(16.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
+    // Decline Dialog
     if (showDeclineDialog) {
         AlertDialog(
             onDismissRequest = { showDeclineDialog = false },
             title = {
                 Text(
-                    text = "Decline Booking",
+                    text = stringResource(R.string.decline_title),
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFC62828)
+                    color = MaterialTheme.colorScheme.error
                 )
             },
             text = {
                 Column {
                     Text(
-                        text = "Please provide a reason for declining this appointment. This will be shared with $userName.",
+                        text = stringResource(R.string.decline_body_format, userName),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.DarkGray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
@@ -320,7 +343,7 @@ fun AppointmentDetailScreen(
                             rejectionReason = it
                             if (it.isNotBlank()) rejectionReasonError = false
                         },
-                        placeholder = { Text("e.g. Fully booked, Location out of range...") },
+                        placeholder = { Text(stringResource(R.string.decline_reason)) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 5,
@@ -328,7 +351,7 @@ fun AppointmentDetailScreen(
                         supportingText = {
                             if (rejectionReasonError) {
                                 Text(
-                                    text = "Rejection reason cannot be empty",
+                                    text = stringResource(R.string.rejection_reason_empty),
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -344,58 +367,44 @@ fun AppointmentDetailScreen(
                             rejectionReasonError = true
                         } else {
                             showDeclineDialog = false
-                            Toast.makeText(context, "Booking declined.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, declinedToastMsg, Toast.LENGTH_SHORT).show()
                             onStatusChange("Rejected", rejectionReason.trim())
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 ) {
-                    Text("Confirm Decline")
+                    Text(stringResource(R.string.confirm_decline))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeclineDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             },
             shape = RoundedCornerShape(16.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
 
-// Reusable Section Container
-@Composable
-private fun DetailSectionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            content()
-        }
-    }
-}
 
 // Reusable Information Row
 @Composable
-private fun DetailRow(
+fun DetailRow(
     iconRes: Int,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = label,
@@ -407,12 +416,13 @@ private fun DetailRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = Color.Black
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

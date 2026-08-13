@@ -275,7 +275,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(Screen.Profile.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---

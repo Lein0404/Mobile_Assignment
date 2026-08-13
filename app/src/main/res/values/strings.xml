@@ -373,4 +373,123 @@
     <string name="back">Back</string>
     <string name="complete">Complete</string>
 
+    <!-- Admin Approval Screen <Chef> -->
+    <string name="chef_approval">Chef Approval</string>
+    <string name="ingredient_requests">Ingredient Requests</string>
+    <string name="label_chef_approval">Chef Approval</string>
+    <string name="label_ingredients">Ingredients</string>
+    <string name="label_logout">Logout</string>
+
+    <string name="experience_years_format">%1$d years experience</string>
+
+    <string name="review_application">Review Application</string>
+    <string name="no_pending_applications">No pending applications</string>
+
+    <string name="logout">Logout</string>
+
+    <!-- Admin Chef Details Screen -->
+    <string name="chef_details">Chef Details</string>
+    <string name="approve">Approve</string>
+
+    <string name="personal_info">Personal Information</string>
+    <string name="contact_info">Contact Information</string>
+    <string name="professional_info">Professional Information</string>
+
+    <string name="label_age">Age</string>
+
+    <string name="full_address_format">%1$s, %2$s, %3$s</string>
+
+    <!-- Chef Home -->
+    <!-- Navigation Bar -->
+    <string name="nav_appointments">Appointments</string>
+    <string name="nav_profile">Profile</string>
+
+    <string name="greeting_good_morning">Good Morning 👋</string>
+    <string name="unknown_client">Unknown Client</string>
+
+    <string name="banner_title_schedule">Your Schedule</string>
+    <string name="banner_appointment_count_format">%1$d Appointments</string>
+    <string name="banner_zero_appointments">0 Appointments</string>
+    <string name="view_all">View All</string>
+
+    <string name="next_appointment">Next Appointment</string>
+    <string name="no_upcoming_appointments">No upcoming appointments scheduled.</string>
+    <string name="error_loading_appointments">Unable to load appointments.</string>
+    <string name="msg_loading">Loading...</string>
+
+    <!-- Chef Appointment Screen -->
+    <string name="bookings_and_events">Bookings &amp; Events</string>
+    <string name="your_appointments">Your Appointments</string>
+
+    <string name="none">None</string>
+
+    <string name="appointment_serving_and_diet_format">Servings: %1$d Pax | Diet: %2$s</string>
+    <string name="appointment_note_format">Note: %1$s</string>
+    <string name="appointment_datetime_format">%1$s (%2$s - %3$s)</string>
+    <string name="appointment_address_format">%1$s, %2$s</string>
+
+    <string name="no_appointments_found">No appointments found.</string>
+    <string name="no_matching_appointments">No appointments match your search/filter.</string>
+
+    <string name="time">Time Icon</string>
+    <string name="location">Location Icon</string>
+
+    <!-- Appointment Details <Chef> -->
+    <string name="date_time">Date &amp; Time</string>
+    <string name="event_location">Event Location</string>
+    <string name="section_booking_details">Booking Details</string>
+    <string name="label_party_size">Party Size</string>
+    <string name="label_dietary_preference">Dietary Preference</string>
+    <string name="label_special_notes">Special Notes:</string>
+    <string name="none_specified">None Specified</string>
+
+    <string name="label_contact_format">Contact: %1$s</string>
+    <string name="party_size_format">%1$d Pax</string>
+
+    <string name="open_in_maps">Open in Maps</string>
+    <string name="decline">Decline</string>
+    <string name="accept_booking">Accept Booking</string>
+    <string name="confirm_accept">Confirm Accept</string>
+    <string name="confirm_decline">Confirm Decline</string>
+    <string name="open_maps">Open with Maps</string>
+
+    <string name="accept_title">Accept Booking?</string>
+    <string name="accept_body_format">Are you sure you want to accept this appointment for %1$s on %2$s?</string>
+    <string name="decline_title">Decline Booking</string>
+    <string name="decline_body_format">Please provide a reason for declining this appointment. This will be shared with %1$s.</string>
+    <string name="decline_reason">e.g. Fully booked, Location out of range...</string>
+    <string name="rejection_reason_empty">Rejection reason cannot be empty</string>
+
+    <string name="booking_accepted">Booking accepted successfully!</string>
+    <string name="booking_declined">Booking declined.</string>
+
+    <!-- Chef Profile Screen -->
+    <string name="account_settings">Account Settings</string>
+    <string name="chef_profile">Chef Profile</string>
+
+    <string name="label_price">Price</string>
+    <string name="label_chef_id">Chef ID</string>
+    <string name="label_bio_description">Bio / Description</string>
+    <string name="label_location">Location</string>
+    <string name="status_pending">Pending</string>
+
+    <string name="edit_profile">Edit Profile</string>
+
+    <!-- Chef Edit Profile -->
+    <string name="selected_picture">Selected Picture</string>
+    <string name="current_picture">Current Picture</string>
+    <string name="change_profile_photo">Change Profile Photo</string>
+    <string name="save">Save</string>
+
+    <string name="personal_details">Personal Details</string>
+    <string name="contact_location">Contact &amp; Location</string>
+    <string name="label_full_name">Full Name</string>
+    <string name="label_years_of_experience">Years of Experience</string>
+    <string name="label_price_currency">Price (RM)</string>
+    <string name="label_phone_number">Phone Number</string>
+    <string name="label_state">State</string>
+    <string name="currency_prefix">RM </string>
+
+    <string name="profile_updated_success">Profile updated successfully!</string>
+
 </resources>
