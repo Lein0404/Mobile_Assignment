@@ -55,7 +55,7 @@ class ChefBookmark : ViewModel() {
         if (userId.isBlank()) return emptyList()
 
         return try {
-            // 1. Fetch bookmark records for this user
+            // Fetch bookmark records for this user
             val bookmarks = client
                 .from("Chef_Bookmark")
                 .select {
@@ -69,12 +69,12 @@ class ChefBookmark : ViewModel() {
 
             if (chefIds.isEmpty()) return emptyList()
 
-            // 2. Fetch matching chefs from 'Chef' table
+            // Fetch matching chefs from 'Chef' table
             client
                 .from("Chef")
                 .select {
                     filter {
-                        isIn("chefId", chefIds) // Update to "id" if your Chef PK is named 'id'
+                        isIn("chefId", chefIds) // Update to "id" if Chef PK is named 'id'
                     }
                 }
                 .decodeList<Chef>()

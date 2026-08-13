@@ -59,7 +59,7 @@ class chefRegisterViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-// UPLOAD IMAGE FLOW
+    // UPLOAD IMAGE FLOW
     var selectedImageUri by mutableStateOf<Uri?>(null)
         private set
 
@@ -85,7 +85,7 @@ class chefRegisterViewModel : ViewModel() {
             try {
                 val client = SupabaseClient.client
 
-               //Authenticate with Supabase first but my one is register so much thing to do
+                //Authenticate with Supabase first but my one is register so much thing to do
                 try {
                     client.auth.signUpWith(Email) {
                         email = this@chefRegisterViewModel.email
@@ -154,6 +154,8 @@ class chefRegisterViewModel : ViewModel() {
                 // Save to supabase that all
                 client.postgrest.from("Chef").insert(newChef)
 
+                client.auth.signOut()
+
                 isSubmitting = false
                 clearData()
                 onSuccess()
@@ -208,7 +210,7 @@ class chefRegisterViewModel : ViewModel() {
                     }
                 }
 
-                // 3. Update AuthViewModel state
+                // Update AuthViewModel state
                 authViewModel.updateLocalChef(chefToSave)
 
                 onSuccess()
@@ -327,7 +329,7 @@ class chefRegisterViewModel : ViewModel() {
     }
 
     fun isValidProfilePicture(): Boolean {
-     return selectedImageUri != null
+        return selectedImageUri != null
     }
 
     // Next button enable feature
@@ -395,5 +397,15 @@ class chefRegisterViewModel : ViewModel() {
         showDescriptionErrorMessage = true
 
         return
+    }
+
+    fun resetRegistrationFlow() {
+        clearData()
+        showBasicInfoErrorMessage = false
+        showContactErrorMessage = false
+        showAddressErrorMessage = false
+        showDescriptionErrorMessage = false
+        errorMessage = null
+        selectedImageUri = null
     }
 }

@@ -53,5 +53,6 @@ enum class PlanCategory(
         fun fromDbKey(key: String?): PlanCategory {
             return entries.find { it.dbKey.equals(key, ignoreCase = true) } ?: OTHERS
         }
+        val catList =listOf<String>(HIGH_PROTEIN.name,LOW_CARB.name,QUICK_EASY.name,KETOGENIC.name,BALANCED.name,COST_FRIENDLY.name,OTHERS.name)
     }
 }

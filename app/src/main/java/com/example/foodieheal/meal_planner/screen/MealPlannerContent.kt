@@ -2,6 +2,7 @@ package com.example.foodieheal.meal_planner.screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
-import com.example.foodieheal.meal_planner.model.WeeklyCalendarState
+import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
 import com.example.foodieheal.model.Recipe
 import java.time.LocalDate
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -47,9 +47,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
-import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -80,7 +77,6 @@ fun MealPlannerContent(
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),
     ) {
-        // 🌟 REMOVED: MealPlannerHeader has been completely extracted out of here.
 
         Spacer(Modifier.height(8.dp))
 
@@ -168,25 +164,25 @@ fun MealPlannerHeader(
                 )
                 Spacer(Modifier.weight(1f))
 
-                // 🌟 Conditionally render action buttons ONLY when Planner tab (0) is active
-                if (selectedTabIndex == 0) {
-                    IconButton(onClick = onRepeatClick, enabled = isNetworkAvailable) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_repeat),
-                            contentDescription = stringResource(R.string.desc_copy_daily_plan),
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+                if (selectedTabIndex == 0) {//only shows in Planner Tab
+                    Icon(
+                        painter = painterResource(R.drawable.ic_repeat),
+                        contentDescription = stringResource(R.string.desc_copy_daily_plan),
+                        modifier = Modifier
+                            .padding(end = 10.dp)
+                            .size(30.dp)
+                            .clickable(onClick = onRepeatClick, enabled = isNetworkAvailable),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
 
-                    IconButton(onClick = onShareClick, enabled = isNetworkAvailable) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_share),
-                            contentDescription = stringResource(R.string.share),
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(R.drawable.ic_share),
+                        contentDescription = stringResource(R.string.share),
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clickable(onClick = onShareClick, enabled = isNetworkAvailable),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
 
@@ -214,73 +210,6 @@ fun MealPlannerHeader(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun CalendarControls(
-    headerText: String,
-    weekDays: List<LocalDate>,
-    selectedDate: LocalDate,
-    onDateBackward: () -> Unit,
-    onDateForward: () -> Unit,
-    onCalendarClick: () -> Unit,
-    onDateSelected: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier,
-    topContent: @Composable (() -> Unit)? = null
-) {
-    Column(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp)
-        ) {
-            Column {
-                topContent?.invoke()
-                Text(
-                    text = headerText,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = onDateBackward) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = stringResource(R.string.desc_calendar_back),
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                IconButton(onClick = onCalendarClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_calendar),
-                        contentDescription = stringResource(R.string.desc_calendar_icon),
-                        modifier = Modifier.size(30.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                IconButton(onClick = onDateForward) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_forward),
-                        contentDescription = stringResource(R.string.desc_calendar_forward),
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        WeeklyDateCardRow(
-            weekDays = weekDays,
-            selectedDate = selectedDate,
-            onDateSelected = onDateSelected
-        )
     }
 }
 
@@ -341,8 +270,7 @@ fun MealPageContent(
                             onAddClick = { onAddMealRecipe(type) },
                             onDeleteClick = { recipe -> onDeleteMealRecipe(type, recipe) },
                             onRecipeDetails = onRecipeDetails,
-                            // Optional but highly recommended: Add spacing between sections
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            modifier = Modifier.padding(bottom = 5.dp)
                         )
                     }
                 }
@@ -376,7 +304,6 @@ fun MealPageContent(
                     }
                 }
             }
-            Spacer(Modifier.height(30.dp))
         }
     }
 }

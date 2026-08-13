@@ -20,7 +20,6 @@ data class MealSlotDTO(
 
 @Serializable
 data class RecipeReference(
-    // 2. Ensuring camelCase matches your JSON property key: "recipeId"
     @SerialName("recipeId") val recipeId: String
 )
 

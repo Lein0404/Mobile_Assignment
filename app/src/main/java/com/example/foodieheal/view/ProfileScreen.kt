@@ -134,7 +134,9 @@ fun ProfileScreen(
                     DrawerItem("Register as Chef", R.drawable.ic_hiring) {
                         navController.navigate(Screen.Welcome.route)
                     }
-                    DrawerItem("Appointment History", R.drawable.ic_calendar) { }
+                    DrawerItem("Appointment History", R.drawable.ic_calendar) {
+                        navController.navigate(Screen.AppoinmtmentHistory.route)
+                    }
                     
                     DrawerItem("Change Password", R.drawable.ic_check) {
                         scope.launch {

@@ -92,7 +92,7 @@ fun RecipesSelectingScreen(
     }
 
     Scaffold(
-//        containerColor = Color(0xFFF8F8F8),
+        modifier = Modifier.navigationBarsPadding(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
