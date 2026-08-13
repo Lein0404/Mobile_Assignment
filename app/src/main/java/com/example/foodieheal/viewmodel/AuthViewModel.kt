@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     private val client = SupabaseClient.client
-
+    
     private fun getDao(): UserDao? {
         return MainActivity.appContext?.let { AppDatabase.getDatabase(it).userDao() }
     }
@@ -63,14 +63,12 @@ class AuthViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             try {
-                // 1. Restore from Room first
                 restoreOfflineSessionSync()
-
+                
                 if (currentUser != null || currentChef != null) {
                     loginSuccess = true
                 }
 
-                // 2. Refresh session from Supabase
                 val user = client.auth.currentUserOrNull()
                 if (user != null) {
                     fetchUserData(user.id)
@@ -85,7 +83,7 @@ class AuthViewModel : ViewModel() {
                 Log.w("AuthViewModel", "Init error: ${e.message}")
             } finally {
                 delay(500)
-                isInitializing = false
+                isInitializing = false 
             }
         }
     }
@@ -281,7 +279,7 @@ class AuthViewModel : ViewModel() {
                 val allUsers = client.postgrest.from("users").select().decodeList<User>()
                 val maxIdNum = allUsers.mapNotNull { it.customId?.removePrefix("U")?.toIntOrNull() }.maxOrNull() ?: 0
                 val customId = "U${(maxIdNum + 1).toString().padStart(3, '0')}"
-
+                
                 val newUser = User(id = uid, customId = customId, email = email, name = "User ($customId)")
 
                 client.postgrest.from("users").insert(newUser)
@@ -340,7 +338,7 @@ class AuthViewModel : ViewModel() {
                     weight = weight ?: currentUser?.weight, height = height ?: currentUser?.height,
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
-
+                
                 client.postgrest.from("users").update(updatedUser) { filter { eq("id", uid) } }
                 this@AuthViewModel.currentUser = updatedUser
                 saveUserToCache(updatedUser)
@@ -416,11 +414,17 @@ class AuthViewModel : ViewModel() {
         currentUser = null
         currentChef = null
         isChef = false
+        isAdmin = false
         loginSuccess = false
         registerSuccess = false
         errorMessage = ""
         viewModelScope.launch {
-            try { client.auth.signOut() } catch (e: Exception) { }
+            try { 
+                val dao = getDao()
+                dao?.deleteUser()
+                dao?.deleteChef()
+                client.auth.signOut() 
+            } catch (e: Exception) { }
             isProcessing = false
             onComplete()
         }

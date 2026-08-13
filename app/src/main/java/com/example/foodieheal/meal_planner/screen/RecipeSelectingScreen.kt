@@ -1,6 +1,11 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.meal_planner.screen
 
 import android.app.Activity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -25,77 +30,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipesScreen(
-    parentNavController: NavController,
-    viewModel: RecipeViewModel,
-    authViewModel: AuthViewModel
+fun RecipesSelectingScreen(
+    recipeViewModel: RecipeViewModel,
+    authViewModel: AuthViewModel,
+    onSave:(List<String>)->Unit,
+    onBackClick:()-> Unit
 ) {
-    val selectedTab = viewModel.activeTab
+    val selectedTab = recipeViewModel.activeTab
     val tabs = listOf("Popular", "My Recipes", "Bookmarks")
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedCourse by remember { mutableStateOf("Breakfast") }
-    val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
-
-    // Filter State
-    var showFilterDialog by remember { mutableStateOf(false) }
-    var filterMaxTime by remember { mutableFloatStateOf(120f) }
-    var filterMaxCalories by remember { mutableFloatStateOf(2000f) }
-    var filterSkill by remember { mutableStateOf<String?>(null) }
-    var filterBudget by remember { mutableStateOf<String?>(null) }
 
     val currentUserId = authViewModel.currentUser?.id
 
-    // 🌟 LOGIC: Filtering based on your instructions
     val currentDataList = when (selectedTab) {
-        // Tab 0: Popular -> Share by OTHER people (Exclude mine)
-        0 -> viewModel.recipeList.filter { it.author_id != currentUserId }
-        // Tab 1: My Recipes -> Created by ME
-        1 -> viewModel.myRecipes
-        // Tab 2: Bookmarks -> Saved by ME
-        2 -> viewModel.bookmarkedRecipes
+        0 -> recipeViewModel.recipeList.filter { it.author_id != currentUserId }
+        1 -> recipeViewModel.myRecipes
+        2 -> recipeViewModel.bookmarkedRecipes
         else -> emptyList()
     }
 
-    val isLoading = viewModel.isLoading
-
-    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
-        derivedStateOf {
-            currentDataList.filter { recipe ->
-                val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true)
-                val matchesCourse = recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
-
-                val matchesTime = recipe.time <= filterMaxTime.toInt()
-                val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
-                val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
-                val matchesBudget = filterBudget == null || recipe.estimatedBudget == filterBudget
-
-                matchesSearch && matchesCourse && matchesTime && matchesCalories && matchesSkill && matchesBudget
-            }
-        }
-    }
-
+    val isLoading = recipeViewModel.isLoading
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
-
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val selectedRecipeIds = remember { mutableStateListOf<String>() }
+
     LaunchedEffect(Unit) {
-        viewModel.bookmarkMessage.collect { message ->
+        recipeViewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
     }
-
-    var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     SideEffect {
         val window = (view.context as Activity).window
@@ -106,22 +79,20 @@ fun RecipesScreen(
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
         if (cid != null) {
-            // 🌟 Smart Sync: Only fetch if memory is empty using short ID
-            if (viewModel.bookmarkedRecipeIds.isEmpty()) {
-                viewModel.fetchBookmarkIds(cid)
+            if (recipeViewModel.bookmarkedRecipeIds.isEmpty()) {
+                recipeViewModel.fetchBookmarkIds(cid)
             }
 
             when (selectedTab) {
-                0 -> if (viewModel.recipeList.isEmpty()) viewModel.fetchAllRecipes()
-                1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(cid)
-                2 -> if (viewModel.bookmarkedRecipes.isEmpty()) viewModel.fetchBookmarkedRecipes(cid)
+                0 -> if (recipeViewModel.recipeList.isEmpty()) recipeViewModel.fetchAllRecipes()
+                1 -> if (recipeViewModel.myRecipes.isEmpty()) recipeViewModel.fetchMyRecipes(cid)
+                2 -> if (recipeViewModel.bookmarkedRecipes.isEmpty()) recipeViewModel.fetchBookmarkedRecipes(cid)
             }
         }
     }
 
     Scaffold(
-        containerColor = Color(0xFFF8F8F8),
-        // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
+//        containerColor = Color(0xFFF8F8F8),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -138,78 +109,161 @@ fun RecipesScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_hamburger_menu),
+                            painter = painterResource(id = R.drawable.ic_arrowback),
                             contentDescription = "Menu",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp).clickable(onClick = {onBackClick()})
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = "Recipe",
+                            text = if (selectedRecipeIds.isEmpty()) "Select Recipes" else "${selectedRecipeIds.size} Selected",
                             color = Color.White,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = Color.Transparent,
-                        contentColor = Color.White,
-                        indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    height = 3.dp,
-                                    color = Color.White
-                                )
-                            }
-                        },
-                        divider = {}
+                }
+            }
+        },
+        // 🌟 Add Button layout anchored cleanly at the bottom container zone
+        bottomBar = {
+            AnimatedVisibility(
+                visible = selectedRecipeIds.isNotEmpty(),
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 8.dp,
+                    color = Color.White
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(16.dp)
                     ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTab == index,
-                                onClick = { viewModel.activeTab = index },
-                                text = {
-                                    Text(
-                                        text = title,
-                                        fontSize = 15.sp,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
-                                    )
-                                }
+                        Button(
+                            onClick = {onSave(selectedRecipeIds)},
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(
+                                text = "Add Selected Recipes (${selectedRecipeIds.size})",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
                     }
                 }
             }
-        },
-        floatingActionButton = {
-            if (selectedTab == 1) {
-                FloatingActionButton(
-                    onClick = { parentNavController.navigate(Screen.AddRecipe.route) },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .offset(y = (-32).dp) // 🌟 Pushed the button higher up by using a negative offset
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_outline_add),
-                        contentDescription = "Add",
-                        modifier = Modifier.size(32.dp)
+        }
+    ) { paddingValues ->
+        RecipeGridContent(
+            paddingValues = paddingValues,
+            currentDataList = currentDataList,
+            isLoading = isLoading,
+            selectedTab = selectedTab,
+            onTabSelected = { index -> recipeViewModel.activeTab = index },
+            tabs = tabs,
+            selectedRecipeIds = selectedRecipeIds,
+            onRecipeSelectedToggle = { id ->
+                if (selectedRecipeIds.contains(id)) {
+                    selectedRecipeIds.remove(id)
+                } else {
+                    selectedRecipeIds.add(id)
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecipeGridContent(
+    paddingValues: PaddingValues,
+    currentDataList: List<Recipe>,
+    isLoading: Boolean,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    tabs: List<String>,
+    selectedRecipeIds: List<String>,
+    onRecipeSelectedToggle: (String) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCourse by remember { mutableStateOf("Breakfast") }
+    val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+
+    var showFilterDialog by remember { mutableStateOf(false) }
+    var filterMaxTime by remember { mutableFloatStateOf(120f) }
+    var filterMaxCalories by remember { mutableFloatStateOf(2000f) }
+    var filterSkill by remember { mutableStateOf<String?>(null) }
+    var filterBudget by remember { mutableStateOf<String?>(null) }
+
+    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
+        derivedStateOf {
+            currentDataList.filter { recipe ->
+                val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true)
+                val matchesCourse = recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
+                val matchesTime = recipe.time <= filterMaxTime.toInt()
+                val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
+                val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
+                val matchesBudget = filterBudget == null || recipe.estimatedBudget == filterBudget
+
+                matchesSearch && matchesCourse && matchesTime && matchesCalories && matchesSkill && matchesBudget
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                contentColor = Color.White,
+                indicator = { tabPositions ->
+                    if (selectedTab < tabPositions.size) {
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            height = 3.dp,
+                            color = Color.White
+                        )
+                    }
+                },
+                divider = {}
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { onTabSelected(index) },
+                        text = {
+                            Text(
+                                text = title,
+                                fontSize = 15.sp,
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                            )
+                        }
                     )
                 }
             }
         }
-    ) { paddingValues ->
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -219,7 +273,9 @@ fun RecipesScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = { Text("Search recipes here", fontSize = 14.sp, color = Color.Gray) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
@@ -232,13 +288,17 @@ fun RecipesScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.filter),
                                 contentDescription = "Filter",
-                                modifier = Modifier.size(20.dp).clickable { showFilterDialog = true }
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { showFilterDialog = true }
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Image(
                                 painter = painterResource(id = R.drawable.search),
                                 contentDescription = "Search",
-                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { /* Handle search */ }
                             )
                         }
                     }
@@ -285,13 +345,17 @@ fun RecipesScreen(
 
             if (isLoading && filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
             } else if (filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
                             text = if (searchQuery.isNotEmpty() || filterMaxTime < 120f || filterMaxCalories < 2000f || filterSkill != null || filterBudget != null)
                                 "No recipes match your filters."
@@ -302,33 +366,16 @@ fun RecipesScreen(
                 }
             } else {
                 gridItems(filteredRecipes) { recipe: Recipe ->
+                    val recipeId = recipe.recipe_id ?: ""
+                    val isSelected = selectedRecipeIds.contains(recipeId)
+
                     RecipeCardItem(
                         recipe = recipe,
-                        // 🌟 ONLY show menu for Tab 1 (My Recipes)
-                        showMenu = selectedTab == 1,
-                        isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
-                        onBookmarkClick = {
-                            // 🌟 FIX: Send the short customId instead of the long UUID
-                            authViewModel.currentUser?.customId?.let { cid ->
-                                recipe.recipe_id?.let { rid ->
-                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
-                                }
-                            }
-                        },
-                        onDeleteClick = { recipeToDelete = recipe },
-                        onEditClick = {
-                            // TODO: Navigate to Edit screen
-                        },
-                        onAddClick = {
-                            recipe.recipe_id?.let { id ->
-                                // 🌟 Navigate to Planner with the specific ID
-                                parentNavController.navigate("add_recipe_to_planner/$id")
-                            }
-                        }
+                        isSelected = isSelected,
+                        onClick = { onRecipeSelectedToggle(recipeId) }
                     )
                 }
             }
-            // 🌟 Added back the 80dp spacer to lift the Floating Action Button up
             item(span = { GridItemSpan(2) }) {
                 Spacer(modifier = Modifier.height(100.dp))
             }
@@ -362,7 +409,9 @@ fun RecipesScreen(
                 }
             },
             text = {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())) {
                     Text("Max Prep Time (mins)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Slider(
@@ -378,7 +427,9 @@ fun RecipesScreen(
                                 val newVal = it.toFloatOrNull() ?: 0f
                                 if (newVal in 0f..120f) filterMaxTime = newVal
                             },
-                            modifier = Modifier.width(70.dp).padding(start = 8.dp),
+                            modifier = Modifier
+                                .width(70.dp)
+                                .padding(start = 8.dp),
                             singleLine = true,
                             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
                         )
@@ -400,7 +451,9 @@ fun RecipesScreen(
                                 val newVal = it.toFloatOrNull() ?: 0f
                                 if (newVal in 0f..2000f) filterMaxCalories = newVal
                             },
-                            modifier = Modifier.width(80.dp).padding(start = 8.dp),
+                            modifier = Modifier
+                                .width(80.dp)
+                                .padding(start = 8.dp),
                             singleLine = true,
                             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
                         )
@@ -430,55 +483,30 @@ fun RecipesScreen(
             }
         )
     }
-
-    if (recipeToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { recipeToDelete = null },
-            title = { Text("Delete Recipe") },
-            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val rid = recipeToDelete?.recipe_id
-                        val uid = currentUserId
-                        if (rid != null && uid != null) {
-                            viewModel.deleteRecipe(rid, uid)
-                        }
-                        recipeToDelete = null
-                    }
-                ) {
-                    Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { recipeToDelete = null }) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            }
-        )
-    }
 }
 
 @Composable
 fun RecipeCardItem(
     recipe: Recipe,
-    showMenu: Boolean = false,
-    isBookmarked: Boolean = false,
-    onBookmarkClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {},
-    onEditClick: () -> Unit = {},
-    onAddClick: () -> Unit = {}
+    isSelected: Boolean, // 🌟 Determines selection layout variant
+    onClick: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth().height(260.dp)
+        // 🌟 Sets dynamic border layout indicating selected state
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp),
+        onClick = onClick
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(160.dp).background(Color(0xFFEEEEEE))) {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .background(Color(0xFFEEEEEE))) {
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
                     AsyncImage(
                         model = recipe.recipeImageUrl,
@@ -490,40 +518,30 @@ fun RecipeCardItem(
                     Image(
                         painter = painterResource(id = R.drawable.ic_image),
                         contentDescription = null,
-                        modifier = Modifier.size(40.dp).align(Alignment.Center),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .align(Alignment.Center),
                         alpha = 0.3f
                     )
                 }
 
-                if (!showMenu) {
+                // 🌟 Check badge overlay variant when card selection is active
+                if (isSelected) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(24.dp)
+                            .align(Alignment.TopEnd)
                     ) {
-                        IconButton(onClick = onBookmarkClick) {
-                            Image(
-                                painter = painterResource(
-                                    id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
-                                ),
-                                contentDescription = "Bookmark",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check), // Make sure ic_check exists in res/drawable
+                            contentDescription = "Selected",
+                            tint = Color.White,
+                            modifier = Modifier.padding(4.dp)
+                        )
                     }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.align(Alignment.TopStart).padding(10.dp).size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_recipe),
-                        contentDescription = "Add to Planner",
-                        modifier = Modifier.padding(6.dp).clickable { onAddClick() },
-                        tint = Color.Black
-                    )
                 }
             }
             Column(modifier = Modifier.padding(12.dp)) {
@@ -540,38 +558,6 @@ fun RecipeCardItem(
                         maxLines = 2,
                         modifier = Modifier.weight(1f)
                     )
-                    if (showMenu) {
-                        Box {
-                            IconButton(onClick = { expanded = true }, modifier = Modifier.size(20.dp)) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_vertical_more),
-                                    contentDescription = "Menu",
-                                    tint = Color.Black
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Edit Recipe") },
-                                    onClick = {
-                                        expanded = false
-                                        onEditClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = Color(0xFFD32F2F)) },
-                                    onClick = {
-                                        expanded = false
-                                        onDeleteClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = Color(0xFFD32F2F), modifier = Modifier.size(18.dp)) }
-                                )
-                            }
-                        }
-                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

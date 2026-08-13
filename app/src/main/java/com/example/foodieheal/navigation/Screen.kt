@@ -1,5 +1,9 @@
 package com.example.foodieheal.navigation
 
+import com.example.foodieheal.meal_planner.model.MealType
+import java.time.LocalDate
+
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -9,8 +13,9 @@ sealed class Screen(val route: String) {
         fun createRoute(recipeId: String): String = "recipe_details/$recipeId"
     }
     object Planner : Screen("planner")
-    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
-        fun createRoute(id: String) = "add_recipe_to_planner/$id"
+    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}")
+    object RecipeSelection : Screen("recipe_selection/{date}/{type}") {
+        fun createRoute(date: LocalDate, type: MealType) = "recipe_selection/$date/$type"
     }
 
     object Hiring : Screen("hiring")

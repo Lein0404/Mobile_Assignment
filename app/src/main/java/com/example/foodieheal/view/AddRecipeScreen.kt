@@ -43,8 +43,8 @@ import java.io.InputStream
 @Composable
 fun AddRecipeScreen(
     navController: NavController,
-    viewModel: RecipeViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner),
-    authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    viewModel: RecipeViewModel,
+    authViewModel: AuthViewModel
 ) {
     val context = LocalContext.current
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -63,11 +63,15 @@ fun AddRecipeScreen(
     val coroutineScope = rememberCoroutineScope()
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
-    val totalCalories = remember(ingredients.size, viewModel.availableIngredients) {
+    val totalCalories = remember {
         derivedStateOf {
             ingredients.sumOf { input ->
                 val qty = input.quantity.toDoubleOrNull() ?: 0.0
-                val ingredientData = viewModel.availableIngredients.find { it.name?.equals(input.name, ignoreCase = true) == true }
+                // 🌟 FIX: Match by BOTH name and unit to handle duplicates like Flour Tortilla
+                val ingredientData = viewModel.availableIngredients.find { 
+                    it.name?.equals(input.name, ignoreCase = true) == true &&
+                    it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
+                }
                 qty * (ingredientData?.kcal ?: 0.0)
             }.toInt()
         }
@@ -506,7 +510,10 @@ fun IngredientRow(
                                 }
                             },
                             onClick = {
-                                onUpdate(item.copy(name = ingredient.name ?: ""))
+                                onUpdate(item.copy(
+                                    name = ingredient.name ?: "",
+                                    unit = ingredient.defaultUnit ?: "pieces"
+                                ))
                                 nameExpanded = false
                             }
                         )
@@ -568,11 +575,11 @@ fun IngredientRow(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Unit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
-                    DropdownField(
+                    AddRecipeTextField(
                         value = item.unit,
-                        options = listOf("cup", "pcs", "pieces", "tsp", "tbsp"),
-                        onSelected = { onUpdate(item.copy(unit = it)) },
-                        modifier = Modifier.height(52.dp)
+                        onValueChange = { },
+                        placeholder = "-",
+                        readOnly = true
                     )
                 }
             }

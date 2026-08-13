@@ -58,8 +58,10 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             CenterAlignedTopAppBar(
                 title = { Text("Body Status", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                    if (!fromRegister) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)

@@ -156,8 +156,11 @@ fun AdminApprovalScreen(
                         unselectedTextColor = Color.Gray
                     ),
                     onClick = {
-                        // 🌟 FIX: Just call logout. MainActivity will swap screens automatically.
-                        authViewModel.logout { }
+                        authViewModel.logout {
+                            parentNavController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
                     }
                 )
             }

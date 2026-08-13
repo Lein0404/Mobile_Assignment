@@ -25,8 +25,7 @@ import androidx.core.view.WindowCompat
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
-fun HomeScreen(navController: NavController) {
-    val viewModel: AuthViewModel = viewModel()
+fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -41,7 +40,7 @@ fun HomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary) // Full header orange
+            .background(MaterialTheme.colorScheme.primary) 
     ) {
         // 1. Top Header (Orange Background)
         Box(
@@ -60,10 +59,10 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
-        // 2. White Sheet (Flat top, no radius)
+        // 2. White Sheet
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(0.dp), // Removed radius
+            shape = RoundedCornerShape(0.dp), 
             color = Color(0xFFF8F8F8)
         ) {
             Column(

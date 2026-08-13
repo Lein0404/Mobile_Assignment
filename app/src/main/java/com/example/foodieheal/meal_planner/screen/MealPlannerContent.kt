@@ -47,6 +47,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
+import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.viewmodel.RecipeViewModel
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -58,14 +61,14 @@ fun MealPlannerContent(
     totalCalories: Int,
     maxCalories: Int,
     mealPlansCache: Map<LocalDate, DailyPlan?>,
-    pagerState: androidx.compose.foundation.pager.PagerState,
+    pagerState: PagerState,
     anchorDate: LocalDate,
     onCalendarClick: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onDateShiftBackward: () -> Unit,
     onDateShiftForward: () -> Unit,
     onLoadPlanForDate: (LocalDate) -> Unit,
-    onAddMealRecipe: (LocalDate, MealType, Recipe) -> Unit,
+    onAddMealRecipe: (LocalDate, MealType) -> Unit,
     onDeleteMealRecipe: (LocalDate, MealType, Recipe) -> Unit,
     onRecipeDetails: (String) -> Unit,
     onCopyPlanClick: () -> Unit,
@@ -125,7 +128,7 @@ fun MealPlannerContent(
                 pageDate = pageDate,
                 isNetworkAvailable = isNetworkAvailable,
                 dailyPlan = dailyPlanForThisPage,
-                onAddMealRecipe = { type, recipe -> onAddMealRecipe(pageDate, type, recipe) },
+                onAddMealRecipe = { type -> onAddMealRecipe(pageDate, type) },
                 onDeleteMealRecipe = { type, recipe -> onDeleteMealRecipe(pageDate, type, recipe) },
                 onRecipeDetails = onRecipeDetails,
                 onCopyPlanClick = onCopyPlanClick
@@ -160,7 +163,7 @@ fun MealPlannerHeader(
                 Text(
                     text = stringResource(R.string.meal_planner),
                     color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.weight(1f))
@@ -286,7 +289,7 @@ fun MealPageContent(
     pageDate: LocalDate,
     isNetworkAvailable: Boolean,
     dailyPlan: DailyPlan?,
-    onAddMealRecipe: (MealType, Recipe) -> Unit,
+    onAddMealRecipe: (MealType) -> Unit,
     onDeleteMealRecipe: (MealType, Recipe) -> Unit,
     onRecipeDetails: (String) -> Unit,
     onCopyPlanClick: () -> Unit
@@ -322,85 +325,58 @@ fun MealPageContent(
                     modifier = Modifier.padding(top = 8.dp, start = 16.dp)
                 )
 
+                val sections = remember(breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes) {
+                    listOf(
+                        Triple(R.string.breakfast, breakfastRecipes, MealType.BREAKFAST),
+                        Triple(R.string.lunch, lunchRecipes, MealType.LUNCH),
+                        Triple(R.string.dinner, dinnerRecipes, MealType.DINNER),
+                        Triple(R.string.snack, snackRecipes, MealType.SNACK)
+                    )
+                }
                 Column {
-                    MealSection(
-                        title = stringResource(R.string.breakfast),
-                        recipes = breakfastRecipes,
-                        onAddClick = { onAddMealRecipe(MealType.BREAKFAST, createSampleRecipe("R001")) },
-                        onDeleteClick = { recipe -> onDeleteMealRecipe(MealType.BREAKFAST, recipe) },
-                        onRecipeDetails = onRecipeDetails,
-                    )
+                    sections.forEach { (title, recipes, type) ->
+                        MealSection(
+                            title = stringResource(title),
+                            recipes = recipes,
+                            onAddClick = { onAddMealRecipe(type) },
+                            onDeleteClick = { recipe -> onDeleteMealRecipe(type, recipe) },
+                            onRecipeDetails = onRecipeDetails,
+                            // Optional but highly recommended: Add spacing between sections
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+                }
 
-                    MealSection(
-                        title = stringResource(R.string.lunch),
-                        recipes = lunchRecipes,
-                        onAddClick = { onAddMealRecipe(MealType.LUNCH, createSampleRecipe("R002")) },
-                        onDeleteClick = { recipe -> onDeleteMealRecipe(MealType.LUNCH, recipe) },
-                        onRecipeDetails = onRecipeDetails,
-                    )
+                val isPlanEmpty = breakfastRecipes.isEmpty() && lunchRecipes.isEmpty() &&
+                        dinnerRecipes.isEmpty() && snackRecipes.isEmpty()
 
-                    MealSection(
-                        title = stringResource(R.string.dinner),
-                        recipes = dinnerRecipes,
-                        onAddClick = { onAddMealRecipe(MealType.DINNER, createSampleRecipe("R003")) },
-                        onDeleteClick = { recipe -> onDeleteMealRecipe(MealType.DINNER, recipe) },
-                        onRecipeDetails = onRecipeDetails,
-                    )
-
-                    MealSection(
-                        title = stringResource(R.string.snack),
-                        recipes = snackRecipes,
-                        onAddClick = { onAddMealRecipe(MealType.SNACK, createSampleRecipe("R004")) },
-                        onDeleteClick = { recipe -> onDeleteMealRecipe(MealType.SNACK, recipe) },
-                        onRecipeDetails = onRecipeDetails,
-                    )
-
-                    val isPlanEmpty = breakfastRecipes.isEmpty() && lunchRecipes.isEmpty() &&
-                            dinnerRecipes.isEmpty() && snackRecipes.isEmpty()
-
-                    if (!isPlanEmpty) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(70.dp)
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            onClick = onCopyPlanClick
+                if (!isPlanEmpty) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = onCopyPlanClick
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize()
+                                .background(MaterialTheme.colorScheme.tertiary),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.tertiary),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_copy_todays_plan),
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onTertiary,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                )
-                            }
+                            Text(
+                                text = stringResource(R.string.btn_copy_todays_plan),
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onTertiary,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
                         }
                     }
                 }
-                Spacer(Modifier.height(30.dp))
             }
+            Spacer(Modifier.height(30.dp))
         }
     }
 }
-
-private fun createSampleRecipe(id: String) = Recipe(
-    recipe_id = id,
-    recipeName = "Oatmeal",
-    calories = 350,
-    time = 10,
-    recipeDescription = "A quick and healthy bowl of warm oats.",
-    recipeStep = "Cook oats in milk or water.",
-    author_id = "",
-    recipeCourse = "",
-    cookingSkill = "",
-    estimatedBudget = "",
-    recipeImageUrl = "",
-    ingredients = emptyList()
-)

@@ -169,7 +169,7 @@ fun AddRecipeToPlanScreen(
                             }
                         }
                         selectedSlots.clear()
-                        snackBarHostState.showSnackbar(message = successMessage)
+//                        snackBarHostState.showSnackbar(message = successMessage)
                         onExecutionComplete()
                     }
                 }

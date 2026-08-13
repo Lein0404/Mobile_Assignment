@@ -55,8 +55,10 @@ import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
 import com.example.foodieheal.ingredients.view.IngredientsMainScreen
 import com.example.foodieheal.ingredients.view.ShoppingListScreen
+import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
+import com.example.foodieheal.meal_planner.screen.RecipesSelectingScreen
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModelFactory
 import com.example.foodieheal.view.AddRecipeScreen
@@ -73,6 +75,7 @@ import com.example.foodieheal.view.RecipesScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -102,7 +105,7 @@ class MainActivity : ComponentActivity() {
                         mealPlannerViewModel.navigationEvent.collect { route ->
                             // 1. Prevent the crash: If NavHost isn't ready, wait until the graph is attached
                             while (runCatching { navController.graph }.isFailure) {
-                                kotlinx.coroutines.delay(50.milliseconds)
+                                delay(50.milliseconds)
                             }
 
                             val currentDest = navController.currentBackStackEntry?.destination?.route
@@ -209,15 +212,15 @@ class MainActivity : ComponentActivity() {
                                 exitTransition = { fadeOut(animationSpec = tween(400)) }
                             ) {
                                 // --- AUTH ---
-                                composable(Screen.Login.route) { LoginScreen(navController) }
-                                composable(Screen.Register.route) { RegisterScreen(navController) }
+                                composable(Screen.Login.route) { LoginScreen(navController, sharedAuthViewModel) }
+                                composable(Screen.Register.route) { RegisterScreen(navController, sharedAuthViewModel) }
 
-                                // --- TABS (Manually apply innerPadding to avoid NavHost-wide resize shifts) ---
+                                // --- TABS ---
                                 composable(Screen.Home.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(navController, sharedAuthViewModel) }
                                 }
                                 composable(Screen.Recipes.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { RecipesScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { RecipesScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
 
                                 composable(Screen.Planner.route) {
@@ -227,12 +230,14 @@ class MainActivity : ComponentActivity() {
                                         onNavigateToProfile = { navController.navigate(Screen.EditBodyStatus.route) },
                                         onRecipeDetails = {recipeId -> navController.navigate(navController.navigate(
                                             Screen.RecipeDetails.createRoute(recipeId)))},
+                                        onAddMeal = { date, type ->
+                                            navController.navigate(Screen.RecipeSelection.createRoute(date = date,type = type))
+                                        }
                                     )
                                 }
 
                                 composable(Screen.AddRecipeToPlanner.route) { backStackEntry ->
                                     val recipeId = backStackEntry.arguments?.getString("recipeId")
-
                                     // Trigger fetch only if the ID is valid
                                     LaunchedEffect(recipeId) {
                                         if (!recipeId.isNullOrEmpty()) {
@@ -256,6 +261,46 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }
+                                composable(
+                                    route = Screen.RecipeSelection.route, // matches "recipe_selection/{date}/{type}"
+                                    arguments = listOf(
+                                        navArgument("date") { type = NavType.StringType },
+                                        navArgument("type") { type = NavType.StringType }
+                                    )
+                                ) { backStackEntry ->
+                                    // 🌟 Extract strings from navigation and parse them into their native types
+                                    val dateString = backStackEntry.arguments?.getString("date") ?: ""
+                                    val typeString = backStackEntry.arguments?.getString("type") ?: ""
+
+                                    // 🌟 Convert strings safely to LocalDate and MealType enum
+                                    val date: LocalDate = if (dateString.isNotEmpty()) LocalDate.parse(dateString) else LocalDate.now()
+                                    val type: MealType = try {
+                                        MealType.valueOf(typeString)
+                                    } catch (e: IllegalArgumentException) {
+                                        MealType.BREAKFAST // Fallback default if parsing fails
+                                    }
+                                    RecipesSelectingScreen(
+                                        recipeViewModel = sharedRecipeViewModel,
+                                        authViewModel = sharedAuthViewModel,
+                                        onSave = { selectedIds ->
+                                            selectedIds.forEach { recipeId ->
+                                                val recipe = sharedRecipeViewModel.recipeList.find { it.recipe_id == recipeId }
+                                                    ?: sharedRecipeViewModel.myRecipes.find { it.recipe_id == recipeId }
+                                                    ?: sharedRecipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
+
+                                                if (recipe != null) {
+                                                    mealPlannerViewModel.addRecipeToMeal(
+                                                        date = date,
+                                                        mealType = type,
+                                                        recipe = recipe
+                                                    )
+                                                }
+                                            }
+                                            navController.popBackStack()
+                                        },
+                                        onBackClick = {navController.popBackStack()}
+                                    )
+                                }
 
                                 composable(Screen.Hiring.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
@@ -266,7 +311,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 composable(Screen.Profile.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---
@@ -299,7 +344,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     }
 
-                                composable(Screen.AddRecipe.route) { AddRecipeScreen(navController) }
+                                composable(Screen.AddRecipe.route) { AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
                                 composable(Screen.ChangePassword.route) { ChangePasswordScreen(navController) }
                                 composable(
@@ -331,8 +376,6 @@ class MainActivity : ComponentActivity() {
                                     val id = backStackEntry.arguments?.getString("id") ?: ""
                                     AdminIngredientRequestFormScreen(navController, id)
                                 }
-
-                                composable(Screen.AdminChefScreen.route) { AdminApprovalScreen(navController) }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
                                 composable("chefDetail/{chefId}") {
                                     ChefDetailScreen(it.arguments?.getString("chefId") ?: "", navController)

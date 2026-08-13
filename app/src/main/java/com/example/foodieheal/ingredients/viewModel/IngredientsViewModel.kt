@@ -121,14 +121,18 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun addToShoppingList(ingredient: Ingredients) {
+        addToShoppingList(ingredient.ingredientId, ingredient.ingredientName)
+    }
+
+    fun addToShoppingList(ingredientId: String, ingredientName: String) {
         viewModelScope.launch {
             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
             if (userId.isEmpty()) return@launch
 
             val entity = ShoppingListEntity(
                 userId = userId,
-                ingredientId = ingredient.ingredientId,
-                ingredientName = ingredient.ingredientName,
+                ingredientId = ingredientId,
+                ingredientName = ingredientName,
                 isChecked = false
             )
             shoppingRepo.insertItem(entity)

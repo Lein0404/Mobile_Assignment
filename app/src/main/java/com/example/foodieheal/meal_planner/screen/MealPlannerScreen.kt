@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
+import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.WeeklyCalendarState
 import com.example.foodieheal.viewmodel.AuthViewModel
@@ -39,12 +41,12 @@ fun MealPlannerScreen(
     mealPlannerViewModel: MealPlannerViewModel,
     authViewModel: AuthViewModel,
     onNavigateToProfile: () -> Unit,
-    onRecipeDetails: (String) -> Unit
+    onRecipeDetails: (String) -> Unit,
+    onAddMeal:(LocalDate, MealType)->Unit
 ) {
     val context = LocalContext.current
 
-    // 🌟 TRACK ACTIVE TAB: 0 = Planner, 1 = Template
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
@@ -175,7 +177,6 @@ fun MealPlannerScreen(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
         topBar = {
-            // Structural Header managing your interactive tabs layout perfectly
             MealPlannerHeader(
                 selectedTabIndex = selectedTabIndex,
                 onTabSelected = { selectedTabIndex = it },
@@ -223,7 +224,7 @@ fun MealPlannerScreen(
                     onLoadPlanForDate = { date ->
                         if (isNetworkAvailable) mealPlannerViewModel.loadPlanForDate(date)
                     },
-                    onAddMealRecipe = { date, type, recipe -> mealPlannerViewModel.addRecipeToMeal(date, type, recipe) },
+                    onAddMealRecipe = { date, type -> onAddMeal(date,type) },
                     onDeleteMealRecipe = { date, type, recipe -> mealPlannerViewModel.deleteRecipeFromMeal(date, type, recipe) },
                     onRecipeDetails = onRecipeDetails,
                     onCopyPlanClick = { showPasteDatePicker = true },
