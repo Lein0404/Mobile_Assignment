@@ -162,7 +162,15 @@ fun IngredientDetailScreen(
                             if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
                                 IconButton(onClick = {
                                     if (isRequest) {
-                                        // Accepted request logic
+                                        requestDetail?.request?.let { request ->
+                                            val productionId = request.ingredientId
+                                            if (productionId != null) {
+                                                ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
+                                                Toast.makeText(context, "${request.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Error: Production ID missing for this request", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     } else {
                                         ingredientsUiState.ingredientDetail?.ingredient?.let {
                                             ingredientsViewModel.addToShoppingList(it)

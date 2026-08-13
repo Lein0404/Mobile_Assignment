@@ -201,7 +201,8 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
                     ingredientImage = imageUrl,
                     requestStatus = Status.APPROVED,
                     rejectedReason = null, // Clear if it was previously rejected
-                    adminNote = adminNote
+                    adminNote = adminNote,
+                    ingredientId = ingredientId
                 )
 
                 val unitRequestIds = repository.getNextUnitRequestIds(state.unitRows.size)

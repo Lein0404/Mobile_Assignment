@@ -15,6 +15,7 @@ data class IngredientRequest(
     @SerialName("request_status") val requestStatus: Status,
     @SerialName("rejected_reason") val rejectedReason: String? = null,
     @SerialName("admin_note") val adminNote: String? = null,
+    @SerialName("ingredient_id") val ingredientId: String? = null,
     @SerialName("datetime_created") val datetimeCreated: String? = null
 )
 
