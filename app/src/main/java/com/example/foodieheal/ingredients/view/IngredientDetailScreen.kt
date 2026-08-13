@@ -106,7 +106,9 @@ fun IngredientDetailScreen(
                 CircularProgressIndicator()
             }
         } else {
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -241,35 +243,43 @@ fun IngredientDetailScreen(
                     }
                 }
 
-                // Action Buttons for Pending Request (only when online)
-                if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable) {
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Button(
-                            onClick = { showDeleteDialog = true },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+
+                // Floating Action Buttons for Pending Request (only when online)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 30.dp),
+                    verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.delete_request),
-                                style = MaterialTheme.typography.labelLarge
+                            Button(
+                                onClick = { showDeleteDialog = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ),
+                                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.delete_request),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
+                            PrimaryButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
+                                },
+                                textID = R.string.edit_request
                             )
                         }
-                        PrimaryButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { 
-                                navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
-                            },
-                            textID = R.string.edit_request
-                        )
                     }
                 }
             }

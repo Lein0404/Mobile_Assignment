@@ -87,7 +87,9 @@ fun AdminIngredientDetailScreen(
         } else {
             requestItem?.let { info ->
                 val request = info.request
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -200,38 +202,49 @@ fun AdminIngredientDetailScreen(
                     }
 
                     // 7. Admin Action Buttons (for Pending)
-                    if (request.requestStatus == Status.PENDING) {
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Button(
-                                onClick = { showRejectDialog = true },
-                                modifier = Modifier.weight(0.45f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ),
-                                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 30.dp),
+                        verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        if (request.requestStatus == Status.PENDING) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Text(
-                                    text = stringResource(R.string.reject),
-                                    style = MaterialTheme.typography.labelLarge
+                                Button(
+                                    onClick = { showRejectDialog = true },
+                                    modifier = Modifier.weight(0.45f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.reject),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                                PrimaryButton(
+                                    modifier = Modifier.weight(0.55f),
+                                    onClick = {
+                                        navController.navigate(Screen.AdminIngredientReview.createRoute(requestId))
+                                    },
+                                    textID = R.string.review_approve
                                 )
                             }
-                            PrimaryButton(
-                                modifier = Modifier.weight(0.55f),
-                                onClick = {
-                                    navController.navigate(Screen.AdminIngredientReview.createRoute(requestId))
-                                },
-                                textID = R.string.review_approve
-                            )
                         }
                     }
                 }
-            } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            } ?:
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 Text("Request not found")
             }
         }

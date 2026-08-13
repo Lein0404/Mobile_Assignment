@@ -30,6 +30,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminIngredientRequestFormScreen(
     navController: NavController,
@@ -59,41 +60,38 @@ fun AdminIngredientRequestFormScreen(
         viewModel.populateFormForReview(requestId)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                        Text(
-                            text = "Review Ingredient Request",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Review Ingredient Request",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = "Back"
                         )
                     }
-                }
-            }
-
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        containerColor = Color(0xFFF8F8F8)
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -196,31 +194,38 @@ fun AdminIngredientRequestFormScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(100.dp))
             }
-        }
 
-        // Floating Approve Button
-        Button(
-            onClick = { showApproveDialog = true },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            enabled = !formState.isSubmitting && requestDetail != null && !isLoading
-        ) {
-            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
-                Text(
-                    text = "APPROVE INGREDIENT REQUEST",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
+            // Floating Approve Button
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Button(
+                    onClick = { showApproveDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    enabled = !formState.isSubmitting && requestDetail != null && !isLoading
+                ) {
+                    if (formState.isSubmitting || (isLoading && requestDetail == null)) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(
+                            text = "APPROVE INGREDIENT REQUEST",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }

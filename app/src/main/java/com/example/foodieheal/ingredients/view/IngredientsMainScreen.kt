@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -81,25 +84,34 @@ fun IngredientsMainScreen(navController: NavController, initialTab: Int = -1) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8F8F8))
-        ) {
-            // Top Bar & Tabs Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
+    Scaffold(
+        topBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White
             ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Text(
-                        text = "Ingredients",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
+                Column {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "Ingredients",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White
+                        )
                     )
 
                     TabRow(
@@ -134,46 +146,52 @@ fun IngredientsMainScreen(navController: NavController, initialTab: Int = -1) {
                     }
                 }
             }
-
-            // Tab Content Area
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f)
-            ) {
-                if (uiState.selectedTab == 0) {
-                    IngredientsExistingScreen(
-                        viewModel = viewModel,
-                        uiState = uiState,
-                        navController = navController,
-                        onAddToCart = { ingredient ->
-                            viewModel.addToShoppingList(ingredient)
-                            Toast.makeText(context, "${ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                } else {
-                    IngredientRequestsScreen(
-                        viewModel = requestViewModel,
-                        uiState = requestUiState,
-                        navController = navController
+        },
+        floatingActionButton = {
+            // Floating Action Button for Requests tab (only when online)
+            if (uiState.selectedTab == 1 && requestUiState.isNetworkAvailable) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                    /*shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),*/
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .offset(y = (-32).dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_outline_add),
+                        contentDescription = "New Request",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
-        }
-
-        // Floating Action Button for Requests tab (only when online)
-        if (uiState.selectedTab == 1 && requestUiState.isNetworkAvailable) {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(28.dp),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .padding(bottom = 16.dp) // Adjust for bottom nav if needed
-            ) {
-                Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = "New Request")
+        },
+        containerColor = Color(0xFFF8F8F8)
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (uiState.selectedTab == 0) {
+                IngredientsExistingScreen(
+                    viewModel = viewModel,
+                    uiState = uiState,
+                    navController = navController,
+                    onAddToCart = { ingredient ->
+                        viewModel.addToShoppingList(ingredient)
+                        Toast.makeText(context, "${ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            } else {
+                IngredientRequestsScreen(
+                    viewModel = requestViewModel,
+                    uiState = requestUiState,
+                    navController = navController
+                )
             }
         }
     }

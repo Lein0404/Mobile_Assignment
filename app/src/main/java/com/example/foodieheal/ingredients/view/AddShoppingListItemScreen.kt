@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddShoppingListItemScreen(
     navController: NavController,
@@ -42,45 +45,41 @@ fun AddShoppingListItemScreen(
     // Track selected ingredients
     val selectedIngredients = remember { mutableStateListOf<IngredientItem>() }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8F8F8))
-        ) {
-            // Header with Back Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                        Text(
-                            text = "Add to Shopping List",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Add to Shopping List",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
                         )
                     }
-                }
-            }
-
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        containerColor = Color(0xFFF8F8F8)
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -159,44 +158,51 @@ fun AddShoppingListItemScreen(
                     }
                 }
             }
-        }
 
-        // Bottom "Add n Item(s) to Shopping List" button
-        Button(
-            onClick = {
-                if (selectedIngredients.isNotEmpty()) {
-                    val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
-                    val entities = selectedIngredients.map { item ->
-                        ShoppingListEntity(
-                            userId = userId,
-                            ingredientId = item.ingredient.ingredientId,
-                            ingredientName = item.ingredient.ingredientName,
-                            isChecked = false
-                        )
-                    }
-                    shoppingListViewModel.addItems(entities)
-                    Toast.makeText(context, "${entities.size} item(s) added to Shopping List", Toast.LENGTH_SHORT).show()
-                    navController.popBackStack()
+            // Floating Bottom "Add n Item(s) to Shopping List" button aligned to the bottom of the Box
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Button(
+                    onClick = {
+                        if (selectedIngredients.isNotEmpty()) {
+                            val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+                            val entities = selectedIngredients.map { item ->
+                                ShoppingListEntity(
+                                    userId = userId,
+                                    ingredientId = item.ingredient.ingredientId,
+                                    ingredientName = item.ingredient.ingredientName,
+                                    isChecked = false
+                                )
+                            }
+                            shoppingListViewModel.addItems(entities)
+                            Toast.makeText(context, "${entities.size} item(s) added to Shopping List", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = Color.Gray
+                    ),
+                    enabled = selectedIngredients.isNotEmpty()
+                ) {
+                    Text(
+                        text = "Add ${selectedIngredients.size} Item(s) to Shopping List",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
                 }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = Color.Gray
-            ),
-            enabled = selectedIngredients.isNotEmpty()
-        ) {
-            Text(
-                text = "Add ${selectedIngredients.size} Item(s) to Shopping List",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.White
-            )
+            }
         }
     }
 }

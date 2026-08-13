@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +35,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngredientRequestFormScreen(
     navController: NavController,
@@ -67,44 +70,42 @@ fun IngredientRequestFormScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { 
-                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                            }
-                        }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = if (requestId == null) "Add Ingredient" else "Update Ingredient",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { 
+                        navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                            popUpTo(Screen.Ingredients.route) { this.inclusive = true }
                         }
-                        Text(
-                            text = if (requestId == null) "Add Ingredient" else "Update Ingredient",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
                         )
                     }
-                }
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        containerColor = Color(0xFFF8F8F8)
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             // Offline gate: show message instead of form
             if (!uiState.isNetworkAvailable) {
                 Box(
@@ -126,210 +127,214 @@ fun IngredientRequestFormScreen(
                         )
                     }
                 }
-                return@Column
-            }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                ) {
+                    // 1. Cloudinary Upload
+                    CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
+                    Spacer(Modifier.height(16.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
-                // 1. Cloudinary Upload
-                CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
-                Spacer(Modifier.height(16.dp))
-
-                // 2. Ingredient Name
-                CommonInputField(
-                    value = formState.ingredientName,
-                    onValueChange = { viewModel.updateFormName(it) },
-                    textId = R.string.ingredient_name,
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = formState.nameError != null
-                )
-                if (formState.nameError != null) {
-                    Text(
-                        text = formState.nameError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    // 2. Ingredient Name
+                    CommonInputField(
+                        value = formState.ingredientName,
+                        onValueChange = { viewModel.updateFormName(it) },
+                        textId = R.string.ingredient_name,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = formState.nameError != null
                     )
-                }
-                Spacer(Modifier.height(16.dp))
+                    if (formState.nameError != null) {
+                        Text(
+                            text = formState.nameError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
 
-                // 3. Ingredient Category
-                LargeSearchableDropdownMenu(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.category),
-                    fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
-                    selectedOption = formState.category,
-                    onItemSelected = { viewModel.updateFormCategory(it) },
-                    selectedItemToString = { it.categoryName },
-                    placeholder = "e.g. Vegetables",
-                    // TODO: placeholderTextStyle
-                    options = IngredientCategory.entries,
-                    drawItem = { item, selected, itemEnabled, onClick ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = itemEnabled, onClick = onClick)
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = item.categoryName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Black
+                    // 3. Ingredient Category
+                    LargeSearchableDropdownMenu(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = stringResource(R.string.category),
+                        fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
+                        selectedOption = formState.category,
+                        onItemSelected = { viewModel.updateFormCategory(it) },
+                        selectedItemToString = { it.categoryName },
+                        placeholder = "e.g. Vegetables",
+                        options = IngredientCategory.entries,
+                        drawItem = { item, selected, itemEnabled, onClick ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = itemEnabled, onClick = onClick)
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = item.categoryName,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Black
+                                )
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        )
+                    )
+                    if (formState.categoryError != null) {
+                        Text(
+                            text = formState.categoryError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+                    // 4. Description
+                    CommonInputField(
+                        value = formState.description,
+                        onValueChange = { viewModel.updateFormDescription(it) },
+                        textId = R.string.description,
+                        modifier = Modifier.height(200.dp).fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 8,
+                        isError = formState.descriptionError != null
+                    )
+                    if (formState.descriptionError != null) {
+                        Text(
+                            text = formState.descriptionError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+                    // 5. Calorie Information (Dynamic Rows)
+                    Text(
+                        text = stringResource(R.string.calorie_information),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    if (formState.unitRowsError != null) {
+                        Text(
+                            text = formState.unitRowsError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    if (availableUnits.isNotEmpty()) {
+                        formState.unitRows.forEachIndexed { index, row ->
+                            UnitRow(
+                                index = index,
+                                selectedUnit = row.selectedUnit,
+                                calories = row.calories,
+                                availableUnits = availableUnits,
+                                onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
+                                onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
+                                unitError = row.unitError,
+                                caloriesError = row.caloriesError
                             )
                         }
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    )
-                )
-                if (formState.categoryError != null) {
-                    Text(
-                        text = formState.categoryError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
+                    }
 
-                // 4. Description
-                CommonInputField(
-                    value = formState.description,
-                    onValueChange = { viewModel.updateFormDescription(it) },
-                    textId = R.string.description,
-                    modifier = Modifier.height(200.dp).fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 8,
-                    isError = formState.descriptionError != null
-                )
-                if (formState.descriptionError != null) {
-                    Text(
-                        text = formState.descriptionError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TextButton(
+                        onClick = { viewModel.addUnitRow() },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ){
+                            Icon(
+                                painter = painterResource(R.drawable.ic_outline_add),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text("Add Unit")
+                        }
+                    }
 
-                // 5. Calorie Information (Dynamic Rows)
-                Text(
-                    text = stringResource(R.string.calorie_information),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                if (formState.unitRowsError != null) {
-                    Text(
-                        text = formState.unitRowsError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-
-                if (availableUnits.isNotEmpty()) {
-                    formState.unitRows.forEachIndexed { index, row ->
-                        UnitRow(
-                            index = index,
-                            selectedUnit = row.selectedUnit,
-                            calories = row.calories,
-                            availableUnits = availableUnits,
-                            onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
-                            unitError = row.unitError,
-                            caloriesError = row.caloriesError
+                    // General error message
+                    if (formState.errorMessage != null) {
+                        Text(
+                            text = formState.errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
                         )
                     }
-                } else {
-                    Box(
+
+                    Spacer(modifier = Modifier.height(100.dp)) // Extra space to scroll past FAB
+                }
+
+                // Floating Submission Button at the bottom center of the Box
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                                    cloudinaryViewModel.uploadImage(context)
+                                } else {
+                                    cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
+                                }
+
+                                viewModel.submitRequest(
+                                    imageUrl = imageUrl,
+                                    onComplete = {
+                                        Toast.makeText(context, if (requestId == null) "Request submitted successfully" else "Request updated successfully", Toast.LENGTH_SHORT).show()
+                                        navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                            popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                                        }
+                                    }
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        enabled = !formState.isSubmitting
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                TextButton(
-                    onClick = { viewModel.addUnitRow() },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ){
-                        Icon(
-                            painter = painterResource(R.drawable.ic_outline_add),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text("Add Unit")
-                    }
-                }
-
-                // General error message
-                if (formState.errorMessage != null) {
-                    Text(
-                        text = formState.errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(100.dp)) // Extra space for FAB
-            }
-        }
-
-        // Floating Submission Button
-        Button(
-            onClick = {
-                // Trigger coroutine manually (manually = user action, e.g. onClick)
-                scope.launch {
-                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
-                        cloudinaryViewModel.uploadImage(context)
-                    } else {
-                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
-                    }
-
-                    viewModel.submitRequest(
-                        imageUrl = imageUrl,
-                        onComplete = {
-                            Toast.makeText(context, if (requestId == null) "Request submitted successfully" else "Request updated successfully", Toast.LENGTH_SHORT).show()
-                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                            }
+                        if (formState.isSubmitting) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text(
+                                text = if (requestId == null) "Request New Ingredient" else "Update Request",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
                         }
-                    )
+                    }
                 }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            enabled = !formState.isSubmitting
-        ) {
-            if (formState.isSubmitting) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
-                Text(
-                    text = if (requestId == null) "Request New Ingredient" else "Update Request",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
             }
         }
     }
@@ -428,4 +433,3 @@ fun UnitRow(
         }
     }
 }
-
