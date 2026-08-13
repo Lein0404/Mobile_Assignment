@@ -56,7 +56,7 @@ class RecipeRepository(
     suspend fun toggleBookmark(userId: String, recipeId: String, isBookmarked: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             if (isBookmarked) {
-                // Remove bookmark
+                // Remove bookmark matching BOTH user and recipe
                 supabaseClient.postgrest.from("recipe_bookmarks").delete {
                     filter {
                         eq("user_id", userId)
@@ -64,8 +64,12 @@ class RecipeRepository(
                     }
                 }
             } else {
-                // Add bookmark
-                val data = mapOf("user_id" to userId, "recipe_id" to recipeId)
+                // 🌟 FIX: Use a simple Map with exact column names. 
+                // Ensure userId is the SUPABASE UUID string.
+                val data = mapOf(
+                    "user_id" to userId,
+                    "recipe_id" to recipeId
+                )
                 supabaseClient.postgrest.from("recipe_bookmarks").insert(data)
             }
             Unit
@@ -74,12 +78,23 @@ class RecipeRepository(
 
     suspend fun getBookmarkedRecipes(userId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            // Fetch bookmarks and join with recipes table
-            val response = supabaseClient.postgrest.from("recipe_bookmarks")
-                .select(io.github.jan.supabase.postgrest.query.Columns.raw("recipes(*)")) {
+            // 1. Fetch the list of recipe IDs this user has bookmarked
+            val idResponse = supabaseClient.postgrest.from("recipe_bookmarks")
+                .select(io.github.jan.supabase.postgrest.query.Columns.list("recipe_id")) {
                     filter { eq("user_id", userId) }
                 }
-            response.decodeList<BookmarkJoin>().map { it.recipes }
+            val bookmarkedIds = idResponse.decodeList<BookmarkId>().map { it.recipe_id }
+
+            if (bookmarkedIds.isEmpty()) return@runCatching emptyList<Recipe>()
+
+            // 2. Fetch the actual recipe details from the main recipes table
+            val recipeResponse = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter {
+                        isIn("recipe_id", bookmarkedIds)
+                    }
+                }
+            recipeResponse.decodeList<Recipe>()
         }
     }
 
@@ -125,3 +140,9 @@ data class BookmarkJoin(val recipes: Recipe)
 
 @kotlinx.serialization.Serializable
 data class BookmarkId(val recipe_id: String)
+
+@kotlinx.serialization.Serializable
+data class RecipeBookmark(
+    val user_id: String,
+    val recipe_id: String
+)

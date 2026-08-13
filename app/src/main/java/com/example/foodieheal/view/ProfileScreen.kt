@@ -60,6 +60,14 @@ fun ProfileScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.bookmarkMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var showBigImage by remember { mutableStateOf(false) }
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
@@ -152,6 +160,9 @@ fun ProfileScreen(
     ) {
         Scaffold(
             containerColor = Color.White,
+            // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Column(
                     modifier = Modifier
@@ -318,7 +329,11 @@ fun ProfileScreen(
                                             unfocusedBorderColor = Color.Transparent
                                         ),
                                         trailingIcon = {
-                                            Icon(painterResource(id = R.drawable.search), null, modifier = Modifier.size(20.dp))
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.search),
+                                                contentDescription = "Search",
+                                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
+                                            )
                                         }
                                     )
                                     
@@ -379,7 +394,19 @@ fun ProfileScreen(
                             if (selectedBookmarkType == 0) {
                                 val filtered = bookmarkedRecipes.filter { it.recipeName.contains(searchQuery, true) && it.recipeCourse == selectedCourse }
                                 gridItems(filtered) { recipe ->
-                                    RecipeCardItem(recipe = recipe, isBookmarked = true)
+                                    // 🌟 Enable bookmark click to allow removing from bookmarks
+                                    RecipeCardItem(
+                                        recipe = recipe, 
+                                        isBookmarked = true,
+                                        onBookmarkClick = {
+                                            // 🌟 FIX: Send short customId instead of long UUID
+                                            user?.customId?.let { cid ->
+                                                recipe.recipe_id?.let { rid -> 
+                                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                                }
+                                            }
+                                        }
+                                    )
                                 }
                             } else {
                                 gridItems(bookmarkedChefs) { chef ->
@@ -388,7 +415,7 @@ fun ProfileScreen(
                             }
                         }
                         
-                        item(span = { GridItemSpan(2) }) { Spacer(modifier = Modifier.height(80.dp)) }
+                        // 🌟 Removed the extra 80dp spacer to fix the empty space issue at the bottom
                     }
                 }
             }
