@@ -34,7 +34,10 @@ import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Status
+import com.example.foodieheal.ingredients.viewModel.IngredientItem
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestItem
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestUiState
+import com.example.foodieheal.ingredients.viewModel.IngredientsUiState
 import com.example.foodieheal.ui.components.StatusBadge
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 

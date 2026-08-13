@@ -26,7 +26,7 @@ import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.model.IngredientItem
+import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 

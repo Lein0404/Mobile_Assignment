@@ -13,6 +13,15 @@ import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+data class ShoppingListUiState(
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val items: List<ShoppingListItem> = emptyList(),
+    val filteredItems: List<ShoppingListItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = IngredientsDatabase.getInstance(application)

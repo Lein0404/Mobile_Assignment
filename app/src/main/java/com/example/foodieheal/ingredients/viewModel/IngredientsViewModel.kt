@@ -13,6 +13,34 @@ import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+data class IngredientsUiState(
+    val selectedTab: Int = 0,
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val ingredients: List<IngredientItem> = emptyList(),
+    val filteredIngredients: List<IngredientItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val ingredientDetail: IngredientDetailInfo? = null,
+    val errorMessage: String? = null
+)
+
+data class IngredientItem(
+    val ingredient: Ingredients,
+    val calorieSummary: String = ""
+)
+
+data class IngredientDetailInfo(
+    val ingredient: Ingredients,
+    val calorieEntries: List<CalorieEntry> = emptyList(),
+    val calorieSummary: String = ""
+)
+
+data class CalorieEntry(
+    val calories: Double,
+    val quantity: Double,
+    val unitName: String
+)
+
 class IngredientsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = IngredientsDatabase.getInstance(application)
@@ -143,4 +171,3 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 }
-

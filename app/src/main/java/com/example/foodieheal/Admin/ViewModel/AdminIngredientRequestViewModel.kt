@@ -5,12 +5,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.model.IngredientRequest
-import com.example.foodieheal.ingredients.model.IngredientRequestFormUiState
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestFormUiState
 import com.example.foodieheal.ingredients.model.IngredientUnits
 import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
 import com.example.foodieheal.ingredients.model.Ingredients
-import com.example.foodieheal.ingredients.model.UnitRowState
+import com.example.foodieheal.ingredients.viewModel.UnitRowState
 import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
