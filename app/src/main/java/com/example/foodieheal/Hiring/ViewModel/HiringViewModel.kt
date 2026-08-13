@@ -475,6 +475,7 @@ class HiringViewModel : ViewModel() {
                         // Return chef copy with calculated rating
                         chef.copy(averagerating = avgRating)
                     }
+                    .sortedByDescending { it.averagerating ?: 0.0 }
 
                 Log.d("SupabaseChef", "Successfully loaded ${chefs.size} chefs.")
                 chefList = processedChefs

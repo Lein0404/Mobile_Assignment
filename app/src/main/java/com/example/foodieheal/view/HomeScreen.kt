@@ -186,6 +186,7 @@ fun ChefListSection(
 
         // 4. Data State
         else -> {
+
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
