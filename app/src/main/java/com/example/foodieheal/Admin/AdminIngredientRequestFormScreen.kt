@@ -47,17 +47,22 @@ fun AdminIngredientRequestFormScreen(
     // TODO
     val errorMessage = formState.errorMessage
     var showErrorDialog by remember { mutableStateOf(false) }
+    var showApproveDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             showErrorDialog = true
         }
     }
-    
-    var showApproveDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(requestId) {
         viewModel.populateFormForReview(requestId)
+    }
+
+    LaunchedEffect(formState.imageUrl) {
+        formState.imageUrl?.let {
+            cloudinaryViewModel.setExistingImageUrl(it)
+        }
     }
 
     Scaffold(
@@ -107,8 +112,17 @@ fun AdminIngredientRequestFormScreen(
                     value = formState.ingredientName,
                     onValueChange = { viewModel.updateFormName(it) },
                     textId = R.string.ingredient_name,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = formState.nameError != null
                 )
+                if (formState.nameError != null) {
+                    Text(
+                        text = formState.nameError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
                 Spacer(Modifier.height(16.dp))
 
                 // 3. Category
@@ -140,6 +154,14 @@ fun AdminIngredientRequestFormScreen(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     )
                 )
+                if (formState.categoryError != null) {
+                    Text(
+                        text = formState.categoryError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
                 Spacer(Modifier.height(16.dp))
 
                 // 4. Description
@@ -149,8 +171,17 @@ fun AdminIngredientRequestFormScreen(
                     textId = R.string.description,
                     modifier = Modifier.height(200.dp).fillMaxWidth(),
                     singleLine = false,
-                    maxLines = 8
+                    maxLines = 8,
+                    isError = formState.descriptionError != null
                 )
+                if (formState.descriptionError != null) {
+                    Text(
+                        text = formState.descriptionError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
                 Spacer(Modifier.height(16.dp))
 
                 // 5. Calorie Information
@@ -159,6 +190,14 @@ fun AdminIngredientRequestFormScreen(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+                if (formState.unitRowsError != null) {
+                    Text(
+                        text = formState.unitRowsError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
 
                 if (availableUnits.isNotEmpty()) {
@@ -169,7 +208,9 @@ fun AdminIngredientRequestFormScreen(
                             calories = row.calories,
                             availableUnits = availableUnits,
                             onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null
+                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
+                            unitError = row.unitError,
+                            caloriesError = row.caloriesError
                         )
                     }
                 } else {
@@ -188,8 +229,15 @@ fun AdminIngredientRequestFormScreen(
                     onClick = { viewModel.addUnitRow() },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)){
-                        Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ){
+                        Icon(
+                            painter = painterResource(R.drawable.ic_outline_add),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
                         Text("Add Unit")
                     }
                 }
@@ -206,7 +254,11 @@ fun AdminIngredientRequestFormScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
                 Button(
-                    onClick = { showApproveDialog = true },
+                    // onClick = { onApproveClick() },
+                    onClick = {
+                        if (viewModel.validateForm()) { showApproveDialog = true }
+                        else { Toast.makeText(context, "Please fix the errors in the form", Toast.LENGTH_SHORT).show() }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)

@@ -107,12 +107,11 @@ fun IngredientDetailScreen(
             }
         } else {
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
                         .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(rememberScrollState())
                 ) {
@@ -248,7 +247,7 @@ fun IngredientDetailScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 30.dp),
+                        .padding(bottom = 16.dp),
                     verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){

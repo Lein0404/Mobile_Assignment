@@ -55,7 +55,6 @@ fun IngredientRequestFormScreen(
     
     val scope = rememberCoroutineScope()
 
-    // Triggered automatically
     LaunchedEffect(requestId) {
         if (requestId != null) {
             viewModel.populateFormForEdit(requestId)

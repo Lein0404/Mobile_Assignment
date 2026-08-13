@@ -147,6 +147,8 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
         adminNote: String?,
         onComplete: () -> Unit
     ) {
+        if (!validateForm()) return
+
         val state = _formState.value
         if (state.requestId == null) {
             _formState.update { it.copy(errorMessage = "Error: Request ID is missing") }
@@ -226,14 +228,14 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
     }
 
     // Reuse form logic from the main VM if possible, but keeping it simple here
-    fun updateFormName(name: String) = _formState.update { it.copy(ingredientName = name) }
-    fun updateFormCategory(category: IngredientCategory) = _formState.update { it.copy(category = category) }
-    fun updateFormDescription(desc: String) = _formState.update { it.copy(description = desc) }
-    fun addUnitRow() = _formState.update { it.copy(unitRows = it.unitRows + UnitRowState()) }
+    fun updateFormName(name: String) = _formState.update { it.copy(ingredientName = name, nameError = null) }
+    fun updateFormCategory(category: IngredientCategory) = _formState.update { it.copy(category = category, categoryError = null) }
+    fun updateFormDescription(desc: String) = _formState.update { it.copy(description = desc, descriptionError = null) }
+    fun addUnitRow() = _formState.update { it.copy(unitRows = it.unitRows + UnitRowState(), unitRowsError = null) }
     fun updateUnitRow(index: Int, unit: Units?, calories: String) = _formState.update { state ->
         val newList = state.unitRows.toMutableList()
-        newList[index] = newList[index].copy(selectedUnit = unit, calories = calories)
-        state.copy(unitRows = newList)
+        newList[index] = newList[index].copy(selectedUnit = unit, calories = calories, unitError = null, caloriesError = null)
+        state.copy(unitRows = newList, unitRowsError = null)
     }
     fun removeUnitRow(index: Int) = _formState.update { state ->
         if (state.unitRows.size > 1) {
@@ -241,6 +243,67 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
             newList.removeAt(index)
             state.copy(unitRows = newList)
         } else state
+    }
+
+    /**
+     * Validates all form fields and returns true if the form is valid.
+     * Sets per-field error messages on the form state if invalid.
+     */
+    fun validateForm(): Boolean {
+        val state = _formState.value
+        var isValid = true
+
+        val nameError = if (state.ingredientName.isBlank()) {
+            isValid = false
+            "Ingredient name is required"
+        } else null
+
+        val categoryError = if (state.category == null) {
+            isValid = false
+            "Category is required"
+        } else null
+
+        val descriptionError = if (state.description.isBlank()) {
+            isValid = false
+            "Description is required"
+        } else null
+
+        // Validate unit rows: at least one must be fully filled
+        val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
+        val unitRowsError = if (!hasAtLeastOneFilledRow) {
+            isValid = false
+            "At least one calorie information entry is required"
+        } else null
+
+        // Per-row validation for partially filled rows
+        val validatedRows = state.unitRows.map { row ->
+            val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
+                isValid = false
+                "Serving unit is required"
+            } else null
+
+            val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
+                isValid = false
+                "Calories value is required"
+            } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
+                isValid = false
+                "Must be a valid number"
+            } else null
+
+            row.copy(unitError = unitError, caloriesError = caloriesError)
+        }
+
+        _formState.update {
+            it.copy(
+                nameError = nameError,
+                categoryError = categoryError,
+                descriptionError = descriptionError,
+                unitRowsError = unitRowsError,
+                unitRows = validatedRows
+            )
+        }
+
+        return isValid
     }
 
     fun clearError() {
