@@ -1,127 +1,97 @@
 package com.example.foodieheal.meal_planner.data
 
+import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.model.PlanCategory
+import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.model.WeeklyPlanEntity
-import com.example.foodieheal.meal_planner.model.WeeklyPlanMealRoomEntity
-import com.example.foodieheal.meal_planner.model.WeeklyPlanRoomEntity
+import com.example.foodieheal.meal_planner.model.toEntity
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 
-class PlanRepository(private val planDao: PlanDao) {
+class PlanRepository {
+
+    private val postgrest = SupabaseClient.client.from("weekly_plans")
 
     /**
-     * Saves a complete WeeklyPlanEntity across both relational tables safely.
+     * Inserts a new WeeklyPlanEntity into Supabase.
+     */
+    suspend fun insertPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
+        postgrest.insert(planEntity)
+    }
+
+    /**
+     * Saves or updates a complete WeeklyPlanEntity in Supabase.
      */
     suspend fun saveWeeklyPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
-        val metadata = WeeklyPlanRoomEntity(
-            planId = planEntity.planId,
-            planName = planEntity.planName,
-            userId = planEntity.userId,
-            category = planEntity.category.dbKey,
-            weekStartDateString = planEntity.weekStartDateString
-        )
-
-        // Flatten Map<String, List<String>> into a database friendly List of rows
-        val mealRows = planEntity.dailyPlans.flatMap { (dateStr, recipeIds) ->
-            recipeIds.map { recipeId ->
-                WeeklyPlanMealRoomEntity(
-                    planId = planEntity.planId,
-                    dateString = dateStr,
-                    recipeId = recipeId
-                )
-            }
-        }
-
-        planDao.insertFullWeeklyPlan(metadata, mealRows)
+        postgrest.upsert(planEntity)
     }
 
     /**
-     * Retrieves a unified WeeklyPlanEntity by its ID.
+     * Retrieves a WeeklyPlanEntity by its ID.
      */
     suspend fun getWeeklyPlanById(planId: String): WeeklyPlanEntity? = withContext(Dispatchers.IO) {
-        val meta = planDao.getPlanMetadata(planId) ?: return@withContext null
-        val mealRows = planDao.getMealsForPlan(planId)
-
-        // Reconstruct the nested Map<String, List<String>> from individual rows
-        val dailyPlansMap = mealRows
-            .groupBy { it.dateString }
-            .mapValues { entry -> entry.value.map { it.recipeId } }
-
-        WeeklyPlanEntity(
-            planName = meta.planName,
-            planId = meta.planId,
-            userId = meta.userId,
-            category = PlanCategory.fromDbKey(meta.category),
-            weekStartDateString = meta.weekStartDateString,
-            dailyPlans = dailyPlansMap
-        )
+        postgrest.select {
+            filter {
+                eq("planId", planId)
+            }
+        }.decodeSingleOrNull<WeeklyPlanEntity>()
     }
 
     /**
-     * Observes all plans belonging to a specific category AND user reactively.
+     * Fetches all plans belonging to a specific category AND user.
      */
-    fun observePlansByCategoryAndUser(category: PlanCategory, userId: String): Flow<List<WeeklyPlanEntity>> {
-        return planDao.getPlansByCategoryAndUserFlow(category.dbKey, userId)
-            .combinePlansWithMeals()
-    }
+    fun observePlansByCategoryAndUser(category: PlanCategory, userId: String): Flow<List<WeeklyPlanEntity>> = flow {
+        val plans = postgrest.select {
+            filter {
+                eq("category", category.name)
+                eq("userId", userId)
+            }
+        }.decodeList<WeeklyPlanEntity>()
+
+        emit(plans)
+    }.flowOn(Dispatchers.IO)
 
     /**
-     * Observes all plans belonging to a specific category reactively (e.g., "high_protein").
+     * Fetches all plans belonging to a specific category.
      */
-    fun observePlansByCategory(category: PlanCategory): Flow<List<WeeklyPlanEntity>> {
-        return planDao.getPlansByCategoryFlow(category.dbKey).combinePlansWithMeals()
-    }
+    fun observePlansByCategory(category: PlanCategory): Flow<List<WeeklyPlanEntity>> = flow {
+        val plans = postgrest.select {
+            filter {
+                eq("category", category.name)
+            }
+        }.decodeList<WeeklyPlanEntity>()
 
-    fun observeAllPlans(): Flow<List<WeeklyPlanEntity>> {
-        return planDao.getAllPlansFlow()
-            .combinePlansWithMeals()
-    }
+        emit(plans)
+    }.flowOn(Dispatchers.IO)
 
     /**
-     * Deletes a plan and relies on DELETE CASCADE to automatically purge the child meals.
+     * Fetches all plans.
+     */
+    fun observeAllPlans(): Flow<List<WeeklyPlanEntity>> = flow {
+        val plans = postgrest.select().decodeList<WeeklyPlanEntity>()
+        emit(plans)
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Deletes a plan by ID.
      */
     suspend fun deletePlan(planId: String) = withContext(Dispatchers.IO) {
-        planDao.deleteWeeklyPlan(planId)
-    }
-
-    // --- Helper Extension to reconstruct list flows cleanly ---
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun Flow<List<WeeklyPlanRoomEntity>>.combinePlansWithMeals(): Flow<List<WeeklyPlanEntity>> {
-        //  Just call mapLatest directly here 👇
-        return mapLatest { metadataList ->
-            if (metadataList.isEmpty()) return@mapLatest emptyList()
-
-            // 1. Collect all plan IDs into a list
-            val planIds = metadataList.map { it.planId }
-
-            // 2. Perform a SINGLE batch query to fetch all relevant meals
-            val allMealRows = planDao.getMealsForPlansBatch(planIds)
-
-            // 3. Group meals by planId in memory for O(1) lookup
-            val mealsByPlanId = allMealRows.groupBy { it.planId }
-
-            // 4. Transform metadata safely without hitting the DB again
-            metadataList.map { meta ->
-                val planMeals = mealsByPlanId[meta.planId] ?: emptyList()
-
-                val dailyPlansMap = planMeals
-                    .groupBy { it.dateString }
-                    .mapValues { entry -> entry.value.map { it.recipeId } }
-
-                WeeklyPlanEntity(
-                    planName = meta.planName,
-                    planId = meta.planId,
-                    userId = meta.userId,
-                    category = PlanCategory.fromDbKey(meta.category),
-                    weekStartDateString = meta.weekStartDateString,
-                    dailyPlans = dailyPlansMap
-                )
+        postgrest.delete {
+            filter {
+                eq("planId", planId)
             }
-        }.flowOn(Dispatchers.IO)
+        }
     }
+    /**
+     * Updates an existing template plan in Supabase.
+     */
+    suspend fun updateTemplate(plan: WeeklyPlan) = withContext(Dispatchers.IO) {
+        val entity = plan.toEntity()
+        postgrest.upsert(entity)
+    }
+
 }

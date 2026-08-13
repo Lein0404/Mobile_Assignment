@@ -13,6 +13,7 @@ import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
+import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
@@ -274,6 +275,55 @@ class MealPlannerViewModel(
                 }
             }
             _uiEvent.emit("Successfully duplicated the entire week schedule!")
+        }
+    }
+
+    fun applyTemplateToDate(template: WeeklyPlan, startDate: LocalDate) {
+        viewModelScope.launch {
+            if (!isNetworkAvailable) {
+                _uiEvent.emit("Cannot apply template while offline.")
+                return@launch
+            }
+
+            isLoading = true
+            val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id.orEmpty()
+
+            if (currentUserId.isBlank()) {
+                _uiEvent.emit("User is not authenticated.")
+                isLoading = false
+                return@launch
+            }
+
+            // Iterate through each day of the template
+            template.dailyPlans.forEach { (dayOfWeek, mealSlots) ->
+                // Filter out slots that have no recipes
+                val validSlots = mealSlots.filter { it.recipes.isNotEmpty() }
+                if (validSlots.isEmpty()) return@forEach
+
+                // 1. Calculate linear offset from Monday (Day 1 of template)
+                // Monday -> offset 0, Tuesday -> offset 1, ..., Sunday -> offset 6
+                val daysOffset = (dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()
+                val targetDate = startDate.plusDays(daysOffset)
+
+                // 2. Build DailyPlan model for the target date
+                val dailyPlan = DailyPlan(
+                    user_id = currentUserId,
+                    date = targetDate.toString(),
+                    meals = validSlots
+                )
+
+                // 3. Immediately update local state cache so UI reflects change without waiting for network
+                mealPlansCache[targetDate] = dailyPlan
+
+                // 4. Persist plan to Supabase
+                val result = repository.saveDailyPlan(dailyPlan)
+                result.onFailure { error ->
+                    Log.e("MealPlannerVM", "Failed to save template day for $targetDate", error)
+                }
+            }
+
+            isLoading = false
+            _uiEvent.emit("Successfully applied '${template.planName}' template!")
         }
     }
 

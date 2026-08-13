@@ -6,65 +6,115 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.MainActivity
+import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.database.AppDatabase
 import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
 import com.example.foodieheal.repository.RecipeRepository
+import com.example.foodieheal.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
+
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TemplatesContent(modifier: Modifier = Modifier) {
-    val tabs = listOf("Hot", "Templates", "My Template")
+fun TemplatesContent(
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel,
+    onAddTemplateClick: () -> Unit,
+    onPlanDetails: (String,Boolean) -> Unit,
+    onEdit: (String) -> Unit
+) {
+    val tabs = listOf( "All", "My Templates")
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { tabs.size }
     )
     val coroutineScope = rememberCoroutineScope()
 
-    Column(modifier = modifier.fillMaxSize()) {
+    val planRepository = remember { PlanRepository() }
+    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+
+    val currentUserIdFlow = remember(authViewModel) {
+        snapshotFlow { authViewModel.currentUser?.id }
+    }
+
+    val templateViewModel: TemplateViewModel = viewModel(
+        factory = remember(currentUserIdFlow) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(
+                    modelClass: Class<T>,
+                    extras: CreationExtras
+                ): T {
+                    val savedStateHandle = extras.createSavedStateHandle()
+                    return TemplateViewModel(
+                        savedStateHandle = savedStateHandle,
+                        planRepository = planRepository,
+                        recipeRepository = recipeRepository,
+                        currentUserIdFlow = currentUserIdFlow
+                    ) as T
+                }
+            }
+        }
+    )
+
+    Column(modifier = modifier
+        .fillMaxSize()
+        .navigationBarsPadding()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp, horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp) // Gap between the text items
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             tabs.forEachIndexed { index, title ->
                 val isSelected = pagerState.currentPage == index
 
-                // Animate color changes smoothly between active/inactive states
                 val textColor by animateColorAsState(
                     targetValue = if (isSelected) {
                         MaterialTheme.colorScheme.primary
@@ -73,16 +123,16 @@ fun TemplatesContent(modifier: Modifier = Modifier) {
                     },
                     label = "TabTextColor"
                 )
-
                 Text(
                     text = title,
                     color = textColor,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    textDecoration = if(isSelected) TextDecoration.Underline else TextDecoration.None,
                     modifier = Modifier
                         .clickable(
                             interactionSource = null,
-                            indication = null // Removes standard gray ripple circle for a cleaner look
+                            indication = null
                         ) {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(index)
@@ -93,7 +143,6 @@ fun TemplatesContent(modifier: Modifier = Modifier) {
             }
         }
 
-        // 🌟 Swappable Container Body
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -101,71 +150,87 @@ fun TemplatesContent(modifier: Modifier = Modifier) {
                 .weight(1f)
         ) { page ->
             when (page) {
-                0 -> HotTemplatesScreen()
-                1 -> AllTemplatesScreen()
-                2 -> MyTemplatesScreen()
+                0 -> AllTemplatesScreen(
+                    templateViewModel = templateViewModel,
+                    onPlanDetails = onPlanDetails
+                )
+                1 -> MyTemplatesScreen(
+                    templateViewModel = templateViewModel,
+                    onAddTemplateClick = onAddTemplateClick,
+                    onPlanDetails = onPlanDetails,
+                    onEdit = onEdit,
+                )
             }
         }
     }
 }
 
 @Composable
-fun HotTemplatesScreen() {
+fun AllTemplatesScreen(
+    templateViewModel: TemplateViewModel,
+    onPlanDetails:(String,Boolean)-> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Fetch your background instances safely
-        val context = MainActivity.appContext ?: throw IllegalStateException("Application context is missing")
-        val database = AppDatabase.getDatabase(context)
-
-        val planRepository = remember { PlanRepository(database.planDao()) }
-        val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
-
-        // 2. Instantiate your custom viewmodel using an inline Factory
-        val viewModel: TemplateViewModel = viewModel(
-            factory = remember {
-                object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return TemplateViewModel(planRepository, recipeRepository) as T
-                    }
-                }
-            }
+        val allPlans by templateViewModel.allWeeklyPlans.collectAsStateWithLifecycle()
+        CategorizedTemplatesScreen(
+            weeklyPlans = allPlans,
+            onPlanDetails = {id ->  onPlanDetails(id,false) },
         )
-
-        // 3. Unpack and observe the Flow safely with UI lifecycle constraints
-        val allPlans by viewModel.allWeeklyPlans.collectAsStateWithLifecycle()
-
-        // 4. Pass the plain list to your component layout
-        CategorizedTemplatesScreen(weeklyPlans = allPlans)
     }
 }
 
 @Composable
-fun AllTemplatesScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("🗂️ Browse All Templates", style = MaterialTheme.typography.bodyLarge)
+fun MyTemplatesScreen(
+    templateViewModel: TemplateViewModel,
+    onAddTemplateClick: () -> Unit,
+    onPlanDetails: (String,Boolean) -> Unit,
+    onEdit: (String) -> Unit
+) {
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 120.dp),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddTemplateClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_outline_add),
+                    contentDescription = "Add template"
+                )
+            }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            val userPlans by templateViewModel.userWeeklyPlans.collectAsStateWithLifecycle()
+
+            CategorizedTemplatesScreen(
+                weeklyPlans = userPlans,
+                onDelete = {id -> templateViewModel.deleteWeeklyPlan(id) },
+                onPlanDetails = { id -> onPlanDetails(id,true) },
+                onEdit =  onEdit,
+                editable = true
+            )
+        }
     }
 }
-
-@Composable
-fun MyTemplatesScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("👤 Your Custom Saved Templates", style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-
 
 @Composable
 fun CategorizedTemplatesScreen(
     weeklyPlans: List<WeeklyPlan>,
-    modifier: Modifier = Modifier
+    onPlanDetails:(String)->Unit,
+    editable: Boolean = false,
+    onEdit: (String) -> Unit = {},
+    onDelete:(String)-> Unit = {}
 ) {
-    // 🌟 1. Group the plans by category
     val categorizedPlans = remember(weeklyPlans) {
         weeklyPlans.groupBy { it.category }
     }
 
-    // 🌟 2. Get all defined categories, but only keep those that actually contain plans
     val activeCategories = remember(categorizedPlans) {
         PlanCategory.entries.filter { category ->
             val plansForCategory = categorizedPlans[category]
@@ -173,20 +238,18 @@ fun CategorizedTemplatesScreen(
         }
     }
 
-    // 🌟 3. Outer list containing the headers and horizontal rows
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         items(
             items = activeCategories,
-            key = { it.dbKey } // Use dbKey as a stable key for smooth animations
+            key = { it.dbKey }
         ) { category ->
             val plans = categorizedPlans[category].orEmpty()
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                // 🏷️ Category Section Header (Skips entirely if category was empty)
                 Text(
                     text = stringResource(id = category.displayNameRes),
                     style = MaterialTheme.typography.titleMedium,
@@ -194,7 +257,6 @@ fun CategorizedTemplatesScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                // 🔄 Inner Row displaying the customized data cards
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -204,7 +266,13 @@ fun CategorizedTemplatesScreen(
                         items = plans,
                         key = { it.planId }
                     ) { plan ->
-                        PlanCard(plan = plan)
+                        PlanCard(
+                            plan = plan,
+                            onPlanDetails = { onPlanDetails(plan.planId) },
+                            editable = editable,
+                            onEdit = { onEdit(plan.planId) },
+                            onDelete = { onDelete(plan.planId) }
+                        )
                     }
                 }
             }
@@ -213,9 +281,19 @@ fun CategorizedTemplatesScreen(
 }
 
 @Composable
-fun PlanCard(plan: WeeklyPlan, modifier: Modifier = Modifier) {
+fun PlanCard(
+    plan: WeeklyPlan,
+    onPlanDetails: () -> Unit,
+    editable: Boolean,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
-        modifier = modifier.width(260.dp),
+        modifier = Modifier
+            .width(260.dp)
+            .clickable(onClick = onPlanDetails),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
@@ -224,19 +302,74 @@ fun PlanCard(plan: WeeklyPlan, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = plan.planName,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = plan.planName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Calculate total items across all days in the map safely
-            val totalMeals = plan.dailyPlans.values.sumOf { it.size }
+                if (editable) {
+                    OtherIconButton(
+                        showMenu = showMenu,
+                        onShowMenuChange = {showMenu = it},
+                        onEdit = onEdit,
+                        onDelete = onDelete
+                    )
+                }
+            }
+
+            val totalMeals = plan.dailyPlans.values.sumOf { realMealSlots ->
+                realMealSlots.sumOf { slot -> slot.recipes.size }
+            }
+
             Text(
                 text = "$totalMeals meals scheduled this week",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun OtherIconButton(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onBackground,
+    showMenu: Boolean,
+    onShowMenuChange:(Boolean)-> Unit,
+    onEdit:()->Unit,
+    onDelete:()-> Unit
+){
+    Box {
+        Icon(
+            painter = painterResource(R.drawable.ic_vertical_more),
+            contentDescription = stringResource(R.string.more_options),
+            modifier = modifier.clickable(onClick = { onShowMenuChange(true) }),
+            tint = color
+        )
+
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { onShowMenuChange(false) }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                onClick = {
+                    onShowMenuChange(false)
+                    onEdit()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    onShowMenuChange(false)
+                    onDelete()
+                }
             )
         }
     }

@@ -2,8 +2,9 @@ package com.example.foodieheal.meal_planner.screen
 
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.pager.rememberPagerState
@@ -26,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
-import com.example.foodieheal.meal_planner.model.WeeklyCalendarState
+import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
 import com.example.foodieheal.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -35,6 +36,9 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MealPlannerScreen(
@@ -42,13 +46,33 @@ fun MealPlannerScreen(
     authViewModel: AuthViewModel,
     onNavigateToProfile: () -> Unit,
     onRecipeDetails: (String) -> Unit,
-    onAddMeal:(LocalDate, MealType)->Unit
+    onAddMeal:(LocalDate, MealType)->Unit,
+    onAddTemplateClick: () -> Unit,
+    onPlanDetails:(String,Boolean)-> Unit,
+    onEdit:(String)-> Unit
 ) {
     val context = LocalContext.current
 
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by rememberSaveable(
+        stateSaver = Saver(
+            save = { it.toString() },
+            restore = { LocalDate.parse(it) }
+        )
+    ) {
+        mutableStateOf(LocalDate.now())
+    }
+
+    var currentWeekStart by rememberSaveable(
+        stateSaver = Saver(
+            save = { it.toString() },
+            restore = { LocalDate.parse(it) }
+        )
+    ) {
+        mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
+    }
+
     val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
     val activeDailyPlan = mealPlannerViewModel.mealPlansCache[selectedDate]
 
@@ -62,9 +86,6 @@ fun MealPlannerScreen(
     val dailyCopySuccessMessage = stringResource(R.string.daily_success_notify)
     val weeklyCopySuccessMessage = stringResource(R.string.weekly_success_notify)
 
-    var currentWeekStart by remember {
-        mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
-    }
 
     val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
@@ -99,8 +120,10 @@ fun MealPlannerScreen(
         }
     }
 
+
     val anchorDate = remember { LocalDate.now().minusYears(1) }
-    val initialPage = remember { ChronoUnit.DAYS.between(anchorDate, LocalDate.now()).toInt() }
+// Calculate initial page based on saved selectedDate instead of forcing LocalDate.now()
+    val initialPage = remember(selectedDate) { ChronoUnit.DAYS.between(anchorDate, selectedDate).toInt() }
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         pageCount = { 730 }
@@ -174,8 +197,8 @@ fun MealPlannerScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
+        modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+        contentWindowInsets = WindowInsets.statusBars,
         topBar = {
             MealPlannerHeader(
                 selectedTabIndex = selectedTabIndex,
@@ -233,7 +256,11 @@ fun MealPlannerScreen(
             }
             1 -> {
                 TemplatesContent(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    onAddTemplateClick = { onAddTemplateClick() },
+                    authViewModel = authViewModel,
+                    onPlanDetails = onPlanDetails,
+                    onEdit = onEdit
                 )
             }
         }

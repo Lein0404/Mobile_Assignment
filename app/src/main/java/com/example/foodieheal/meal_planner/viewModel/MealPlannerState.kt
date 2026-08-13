@@ -1,4 +1,4 @@
-package com.example.foodieheal.meal_planner.model
+package com.example.foodieheal.meal_planner.viewModel
 
 import java.time.LocalDate
 
