@@ -70,6 +70,7 @@ data class CalorieEntry(
 )
 
 data class IngredientsUiState(
+    val selectedTab: Int = 0,
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val ingredients: List<IngredientItem> = emptyList(),

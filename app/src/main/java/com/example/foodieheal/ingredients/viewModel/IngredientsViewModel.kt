@@ -61,6 +61,10 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
         applyFilters()
     }
 
+    fun onTabChange(index: Int) {
+        _uiState.update { it.copy(selectedTab = index) }
+    }
+
     fun toggleCategory(category: IngredientCategory) {
         _uiState.update { state ->
             val newCategories = if (state.selectedCategories.contains(category)) {

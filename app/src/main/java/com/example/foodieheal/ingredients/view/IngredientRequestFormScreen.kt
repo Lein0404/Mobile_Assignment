@@ -29,6 +29,7 @@ import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModelFactory
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
@@ -84,7 +85,11 @@ fun IngredientRequestFormScreen(
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = { 
+                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                            }
+                        }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
                                 contentDescription = "Back",
@@ -300,7 +305,9 @@ fun IngredientRequestFormScreen(
                         imageUrl = imageUrl,
                         onComplete = {
                             Toast.makeText(context, if (requestId == null) "Request submitted successfully" else "Request updated successfully", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
+                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                            }
                         }
                     )
                 }

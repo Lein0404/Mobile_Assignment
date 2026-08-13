@@ -40,7 +40,9 @@ sealed class Screen(val route: String) {
     object AppointmentReview : Screen("appointmentReview")
 
     // Ingredients module
-    object Ingredients : Screen("ingredients")
+    object Ingredients : Screen("ingredients?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "ingredients?tab=$tab"
+    }
     object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {
         fun createRoute(id: String, isRequest: Boolean = false) = "ingredient_detail/$id/$isRequest"
     }

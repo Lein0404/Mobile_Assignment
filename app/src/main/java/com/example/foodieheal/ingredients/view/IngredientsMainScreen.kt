@@ -48,7 +48,7 @@ fun IngredientsScreenPreview() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IngredientsMainScreen(navController: NavController) {
+fun IngredientsMainScreen(navController: NavController, initialTab: Int = -1) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
     
@@ -57,11 +57,17 @@ fun IngredientsMainScreen(navController: NavController) {
         factory = IngredientRequestViewModelFactory(application)
     )
     
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Existing", "Requests")
-
     val uiState by viewModel.uiState.collectAsState()
     val requestUiState by requestViewModel.uiState.collectAsState()
+
+    // Sync tab state only if initialTab is explicitly provided (0 or 1)
+    LaunchedEffect(initialTab) {
+        if (initialTab != -1) {
+            viewModel.onTabChange(initialTab)
+        }
+    }
+
+    val tabs = listOf("Existing", "Requests")
     
     // Refresh data when screen becomes active
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -94,13 +100,13 @@ fun IngredientsMainScreen(navController: NavController) {
                     )
 
                     TabRow(
-                        selectedTabIndex = selectedTab,
+                        selectedTabIndex = uiState.selectedTab,
                         containerColor = Color.Transparent,
                         contentColor = Color.White,
                         indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
+                            if (uiState.selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                    Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
                                     height = 3.dp,
                                     color = Color.White
                                 )
@@ -110,14 +116,14 @@ fun IngredientsMainScreen(navController: NavController) {
                     ) {
                         tabs.forEachIndexed { index, title ->
                             Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
+                                selected = uiState.selectedTab == index,
+                                onClick = { viewModel.onTabChange(index) },
                                 text = {
                                     Text(
                                         text = title,
                                         fontSize = 15.sp,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                        fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (uiState.selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
                                     )
                                 }
                             )
@@ -132,7 +138,7 @@ fun IngredientsMainScreen(navController: NavController) {
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                if (selectedTab == 0) {
+                if (uiState.selectedTab == 0) {
                     IngredientsExistingScreen(
                         viewModel = viewModel,
                         uiState = uiState,
@@ -153,7 +159,7 @@ fun IngredientsMainScreen(navController: NavController) {
         }
 
         // Floating Action Button for Requests tab (only when online)
-        if (selectedTab == 1 && requestUiState.isNetworkAvailable) {
+        if (uiState.selectedTab == 1 && requestUiState.isNetworkAvailable) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
                 containerColor = MaterialTheme.colorScheme.primary,

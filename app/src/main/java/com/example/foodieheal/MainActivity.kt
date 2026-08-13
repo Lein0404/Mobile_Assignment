@@ -346,8 +346,12 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // Ingredients module
-                                composable(Screen.Ingredients.route) {
-                                    IngredientsMainScreen(navController)
+                                composable(
+                                    route = Screen.Ingredients.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                                    IngredientsMainScreen(navController, initialTab = tab)
                                 }
                                 composable(
                                     route = Screen.IngredientDetail.route,

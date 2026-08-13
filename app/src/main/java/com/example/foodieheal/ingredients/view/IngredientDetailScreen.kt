@@ -81,7 +81,15 @@ fun IngredientDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        if (isRequest) {
+                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                            }
+                        } else {
+                            navController.popBackStack()
+                        }
+                    }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = "Back", 
