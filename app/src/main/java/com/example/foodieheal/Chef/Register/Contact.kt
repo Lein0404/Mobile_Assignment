@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,9 +36,11 @@ import com.example.foodieheal.ui.components.CommonInputField
 @Composable
 fun contactInfo(
     navController: NavController,
-    chefviewModel: chefRegisterViewModel
+    chefViewModel: chefRegisterViewModel
 ) {
     val viewModel: AuthViewModel = viewModel()
+    val isEmailError = chefViewModel.showContactErrorMessage && !chefViewModel.isValidEmail()
+    val isPhoneError = chefViewModel.showContactErrorMessage && !chefViewModel.isValidPhoneNumber()
 
     Scaffold(
         topBar = {
@@ -79,60 +82,48 @@ fun contactInfo(
             )
 
             CommonInputField(
-                value = chefviewModel.email,
-                onValueChange = {
-                    chefviewModel.email = it
-                },
+                value = chefViewModel.email,
+                onValueChange = { chefViewModel.email = it.trim() },
                 textId = R.string.email,
                 placeholder = stringResource(R.string.email),
+                isError = isEmailError,
+                supportingText = if (isEmailError) {
+                    { Text("Please enter a valid email address.") }
+                } else null,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showContactErrorMessage &&
-                !chefviewModel.isValidEmail()
-            ) {
-                Text(
-                    text = "Please enter a valid email address.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             CommonInputField(
-                value = chefviewModel.phoneNumber,
-                onValueChange = {
-                    chefviewModel.phoneNumber = it
+                value = chefViewModel.phoneNumber,
+                onValueChange = { input ->
+                    chefViewModel.phoneNumber = input.filter { it.isDigit() }
                 },
                 textId = R.string.phone_number,
                 placeholder = stringResource(R.string.phone_number),
+                isError = isPhoneError,
+                supportingText = if (isPhoneError) {
+                    { Text("Please enter a valid phone number (e.g., 0123456789).") }
+                } else null,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showContactErrorMessage &&
-                !chefviewModel.isValidPhoneNumber()
-            ) {
-                Text(
-                    text = "Please enter a valid phone number.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    if (chefviewModel.validateContactInfo()) {
+                    if (chefViewModel.validateContactInfo()) {
                         navController.navigate("addressInfo")
                     }
                 },
-                enabled = chefviewModel.canProceedContactInfo(),
+                enabled = chefViewModel.canProceedContactInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

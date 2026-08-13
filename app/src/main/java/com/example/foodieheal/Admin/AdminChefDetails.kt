@@ -49,6 +49,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.DetailRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +101,7 @@ fun ChefDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
@@ -116,7 +117,7 @@ fun ChefDetailScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     elevation = CardDefaults.cardElevation(5.dp)
                 ) {
@@ -136,7 +137,7 @@ fun ChefDetailScreen(
                                 Icon(
                                     painter = painterResource(R.drawable.ic_outline_account_circle),
                                     contentDescription = "Default Profile",
-                                    tint = Color(0xFFFF9800),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else {
@@ -158,7 +159,8 @@ fun ChefDetailScreen(
                         Text(
                             text = chef!!.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(
@@ -220,14 +222,17 @@ fun ChefDetailScreen(
                     )
                     Text(
                         text = "Description",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(
                         modifier = Modifier.height(6.dp)
                     )
                     Text(
                         text = chef!!.description,
-                        color = Color.DarkGray
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -244,7 +249,8 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
@@ -258,7 +264,10 @@ fun ChefDetailScreen(
                         Spacer(
                             Modifier.width(8.dp)
                         )
-                        Text("Approve")
+                        Text(
+                            "Approve",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     Button(
@@ -266,7 +275,8 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935)
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
@@ -280,7 +290,9 @@ fun ChefDetailScreen(
                         Spacer(
                             Modifier.width(8.dp)
                         )
-                        Text("Reject")
+                        Text(
+                            "Reject",
+                            fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -295,7 +307,7 @@ fun DetailSectionCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(4.dp)
@@ -309,45 +321,14 @@ fun DetailSectionCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             HorizontalDivider()
 
             content()
 
-        }
-    }
-}
-
-@Composable
-fun DetailRow(
-    painter: Painter,
-    label: String,
-    value: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(
-            Modifier.width(12.dp)
-        )
-        Column {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = value,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }

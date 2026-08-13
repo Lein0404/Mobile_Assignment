@@ -5,9 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -33,25 +40,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.Surface
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Status
-import androidx.compose.ui.graphics.Color
+import java.util.Locale
 
 /**
  * Common is a helper class with composable templates such as Buttons, Carousels, Lists configured
  * to our app's colors.
  */
-
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
@@ -141,7 +150,9 @@ fun CommonInputField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isError: Boolean = false,
-    leadingIconRes: Int? = null, // Drawable resource ID
+    supportingText: @Composable (() -> Unit)? = null,
+    leadingIconRes: Int? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -149,7 +160,8 @@ fun CommonInputField(
     maxLines: Int = 1,
     minLines: Int = 1,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    // Modifier is applied ONLY to the parent container
+    Column(modifier = modifier) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -159,15 +171,20 @@ fun CommonInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier, // Apply modifier directly
+            modifier = Modifier.fillMaxWidth(), // Inner field always takes full container width
             enabled = enabled,
             placeholder = placeholder?.let { { Text(it) } },
             leadingIcon = leadingIconRes?.let {
-                { Icon(painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier.padding(dimensionResource(R.dimen.padding_md)))
+                {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_md))
+                    )
                 }
             },
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
             isError = isError,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -184,15 +201,15 @@ fun CommonInputField(
         )
     }
 }
-
 @Composable
 fun PasswordInputField(
     value: String,
     onValueChange: (String) -> Unit,
     textId: Int, // string resource for label
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier, // Removed default fillMaxWidth here to avoid confusion
     enabled: Boolean = true,
     isError: Boolean = false,
+    supportingText: @Composable (() -> Unit)? = null, // Added supportingText slot
     placeholder: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -201,7 +218,9 @@ fun PasswordInputField(
     minLines: Int = 1
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    Column(modifier = modifier) {
+
+    // Modifier applied ONLY to outer Column
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -211,7 +230,7 @@ fun PasswordInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(), // Inner field always fills container width
             enabled = enabled,
             textStyle = MaterialTheme.typography.bodyLarge,
             placeholder = placeholder?.let { { Text(it) } },
@@ -223,7 +242,8 @@ fun PasswordInputField(
                     stringResource(id = R.string.show_password)
                 }
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(painterResource(id = visibilityIcon),
+                    Icon(
+                        painter = painterResource(id = visibilityIcon),
                         contentDescription = description,
                         modifier = Modifier
                             .padding(dimensionResource(R.dimen.padding_xsm))
@@ -232,6 +252,7 @@ fun PasswordInputField(
                 }
             },
             isError = isError,
+            supportingText = supportingText,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -248,7 +269,6 @@ fun PasswordInputField(
         )
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
@@ -282,8 +302,8 @@ fun DropDownList(
                 readOnly = true,
                 placeholder = {
                     Text(stringResource(placeholderId),
-                    color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
-                ) },
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
+                    ) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 },
@@ -432,6 +452,149 @@ fun StatusBadge(status: Status) {
         )
     }
 }
+
+@Composable
+fun DetailRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    painter: Painter? = null,
+    iconSize: Dp = 20.dp,
+    valueFontWeight: FontWeight = if (painter == null) FontWeight.Bold else FontWeight.Medium,
+    isSpaceBetween: Boolean = (painter == null)
+) {
+    if (isSpaceBetween) {
+        // Horizontal Layout: [Icon + Label ----------- Value]
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                painter?.let { p ->
+                    Icon(
+                        painter = p,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = valueFontWeight,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    } else {
+        // Vertical Stack Layout: [Icon]  Label
+        //                                Value
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            painter?.let { p ->
+                Icon(
+                    painter = p,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(iconSize)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = valueFontWeight,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailRow(
+    painter: Painter,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    DetailRow(
+        label = label,
+        value = value,
+        modifier = modifier,
+        painter = painter
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    DatePickerDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = confirmButton,
+        dismissButton = dismissButton,
+        content = content
+    )
+}
+
+@Composable
+fun AppointmentStatusBadge(
+    status: String,
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 8.dp,
+    horizontalPadding: Dp = 10.dp,
+    verticalPadding: Dp = 4.dp
+) {
+    val (backgroundColor, textColor) = when (status.lowercase(Locale.ROOT).trim()) {
+        "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
+        "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
+        "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
+        "pending"   -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
+        else        -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    // Format display text (capitalized or fallback)
+    val displayText = status.ifBlank { "Confirmed" }.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+    }
+
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(cornerRadius),
+        color = backgroundColor
+    ) {
+        Text(
+            text = displayText,
+            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = verticalPadding),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
 
 /*@OptIn(ExperimentalMaterial3Api::class)
 @Composable

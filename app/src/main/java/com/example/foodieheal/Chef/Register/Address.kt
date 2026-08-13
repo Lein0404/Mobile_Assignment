@@ -2,11 +2,13 @@ package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -20,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.foodieheal.Chef.States
@@ -32,8 +35,12 @@ import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 @Composable
 fun addressInfo(
     navController: NavController,
-    chefviewModel: chefRegisterViewModel
+    chefViewModel: chefRegisterViewModel
 ) {
+
+    val isAddressError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidAddress()
+    val isPostcodeError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidPostcode()
+    val isStateError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidState()
 
     Scaffold(
         topBar = {
@@ -75,58 +82,45 @@ fun addressInfo(
             )
 
             CommonInputField(
-                value = chefviewModel.address,
-                onValueChange = {
-                    chefviewModel.address = it
-                },
+                value = chefViewModel.address,
+                onValueChange = { chefViewModel.address = it },
                 textId = R.string.address,
                 placeholder = "Enter your address",
+                isError = isAddressError,
+                supportingText = if (isAddressError) {
+                    { Text("Address cannot be empty.") }
+                } else null,
+                singleLine = false,
+                maxLines = 3,
+                minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showAddressErrorMessage &&
-                !chefviewModel.isValidAddress()
-            ) {
-                Text(
-                    text = "Address cannot be empty.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             CommonInputField(
-                value = chefviewModel.postcode,
-                onValueChange = {
-                    chefviewModel.postcode = it
+                value = chefViewModel.postcode,
+                onValueChange = { input ->
+                    chefViewModel.postcode = input.filter { it.isDigit() }.take(5)
                 },
                 textId = R.string.postcode,
                 placeholder = "Enter your Postcode",
+                isError = isPostcodeError,
+                supportingText = if (isPostcodeError) {
+                    { Text("Postcode must contain exactly 5 digits.") }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showAddressErrorMessage &&
-                !chefviewModel.isValidPostcode()
-            ) {
-                Text(
-                    text = "Postcode must contain 5 digits.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             DropDownList(
                 labelId = R.string.state,
                 placeholderId = R.string.select_state,
-                selectedValue = chefviewModel.state,
+                selectedValue = chefViewModel.state,
                 options = States,
-                onOptionSelected = {
-                    chefviewModel.updateState(it)
-                }
+                onOptionSelected = { chefViewModel.updateState(it ?: "") }
             )
-            if (
-                chefviewModel.showAddressErrorMessage &&
-                !chefviewModel.isValidState()
-            ) {
+            if (isStateError) {
                 Text(
                     text = "Please select a state.",
                     color = MaterialTheme.colorScheme.error,
@@ -134,15 +128,17 @@ fun addressInfo(
                 )
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    if (chefviewModel.validateAddressInfo()) {
+                    if (chefViewModel.validateAddressInfo()) {
                         navController.navigate("descriptionInfo")
                     }
                 },
-                enabled = chefviewModel.canProceedAddressInfo(),
+                enabled = chefViewModel.canProceedAddressInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

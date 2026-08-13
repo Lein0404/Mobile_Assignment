@@ -143,7 +143,7 @@ fun reviewInfo(
                 onClick = {
                     chefRegisterViewModel.registerChef(context = context) {
                         navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                            popUpTo("chefRegisterRoute") { inclusive = true }
                         }
                     }
                 },

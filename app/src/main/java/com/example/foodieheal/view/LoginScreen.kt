@@ -14,15 +14,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(navController: NavController, viewModel: AuthViewModel){
+    val chefRegisterViewModel: chefRegisterViewModel = viewModel()
     var email by remember{ mutableStateOf("") }
     var password by remember{mutableStateOf("")}
     
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
+
+    LaunchedEffect(Unit) {
+        chefRegisterViewModel.resetRegistrationFlow()
+    }
+
 
     LaunchedEffect(viewModel.loginSuccess) {
         if (viewModel.loginSuccess) {
