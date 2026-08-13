@@ -88,6 +88,14 @@ fun RecipesScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.bookmarkMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     SideEffect {
@@ -97,18 +105,26 @@ fun RecipesScreen(
     }
 
     LaunchedEffect(selectedTab, currentUserId) {
-        if (currentUserId != null) {
-            viewModel.fetchBookmarkIds(currentUserId)
+        val cid = authViewModel.currentUser?.customId
+        if (cid != null) {
+            // 🌟 Smart Sync: Only fetch if memory is empty using short ID
+            if (viewModel.bookmarkedRecipeIds.isEmpty()) {
+                viewModel.fetchBookmarkIds(cid)
+            }
+            
             when (selectedTab) {
                 0 -> if (viewModel.recipeList.isEmpty()) viewModel.fetchAllRecipes()
-                1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(currentUserId)
-                2 -> if (viewModel.bookmarkedRecipes.isEmpty()) viewModel.fetchBookmarkedRecipes(currentUserId)
+                1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(cid)
+                2 -> if (viewModel.bookmarkedRecipes.isEmpty()) viewModel.fetchBookmarkedRecipes(cid)
             }
         }
     }
 
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
+        // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -179,7 +195,7 @@ fun RecipesScreen(
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
-                        .offset(y = 20.dp) 
+                        .offset(y = (-32).dp) // 🌟 Pushed the button higher up by using a negative offset
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_outline_add),
@@ -223,7 +239,7 @@ fun RecipesScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.search), 
                                 contentDescription = "Search", 
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
                             )
                         }
                     }
@@ -293,8 +309,11 @@ fun RecipesScreen(
                         showMenu = selectedTab == 1,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                         onBookmarkClick = {
-                            currentUserId?.let { uid ->
-                                recipe.recipe_id?.let { rid -> viewModel.toggleBookmark(uid, rid) }
+                            // 🌟 FIX: Send the short customId instead of the long UUID
+                            authViewModel.currentUser?.customId?.let { cid ->
+                                recipe.recipe_id?.let { rid -> 
+                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                }
                             }
                         },
                         onDeleteClick = { recipeToDelete = recipe },
@@ -303,14 +322,17 @@ fun RecipesScreen(
                         },
                         onAddClick = {
                             recipe.recipe_id?.let { id ->
-                                parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
+                                // 🌟 Navigate to Planner with the specific ID
+                                parentNavController.navigate("add_recipe_to_planner/$id")
                             }
                         }
                     )
                 }
             }
-            
-            item(span = { GridItemSpan(2) }) { Spacer(modifier = Modifier.height(80.dp)) }
+            // 🌟 Added back the 80dp spacer to lift the Floating Action Button up
+            item(span = { GridItemSpan(2) }) {
+                Spacer(modifier = Modifier.height(100.dp))
+            }
         }
     }
 
