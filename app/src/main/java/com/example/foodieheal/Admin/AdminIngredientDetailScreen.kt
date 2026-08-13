@@ -44,7 +44,7 @@ fun AdminIngredientDetailScreen(
     val requestItem by viewModel.requestDetail.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-    
+
     var showRejectDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(requestId) {
@@ -124,13 +124,13 @@ fun AdminIngredientDetailScreen(
                         ) {
                             // 2. Title & Category
                             Text(
-                                text = request.ingredientName, 
-                                style = MaterialTheme.typography.headlineMedium, 
+                                text = request.ingredientName,
+                                style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
                             Text(
-                                text = request.ingredientCategory?.categoryName ?: "Others", 
+                                text = request.ingredientCategory?.categoryName ?: "Others",
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
@@ -138,8 +138,8 @@ fun AdminIngredientDetailScreen(
                             StatusBadge(status = request.requestStatus)
 
                             HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 16.dp), 
-                                thickness = 1.dp, 
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                thickness = 1.dp,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
@@ -183,8 +183,8 @@ fun AdminIngredientDetailScreen(
                             }
 
                             HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 16.dp), 
-                                thickness = 1.dp, 
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                thickness = 1.dp,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
@@ -194,7 +194,7 @@ fun AdminIngredientDetailScreen(
                             Text("User ID: ${info.requesterCustomId}", fontSize = 14.sp)
                             Text("User Name: ${info.requesterName}", fontSize = 14.sp)
                             Text("Created date: ${formatDisplayDateTime(request.datetimeCreated)}", fontSize = 14.sp)
-                            
+
                             Spacer(modifier = Modifier.height(120.dp))
                         }
                     }
@@ -223,7 +223,7 @@ fun AdminIngredientDetailScreen(
                             }
                             PrimaryButton(
                                 modifier = Modifier.weight(0.55f),
-                                onClick = { 
+                                onClick = {
                                     navController.navigate(Screen.AdminIngredientReview.createRoute(requestId))
                                 },
                                 textID = R.string.review_approve
@@ -280,7 +280,7 @@ fun RejectRequestDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = reason,
-                    onValueChange = { 
+                    onValueChange = {
                         reason = it
                         if (it.isNotBlank()) error = null
                     },

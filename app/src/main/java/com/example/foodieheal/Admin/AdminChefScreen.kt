@@ -55,20 +55,22 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
+import com.example.foodieheal.NavigationItem
 import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.view.NavigationItem
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminApprovalScreen(
     parentNavController: NavHostController,
-    viewModel: AdminApprovalViewModel = viewModel()
+    viewModel: AdminApprovalViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val navController = rememberNavController()
-    val AuthviewModel: AuthViewModel = viewModel()
+    // Using the passed-in authViewModel instead of creating a local one
+    // to ensure we share login state with MainActivity
 
     val items = listOf(
         NavigationItem(Screen.AdminChefScreen.route, "Chef Approval", R.drawable.ic_outline_account_circle),
@@ -84,7 +86,7 @@ fun AdminApprovalScreen(
         topBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -154,7 +156,7 @@ fun AdminApprovalScreen(
                         unselectedTextColor = Color.Gray
                     ),
                     onClick = {
-                        AuthviewModel.logout {
+                        authViewModel.logout {
                             parentNavController.navigate(Screen.Login.route) {
                                 popUpTo(0) { inclusive = true }
                             }

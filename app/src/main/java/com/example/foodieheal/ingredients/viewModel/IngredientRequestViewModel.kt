@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
-import com.example.foodieheal.util.NetworkMonitor
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

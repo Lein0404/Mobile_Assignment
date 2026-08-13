@@ -1,7 +1,9 @@
 package com.example.foodieheal.meal_planner.screen
 
+import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,13 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,8 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,9 +47,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
-import com.example.foodieheal.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.MealType
+import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.viewmodel.AuthViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -57,15 +60,23 @@ import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    val isNetworkAvailable = viewModel.isNetworkAvailable
+fun MealPlannerScreen(
+    mealPlannerViewModel: MealPlannerViewModel,
+    authViewModel: AuthViewModel,
+    onNavigateToProfile:()-> Unit,
+    onRecipeDetails: (String) -> Unit
+) {
+    // 🌟 FIX: Fetch the local environment layout context safely inside a Composable boundary
+    val context = LocalContext.current
 
-    val activeDailyPlan = viewModel.mealPlansCache[selectedDate]
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
+
+    val activeDailyPlan = mealPlannerViewModel.mealPlansCache[selectedDate]
 
     LaunchedEffect(selectedDate) {
         if (isNetworkAvailable) {
-            viewModel.loadPlanForDate(selectedDate)
+            mealPlannerViewModel.loadPlanForDate(selectedDate)
         }
     }
 
@@ -73,12 +84,11 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
         mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
     }
 
-    val weekDays = viewModel.getCurrentWeekDays(currentWeekStart)
+    val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${weekEndDate.month.getDisplayName(
         TextStyle.SHORT, Locale.getDefault())} ${weekEndDate.year}"
 
-    // Dynamic state computation layer tracking current active calendar totals safely above the pager
     val totalCaloriesForSelectedDate = remember(activeDailyPlan) {
         activeDailyPlan?.meals
             ?.flatMap { it.recipes }
@@ -89,9 +99,21 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
     var showPasteDatePicker by remember { mutableStateOf(false) }
     var showWeeklyPasteDatePicker by remember { mutableStateOf(false) }
 
+    val deepLinkDays = mealPlannerViewModel.deepLinkSourceDays
+
+    LaunchedEffect(deepLinkDays) {
+        if (deepLinkDays != null) {
+            // 1. 🌟 ACTUALLY ENABLE THE DIALOG SO COMPOSE WILL DRAW IT!
+            showWeeklyPasteDatePicker = true
+
+            // 2. Consume the link trigger context immediately to prevent the double prompt trap
+            mealPlannerViewModel.clearDeepLinkState()
+        }
+    }
+
     val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collect { message ->
+        mealPlannerViewModel.uiEvent.collect { message ->
             snackBarHostState.showSnackbar(message = message)
         }
     }
@@ -139,7 +161,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
             titleText = stringResource(R.string.dialog_title_choose_paste_date),
             onDateSelected = { targetDate ->
                 activeDailyPlan?.let { sourcePlan ->
-                    viewModel.copyDailyPlanToDate(sourcePlan, targetDate)
+                    mealPlannerViewModel.copyDailyPlanToDate(sourcePlan, targetDate)
                 }
                 showPasteDatePicker = false
             },
@@ -150,13 +172,21 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
     if (showWeeklyPasteDatePicker) {
         MealDatePickerDialog(
             initialDate = currentWeekStart.plusWeeks(1),
-            titleText = stringResource(R.string.dialog_title_choose_weekly_paste_date),
+            titleText = stringResource(R.string.dialog_title_choose_weekly_repeat_date),
             onDateSelected = { targetDate ->
                 val targetWeekStart = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-                viewModel.copyWeeklyPlanToDate(weekDays, targetWeekStart)
+
+                // 🌟 FIX: Use the deep link days if available, otherwise fallback to local visible week days
+                val daysToCopy = mealPlannerViewModel.deepLinkSourceDays ?: weekDays
+                mealPlannerViewModel.copyWeeklyPlanToDate(daysToCopy, targetWeekStart)
+
                 showWeeklyPasteDatePicker = false
+                mealPlannerViewModel.clearDeepLinkState() // Clear buffer data
             },
-            onDismiss = { showWeeklyPasteDatePicker = false }
+            onDismiss = {
+                showWeeklyPasteDatePicker = false
+                mealPlannerViewModel.clearDeepLinkState()
+            }
         )
     }
 
@@ -182,12 +212,47 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    Spacer(Modifier.weight(1f))
+
+                    IconButton(
+                        onClick = { showWeeklyPasteDatePicker = true },
+                        enabled = isNetworkAvailable
+                    ){
+                        Icon(
+                            painter = painterResource(R.drawable.ic_repeat),
+                            contentDescription = stringResource(R.string.desc_copy_daily_plan),
+                            modifier = Modifier.size(30.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            val shareUrl = mealPlannerViewModel.generateShareLink(currentWeekStart)
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareUrl)
+                                type = "text/plain"
+                            }
+                            val shareIntent = Intent.createChooser(sendIntent, "Share Weekly Meal Plan")
+                            context.startActivity(shareIntent)
+                        },
+                        enabled = isNetworkAvailable
+                    ){
+                        Icon(
+                            painter = painterResource(R.drawable.ic_share),
+                            contentDescription = stringResource(R.string.share),
+                            modifier = Modifier.size(30.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
+            Spacer(Modifier.height(8.dp))
 
             Row(
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 10.dp, end = 10.dp)
             ) {
                 Text(
                     text = headerText,
@@ -199,53 +264,38 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    IconButton(
-                        onClick = {
-                            selectedDate = selectedDate.minusWeeks(1)
-                            currentWeekStart = currentWeekStart.minusWeeks(1)
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.desc_calendar_back),
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = stringResource(R.string.desc_calendar_back),
+                        modifier = Modifier
+                            .size(35.dp)
+                            .clickable {
+                                selectedDate = selectedDate.minusWeeks(1)
+                                currentWeekStart = currentWeekStart.minusWeeks(1)
+                            },
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
 
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_calendar),
-                            contentDescription = stringResource(R.string.desc_calendar_icon),
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            selectedDate = selectedDate.plusWeeks(1)
-                            currentWeekStart = currentWeekStart.plusWeeks(1)
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_forward),
-                            contentDescription = stringResource(R.string.desc_calendar_forward),
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    IconButton(
-                        onClick = { showWeeklyPasteDatePicker = true },
-                        enabled = isNetworkAvailable
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_repeat),
-                            contentDescription = stringResource(R.string.desc_copy_daily_plan),
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(R.drawable.ic_calendar),
+                        contentDescription = stringResource(R.string.desc_calendar_icon),
+                        modifier = Modifier
+                            .size(35.dp)
+                            .clickable { showDatePicker = true },
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_forward),
+                        contentDescription = stringResource(R.string.desc_calendar_forward),
+                        modifier = Modifier
+                            .size(35.dp)
+                            .clickable {
+                                selectedDate = selectedDate.plusWeeks(1)
+                                currentWeekStart = currentWeekStart.plusWeeks(1)
+                            },
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
 
@@ -261,10 +311,13 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
             Spacer(Modifier.height(12.dp))
 
             if (isNetworkAvailable) {
+                val currentUser = authViewModel.currentUser
+                val maxCalories = calculateSuggestedDailyCalories(currentUser)
+
                 CalorieProgressBar(
                     currentCalories = totalCaloriesForSelectedDate,
-                    maxCalories = 1800,
-                    onNavigateToProfile = { /* TODO : wait for profile */ }
+                    maxCalories = maxCalories,
+                    onNavigateToProfile = { onNavigateToProfile() },
                 )
                 Spacer(Modifier.height(12.dp))
             }
@@ -282,13 +335,12 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
 
                 LaunchedEffect(pageDate) {
                     if (isNetworkAvailable) {
-                        viewModel.loadPlanForDate(pageDate)
+                        mealPlannerViewModel.loadPlanForDate(pageDate)
                     }
                 }
 
-                val dailyPlanForThisPage = viewModel.mealPlansCache[pageDate]
+                val dailyPlanForThisPage = mealPlannerViewModel.mealPlansCache[pageDate]
 
-                // Formatted dynamic date string linked to this specific page's date context
                 val dailyBannerText = remember(pageDate) {
                     val dayName = pageDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
                     val dayOfMonth = pageDate.dayOfMonth
@@ -358,133 +410,140 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                                 color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.padding(top = 8.dp, start = 16.dp)
                             )
+                            Column {
+                                MealSection(
+                                    title = stringResource(R.string.breakfast),
+                                    recipes = breakfastRecipes,
+                                    onAddClick = {//TODO a screen that can choose recipe
+                                        val sampleRecipe = Recipe(
+                                            recipe_id = "R001",
+                                            recipeName = "Oatmeal",
+                                            calories = 350,
+                                            time = 10,
+                                            recipeDescription = "A quick and healthy bowl of warm oats.",
+                                            recipeStep = "Cook oats in milk or water.",
+                                            author_id = "",
+                                            recipeCourse = "",
+                                            cookingSkill = "",
+                                            estimatedBudget = "",
+                                            recipeImageUrl = "",
+                                            ingredients = emptyList()
+                                        )
+                                        mealPlannerViewModel.addRecipeToMeal(pageDate, MealType.BREAKFAST, sampleRecipe)
+                                    },
+                                    onDeleteClick = { recipe ->
+                                        mealPlannerViewModel.deleteRecipeFromMeal(pageDate, MealType.BREAKFAST, recipe)
+                                    },
+                                    onRecipeDetails = { recipeId -> onRecipeDetails(recipeId)},
+                                )
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp)),
-                                elevation = CardDefaults.cardElevation(100.dp),
-                                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
-                            ) {
-                                Column {
-                                    MealSection(
-                                        title = stringResource(R.string.breakfast),
-                                        recipes = breakfastRecipes,
-                                        onAddClick = {
-                                            val sampleRecipe = Recipe(
-                                                recipe_id = "R999",
-                                                recipeName = "Oatmeal",
-                                                calories = 350,
-                                                time = 10,
-                                                recipeImage = R.drawable.ic_breakfast,
-                                                recipeDescription = "A quick and healthy bowl of warm oats.",
-                                                budget = 2.50,
-                                                skillLevel = 1,
-                                                recipeStep = "Cook oats in milk or water."
-                                            )
-                                            viewModel.addRecipeToMeal(pageDate, MealType.BREAKFAST, sampleRecipe)
-                                        },
-                                        onDeleteClick = { recipe ->
-                                            viewModel.deleteRecipeFromMeal(pageDate, MealType.BREAKFAST, recipe)
-                                        }
-                                    )
+                                MealSection(
+                                    title = stringResource(R.string.lunch),
+                                    recipes = lunchRecipes,
+                                    onAddClick = {
+                                        val sampleRecipe = Recipe(
+                                            recipe_id = "R002",
+                                            recipeName = "Oatmeal",
+                                            calories = 350,
+                                            time = 10,
+                                            recipeDescription = "A quick and healthy bowl of warm oats.",
+                                            recipeStep = "Cook oats in milk or water.",
+                                            author_id = "",
+                                            recipeCourse = "",
+                                            cookingSkill = "",
+                                            estimatedBudget = "",
+                                            recipeImageUrl = "",
+                                            ingredients = emptyList()
+                                        )
+                                        mealPlannerViewModel.addRecipeToMeal(pageDate, MealType.LUNCH, sampleRecipe)
+                                    },
+                                    onDeleteClick = { recipe ->
+                                        mealPlannerViewModel.deleteRecipeFromMeal(pageDate, MealType.LUNCH, recipe)
+                                    },
+                                    onRecipeDetails = { recipeId -> onRecipeDetails(recipeId)},
+                                )
 
-                                    MealSection(
-                                        title = stringResource(R.string.lunch),
-                                        recipes = lunchRecipes,
-                                        onAddClick = {
-                                            val sampleRecipe = Recipe(
-                                                recipe_id = "R011",
-                                                recipeName = "Chicken Wrap",
-                                                calories = 340,
-                                                time = 15,
-                                                recipeImage = R.drawable.ic_lunch,
-                                                recipeDescription = "A delicious wrap filled with grilled chicken.",
-                                                budget = 5.80,
-                                                skillLevel = 1,
-                                                recipeStep = "Grill chicken, fill tortilla, roll."
-                                            )
-                                            viewModel.addRecipeToMeal(pageDate, MealType.LUNCH, sampleRecipe)
-                                        },
-                                        onDeleteClick = { recipe ->
-                                            viewModel.deleteRecipeFromMeal(pageDate, MealType.LUNCH, recipe)
-                                        }
-                                    )
+                                MealSection(
+                                    title = stringResource(R.string.dinner),
+                                    recipes = dinnerRecipes,
+                                    onAddClick = {
+                                        val sampleRecipe = Recipe(
+                                            recipe_id = "R003",
+                                            recipeName = "Oatmeal",
+                                            calories = 350,
+                                            time = 10,
+                                            recipeDescription = "A quick and healthy bowl of warm oats.",
+                                            recipeStep = "Cook oats in milk or water.",
+                                            author_id = "",
+                                            recipeCourse = "",
+                                            cookingSkill = "",
+                                            estimatedBudget = "",
+                                            recipeImageUrl = "",
+                                            ingredients = emptyList()
+                                        )
+                                        mealPlannerViewModel.addRecipeToMeal(pageDate, MealType.DINNER, sampleRecipe)
+                                    },
+                                    onDeleteClick = { recipe ->
+                                        mealPlannerViewModel.deleteRecipeFromMeal(pageDate, MealType.DINNER, recipe)
+                                    },
+                                    onRecipeDetails = { recipeId -> onRecipeDetails(recipeId)},
+                                )
 
-                                    MealSection(
-                                        title = stringResource(R.string.dinner),
-                                        recipes = dinnerRecipes,
-                                        onAddClick = {
-                                            val sampleRecipe = Recipe(
-                                                recipe_id = "R015",
-                                                recipeName = "Thai Green Curry",
-                                                calories = 550,
-                                                time = 45,
-                                                recipeImage = R.drawable.ic_dinner,
-                                                recipeDescription = "A fragrant Thai green curry.",
-                                                budget = 10.50,
-                                                skillLevel = 5,
-                                                recipeStep = "Fry curry paste, add coconut milk, simmer."
-                                            )
-                                            viewModel.addRecipeToMeal(pageDate, MealType.DINNER, sampleRecipe)
-                                        },
-                                        onDeleteClick = { recipe ->
-                                            viewModel.deleteRecipeFromMeal(pageDate, MealType.DINNER, recipe)
-                                        }
-                                    )
+                                MealSection(
+                                    title = stringResource(R.string.snack),
+                                    recipes = snackRecipes,
+                                    onAddClick = {
+                                        val sampleRecipe = Recipe(
+                                            recipe_id = "R004",
+                                            recipeName = "Oatmeal",
+                                            calories = 350,
+                                            time = 10,
+                                            recipeDescription = "A quick and healthy bowl of warm oats.",
+                                            recipeStep = "Cook oats in milk or water.",
+                                            author_id = "",
+                                            recipeCourse = "",
+                                            cookingSkill = "",
+                                            estimatedBudget = "",
+                                            recipeImageUrl = "",
+                                            ingredients = emptyList()
+                                        )
+                                        mealPlannerViewModel.addRecipeToMeal(pageDate, MealType.SNACK, sampleRecipe)
+                                    },
+                                    onDeleteClick = { recipe ->
+                                        mealPlannerViewModel.deleteRecipeFromMeal(pageDate, MealType.SNACK, recipe)
+                                    },
+                                    onRecipeDetails = { recipeId -> onRecipeDetails(recipeId)},
+                                )
 
-                                    MealSection(
-                                        title = stringResource(R.string.snack),
-                                        recipes = snackRecipes,
-                                        onAddClick = {
-                                            val sampleRecipe = Recipe(
-                                                recipe_id = "R002",
-                                                recipeName = "Fluffy Buttermilk Pancakes",
-                                                calories = 200,
-                                                time = 15,
-                                                recipeImage = R.drawable.ic_snack,
-                                                recipeDescription = "Golden, diner-style pancakes.",
-                                                budget = 4.00,
-                                                skillLevel = 2,
-                                                recipeStep = "Mix ingredients, cook on griddle."
-                                            )
-                                            viewModel.addRecipeToMeal(pageDate, MealType.SNACK, sampleRecipe)
-                                        },
-                                        onDeleteClick = { recipe ->
-                                            viewModel.deleteRecipeFromMeal(pageDate, MealType.SNACK, recipe)
-                                        }
-                                    )
+                                val isPlanEmpty = breakfastRecipes.isEmpty() &&
+                                        lunchRecipes.isEmpty() &&
+                                        dinnerRecipes.isEmpty() &&
+                                        snackRecipes.isEmpty()
 
-                                    val isPlanEmpty = breakfastRecipes.isEmpty() &&
-                                            lunchRecipes.isEmpty() &&
-                                            dinnerRecipes.isEmpty() &&
-                                            snackRecipes.isEmpty()
-
-                                    if (!isPlanEmpty) {
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(70.dp)
-                                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                                                .background(
-                                                    MaterialTheme.colorScheme.tertiary,
-                                                    RoundedCornerShape(20.dp)
-                                                ),
-                                            onClick = { showPasteDatePicker = true }
+                                if (!isPlanEmpty) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(70.dp)
+                                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.tertiary,
+                                                RoundedCornerShape(20.dp)
+                                            ),
+                                        onClick = { showPasteDatePicker = true }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxSize(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
                                         ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxSize(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
-                                            ) {
-                                                Text(
-                                                    text = stringResource(R.string.btn_copy_todays_plan),
-                                                    fontSize = 15.sp,
-                                                    color = MaterialTheme.colorScheme.onTertiary,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                )
-                                            }
+                                            Text(
+                                                text = stringResource(R.string.btn_copy_todays_plan),
+                                                fontSize = 15.sp,
+                                                color = MaterialTheme.colorScheme.onTertiary,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                            )
                                         }
                                     }
                                 }
@@ -493,6 +552,7 @@ fun MealPlannerScreen(viewModel: MealPlannerViewModel) {
                     }
                 }
             }
+            Spacer(Modifier.height(30.dp)            )
         }
 
         SnackbarHost(

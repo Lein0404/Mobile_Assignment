@@ -8,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.focus.onFocusEvent
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -26,28 +29,66 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
+import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.model.IngredientItem
+import com.example.foodieheal.model.Ingredient
+import com.example.foodieheal.viewmodel.RecipeViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 import java.io.InputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddRecipeScreen(navController: NavController) {
+fun AddRecipeScreen(
+    navController: NavController,
+    viewModel: RecipeViewModel,
+    authViewModel: AuthViewModel
+) {
     val context = LocalContext.current
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var recipeName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("Breakfast") }
     var totalTime by remember { mutableStateOf("") }
-    var calories by remember { mutableStateOf("0") }
     var cookingSkill by remember { mutableStateOf("Beginner") }
-    var budget by remember { mutableStateOf("RM 0 - 10") }
+    var budget by remember { mutableStateOf("0 - 10") }
     var steps by remember { mutableStateOf("") }
+    var showResetDialog by remember { mutableStateOf(false) }
 
-    val ingredients = remember { mutableStateListOf(IngredientInput()) }
+    val ingredients = remember { mutableStateListOf(IngredientInputState()) }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+
+    val totalCalories = remember {
+        derivedStateOf {
+            ingredients.sumOf { input ->
+                val qty = input.quantity.toDoubleOrNull() ?: 0.0
+                // 🌟 FIX: Match by BOTH name and unit to handle duplicates like Flour Tortilla
+                val ingredientData = viewModel.availableIngredients.find { 
+                    it.name?.equals(input.name, ignoreCase = true) == true &&
+                    it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
+                }
+                qty * (ingredientData?.kcal ?: 0.0)
+            }.toInt()
+        }
+    }.value
 
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    LaunchedEffect(Unit) {
+        viewModel.addRecipeSuccess.collect { success ->
+            if (success) {
+                // 🌟 SUCCESS: land back on "My Recipes" tab
+                viewModel.activeTab = 1
+                navController.popBackStack()
+            }
+        }
+    }
 
     SideEffect {
         val window = (view.context as Activity).window
@@ -59,6 +100,7 @@ fun AddRecipeScreen(navController: NavController) {
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
+            imageUri = it
             val inputStream: InputStream? = context.contentResolver.openInputStream(it)
             imageBitmap = BitmapFactory.decodeStream(inputStream)
         }
@@ -69,7 +111,11 @@ fun AddRecipeScreen(navController: NavController) {
             CenterAlignedTopAppBar(
                 title = { Text("Add Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 BACK: ensure we go back to "My Recipes" tab
+                        viewModel.activeTab = 1
+                        navController.popBackStack() 
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
                     }
                 },
@@ -82,10 +128,11 @@ fun AddRecipeScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color(0xFFF8F8F8))
-                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding() 
+                .imePadding() 
+                .verticalScroll(scrollState)
                 .padding(20.dp)
         ) {
-            // Image Upload Section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,18 +165,6 @@ fun AddRecipeScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedButton(
-                onClick = { imageLauncher.launch("image/*") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("SELECT IMAGE", fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             LabelText("Recipe Name")
             AddRecipeTextField(value = recipeName, onValueChange = { recipeName = it }, placeholder = "Recipe Name")
 
@@ -145,27 +180,27 @@ fun AddRecipeScreen(navController: NavController) {
             LabelText("Course")
             DropdownField(
                 value = course,
-                options = listOf("Breakfast", "Lunch", "Dinner"),
+                options = listOf("Breakfast", "Lunch", "Dinner", "Snack"),
                 onSelected = { course = it }
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    LabelText("Total Time")
+                    LabelText("Total Time (min)")
                     AddRecipeTextField(
                         value = totalTime,
                         onValueChange = { totalTime = it },
-                        placeholder = "Pick time here",
+                        placeholder = "e.g. 30",
                         trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    LabelText("Calories")
+                    LabelText("Calories (kcal)")
                     AddRecipeTextField(
-                        value = "$calories kcal",
+                        value = "$totalCalories",
                         onValueChange = { },
                         readOnly = true,
-                        placeholder = "0 kcal"
+                        placeholder = "0"
                     )
                 }
             }
@@ -180,21 +215,31 @@ fun AddRecipeScreen(navController: NavController) {
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    LabelText("Estimated Budget")
+                    LabelText("Budget (RM)")
                     DropdownField(
                         value = budget,
-                        options = listOf("RM 0 - 10", "RM 10 - 20", "RM 20 - 30", "RM 30 - 40", "RM 40 - 50", "RM 50 - 60", "RM 60 - 70", "RM 70 - 80", "RM 80 - 90", "RM 90 - 100"),
+                        options = listOf("0 - 20", "20 - 40", "40 - 60", "60 - 80", "80 - 100"),
                         onSelected = { budget = it }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            LabelText("Ingredients")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LabelText("Ingredients")
+                TextButton(onClick = { showResetDialog = true }) {
+                    Text("Reset Ingredients", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            }
             
             ingredients.forEachIndexed { index, item ->
                 IngredientRow(
                     item = item,
+                    availableIngredients = viewModel.availableIngredients,
                     onRemove = { if (ingredients.size > 1) ingredients.removeAt(index) },
                     onUpdate = { updated -> ingredients[index] = updated }
                 )
@@ -202,7 +247,7 @@ fun AddRecipeScreen(navController: NavController) {
             }
 
             TextButton(
-                onClick = { ingredients.add(IngredientInput()) },
+                onClick = { ingredients.add(IngredientInputState()) },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Icon(painterResource(id = R.drawable.ic_outline_add), null, modifier = Modifier.size(20.dp))
@@ -216,24 +261,96 @@ fun AddRecipeScreen(navController: NavController) {
                 onValueChange = { steps = it },
                 placeholder = "1. Cook the Pasta",
                 singleLine = false,
-                modifier = Modifier.height(120.dp)
+                modifier = Modifier
+                    .height(120.dp)
+                    .onFocusEvent { focusState ->
+                        if (focusState.isFocused) {
+                            coroutineScope.launch {
+                                bringIntoViewRequester.bringIntoView()
+                            }
+                        }
+                    }
+                    .bringIntoViewRequester(bringIntoViewRequester)
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (viewModel.errorMessage != null) {
+                Text(
+                    text = viewModel.errorMessage!!,
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
 
             Button(
-                onClick = { /* Save Logic */ },
+                onClick = {
+                    val nextId = viewModel.generateNextRecipeId()
+                    
+                    var imageBytes: ByteArray? = null
+                    if (imageBitmap != null) {
+                        val stream = java.io.ByteArrayOutputStream()
+                        imageBitmap!!.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                        imageBytes = stream.toByteArray()
+                    }
+
+                    val recipe = Recipe(
+                        recipe_id = nextId,
+                        author_id = authViewModel.currentUser?.id,
+                        recipeName = recipeName,
+                        recipeDescription = description,
+                        recipeCourse = course,
+                        time = totalTime.toIntOrNull() ?: 0,
+                        calories = totalCalories,
+                        cookingSkill = cookingSkill,
+                        estimatedBudget = budget,
+                        recipeStep = steps,
+                        recipeImageUrl = null, 
+                        ingredients = ingredients.map { IngredientItem(it.name, it.quantity, it.unit) }
+                    )
+                    viewModel.addRecipe(recipe, imageBytes)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                enabled = !viewModel.isLoading
             ) {
-                Text("ADD RECIPE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("ADD RECIPE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             }
             
             Spacer(modifier = Modifier.height(40.dp))
         }
+    }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("Clear Ingredients?") },
+            text = { Text("Are you sure you want to clear all the ingredients you've entered?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        ingredients.clear()
+                        ingredients.add(IngredientInputState())
+                        showResetDialog = false
+                    }
+                ) {
+                    Text("Yes", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("No", color = Color.Gray)
+                }
+            }
+        )
     }
 }
 
@@ -258,18 +375,19 @@ fun AddRecipeTextField(
     readOnly: Boolean = false,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
-    OutlinedTextField(
+    TextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder, fontSize = 14.sp, color = Color.Gray) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().then(if (singleLine) Modifier.height(52.dp) else Modifier),
         singleLine = singleLine,
         readOnly = readOnly,
         shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color.Transparent,
-            unfocusedBorderColor = Color.Transparent,
+        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
             unfocusedContainerColor = Color(0xFFE8E8E8),
             focusedContainerColor = Color(0xFFE8E8E8),
             focusedTextColor = Color.Black,
@@ -280,24 +398,28 @@ fun AddRecipeTextField(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownField(value: String, options: List<String>, onSelected: (String) -> Unit) {
+fun DropdownField(value: String, options: List<String>, onSelected: (String) -> Unit, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
-        OutlinedTextField(
+        TextField(
             value = value,
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
+            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
             shape = RoundedCornerShape(12.dp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
                 unfocusedContainerColor = Color(0xFFE8E8E8),
                 focusedContainerColor = Color(0xFFE8E8E8),
                 focusedTextColor = Color.Black,
@@ -310,7 +432,7 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option, fontSize = 14.sp) },
                     onClick = {
                         onSelected(option)
                         expanded = false
@@ -321,34 +443,159 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IngredientRow(item: IngredientInput, onRemove: () -> Unit, onUpdate: (IngredientInput) -> Unit) {
+fun IngredientRow(
+    item: IngredientInputState,
+    availableIngredients: List<Ingredient>,
+    onRemove: () -> Unit,
+    onUpdate: (IngredientInputState) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1.5f)) {
-            Text("Name", fontSize = 12.sp, color = Color.Gray)
-            AddRecipeTextField(value = item.name, onValueChange = { onUpdate(item.copy(name = it)) }, placeholder = "e.g. Flour")
-        }
         Column(modifier = Modifier.weight(1f)) {
-            Text("Quantity", fontSize = 12.sp, color = Color.Gray)
-            AddRecipeTextField(value = item.quantity, onValueChange = { onUpdate(item.copy(quantity = it)) }, placeholder = "0")
+            Text("Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+            var nameExpanded by remember { mutableStateOf(false) }
+            
+            val filteredIngredients = remember(item.name, availableIngredients) {
+                availableIngredients
+                    .filter { it.name?.contains(item.name, ignoreCase = true) == true }
+                    .take(50)
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = nameExpanded && filteredIngredients.isNotEmpty(),
+                onExpandedChange = { nameExpanded = it }
+            ) {
+                TextField(
+                    value = item.name,
+                    onValueChange = { 
+                        onUpdate(item.copy(name = it))
+                        nameExpanded = true 
+                    },
+                    placeholder = { Text("e.g. Flour", fontSize = 14.sp, color = Color.Gray) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nameExpanded) },
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        unfocusedContainerColor = Color(0xFFE8E8E8),
+                        focusedContainerColor = Color(0xFFE8E8E8),
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = nameExpanded,
+                    onDismissRequest = { nameExpanded = false },
+                    modifier = Modifier.heightIn(max = 300.dp) 
+                ) {
+                    filteredIngredients.forEach { ingredient ->
+                        DropdownMenuItem(
+                            text = { 
+                                Column {
+                                    Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium)
+                                    if (ingredient.defaultUnit != null) {
+                                        Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = Color.Gray)
+                                    }
+                                }
+                            },
+                            onClick = {
+                                onUpdate(item.copy(
+                                    name = ingredient.name ?: "",
+                                    unit = ingredient.defaultUnit ?: "pieces"
+                                ))
+                                nameExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Quantity", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+                    var qtyExpanded by remember { mutableStateOf(false) }
+                    
+                    TextField(
+                        value = item.quantity,
+                        onValueChange = { onUpdate(item.copy(quantity = it)) },
+                        placeholder = { Text("0", fontSize = 14.sp, color = Color.Gray) },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+                        trailingIcon = {
+                            IconButton(onClick = { qtyExpanded = true }) {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = qtyExpanded)
+                            }
+                            DropdownMenu(expanded = qtyExpanded, onDismissRequest = { qtyExpanded = false }) {
+                                listOf("1/2", "1/4", "3/4").forEach { fraction ->
+                                    DropdownMenuItem(
+                                        text = { Text(fraction) },
+                                        onClick = {
+                                            val current = item.quantity.toDoubleOrNull() ?: 0.0
+                                            val add = when(fraction) {
+                                                "1/2" -> 0.5
+                                                "1/4" -> 0.25
+                                                "3/4" -> 0.75
+                                                else -> 0.0
+                                            }
+                                            onUpdate(item.copy(quantity = (current + add).toString()))
+                                            qtyExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            unfocusedContainerColor = Color(0xFFE8E8E8),
+                            focusedContainerColor = Color(0xFFE8E8E8),
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        )
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Unit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+                    AddRecipeTextField(
+                        value = item.unit,
+                        onValueChange = { },
+                        placeholder = "-",
+                        readOnly = true
+                    )
+                }
+            }
         }
-        Column(modifier = Modifier.weight(1f)) {
-            Text("Unit", fontSize = 12.sp, color = Color.Gray)
-            AddRecipeTextField(value = item.unit, onValueChange = { onUpdate(item.copy(unit = it)) }, placeholder = "Unit")
-        }
-        
-        IconButton(onClick = onRemove, modifier = Modifier.padding(top = 16.dp)) {
-            Icon(painterResource(id = R.drawable.ic_remove), "Remove", tint = Color.Black, modifier = Modifier.size(20.dp))
+
+        IconButton(
+            onClick = onRemove, 
+            modifier = Modifier.padding(start = 8.dp, top = 20.dp).size(32.dp)
+        ) {
+            Icon(painterResource(id = R.drawable.ic_remove), "Remove", tint = Color.Black)
         }
     }
 }
 
-data class IngredientInput(
+data class IngredientInputState(
     val name: String = "",
     val quantity: String = "",
-    val unit: String = "pcs"
+    val unit: String = "pieces"
 )
