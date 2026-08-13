@@ -59,6 +59,10 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
     private val _addRecipeSuccess = MutableSharedFlow<Boolean>()
     val addRecipeSuccess = _addRecipeSuccess.asSharedFlow()
 
+    // 🌟 Shared Flow for bookmark feedback messages
+    private val _bookmarkMessage = MutableSharedFlow<String>()
+    val bookmarkMessage = _bookmarkMessage.asSharedFlow()
+
     private var isFetchingIngredients = false
     private var isFetchingAll = false
 
@@ -118,31 +122,23 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
     }
 
     fun fetchRecipeById(recipeId: String) {
-        // 1. Quick Check: If it's already in our memory cache, load it instantly
         val cachedRecipe = recipeList.find { it.recipe_id == recipeId }
         if (cachedRecipe != null) {
             selectedRecipe = cachedRecipe
             return
         }
 
-        // 2. Fallback: If not found in memory, query database/repository asynchronously
         viewModelScope.launch {
             isLoading = true
             val dao = getDao()
-
             try {
-                val localEntity = dao?.getRecipeById(recipeId) // Assumes you have this in RecipeDao
+                val localEntity = dao?.getRecipeById(recipeId)
                 if (localEntity != null) {
                     selectedRecipe = mapEntityToRecipe(localEntity)
                 } else {
-                    // If missing locally, pull from the network repository
-                    repository.getRecipeById(recipeId) // Assumes you have this in Repository
-                        .onSuccess { recipe ->
-                            selectedRecipe = recipe
-                        }
-                        .onFailure { e ->
-                            errorMessage = "Recipe not found: ${e.message}"
-                        }
+                    repository.getRecipeById(recipeId)
+                        .onSuccess { recipe -> selectedRecipe = recipe }
+                        .onFailure { e -> errorMessage = "Recipe not found: ${e.message}" }
                 }
             } catch (e: Exception) {
                 errorMessage = e.message
@@ -154,7 +150,6 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     fun fetchAllRecipes(force: Boolean = false) {
         if (isFetchingAll) return
-        
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
             try {
@@ -163,9 +158,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                     isFetchingAll = false
                     return@launch
                 }
-                
                 if (recipeList.isEmpty()) isLoading = true
-                
                 repository.getAllRecipes()
                     .onSuccess { recipes ->
                         recipeList = recipes.sortedBy { it.recipe_id }
@@ -197,7 +190,6 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     fun fetchAvailableIngredients() {
         if (isFetchingIngredients) return
-        
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
             try {
@@ -217,12 +209,24 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         }
     }
 
-    fun fetchBookmarkIds(userId: String) {
+    fun fetchBookmarkIds(userId: String, force: Boolean = false) {
+        // 🌟 Ensure we use the short ID (U001) for both Room and Supabase
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
-            val localIds = dao.getBookmarkIds(userId)
-            if (localIds.isNotEmpty()) bookmarkedRecipeIds = localIds.toSet()
+            
+            // 🌟 1. If memory already has IDs and we aren't forcing, don't fetch from server
+            // This prevents "Reverting Icon" when switching tabs quickly
+            if (!force && bookmarkedRecipeIds.isNotEmpty()) {
+                return@launch
+            }
 
+            // 2. Load from Room as fallback
+            if (bookmarkedRecipeIds.isEmpty()) {
+                val localIds = dao.getBookmarkIds(userId)
+                if (localIds.isNotEmpty()) bookmarkedRecipeIds = localIds.toSet()
+            }
+
+            // 3. Sync with Supabase in background
             repository.getUserBookmarkIds(userId)
                 .onSuccess { ids -> 
                     bookmarkedRecipeIds = ids.toSet()
@@ -232,23 +236,69 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         }
     }
 
-    fun toggleBookmark(userId: String, recipeId: String) {
+    fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
         viewModelScope.launch {
+            val dao = getDao()
+            
+            // 🌟 1. Update Memory IDs IMMEDIATELY
             bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
+            
+            // 🌟 2. Update Memory List IMMEDIATELY (so Tab 2 updates without flickering)
+            if (isBookmarked) {
+                bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+            } else {
+                // Find the recipe object from the main list to add it to bookmarks tab
+                recipeList.find { it.recipe_id == recipeId }?.let {
+                    bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
+                }
+            }
+
+            // 3. Update Local Room Database
+            try {
+                if (isBookmarked) {
+                    dao?.deleteBookmark(userId, recipeId)
+                } else {
+                    dao?.insertBookmarks(listOf(BookmarkEntity(userId, recipeId)))
+                }
+            } catch (e: Exception) { }
+
+            // 4. Feedback
+            if (!isBookmarked) {
+                _bookmarkMessage.emit("Added to favorite: $recipeName")
+            } else {
+                _bookmarkMessage.emit("Removed from favorites")
+            }
+
+            // 5. Persist to Supabase in background
             repository.toggleBookmark(userId, recipeId, isBookmarked)
+                .onFailure { e ->
+                    Log.e("RecipeViewModel", "Supabase bookmark failed: ${e.message}", e)
+                    // Optional: Revert UI if needed, but keeping it simple for now
+                }
         }
     }
 
-    fun fetchBookmarkedRecipes(userId: String) {
+    fun fetchBookmarkedRecipes(userId: String, force: Boolean = false) {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
+            
+            // 🌟 1. If we already have data in memory and aren't forcing, STOP.
+            // This prevents old server data from overwriting your latest clicks.
+            if (!force && bookmarkedRecipes.isNotEmpty()) {
+                return@launch
+            }
+
+            // 2. Load from Room fallback
             val local = dao.getBookmarkedRecipes(userId)
             if (local.isNotEmpty()) bookmarkedRecipes = local.map { mapEntityToRecipe(it) }
 
+            // 3. Sync with Supabase in background
             isLoading = true
             repository.getBookmarkedRecipes(userId)
-                .onSuccess { recipes -> bookmarkedRecipes = recipes.sortedBy { it.recipe_id } }
+                .onSuccess { recipes -> 
+                    bookmarkedRecipes = recipes.sortedBy { it.recipe_id } 
+                }
             isLoading = false
         }
     }

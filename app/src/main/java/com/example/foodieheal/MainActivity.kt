@@ -209,15 +209,15 @@ class MainActivity : ComponentActivity() {
                                 exitTransition = { fadeOut(animationSpec = tween(400)) }
                             ) {
                                 // --- AUTH ---
-                                composable(Screen.Login.route) { LoginScreen(navController) }
-                                composable(Screen.Register.route) { RegisterScreen(navController) }
+                                composable(Screen.Login.route) { LoginScreen(navController, sharedAuthViewModel) }
+                                composable(Screen.Register.route) { RegisterScreen(navController, sharedAuthViewModel) }
 
-                                // --- TABS (Manually apply innerPadding to avoid NavHost-wide resize shifts) ---
+                                // --- TABS ---
                                 composable(Screen.Home.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(navController, sharedAuthViewModel) }
                                 }
                                 composable(Screen.Recipes.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { RecipesScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { RecipesScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
 
                                 composable(Screen.Planner.route) {
@@ -266,7 +266,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 composable(Screen.Profile.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---
@@ -299,7 +299,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     }
 
-                                composable(Screen.AddRecipe.route) { AddRecipeScreen(navController) }
+                                composable(Screen.AddRecipe.route) { AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
                                 composable(Screen.ChangePassword.route) { ChangePasswordScreen(navController) }
                                 composable(
