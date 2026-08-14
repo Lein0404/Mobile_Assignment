@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -36,19 +34,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
-import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.DetailSectionCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +53,6 @@ fun ChefDetailScreen(
     navController: NavController,
     viewModel: AdminApprovalViewModel = viewModel()
 ) {
-
     val chef = viewModel.selectedChef
 
     LaunchedEffect(chefId) {
@@ -65,19 +60,22 @@ fun ChefDetailScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF7F8FC),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Chef Details", fontWeight = FontWeight.Bold) },
-
+                    Text(
+                        text = stringResource(R.string.chef_details),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navController.navigate(Screen.AdminChefScreen.route) }
+                        onClick = { navController.popBackStack() }
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -87,22 +85,22 @@ fun ChefDetailScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
                     actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
-
             )
         }
     ) { padding ->
 
         if (chef == null) {
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
+            val currentChef = chef
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,13 +110,13 @@ fun ChefDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-                // Profile Header
+                // Profile Header Card
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(5.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -126,115 +124,106 @@ fun ChefDetailScreen(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(90.dp)
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (chef.profilePictureUrl.isNullOrEmpty()) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_outline_account_circle),
-                                    contentDescription = "Default Profile",
-                                    tint = Color(0xFFFF9800),
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                AsyncImage(
-                                    model = chef.profilePictureUrl,
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
+                        if (currentChef.profilePictureUrl.isNullOrEmpty()) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_outline_account_circle),
+                                contentDescription = stringResource(R.string.default_profile),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            AsyncImage(
+                                model = currentChef.profilePictureUrl,
+                                contentDescription = stringResource(R.string.profile_picture),
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
                         }
 
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
-                        )
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = chef!!.name,
+                            text = currentChef.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Spacer(
-                            modifier = Modifier.height(8.dp)
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        StatusChip(
-                            status = chef!!.status
-                        )
+                        StatusChip(status = currentChef.status)
                     }
                 }
 
-                // Personal Information
+                // Personal Information Card
                 DetailSectionCard(
-                    title = "Personal Information"
+                    title = stringResource(R.string.personal_info)
                 ) {
                     DetailRow(
                         painter = painterResource(R.drawable.ic_outline_account_circle),
-                        "Gender",
-                        chef!!.gender
+                        label = stringResource(R.string.label_gender),
+                        value = currentChef.gender
                     )
 
                     DetailRow(
                         painter = painterResource(R.drawable.age),
-                        "Age",
-                        chef!!.age.toString()
+                        label = stringResource(R.string.label_age),
+                        value = currentChef.age.toString()
                     )
                 }
 
-                // Contact Information
+                // Contact Information Card
                 DetailSectionCard(
-                    title = "Contact Information"
+                    title = stringResource(R.string.contact_info)
                 ) {
                     DetailRow(
                         painter = painterResource(R.drawable.mail),
-                        "Email",
-                        chef!!.email
+                        label = stringResource(R.string.label_email),
+                        value = currentChef.email
                     )
+
                     DetailRow(
                         painter = painterResource(R.drawable.telephone),
-                        "Phone",
-                        chef!!.phoneNumber
+                        label = stringResource(R.string.label_phone),
+                        value = currentChef.phoneNumber
                     )
+
                     DetailRow(
                         painter = painterResource(R.drawable.location),
-                        "Address",
-                        "${chef!!.address}, ${chef!!.postcode}, ${chef!!.state}"
+                        label = stringResource(R.string.label_address),
+                        value = stringResource(
+                            R.string.full_address_format,
+                            currentChef.address,
+                            currentChef.postcode,
+                            currentChef.state
+                        )
                     )
                 }
 
-                // Experience
+                // Professional Information Card
                 DetailSectionCard(
-                    title = "Professional Information"
+                    title = stringResource(R.string.professional_info)
                 ) {
                     DetailRow(
                         painter = painterResource(R.drawable.ic_clock),
-                        "Experience",
-                        "${chef!!.experience} years"
+                        label = stringResource(R.string.label_experience),
+                        value = stringResource(R.string.experience_years_format, currentChef.experience)
                     )
-                    Text(
-                        text = "Description",
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(
-                        modifier = Modifier.height(6.dp)
-                    )
-                    Text(
-                        text = chef!!.description,
-                        color = Color.DarkGray
+
+                    DetailRow(
+                        painter = painterResource(R.drawable.ic_view),
+                        label = stringResource(R.string.label_description),
+                        value = currentChef.description
                     )
                 }
 
-                Spacer(
-                    modifier = Modifier.height(10.dp)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
 
+                // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -244,21 +233,19 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
-                            viewModel.updateChefStatus(
-                                chef!!.chefId,
-                                "Approved"
-                            )
+                            viewModel.updateChefStatus(currentChef.chefId, "Approved")
                             navController.popBackStack()
                         }
                     ) {
-                        Spacer(
-                            Modifier.width(8.dp)
+                        Text(
+                            text = stringResource(R.string.approve),
+                            fontWeight = FontWeight.Bold
                         )
-                        Text("Approve")
                     }
 
                     Button(
@@ -266,88 +253,22 @@ fun ChefDetailScreen(
                             .weight(1f)
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935)
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         ),
                         shape = RoundedCornerShape(14.dp),
                         onClick = {
-                            viewModel.updateChefStatus(
-                                chef!!.chefId,
-                                "Rejected"
-                            )
+                            viewModel.updateChefStatus(currentChef.chefId, "Rejected")
                             navController.popBackStack()
                         }
                     ) {
-                        Spacer(
-                            Modifier.width(8.dp)
+                        Text(
+                            text = stringResource(R.string.reject),
+                            fontWeight = FontWeight.Bold
                         )
-                        Text("Reject")
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun DetailSectionCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        shape = RoundedCornerShape(18.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            HorizontalDivider()
-
-            content()
-
-        }
-    }
-}
-
-@Composable
-fun DetailRow(
-    painter: Painter,
-    label: String,
-    value: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(
-            Modifier.width(12.dp)
-        )
-        Column {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = value,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }

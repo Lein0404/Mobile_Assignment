@@ -121,7 +121,7 @@ fun IngredientDetailScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
                                 loading = {
-                                    CircularProgressIndicator(modifier = Modifier.scale(0.5f))
+                                    CircularProgressIndicator(modifier = Modifier.scale(0.5f)) // TODO: make the CPI smaller
                                 },
                                 error = { ImagePlaceholder() }
                             )
@@ -162,7 +162,15 @@ fun IngredientDetailScreen(
                             if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
                                 IconButton(onClick = {
                                     if (isRequest) {
-                                        // Accepted request logic
+                                        requestDetail?.request?.let { request ->
+                                            val productionId = request.ingredientId
+                                            if (productionId != null) {
+                                                ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
+                                                Toast.makeText(context, "${request.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Error: Production ID missing for this request", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     } else {
                                         ingredientsUiState.ingredientDetail?.ingredient?.let {
                                             ingredientsViewModel.addToShoppingList(it)
@@ -206,6 +214,16 @@ fun IngredientDetailScreen(
                             Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(
                                 text = requestDetail?.request?.rejectedReason ?: "Unspecified.",
+                                color = Color.Black,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+
+                        if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = requestDetail?.request?.adminNote ?: "",
                                 color = Color.Black,
                                 modifier = Modifier.padding(top = 4.dp)
                             )

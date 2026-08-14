@@ -1,6 +1,9 @@
 package com.example.foodieheal.Chef
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,29 +14,38 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.foodieheal.Chef.Home.AppointmentDetailScreen
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
+import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
+import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
+import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
-sealed class ChefNavigationItem(val route: String, val title: String, val iconRes: Int) {
-    object Home : ChefNavigationItem("chef_home", "Home", R.drawable.ic_home)
-    object Appointments : ChefNavigationItem("chef_appointments", "Appointments", R.drawable.ic_planner)
-    object Profile : ChefNavigationItem("chef_profile", "Profile", R.drawable.ic_outline_account_circle)
+sealed class ChefNavigationItem(val route: String, val titleRes: Int, val iconRes: Int) {
+    object Home : ChefNavigationItem("chef_home", R.string.nav_home, R.drawable.ic_home)
+    object Appointments : ChefNavigationItem("chef_appointments", R.string.nav_appointments, R.drawable.ic_planner)
+    object Profile : ChefNavigationItem("chef_profile", R.string.nav_profile, R.drawable.ic_outline_account_circle)
 }
 
 @Composable
@@ -42,6 +54,7 @@ fun ChefMainScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val chefNavController = rememberNavController()
+    val homeViewModel: ChefPortalViewModel = viewModel()
 
     // Ensure chef data is loaded upon entry
     LaunchedEffect(Unit) {
@@ -62,22 +75,23 @@ fun ChefMainScreen(
         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         bottomBar = {
             NavigationBar(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                tonalElevation = 8.dp
+                windowInsets = WindowInsets.navigationBars
             ) {
                 val navBackStackEntry by chefNavController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
                 items.forEach { item ->
+                    val labelText = stringResource(id = item.titleRes)
                     NavigationBarItem(
                         icon = {
                             Icon(
                                 painter = painterResource(id = item.iconRes),
-                                contentDescription = item.title
+                                contentDescription = labelText
                             )
                         },
-                        label = { Text(text = item.title, fontSize = 10.sp) },
+                        label = { Text(labelText, fontSize = 10.sp) },
                         selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -106,32 +120,90 @@ fun ChefMainScreen(
             startDestination = ChefNavigationItem.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // 1. Chef Home Tab
-            composable(ChefNavigationItem.Home.route) {
-                ChefHomeScreen(
-                    navController = parentNavController,
-                    onNavigateToAppointments = {
-                        chefNavController.navigate(ChefNavigationItem.Appointments.route) {
-                            popUpTo(chefNavController.graph.startDestinationId) {
-                                saveState = true
+
+                composable(ChefNavigationItem.Home.route) {
+                    ChefHomeScreen(
+                        navController = parentNavController,
+                        homeViewModel = homeViewModel,
+                        onNavigateToAppointments = {
+                            chefNavController.navigate(ChefNavigationItem.Appointments.route) {
+                                popUpTo(chefNavController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        },
+                        onCardClick = { appointment ->
+
+                            homeViewModel.selectAppointment(appointment)
+                            chefNavController.navigate(Screen.AppointmentDetails.route)
                         }
+                    )
+                }
+
+            composable(ChefNavigationItem.Appointments.route) {
+                AppointmentsScreen(
+                    viewModel = homeViewModel,
+                    onCardClick = { appointment ->
+                        homeViewModel.selectAppointment(appointment)
+                        chefNavController.navigate(Screen.AppointmentDetails.route)
                     }
                 )
             }
-            // 2. Chef Appointments Tab
-            composable(ChefNavigationItem.Appointments.route) {
-                AppointmentsScreen()
+
+            composable(Screen.AppointmentDetails.route) {
+
+                val appointment = homeViewModel.selectedAppointment
+
+                if (appointment != null) {
+                    val apptUiState by homeViewModel.appointmentsUiState.collectAsState()
+                    val homeUiState by homeViewModel.homeUiState.collectAsState()
+
+                    val usersMap = (apptUiState as? AppointmentsUiState.Success)?.usersMap
+                        ?: (homeUiState as? HomeUiState.Success)?.usersMap
+                        ?: emptyMap()
+
+                    val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
+
+                    AppointmentDetailScreen(
+                        appointment = appointment,
+                        userName = userName,
+                        onBackClick = { chefNavController.popBackStack() },
+                        onStatusChange = { newStatus, rejectionReason ->
+                            val id = appointment.AppointmentID.orEmpty()
+                            if (id.isNotBlank()) {
+                                homeViewModel.updateAppointmentStatus(
+                                    appointmentId = id,
+                                    newStatus = newStatus,
+                                    rejectionReason = rejectionReason
+                                )
+                                chefNavController.popBackStack()
+                            }
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No appointment selected", color = Color.Gray)
+                    }
+                }
             }
 
-            // 3. Chef Profile Tab
             composable(ChefNavigationItem.Profile.route) {
                 ChefProfileScreen(
                     navController = parentNavController, // Pass parent controller to allow complete logout back to root/login graph
                     chef = currentChef,
-                    onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) }
+                    viewModel = authViewModel,
+                    onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) },
+                    onLogoutSuccess = {
+                        // Navigate using parent controller at the top level
+                        parentNavController.navigate(Screen.Login.route) {
+                            popUpTo(parentNavController.graph.id) { inclusive = true }
+                        }
+                    }
                 )
             }
 
