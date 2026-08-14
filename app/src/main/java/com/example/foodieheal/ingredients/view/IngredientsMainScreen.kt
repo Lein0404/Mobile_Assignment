@@ -32,7 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
-import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModelFactory
+import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
@@ -54,14 +54,25 @@ fun IngredientsScreenPreview() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IngredientsMainScreen(navController: NavController, initialTab: Int = -1) {
+fun IngredientsMainScreen(
+    navController: NavController,
+    initialTab: Int = -1
+) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
-    
-    val viewModel: IngredientsViewModel = viewModel()
-    val requestViewModel: IngredientRequestViewModel = viewModel(
-        factory = IngredientRequestViewModelFactory(application)
-    )
+
+    /**
+     * Calls the `IngredientsViewModelFactory`
+     * which initializes:
+     * - `IngredientsViewModel` with an `Application` argument passed from here,
+     *   an `IngredientsRepository` instance and a `ShoppingListRepository` instance created and passed from IngredientsViewModelFactory
+     *
+     * - `IngredientRequestViewModel` with an `Application` argument passed from here,
+     *   and a `IngredientRequestRepository` instance created and passed from IngredientsViewModelFactory
+     */
+    val factory = IngredientsViewModelFactory(application)
+    val viewModel: IngredientsViewModel = viewModel(factory = factory)
+    val requestViewModel: IngredientRequestViewModel = viewModel(factory = factory)
     
     val uiState by viewModel.uiState.collectAsState()
     val requestUiState by requestViewModel.uiState.collectAsState()
@@ -311,7 +322,10 @@ fun IngredientRequestsScreen(
 }
 
 @Composable
-fun IngredientRequestCard(item: IngredientRequestItem, onClick: () -> Unit) {
+fun IngredientRequestCard(
+    item: IngredientRequestItem,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

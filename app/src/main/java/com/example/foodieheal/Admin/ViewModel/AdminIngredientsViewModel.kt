@@ -37,8 +37,8 @@ data class AdminIngredientRequestItem(
 
 class AdminIngredientsViewModel(
     application: Application,
-    private val repository: IngredientRequestRepository = IngredientRequestRepository(),
-    private val userRepository: UserRepository = UserRepository()
+    private val repository: IngredientRequestRepository,
+    private val userRepository: UserRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AdminIngredientRequestUiState())
@@ -130,12 +130,3 @@ class AdminIngredientsViewModel(
     }
 }
 
-class AdminIngredientsViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AdminIngredientsViewModel::class.java)) {
-            return AdminIngredientsViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-    }
-}

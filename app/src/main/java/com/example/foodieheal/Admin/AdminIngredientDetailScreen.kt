@@ -25,7 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModelFactory
+import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.view.ImagePlaceholder
 import com.example.foodieheal.model.Status
@@ -45,7 +45,7 @@ fun AdminIngredientDetailScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val viewModel: AdminIngredientRequestViewModel = viewModel(
-        factory = AdminIngredientRequestViewModelFactory(application)
+        factory = AdminViewModelFactory(application)
     )
     val requestItem by viewModel.requestDetail.collectAsState()
     val actionUiState by viewModel.uiState.collectAsState()

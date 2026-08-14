@@ -43,11 +43,11 @@ data class CalorieEntry(
     val unitName: String
 )
 
-class IngredientsViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val database = IngredientsDatabase.getInstance(application)
-    private val repository = IngredientsRepository(database.ingredientsDao())
-    private val shoppingRepo = ShoppingListRepository(database.shoppingListDao())
+class IngredientsViewModel(
+    application: Application,
+    private val repository: IngredientsRepository,
+    private val shoppingRepo: ShoppingListRepository
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(IngredientsUiState())
     val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()

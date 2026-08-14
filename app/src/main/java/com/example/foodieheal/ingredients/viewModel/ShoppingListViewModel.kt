@@ -22,11 +22,11 @@ data class ShoppingListUiState(
     val errorMessage: String? = null
 )
 
-class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val database = IngredientsDatabase.getInstance(application)
-    private val shoppingRepo = ShoppingListRepository(database.shoppingListDao())
-    private val ingredientsRepo = IngredientsRepository(database.ingredientsDao())
+class ShoppingListViewModel(
+    application: Application,
+    private val shoppingRepo: ShoppingListRepository,
+    private val ingredientsRepo: IngredientsRepository
+) : AndroidViewModel(application) {
     private val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
 
     private val _uiState = MutableStateFlow(ShoppingListUiState())

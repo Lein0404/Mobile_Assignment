@@ -32,7 +32,7 @@ import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
-import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModelFactory
+import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
@@ -48,7 +48,7 @@ fun IngredientRequestFormScreen(
     val application = context.applicationContext as Application
     
     val viewModel: IngredientRequestViewModel = viewModel(
-        factory = IngredientRequestViewModelFactory(application)
+        factory = IngredientsViewModelFactory(application)
     )
     
     val uiState by viewModel.uiState.collectAsState()

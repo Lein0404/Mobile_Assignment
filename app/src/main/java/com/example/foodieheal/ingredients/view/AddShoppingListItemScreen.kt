@@ -1,5 +1,6 @@
 package com.example.foodieheal.ingredients.view
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,14 +31,19 @@ import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
+import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddShoppingListItemScreen(
     navController: NavController,
-    ingredientsViewModel: IngredientsViewModel = viewModel(),
-    shoppingListViewModel: ShoppingListViewModel = viewModel()
+    ingredientsViewModel: IngredientsViewModel = viewModel(
+        factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
+    ),
+    shoppingListViewModel: ShoppingListViewModel = viewModel(
+        factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
+    )
 ) {
     val uiState by ingredientsViewModel.uiState.collectAsState()
     val context = LocalContext.current

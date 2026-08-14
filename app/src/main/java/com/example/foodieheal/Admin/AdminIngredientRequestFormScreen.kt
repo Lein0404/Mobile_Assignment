@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModelFactory
+import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.Cloudinary.CloudinaryUploadScreen
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
@@ -43,7 +43,7 @@ fun AdminIngredientRequestFormScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val viewModel: AdminIngredientRequestViewModel = viewModel(
-        factory = AdminIngredientRequestViewModelFactory(application)
+        factory = AdminViewModelFactory(application)
     )
     
     val formState by viewModel.formState.collectAsState()

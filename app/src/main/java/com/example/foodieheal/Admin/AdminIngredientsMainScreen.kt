@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestItem
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModel
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModelFactory
+import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ui.components.StatusBadge
@@ -39,7 +39,7 @@ fun AdminIngredientsScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val viewModel: AdminIngredientsViewModel = viewModel(
-        factory = AdminIngredientsViewModelFactory(application)
+        factory = AdminViewModelFactory(application)
     )
     val uiState by viewModel.uiState.collectAsState()
 

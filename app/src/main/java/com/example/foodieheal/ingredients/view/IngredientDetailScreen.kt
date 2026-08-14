@@ -27,7 +27,7 @@ import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
-import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModelFactory
+import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.PrimaryButton
@@ -43,10 +43,9 @@ fun IngredientDetailScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    val ingredientsViewModel: IngredientsViewModel = viewModel()
-    val requestViewModel: IngredientRequestViewModel = viewModel(
-        factory = IngredientRequestViewModelFactory(application)
-    )
+    val factory = IngredientsViewModelFactory(application)
+    val ingredientsViewModel: IngredientsViewModel = viewModel(factory = factory)
+    val requestViewModel: IngredientRequestViewModel = viewModel(factory = factory)
     
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
     val requestDetail by requestViewModel.requestDetail.collectAsState()
