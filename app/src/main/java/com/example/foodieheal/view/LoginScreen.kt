@@ -4,8 +4,10 @@ import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -84,20 +86,32 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F8F8))
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.weight(0.6f))
-
-        Text(
-            text = "Login",
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+        // 🌟 Seamless Orange Status Bar Strip
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(primaryColor)
+                .statusBarsPadding()
         )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.weight(0.6f))
+
+            Text(
+                text = "Login",
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
 
         Spacer(modifier = Modifier.height(48.dp))
 
@@ -271,5 +285,6 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         }
 
         Spacer(modifier = Modifier.weight(1f))
+        }
     }
 }

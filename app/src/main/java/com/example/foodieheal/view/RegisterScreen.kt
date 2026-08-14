@@ -61,31 +61,42 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F8F8))
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Back Button
-        Box(modifier = Modifier.fillMaxWidth()) {
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.Black)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "Register",
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+        // 🌟 Seamless Orange Status Bar Strip
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(primaryColor)
+                .statusBarsPadding()
         )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Back Button
+            Box(modifier = Modifier.fillMaxWidth()) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.Black)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Register",
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
 
         Spacer(modifier = Modifier.height(40.dp))
 
@@ -239,5 +250,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
