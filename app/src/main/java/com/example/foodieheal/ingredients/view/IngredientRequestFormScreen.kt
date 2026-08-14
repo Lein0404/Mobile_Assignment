@@ -228,17 +228,28 @@ fun IngredientRequestFormScreen(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
 
-                formState.unitRows.forEachIndexed { index, row ->
-                    UnitRow(
-                        index = index,
-                        selectedUnit = row.selectedUnit,
-                        calories = row.calories,
-                        availableUnits = availableUnits,
-                        onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                        onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
-                        unitError = row.unitError,
-                        caloriesError = row.caloriesError
-                    )
+                if (availableUnits.isNotEmpty()) {
+                    formState.unitRows.forEachIndexed { index, row ->
+                        UnitRow(
+                            index = index,
+                            selectedUnit = row.selectedUnit,
+                            calories = row.calories,
+                            availableUnits = availableUnits,
+                            onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
+                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
+                            unitError = row.unitError,
+                            caloriesError = row.caloriesError
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))

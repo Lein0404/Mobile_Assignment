@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import com.example.foodieheal.R
+import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
@@ -34,6 +35,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val chefRegisterViewModel: chefRegisterViewModel = viewModel()   
     
     // 🌟 Track if user has tried to submit for validation display
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
@@ -52,6 +54,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         window.statusBarColor = primaryColor.toArgb()
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
+
+    LaunchedEffect(Unit) {
+        chefRegisterViewModel.resetRegistrationFlow()
+    }
+
 
     LaunchedEffect(viewModel.loginSuccess) {
         if (viewModel.loginSuccess) {

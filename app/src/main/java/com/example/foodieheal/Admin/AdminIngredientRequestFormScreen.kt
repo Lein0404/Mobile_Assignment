@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientActionViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.Cloudinary.CloudinaryUploadScreen
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
@@ -34,13 +34,14 @@ import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 fun AdminIngredientRequestFormScreen(
     navController: NavController,
     requestId: String,
-    viewModel: AdminIngredientActionViewModel = viewModel(),
+    viewModel: AdminIngredientRequestViewModel = viewModel(),
     cloudinaryViewModel: CloudinaryUploadViewModel = viewModel()
 ) {
     val formState by viewModel.formState.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
+    val requestDetail by viewModel.requestDetail.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
 
     // TODO
     val errorMessage = formState.errorMessage
@@ -96,7 +97,7 @@ fun AdminIngredientRequestFormScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
                 // 1. Cloudinary Upload
@@ -162,15 +163,26 @@ fun AdminIngredientRequestFormScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                formState.unitRows.forEachIndexed { index, row ->
-                    UnitRow(
-                        index = index,
-                        selectedUnit = row.selectedUnit,
-                        calories = row.calories,
-                        availableUnits = availableUnits,
-                        onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                        onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null
-                    )
+                if (availableUnits.isNotEmpty()) {
+                    formState.unitRows.forEachIndexed { index, row ->
+                        UnitRow(
+                            index = index,
+                            selectedUnit = row.selectedUnit,
+                            calories = row.calories,
+                            availableUnits = availableUnits,
+                            onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
+                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -198,9 +210,9 @@ fun AdminIngredientRequestFormScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            enabled = !formState.isSubmitting
+            enabled = !formState.isSubmitting && requestDetail != null && !isLoading
         ) {
-            if (formState.isSubmitting) {
+            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
                 Text(
@@ -214,35 +226,24 @@ fun AdminIngredientRequestFormScreen(
     }
 
     if (showApproveDialog) {
-        AlertDialog(
-            onDismissRequest = { showApproveDialog = false },
-            title = { Text("Approve Request") },
-            text = { Text("Ingredient Request that is approved cannot be edited anymore. Are you sure?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showApproveDialog = false // Close dialog immediately
-                    viewModel.approveRequest(
-                        imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
-                        onComplete = {
-                            Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
-                            navController.navigate(Screen.AdminChefScreen.route) {
-                                popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
-                            }
+        ApproveRequestDialog(
+            onDismiss = { showApproveDialog = false },
+            onConfirm = { adminNote ->
+                showApproveDialog = false
+                viewModel.approveRequest(
+                    imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
+                    adminNote = if (adminNote.isBlank()) null else adminNote,
+                    onComplete = {
+                        Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
+                        navController.navigate(Screen.AdminChefScreen.route) {
+                            popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
                         }
-                    )
-                }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showApproveDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
-                }
+                    }
+                )
             }
         )
     }
 
-    // TODO
     if (showErrorDialog && errorMessage != null) {
         AlertDialog(
             onDismissRequest = { 
@@ -266,4 +267,41 @@ fun AdminIngredientRequestFormScreen(
             }
         )
     }
+}
+
+@Composable
+fun ApproveRequestDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var adminNote by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Approve Request", fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = adminNote,
+                    onValueChange = { adminNote = it },
+                    placeholder = { Text("Note (Optional)") },
+                    modifier = Modifier.fillMaxWidth().height(120.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(adminNote)
+            }) {
+                Text("Approve", color = MaterialTheme.colorScheme.primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.Gray)
+            }
+        }
+    )
 }

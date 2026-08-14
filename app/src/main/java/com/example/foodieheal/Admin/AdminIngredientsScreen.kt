@@ -83,9 +83,9 @@ fun AdminIngredientsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Filter by Status:", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            
+
             var expanded by remember { mutableStateOf(false) }
-            val statusOptions = listOf("All", "Pending", "Accepted", "Rejected")
+            val statusOptions = listOf("All", "Pending", "Approved", "Rejected")
             
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -189,7 +189,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
                 Text(item.calorieSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
                 Text("Requested By: ${item.requesterName}", style = MaterialTheme.typography.bodySmall)
             }
-            
+
             StatusBadge(status = item.request.requestStatus)
         }
     }
