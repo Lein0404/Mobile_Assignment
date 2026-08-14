@@ -21,6 +21,7 @@ data class IngredientRequestUiState(
     val requests: List<IngredientRequestItem> = emptyList(),
     val filteredRequests: List<IngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
+    val isStatusConflict: Boolean = false,
     val errorMessage: String? = null,
     val isNetworkAvailable: Boolean = true
 )
@@ -33,6 +34,7 @@ data class IngredientRequestFormUiState(
     val imageUrl: String? = null,
     val unitRows: List<UnitRowState> = listOf(UnitRowState()),
     val isSubmitting: Boolean = false,
+    val isStatusConflict: Boolean = false,
     val errorMessage: String? = null,
 
     // Per-field validation errors
@@ -160,6 +162,13 @@ class IngredientRequestViewModel(
     fun deleteRequest(requestId: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
+                // Guard: Check status before deleting
+                val current = repository.getIngredientRequestById(requestId)
+                if (current != null && current.requestStatus != Status.PENDING) {
+                    _uiState.update { it.copy(isStatusConflict = true) }
+                    return@launch
+                }
+
                 repository.deleteIngredientRequest(requestId)
                 fetchRequests()
                 onComplete()
@@ -184,6 +193,7 @@ class IngredientRequestViewModel(
                             category = request.ingredientCategory,
                             description = request.ingredientDesc,
                             imageUrl = request.ingredientImage,
+                            isStatusConflict = false,
                             unitRows = unitRequests.map { ur ->
                                 UnitRowState(
                                     selectedUnit = allUnits[ur.unitID],
@@ -201,6 +211,11 @@ class IngredientRequestViewModel(
 
     fun clearForm() {
         _formState.value = IngredientRequestFormUiState()
+    }
+
+    fun clearStatusConflict() {
+        _uiState.update { it.copy(isStatusConflict = false) }
+        _formState.update { it.copy(isStatusConflict = false) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -328,6 +343,15 @@ class IngredientRequestViewModel(
         viewModelScope.launch {
             _formState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
+                // Check if request is still PENDING before updating
+                if (state.requestId != null) {
+                    val currentRequest = repository.getIngredientRequestById(state.requestId)
+                    if (currentRequest?.requestStatus != Status.PENDING) {
+                        _formState.update { it.copy(isSubmitting = false, isStatusConflict = true) }
+                        return@launch
+                    }
+                }
+
                 // Generate sequential IDs
                 val requestId = state.requestId ?: repository.getNextRequestId()
                 val filledRows = state.unitRows.filter { it.selectedUnit != null && it.calories.isNotBlank() }

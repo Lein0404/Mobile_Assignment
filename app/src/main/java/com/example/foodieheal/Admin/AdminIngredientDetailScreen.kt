@@ -53,6 +53,18 @@ fun AdminIngredientDetailScreen(
     
     var showRejectDialog by remember { mutableStateOf(false) }
 
+    RequestConflictDialog(
+        isDeleted = actionUiState.isDeletedByUser,
+        isProcessed = actionUiState.isAlreadyProcessed,
+        onDeletedConfirm = {
+            navController.popBackStack()
+        },
+        onProcessedConfirm = {
+            // Already on detail screen, just refresh or close dialog
+            viewModel.fetchRequestDetail(requestId)
+        }
+    )
+
     LaunchedEffect(requestId) {
         viewModel.fetchRequestDetail(requestId)
     }
@@ -331,4 +343,36 @@ fun RejectRequestDialog(
             }
         }
     )
+}
+
+@Composable
+private fun RequestConflictDialog(
+    isDeleted: Boolean,
+    isProcessed: Boolean,
+    onDeletedConfirm: () -> Unit,
+    onProcessedConfirm: () -> Unit
+) {
+    if (isDeleted) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Deleted", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has been deleted by the user.") },
+            confirmButton = {
+                TextButton(onClick = onDeletedConfirm) {
+                    Text("OK")
+                }
+            }
+        )
+    } else if (isProcessed) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has already been approved or rejected by another administrator.") },
+            confirmButton = {
+                TextButton(onClick = onProcessedConfirm) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }

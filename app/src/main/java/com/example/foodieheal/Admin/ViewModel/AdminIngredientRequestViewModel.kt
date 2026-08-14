@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 data class AdminRequestActionUiState(
     val isNetworkAvailable: Boolean = true,
     val isLoading: Boolean = false,
+    val isDeletedByUser: Boolean = false,
+    val isAlreadyProcessed: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -67,30 +69,91 @@ class AdminIngredientRequestViewModel(
 
     fun fetchRequestDetail(requestId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, isDeletedByUser = false, isAlreadyProcessed = false) }
             try {
                 val request = repository.getIngredientRequestById(requestId)
-                if (request != null) {
-                    val user = userRepository.getUserById(request.createdByUserId)
-                    val allUnits = repository.getUnits().associateBy { it.unitID }
-                    val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
-
-                    val summary = unitRequests.joinToString("\n") { ur ->
-                        val unit = allUnits[ur.unitID]
-                        val qty = unit?.defaultQuantity?.toInt() ?: 100
-                        val display = unit?.unitDisplay ?: ""
-                        "${ur.caloriesPerDefaultQuantity.toInt()} kcal / ${qty} ${display}"
-                    }
-                    _requestDetail.value = AdminIngredientRequestItem(
-                        request = request,
-                        requesterName = user?.name ?: "Unknown",
-                        requesterCustomId = user?.customId ?: "Unknown",
-                        calorieSummary = summary
-                    )
+                if (request == null) {
+                    _uiState.update { it.copy(isLoading = false, isDeletedByUser = true) }
+                    return@launch
                 }
+
+                val user = userRepository.getUserById(request.createdByUserId)
+                val allUnits = repository.getUnits().associateBy { it.unitID }
+                val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
+
+                val summary = unitRequests.joinToString("\n") { ur ->
+                    val unit = allUnits[ur.unitID]
+                    val qty = unit?.defaultQuantity?.toInt() ?: 100
+                    val display = unit?.unitDisplay ?: ""
+                    "${ur.caloriesPerDefaultQuantity.toInt()} kcal / ${qty} ${display}"
+                }
+                _requestDetail.value = AdminIngredientRequestItem(
+                    request = request,
+                    requesterName = user?.name ?: "Unknown",
+                    requesterCustomId = user?.customId ?: "Unknown",
+                    calorieSummary = summary
+                )
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun populateFormForReview(requestId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, isDeletedByUser = false, isAlreadyProcessed = false) }
+            try {
+                val request = repository.getIngredientRequestById(requestId)
+                // If the request is deleted by the user
+                if (request == null) {
+                    _uiState.update { it.copy(isLoading = false, isDeletedByUser = true) }
+                    return@launch
+                }
+                // If the request is being approved by another admin at the meantime
+                if (request.requestStatus != Status.PENDING) {
+                    _uiState.update { it.copy(isLoading = false, isAlreadyProcessed = true) }
+                    return@launch
+                }
+                // If the request still exists and pending, proceed
+
+                val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
+                val allUnits = repository.getUnits().associateBy { it.unitID }
+
+                // Populate requestDetail for later use in approveRequest
+                val user = userRepository.getUserById(request.createdByUserId)
+                val summary = unitRequests.joinToString("\n") { ur ->
+                    val unit = allUnits[ur.unitID]
+                    val qty = unit?.defaultQuantity?.toInt() ?: 100
+                    val display = unit?.unitDisplay ?: ""
+                    "${ur.caloriesPerDefaultQuantity.toInt()} kcal / ${qty} ${display}"
+                }
+                _requestDetail.value = AdminIngredientRequestItem(
+                    request = request,
+                    requesterName = user?.name ?: "Unknown",
+                    requesterCustomId = user?.customId ?: "Unknown",
+                    calorieSummary = summary
+                )
+
+                _formState.update { state ->
+                    state.copy(
+                        requestId = request.ingredientRequestId,
+                        ingredientName = request.ingredientName,
+                        category = request.ingredientCategory,
+                        description = request.ingredientDesc,
+                        imageUrl = request.ingredientImage,
+                        unitRows = unitRequests.map { ur ->
+                            UnitRowState(
+                                selectedUnit = allUnits[ur.unitID],
+                                calories = ur.caloriesPerDefaultQuantity.toInt().toString()
+                            )
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
@@ -105,56 +168,18 @@ class AdminIngredientRequestViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
+                val current = repository.getIngredientRequestById(requestId)
+                if (current == null) {
+                    _uiState.update { it.copy(isLoading = false, isDeletedByUser = true) }
+                    return@launch
+                }
+                if (current.requestStatus != Status.PENDING) {
+                    _uiState.update { it.copy(isLoading = false, isAlreadyProcessed = true) }
+                    return@launch
+                }
+
                 repository.updateRequestStatus(requestId, Status.REJECTED, reason)
                 onComplete()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        }
-    }
-
-    fun populateFormForReview(requestId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                val request = repository.getIngredientRequestById(requestId)
-                val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
-                val allUnits = repository.getUnits().associateBy { it.unitID }
-
-                if (request != null) {
-                    // Populate requestDetail for later use in approveRequest
-                    val user = userRepository.getUserById(request.createdByUserId)
-                    val summary = unitRequests.joinToString("\n") { ur ->
-                        val unit = allUnits[ur.unitID]
-                        val qty = unit?.defaultQuantity?.toInt() ?: 100
-                        val display = unit?.unitDisplay ?: ""
-                        "${ur.caloriesPerDefaultQuantity.toInt()} kcal / ${qty} ${display}"
-                    }
-                    _requestDetail.value = AdminIngredientRequestItem(
-                        request = request,
-                        requesterName = user?.name ?: "Unknown",
-                        requesterCustomId = user?.customId ?: "Unknown",
-                        calorieSummary = summary
-                    )
-
-                    _formState.update { state ->
-                        state.copy(
-                            requestId = request.ingredientRequestId,
-                            ingredientName = request.ingredientName,
-                            category = request.ingredientCategory,
-                            description = request.ingredientDesc,
-                            imageUrl = request.ingredientImage,
-                            unitRows = unitRequests.map { ur ->
-                                UnitRowState(
-                                    selectedUnit = allUnits[ur.unitID],
-                                    calories = ur.caloriesPerDefaultQuantity.toInt().toString()
-                                )
-                            }
-                        )
-                    }
-                }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -179,6 +204,19 @@ class AdminIngredientRequestViewModel(
         viewModelScope.launch {
             _formState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
+                // Check if request is still PENDING and exists
+                val current = repository.getIngredientRequestById(state.requestId)
+                if (current == null) {
+                    _uiState.update { it.copy(isDeletedByUser = true) }
+                    _formState.update { it.copy(isSubmitting = false) }
+                    return@launch
+                }
+                if (current.requestStatus != Status.PENDING) {
+                    _uiState.update { it.copy(isAlreadyProcessed = true) }
+                    _formState.update { it.copy(isSubmitting = false) }
+                    return@launch
+                }
+
                 // 1. Generate IDs
                 val ingredientId = productionRepository.getNextIngredientId()
                 val unitIds = productionRepository.getNextIngredientUnitIds(state.unitRows.size)

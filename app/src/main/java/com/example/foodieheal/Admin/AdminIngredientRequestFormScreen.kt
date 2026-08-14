@@ -54,6 +54,19 @@ fun AdminIngredientRequestFormScreen(
     val isLoading = actionUiState.isLoading
     val scope = rememberCoroutineScope()
 
+    RequestConflictDialog(
+        isDeleted = actionUiState.isDeletedByUser,
+        isProcessed = actionUiState.isAlreadyProcessed,
+        onDeletedConfirm = {
+            // Return to the list screen correctly
+            navController.popBackStack(Screen.AdminChefScreen.route, false)
+        },
+        onProcessedConfirm = {
+            // Return to the detail screen to see the updated status
+            navController.popBackStack()
+        }
+    )
+
     val errorMessage = formState.errorMessage
     var showErrorDialog by remember { mutableStateOf(false) }
     var showApproveDialog by remember { mutableStateOf(false) }
@@ -385,7 +398,6 @@ fun ApproveRequestDialog(
                     color = MaterialTheme.colorScheme.error
                 )
                 Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
-                //Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = adminNote,
                     onValueChange = { adminNote = it },
@@ -407,4 +419,36 @@ fun ApproveRequestDialog(
             }
         }
     )
+}
+
+@Composable
+private fun RequestConflictDialog(
+    isDeleted: Boolean,
+    isProcessed: Boolean,
+    onDeletedConfirm: () -> Unit,
+    onProcessedConfirm: () -> Unit
+) {
+    if (isDeleted) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Deleted", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has been deleted by the user.") },
+            confirmButton = {
+                TextButton(onClick = onDeletedConfirm) {
+                    Text("OK")
+                }
+            }
+        )
+    } else if (isProcessed) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has already been approved or rejected by another administrator.") },
+            confirmButton = {
+                TextButton(onClick = onProcessedConfirm) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }

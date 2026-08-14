@@ -57,6 +57,23 @@ fun IngredientRequestFormScreen(
     
     val scope = rememberCoroutineScope()
 
+    if (formState.isStatusConflict) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has already been processed by an administrator and can no longer be modified.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     LaunchedEffect(requestId) {
         if (requestId != null) {
             viewModel.populateFormForEdit(requestId)
@@ -83,10 +100,8 @@ fun IngredientRequestFormScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
-                        navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                            popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                        }
+                    IconButton(onClick = {
+                        navController.popBackStack()
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

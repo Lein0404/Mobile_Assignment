@@ -62,6 +62,26 @@ fun IngredientDetailScreen(
     }
 
     val isLoading = if (isRequest) requestUiState.isLoading else ingredientsUiState.isLoading
+
+    if (isRequest && requestUiState.isStatusConflict) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
+            text = { Text("This request has already been approved or rejected by an administrator and can no longer be deleted.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        requestViewModel.clearStatusConflict()
+                        // Refresh to show latest status and hide delete button
+                        requestViewModel.fetchRequestDetail(ingredientId)
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     val name = if (isRequest) requestDetail?.request?.ingredientName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientName
     val category = if (isRequest) requestDetail?.request?.ingredientCategory?.categoryName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientCategory?.categoryName
     val image = if (isRequest) requestDetail?.request?.ingredientImage else ingredientsUiState.ingredientDetail?.ingredient?.ingredientImage
