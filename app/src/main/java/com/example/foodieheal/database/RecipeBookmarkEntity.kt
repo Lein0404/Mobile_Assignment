@@ -3,7 +3,7 @@ package com.example.foodieheal.database
 import androidx.room.Entity
 
 @Entity(tableName = "local_bookmarks", primaryKeys = ["userId", "recipeId"])
-data class BookmarkEntity(
+data class RecipeBookmarkEntity(
     val userId: String,
     val recipeId: String
 )

@@ -55,6 +55,12 @@ fun EditProfileScreen(navController: NavController) {
         }
     }
 
+    // 🌟 No more collection logic here, avoids the "kick back" bug entirely
+    DisposableEffect(Unit) {
+        authViewModel.clearProfileEvents()
+        onDispose { }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -185,8 +191,9 @@ fun EditProfileScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    authViewModel.updateProfile(name, user?.email ?: "", profilePicBase64, description)
-                    navController.popBackStack()
+                    authViewModel.updateProfile(name, user?.email ?: "", profilePicBase64, description) {
+                        navController.popBackStack()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),

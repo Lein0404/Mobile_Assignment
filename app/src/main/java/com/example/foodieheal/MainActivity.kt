@@ -73,9 +73,11 @@ import com.example.foodieheal.view.AppointmentHistoryScreen
 import com.example.foodieheal.view.ChangePasswordScreen
 import com.example.foodieheal.view.EditBodyStatusScreen
 import com.example.foodieheal.view.EditProfileScreen
+import com.example.foodieheal.view.EditRecipeScreen
 import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.ProfileScreen
+import com.example.foodieheal.view.RecipeDetailsScreen
 import com.example.foodieheal.view.RecipesScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
@@ -402,6 +404,14 @@ class MainActivity : ComponentActivity() {
 
 
                                 composable(Screen.AddRecipe.route) { AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
+                                composable(Screen.EditRecipe.route) { backStackEntry ->
+                                    val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                                    EditRecipeScreen(navController, recipeId, sharedRecipeViewModel, sharedAuthViewModel)
+                                }
+                                composable(Screen.RecipeDetails.route) { backStackEntry ->
+                                    val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                                    RecipeDetailsScreen(navController, recipeId, sharedRecipeViewModel, sharedAuthViewModel)
+                                }
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
 
                                 composable(Screen.AppoinmtmentHistory.route) {

@@ -46,15 +46,16 @@ fun RecipesScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("Breakfast") }
     val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
-    
+
     // Filter State
     var showFilterDialog by remember { mutableStateOf(false) }
     var filterMaxTime by remember { mutableFloatStateOf(120f) }
     var filterMaxCalories by remember { mutableFloatStateOf(2000f) }
     var filterSkill by remember { mutableStateOf<String?>(null) }
     var filterBudget by remember { mutableStateOf<String?>(null) }
-    
-    val currentUserId = authViewModel.currentUser?.id
+
+    // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent
+    val currentUserId = authViewModel.currentUser?.customId
 
     // 🌟 LOGIC: Filtering based on your instructions
     val currentDataList = when (selectedTab) {
@@ -66,20 +67,28 @@ fun RecipesScreen(
         2 -> viewModel.bookmarkedRecipes
         else -> emptyList()
     }
-    
+
     val isLoading = viewModel.isLoading
-    
+
     val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
         derivedStateOf {
             currentDataList.filter { recipe ->
                 val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true)
-                val matchesCourse = recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
-                
+
+                // 🌟 FIX: For "My Recipes" and "Bookmarks", show all courses by default
+                // Only filter by course if we are in the "Popular" tab
+                val matchesCourse = if (selectedTab == 0) {
+                    recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
+                } else {
+                    // In My Recipes/Bookmarks, only filter if the course is explicitly matching (optional, showing all is better)
+                    recipe.recipeCourse.equals(selectedCourse, ignoreCase = true) || searchQuery.isNotEmpty()
+                }
+
                 val matchesTime = recipe.time <= filterMaxTime.toInt()
                 val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
                 val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
                 val matchesBudget = filterBudget == null || recipe.estimatedBudget == filterBudget
-                
+
                 matchesSearch && matchesCourse && matchesTime && matchesCalories && matchesSkill && matchesBudget
             }
         }
@@ -111,7 +120,7 @@ fun RecipesScreen(
             if (viewModel.bookmarkedRecipeIds.isEmpty()) {
                 viewModel.fetchBookmarkIds(cid)
             }
-            
+
             when (selectedTab) {
                 0 -> if (viewModel.recipeList.isEmpty()) viewModel.fetchAllRecipes()
                 1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(cid)
@@ -120,12 +129,13 @@ fun RecipesScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color(0xFFF8F8F8),
-        // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
+    // 🌟 Wrap in Box to manually control Snackbar height
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Color(0xFFF8F8F8),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            // snackbarHost is removed from Scaffold to stop the FAB from pushing it up
+            topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -231,14 +241,14 @@ fun RecipesScreen(
                     trailingIcon = {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
                             Image(
-                                painter = painterResource(id = R.drawable.filter), 
-                                contentDescription = "Filter", 
+                                painter = painterResource(id = R.drawable.filter),
+                                contentDescription = "Filter",
                                 modifier = Modifier.size(20.dp).clickable { showFilterDialog = true }
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Image(
-                                painter = painterResource(id = R.drawable.search), 
-                                contentDescription = "Search", 
+                                painter = painterResource(id = R.drawable.search),
+                                contentDescription = "Search",
                                 modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
                             )
                         }
@@ -294,9 +304,9 @@ fun RecipesScreen(
                 item(span = { GridItemSpan(2) }) {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text = if (searchQuery.isNotEmpty() || filterMaxTime < 120f || filterMaxCalories < 2000f || filterSkill != null || filterBudget != null) 
-                                "No recipes match your filters." 
-                            else "No recipes found for '$selectedCourse'.", 
+                            text = if (searchQuery.isNotEmpty() || filterMaxTime < 120f || filterMaxCalories < 2000f || filterSkill != null || filterBudget != null)
+                                "No recipes match your filters."
+                            else "No recipes found for '$selectedCourse'.",
                             color = Color.Gray
                         )
                     }
@@ -304,26 +314,31 @@ fun RecipesScreen(
             } else {
                 gridItems(filteredRecipes) { recipe: Recipe ->
                     RecipeCardItem(
-                        recipe = recipe, 
-                        // 🌟 ONLY show menu for Tab 1 (My Recipes)
+                        recipe = recipe,
+                        // 🌟 Only show menu (hide bookmark) for the "My Recipes" tab
                         showMenu = selectedTab == 1,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                         onBookmarkClick = {
-                            // 🌟 FIX: Send the short customId instead of the long UUID
                             authViewModel.currentUser?.customId?.let { cid ->
-                                recipe.recipe_id?.let { rid -> 
-                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                recipe.recipe_id?.let { rid ->
+                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
                                 }
                             }
                         },
                         onDeleteClick = { recipeToDelete = recipe },
                         onEditClick = {
-                            // TODO: Navigate to Edit screen
+                            recipe.recipe_id?.let { id ->
+                                parentNavController.navigate(Screen.EditRecipe.createRoute(id))
+                            }
                         },
                         onAddClick = {
                             recipe.recipe_id?.let { id ->
-                                // 🌟 Navigate to Planner with the specific ID
-                                parentNavController.navigate("add_recipe_to_planner/$id")
+                                parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
+                            }
+                        },
+                        onClick = {
+                            recipe.recipe_id?.let { id ->
+                                parentNavController.navigate(Screen.RecipeDetails.createRoute(id))
                             }
                         }
                     )
@@ -335,6 +350,13 @@ fun RecipesScreen(
             }
         }
     }
+
+    // 🌟 Manually anchor the Snackbar at the bottom, perfectly into the "empty place" under the FAB
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
+    )
+}
 
     if (showFilterDialog) {
         AlertDialog(
@@ -354,9 +376,9 @@ fun RecipesScreen(
                     showFilterDialog = false
                 }) { Text("Clear All", color = Color.Red) }
             },
-            title = { 
+            title = {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Filter Recipes", fontWeight = FontWeight.Bold) 
+                    Text("Filter Recipes", fontWeight = FontWeight.Bold)
                     IconButton(onClick = { showFilterDialog = false }) {
                         Icon(painterResource(id = R.drawable.cancel), "Close", modifier = Modifier.size(20.dp))
                     }
@@ -375,7 +397,7 @@ fun RecipesScreen(
                         )
                         OutlinedTextField(
                             value = filterMaxTime.toInt().toString(),
-                            onValueChange = { 
+                            onValueChange = {
                                 val newVal = it.toFloatOrNull() ?: 0f
                                 if (newVal in 0f..120f) filterMaxTime = newVal
                             },
@@ -397,7 +419,7 @@ fun RecipesScreen(
                         )
                         OutlinedTextField(
                             value = filterMaxCalories.toInt().toString(),
-                            onValueChange = { 
+                            onValueChange = {
                                 val newVal = it.toFloatOrNull() ?: 0f
                                 if (newVal in 0f..2000f) filterMaxCalories = newVal
                             },
@@ -436,12 +458,13 @@ fun RecipesScreen(
         AlertDialog(
             onDismissRequest = { recipeToDelete = null },
             title = { Text("Delete Recipe") },
-            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'? This action cannot be undone.") },
+            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
             confirmButton = {
                 TextButton(
                     onClick = {
                         val rid = recipeToDelete?.recipe_id
-                        val uid = currentUserId
+                        // 🌟 Ensure we use the short customId for deletion
+                        val uid = authViewModel.currentUser?.customId
                         if (rid != null && uid != null) {
                             viewModel.deleteRecipe(rid, uid)
                         }
@@ -468,7 +491,8 @@ fun RecipeCardItem(
     onBookmarkClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
-    onAddClick: () -> Unit = {}
+    onAddClick: () -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -476,7 +500,7 @@ fun RecipeCardItem(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth().height(260.dp)
+        modifier = Modifier.fillMaxWidth().height(260.dp).clickable { onClick() }
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(160.dp).background(Color(0xFFEEEEEE))) {
@@ -488,29 +512,40 @@ fun RecipeCardItem(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_image),
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp).align(Alignment.Center),
-                        alpha = 0.3f
-                    )
+                    // 🌟 Artistic Placeholder
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color(0xFFFFF9E1)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val iconRes = when (recipe.recipeCourse.lowercase()) {
+                            "breakfast" -> R.drawable.ic_breakfast
+                            "lunch" -> R.drawable.ic_lunch
+                            "dinner" -> R.drawable.ic_dinner
+                            else -> R.drawable.ic_snack
+                        }
+                        Image(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = null,
+                            modifier = Modifier.size(60.dp),
+                            alpha = 0.3f
+                        )
+                    }
                 }
 
-                if (!showMenu) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
-                    ) {
-                        IconButton(onClick = onBookmarkClick) {
-                            Image(
-                                painter = painterResource(
-                                    id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
-                                ),
-                                contentDescription = "Bookmark",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                // 🌟 Always show bookmark icon, even if showMenu is true
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
+                ) {
+                    IconButton(onClick = onBookmarkClick) {
+                        Image(
+                            painter = painterResource(
+                                id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
+                            ),
+                            contentDescription = "Bookmark",
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 

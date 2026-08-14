@@ -372,9 +372,9 @@ fun RecipeGrid() {
 }
 
 @Composable
-fun RecipeCard(title: String, modifier: Modifier = Modifier) {
+fun RecipeCard(title: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Card(
-        modifier = modifier.height(220.dp),
+        modifier = modifier.height(220.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

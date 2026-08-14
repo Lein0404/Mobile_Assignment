@@ -1,30 +1,57 @@
 package com.example.foodieheal.view
 
-import androidx.compose.foundation.BorderStroke
+import android.app.Activity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import com.example.foodieheal.R
 import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: AuthViewModel){
-    val chefRegisterViewModel: chefRegisterViewModel = viewModel()
-    var email by remember{ mutableStateOf("") }
-    var password by remember{mutableStateOf("")}
+fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val chefRegisterViewModel: chefRegisterViewModel = viewModel()   
     
+    // 🌟 Track if user has tried to submit for validation display
+    var hasAttemptedSubmit by remember { mutableStateOf(false) }
+
+    // 🌟 EXTRA Strict Email Validation (Requires at least 3 chars for TLD like .com)
+    val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
+    val isEmailFormatValid = email.matches(emailRegex)
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
+
+    val view = LocalView.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    // Update Status Bar Color
+    SideEffect {
+        val window = (view.context as Activity).window
+        window.statusBarColor = primaryColor.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+    }
 
     LaunchedEffect(Unit) {
         chefRegisterViewModel.resetRegistrationFlow()
@@ -56,98 +83,193 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel){
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF8F8F8))
             .statusBarsPadding()
             .navigationBarsPadding()
             .imePadding()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
+        Spacer(modifier = Modifier.weight(0.6f))
+
         Text(
             text = "Login",
-            style = MaterialTheme.typography.headlineMedium,
+            fontSize = 40.sp,
+            fontWeight = FontWeight.Bold,
             color = Color.Black
         )
-        Spacer(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = {email = it},
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Email Section
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Email",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = {password = it},
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black
+            TextField(
+                value = email,
+                onValueChange = { 
+                    email = it
+                    if (hasAttemptedSubmit) hasAttemptedSubmit = false 
+                    if (viewModel.errorMessage.isNotEmpty()) viewModel.resetPasswordState()
+                },
+                placeholder = { Text("Email", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color(0xFFE8E8E8),
+                    focusedContainerColor = Color(0xFFE8E8E8),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
             )
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (viewModel.isProcessing) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = { viewModel.login(email, password) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                enabled = isFormValid,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                ),
-                border = if (!isFormValid) BorderStroke(1.dp, Color.Gray) else null
-            ){
-                Text("Login")
-            }
-
-            TextButton(
-                onClick = { viewModel.forgotPassword(email) },
-                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
-            ) {
-                Text("Forgot Password?")
+            // 🌟 Client-side Format Validation ONLY
+            // This now catches .co or .c because we require 3+ chars for the domain
+            if (hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty()) {
+                Text(
+                    text = "Invalid email",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-        TextButton(
-            onClick = {
-                navController.navigate(Screen.Register.route)
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Password Section
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Password",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            TextField(
+                value = password,
+                onValueChange = { 
+                    password = it
+                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                    // 🌟 Clear server errors when user starts fixing the input
+                    if (viewModel.errorMessage.isNotEmpty()) viewModel.resetPasswordState()
+                },
+                placeholder = { Text("Password", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (passwordVisible) R.drawable.ic_view else R.drawable.ic_hide
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(painter = painterResource(id = image), contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color(0xFFE8E8E8),
+                    focusedContainerColor = Color(0xFFE8E8E8),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            
+            // 🌟 Simplified Server Error
+            if (viewModel.errorMessage.isNotEmpty() && viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
+                Text(
+                    text = "Invalid password",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+
+        // Forgot Password
+        Box(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+            Text(
+                text = "Forget Password?",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clickable { viewModel.forgotPassword(email) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Login Button
+        Button(
+            onClick = { 
+                if (isEmailFormatValid) {
+                    viewModel.login(email, password)
+                } else {
+                    hasAttemptedSubmit = true
+                }
             },
-            colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+            modifier = Modifier
+                .width(150.dp)
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFFF0F0F0), // 🌟 Very light gray
+                disabledContentColor = Color(0xFF666666)     // 🌟 Dark text for maximum readability
+            ),
+            enabled = isFormValid && !viewModel.isProcessing
         ) {
-            Text("Don't have an account? Register")
-        }
-
-        Spacer(modifier = Modifier.height(5.dp))
-        TextButton(
-            onClick = {
-                navController.navigate(Screen.Welcome.route)
+            if (viewModel.isProcessing) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-        ) {
-            Text("Register as a Chef")
         }
 
-        if(viewModel.errorMessage.isNotEmpty()){
-            Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Footer Link
+        Text(
+            text = "Don't have an account? Sign up here!",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { 
+                navController.navigate(Screen.Register.route)
+            }
+        )
+        
+        // Register as Chef option
+        TextButton(
+            onClick = { navController.navigate(Screen.Welcome.route) },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Register as a Chef", color = Color.Gray, fontSize = 12.sp)
+        }
+
+        // Generic Error Message (if not wrong password)
+        if (viewModel.errorMessage.isNotEmpty() && !viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
             val isSuccess = viewModel.errorMessage.contains("sent")
             Text(
                 text = viewModel.errorMessage,
-                color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                color = if (isSuccess) Color(0xFF4CAF50) else Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 16.dp)
             )
         }
+
+        Spacer(modifier = Modifier.weight(1f))
     }
 }

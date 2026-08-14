@@ -6,17 +6,18 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Recipe(
     @SerialName("recipe_id") val recipe_id: String? = null,
-    @SerialName("author_id") val author_id: String? = null,
+    @SerialName("recipe_author") val author_id: String? = null,
     @SerialName("recipe_name") val recipeName: String,
     @SerialName("recipe_description") val recipeDescription: String,
-    @SerialName("recipe_course") val recipeCourse: String, // Breakfast, Lunch, Dinner
-    @SerialName("recipe_time") val time: Int, // In minutes
+    @SerialName("recipe_course") val recipeCourse: String, 
+    @SerialName("recipe_time") val time: Int, 
     @SerialName("recipe_calories") val calories: Int,
-    @SerialName("cooking_skill") val cookingSkill: String, // Beginner, Intermediate, Expert
+    @SerialName("cooking_skill") val cookingSkill: String, 
     @SerialName("estimated_budget") val estimatedBudget: String,
     @SerialName("recipe_steps") val recipeStep: String,
-    @SerialName("recipe_image_url") val recipeImageUrl: String? = null,
-    @SerialName("recipe_ingredients") val ingredients: List<IngredientItem>
+    @SerialName("recipe_image") val recipeImageUrl: String? = null,
+    @SerialName("recipe_ingredients") val ingredients: List<IngredientItem>,
+    @SerialName("last_updated") val lastUpdated: String? = null // 🌟 New column
 )
 
 @Serializable
