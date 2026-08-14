@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,6 +65,7 @@ fun IngredientRequestFormScreen(
         }
     }
 
+    // TODO: duplicated LaunchedEffect in AdminIngredientRequestFormScreen
     LaunchedEffect(formState.imageUrl) {
         formState.imageUrl?.let {
             cloudinaryViewModel.setExistingImageUrl(it)
@@ -104,6 +107,7 @@ fun IngredientRequestFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)  // prevent adding navigation bar padding + keyboard padding
         ) {
             // Offline gate: show message instead of form
             if (!uiState.isNetworkAvailable) {
@@ -111,7 +115,9 @@ fun IngredientRequestFormScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.wifi_off),
                             contentDescription = null,
@@ -131,7 +137,8 @@ fun IngredientRequestFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .imePadding(), // prevent keyboard from hiding input box
                 ) {
                     // 1. Cloudinary Upload
                     CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
@@ -283,17 +290,7 @@ fun IngredientRequestFormScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(100.dp)) // Extra space to scroll past FAB
-                }
-
-                // Floating Submission Button at the bottom center of the Box
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 16.dp),
-                    verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
+                    Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = {
                             scope.launch {
@@ -316,7 +313,6 @@ fun IngredientRequestFormScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
                             .height(56.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -333,6 +329,8 @@ fun IngredientRequestFormScreen(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -405,7 +403,12 @@ fun UnitRow(
             }
             OutlinedTextField(
                 value = calories,
-                onValueChange = { onUpdate(selectedUnit, it) },
+                onValueChange = { newValue ->
+                    // Only allow numeric digits (stops decimal points, commas, etc. being entered)
+                    if (newValue.all { it.isDigit() }) {
+                        onUpdate(selectedUnit, newValue)
+                    }
+                },
                 placeholder = { Text(placeholderText, fontSize = 12.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = caloriesError != null,
@@ -413,6 +416,9 @@ fun UnitRow(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
                 )
             )
             if (caloriesError != null) {

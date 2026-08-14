@@ -49,6 +49,7 @@ fun AdminIngredientRequestFormScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var showApproveDialog by remember { mutableStateOf(false) }
 
+    // TODO: remove / replace?
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             showErrorDialog = true
@@ -59,6 +60,7 @@ fun AdminIngredientRequestFormScreen(
         viewModel.populateFormForReview(requestId)
     }
 
+    // TODO: duplicated LaunchedEffect in IngredientRequestFormScreen
     LaunchedEffect(formState.imageUrl) {
         formState.imageUrl?.let {
             cloudinaryViewModel.setExistingImageUrl(it)
@@ -96,12 +98,14 @@ fun AdminIngredientRequestFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .consumeWindowInsets(paddingValues) // prevent adding navigation bar padding + keyboard padding
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .imePadding(), // prevent keyboard from hiding input box
             ) {
                 // 1. Cloudinary Upload
                 CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
@@ -242,26 +246,14 @@ fun AdminIngredientRequestFormScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(100.dp))
-            }
-
-            // Floating Approve Button
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
-                horizontalAlignment = Alignment.CenterHorizontally
-            ){
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    // onClick = { onApproveClick() },
                     onClick = {
                         if (viewModel.validateForm()) { showApproveDialog = true }
                         else { Toast.makeText(context, "Please fix the errors in the form", Toast.LENGTH_SHORT).show() }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
