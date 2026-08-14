@@ -1,5 +1,6 @@
 package com.example.foodieheal
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -19,6 +20,8 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,9 +141,8 @@ class MainActivity : ComponentActivity() {
                 val hiringViewModel: HiringViewModel = viewModel()
                 val chefViewModel: chefRegisterViewModel = viewModel()
 
-                if (sharedAuthViewModel.isInitializing) {
-                    SplashLogoOverlay()
-                } else {
+                // 🌟 FIX: The curtain strategy. Content loads first, Splash sits on top.
+                Box(modifier = Modifier.fillMaxSize()) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
 
@@ -152,6 +154,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         // 🌟 contentWindowInsets=0 ensures the orange header reaches the top without gaps
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        containerColor = Color(0xFFF8F8F8), // 🌟 FIX: Stop the "black gap" during transitions
                         bottomBar = {
                             if (shouldShowBottomBar) {
                                 NavigationBar(
@@ -393,6 +396,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    // 🌟 The Curtain: Fades away to reveal the Login screen already sitting underneath
+                    AnimatedVisibility(
+                        visible = sharedAuthViewModel.isInitializing,
+                        enter = fadeIn(),
+                        exit = fadeOut(animationSpec = tween(600))
+                    ) {
+                        SplashLogoOverlay()
+                    }
+
                     // Global Logout Logic
                     LaunchedEffect(sharedAuthViewModel.loginSuccess) {
                         if (!sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
@@ -436,26 +448,48 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 
 @Composable
 fun SplashLogoOverlay() {
-    Box(
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val view = LocalView.current
+    
+    // 🌟 Sync Status Bar immediately to orange
+    SideEffect {
+        val window = (view.context as Activity).window
+        window.statusBarColor = primaryColor.toArgb()
+        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
+            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Foodie Heal",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Nourishing every bite.",
-                color = Color.Gray,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+        // 🌟 Orange Strip Sync
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(primaryColor)
+                .statusBarsPadding()
+        )
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Foodie Heal",
+                    color = primaryColor,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Nourishing every bite.",
+                    color = Color.Gray,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
