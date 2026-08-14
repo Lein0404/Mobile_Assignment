@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
 import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
@@ -51,6 +52,7 @@ fun AdminIngredientRequestFormScreen(
     val requestDetail by viewModel.requestDetail.collectAsState()
     val actionUiState by viewModel.uiState.collectAsState()
     val isLoading = actionUiState.isLoading
+    val scope = rememberCoroutineScope()
 
     val errorMessage = formState.errorMessage
     var showErrorDialog by remember { mutableStateOf(false) }
@@ -316,16 +318,24 @@ fun AdminIngredientRequestFormScreen(
             onDismiss = { showApproveDialog = false },
             onConfirm = { adminNote ->
                 showApproveDialog = false
-                viewModel.approveRequest(
-                    imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
-                    adminNote = if (adminNote.isBlank()) null else adminNote,
-                    onComplete = {
-                        Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
-                        navController.navigate(Screen.AdminChefScreen.route) {
-                            popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
-                        }
+                scope.launch {
+                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                        cloudinaryViewModel.uploadImage(context)
+                    } else {
+                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl }
                     }
-                )
+
+                    viewModel.approveRequest(
+                        imageUrl = imageUrl,
+                        adminNote = if (adminNote.isBlank()) null else adminNote,
+                        onComplete = {
+                            Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
+                            navController.navigate(Screen.AdminChefScreen.route) {
+                                popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
         )
     }
@@ -366,9 +376,16 @@ fun ApproveRequestDialog(
         onDismissRequest = onDismiss,
         title = { Text("Approve Request", fontWeight = FontWeight.Bold) },
         text = {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Warning: You are unable to edit the request after approving it!", // TODO: newline in strings.xml
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
                 Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
-                Spacer(modifier = Modifier.height(16.dp))
+                //Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = adminNote,
                     onValueChange = { adminNote = it },
