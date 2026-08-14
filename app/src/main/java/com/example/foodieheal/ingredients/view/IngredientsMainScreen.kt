@@ -276,7 +276,13 @@ fun IngredientRequestsScreen(
             }
         } else if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { viewModel.fetchRequests() }) {
+                        Text("Retry")
+                    }
+                }
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -377,7 +383,13 @@ fun IngredientsExistingScreen(
         }
         if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { viewModel.fetchIngredients() }) {
+                        Text("Retry")
+                    }
+                }
             }
         }
         if (uiState.filteredIngredients.isEmpty() && !uiState.isLoading) {

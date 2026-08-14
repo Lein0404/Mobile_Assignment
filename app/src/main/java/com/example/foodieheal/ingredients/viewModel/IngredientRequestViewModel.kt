@@ -97,7 +97,7 @@ class IngredientRequestViewModel(
     fun fetchRequests() {
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val requests = repository.getIngredientRequests(currentUserId)
                 val allUnits = repository.getUnits().associateBy { it.unitID }

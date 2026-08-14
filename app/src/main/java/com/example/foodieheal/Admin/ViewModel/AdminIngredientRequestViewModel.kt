@@ -2,17 +2,21 @@ package com.example.foodieheal.Admin.ViewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestItem
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.viewModel.IngredientRequestFormUiState
 import com.example.foodieheal.ingredients.model.IngredientUnits
 import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
 import com.example.foodieheal.ingredients.model.Ingredients
-import com.example.foodieheal.ingredients.viewModel.UnitRowState
 import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
+import com.example.foodieheal.ingredients.viewModel.IngredientRequestFormUiState
+import com.example.foodieheal.ingredients.viewModel.UnitRowState
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.repo.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,12 +25,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class AdminRequestActionUiState(
+    val isNetworkAvailable: Boolean = true,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class AdminIngredientRequestViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = IngredientRequestRepository()
     private val userRepository = UserRepository()
     private val database = IngredientsDatabase.getInstance(application)
     private val productionRepository = IngredientsRepository(database.ingredientsDao())
+
+    private val _uiState = MutableStateFlow(AdminRequestActionUiState())
+    val uiState: StateFlow<AdminRequestActionUiState> = _uiState.asStateFlow()
 
     private val _requestDetail = MutableStateFlow<AdminIngredientRequestItem?>(null)
     val requestDetail: StateFlow<AdminIngredientRequestItem?> = _requestDetail.asStateFlow()
@@ -37,16 +50,24 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
     private val _availableUnits = MutableStateFlow<List<Units>>(emptyList())
     val availableUnits: StateFlow<List<Units>> = _availableUnits.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val networkMonitor = NetworkMonitor(application)
 
     init {
+        observeNetworkStatus()
         fetchUnits()
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor.isConnected.collect { connected ->
+                _uiState.update { it.copy(isNetworkAvailable = connected) }
+            }
+        }
     }
 
     fun fetchRequestDetail(requestId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.update { it.copy(isLoading = true) }
             try {
                 val request = repository.getIngredientRequestById(requestId)
                 if (request != null) {
@@ -67,10 +88,10 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
                         calorieSummary = summary
                     )
                 }
-                _isLoading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _isLoading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -82,21 +103,21 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
     ) {
         if (reason.isBlank()) return
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.update { it.copy(isLoading = true) }
             try {
                 repository.updateRequestStatus(requestId, Status.REJECTED, reason)
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                _isLoading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
     fun populateFormForReview(requestId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.update { it.copy(isLoading = true) }
             try {
                 val request = repository.getIngredientRequestById(requestId)
                 val unitRequests = repository.getIngredientUnitsRequestsById(requestId)
@@ -137,7 +158,7 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                _isLoading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -318,5 +339,15 @@ class AdminIngredientRequestViewModel(application: Application) : AndroidViewMod
                 e.printStackTrace()
             }
         }
+    }
+}
+
+class AdminIngredientRequestViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AdminIngredientRequestViewModel::class.java)) {
+            return AdminIngredientRequestViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

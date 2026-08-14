@@ -1,5 +1,6 @@
 package com.example.foodieheal.Admin
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.view.ImagePlaceholder
 import com.example.foodieheal.model.Status
@@ -38,13 +40,17 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AdminIngredientDetailScreen(
     navController: NavController,
-    requestId: String,
-    viewModel: AdminIngredientRequestViewModel = viewModel()
+    requestId: String
 ) {
-    val requestItem by viewModel.requestDetail.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-
+    val application = context.applicationContext as Application
+    val viewModel: AdminIngredientRequestViewModel = viewModel(
+        factory = AdminIngredientRequestViewModelFactory(application)
+    )
+    val requestItem by viewModel.requestDetail.collectAsState()
+    val actionUiState by viewModel.uiState.collectAsState()
+    val isLoading = actionUiState.isLoading
+    
     var showRejectDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(requestId) {
@@ -211,7 +217,7 @@ fun AdminIngredientDetailScreen(
                         verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
-                        if (request.requestStatus == Status.PENDING) {
+                        if (request.requestStatus == Status.PENDING && actionUiState.isNetworkAvailable) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

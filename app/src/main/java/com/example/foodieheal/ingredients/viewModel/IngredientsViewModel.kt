@@ -9,6 +9,7 @@ import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ data class IngredientsUiState(
     val filteredIngredients: List<IngredientItem> = emptyList(),
     val isLoading: Boolean = false,
     val ingredientDetail: IngredientDetailInfo? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isNetworkAvailable: Boolean = true
 )
 
 data class IngredientItem(
@@ -50,13 +52,28 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
     private val _uiState = MutableStateFlow(IngredientsUiState())
     val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()
 
+    // Network connectivity monitoring
+    private val networkMonitor = NetworkMonitor(application)
+
     init {
+        observeNetworkStatus()
         fetchIngredients()
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor.isConnected.collect { connected ->
+                _uiState.update { it.copy(isNetworkAvailable = connected) }
+                if (connected) {
+                    fetchIngredients()
+                }
+            }
+        }
     }
 
     fun fetchIngredients() {
         viewModelScope.launch {
-            updateLoading(true)
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val ingredients = repository.getIngredients()
                 val allUnits = repository.getUnits().associateBy { it.unitID }
@@ -84,13 +101,13 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun onTabChange(index: Int) {
+        _uiState.update { it.copy(selectedTab = index) }
+    }
+
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
         applyFilters()
-    }
-
-    fun onTabChange(index: Int) {
-        _uiState.update { it.copy(selectedTab = index) }
     }
 
     fun toggleCategory(category: IngredientCategory) {

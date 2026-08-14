@@ -1,10 +1,14 @@
 package com.example.foodieheal.Admin.ViewModel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.repo.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +24,8 @@ data class AdminIngredientRequestUiState(
     val requests: List<AdminIngredientRequestItem> = emptyList(),
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isNetworkAvailable: Boolean = true
 )
 
 data class AdminIngredientRequestItem(
@@ -31,20 +36,35 @@ data class AdminIngredientRequestItem(
 )
 
 class AdminIngredientsViewModel(
+    application: Application,
     private val repository: IngredientRequestRepository = IngredientRequestRepository(),
     private val userRepository: UserRepository = UserRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AdminIngredientRequestUiState())
     val uiState: StateFlow<AdminIngredientRequestUiState> = _uiState.asStateFlow()
 
+    private val networkMonitor = NetworkMonitor(application)
+
     init {
+        observeNetworkStatus()
         fetchRequests()
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor.isConnected.collect { connected ->
+                _uiState.update { it.copy(isNetworkAvailable = connected) }
+                if (connected) {
+                    fetchRequests()
+                }
+            }
+        }
     }
 
     fun fetchRequests() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val requests = repository.getAllIngredientRequests()
                 val users = userRepository.getAllUsers().associateBy { it.id }
@@ -107,5 +127,15 @@ class AdminIngredientsViewModel(
             }
             state.copy(filteredRequests = filtered)
         }
+    }
+}
+
+class AdminIngredientsViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AdminIngredientsViewModel::class.java)) {
+            return AdminIngredientsViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

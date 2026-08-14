@@ -1,5 +1,6 @@
 package com.example.foodieheal.Admin
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,13 +13,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestItem
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ui.components.StatusBadge
@@ -28,9 +34,13 @@ import com.example.foodieheal.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminIngredientsScreen(
-    navController: NavController,
-    viewModel: AdminIngredientsViewModel = viewModel()
+    navController: NavController
 ) {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val viewModel: AdminIngredientsViewModel = viewModel(
+        factory = AdminIngredientsViewModelFactory(application)
+    )
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -43,6 +53,41 @@ fun AdminIngredientsScreen(
             .background(Color(0xFFF8F8F8))
             .padding(horizontal = 16.dp)
     ) {
+        // Gate: show offline message when not connected
+        if (!uiState.isNetworkAvailable) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.wifi_off),
+                        contentDescription = stringResource(R.string.desc_no_network),
+                        tint = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(70.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.title_no_internet),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Please connect to the internet to view ingredient requests",
+                        fontSize = 15.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            return@Column
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         // 1. Search Bar
@@ -114,7 +159,7 @@ fun AdminIngredientsScreen(
                             onClick = {
                                 val status = when (statusName) {
                                     "Pending" -> Status.PENDING
-                                    "Accepted" -> Status.APPROVED
+                                    "Approved" -> Status.APPROVED
                                     "Rejected" -> Status.REJECTED
                                     else -> null
                                 }
@@ -135,7 +180,13 @@ fun AdminIngredientsScreen(
             }
         } else if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = { viewModel.fetchRequests() }) {
+                        Text("Retry")
+                    }
+                }
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
