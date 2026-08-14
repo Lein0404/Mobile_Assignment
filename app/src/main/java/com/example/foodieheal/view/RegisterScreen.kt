@@ -1,174 +1,243 @@
 package com.example.foodieheal.view
 
-import androidx.compose.foundation.BorderStroke
+import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import com.example.foodieheal.R
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController, viewModel: AuthViewModel){
+fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    // 🌟 Track if user has tried to submit
+    var hasAttemptedSubmit by remember { mutableStateOf(false) }
+
+    // 🌟 Strict Validation Logic
+    val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
+    val isEmailValid = email.matches(emailRegex)
     val isPasswordValid = password.length in 8..20
     val passwordsMatch = password == confirmPassword
-    val isFormValid = isEmailValid && isPasswordValid && passwordsMatch && !viewModel.isProcessing
+    val isFormValid = email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && !viewModel.isProcessing
 
-    LaunchedEffect(viewModel.registerSuccess) {
-        if (viewModel.registerSuccess) {
-            // Navigate to Body Status screen after registration
-            navController.navigate(com.example.foodieheal.navigation.Screen.EditBodyStatus.route + "?fromRegister=true") {
-                popUpTo(com.example.foodieheal.navigation.Screen.Register.route) { inclusive = true }
-            }
-        }
+    val view = LocalView.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    // Sync Status Bar Color
+    SideEffect {
+        val window = (view.context as Activity).window
+        window.statusBarColor = primaryColor.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF8F8F8))
             .statusBarsPadding()
             .navigationBarsPadding()
             .imePadding()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
+        // Back Button
         Box(modifier = Modifier.fillMaxWidth()) {
-            TextButton(
+            IconButton(
                 onClick = { navController.popBackStack() },
-                modifier = Modifier.align(Alignment.CenterStart),
-                colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                Text("< Back")
+                Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.Black)
             }
-            Text(
-                text = "Register",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.Black,
-                modifier = Modifier.align(Alignment.Center)
-            )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = {email = it},
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing,
-            isError = email.isNotEmpty() && !isEmailValid,
-            supportingText = {
-                if (email.isNotEmpty() && !isEmailValid) {
-                    Text("Invalid email format")
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black
-            )
+        Text(
+            text = "Register",
+            fontSize = 40.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
-        Spacer(modifier = Modifier.height(10.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = {password = it},
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing,
-            isError = password.isNotEmpty() && !isPasswordValid,
-            supportingText = {
-                if (password.isNotEmpty() && !isPasswordValid) {
-                    Text("Password must be 8-20 characters")
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Email Section
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Email", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 8.dp))
+            TextField(
+                value = email,
+                onValueChange = { 
+                    email = it
+                    if (hasAttemptedSubmit) hasAttemptedSubmit = false 
+                },
+                placeholder = { Text("Email", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color(0xFFE8E8E8),
+                    focusedContainerColor = Color(0xFFE8E8E8),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
             )
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = {confirmPassword = it},
-            label = { Text("Confirm Password") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            enabled = !viewModel.isProcessing,
-            isError = confirmPassword.isNotEmpty() && !passwordsMatch,
-            supportingText = {
-                if (confirmPassword.isNotEmpty() && !passwordsMatch) {
-                    Text("Passwords do not match")
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black
-            )
-        )
+            if (hasAttemptedSubmit && !isEmailValid && email.isNotEmpty()) {
+                Text(text = "Invalid email", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
-        
-        if (viewModel.isProcessing) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = { viewModel.register(email, password) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                enabled = isFormValid,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                ),
-                border = if (!isFormValid) BorderStroke(1.dp, Color.Gray) else null
-            ) {
-                Text("Submit")
+
+        // Password Section
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 8.dp))
+            TextField(
+                value = password,
+                onValueChange = { 
+                    password = it
+                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                },
+                placeholder = { Text("Password", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (passwordVisible) R.drawable.ic_view else R.drawable.ic_hide
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(painter = painterResource(id = image), null, modifier = Modifier.size(20.dp))
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color(0xFFE8E8E8),
+                    focusedContainerColor = Color(0xFFE8E8E8),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            if (hasAttemptedSubmit && !isPasswordValid && password.isNotEmpty()) {
+                Text(text = "Password must be 8-20 characters", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Confirm Password Section
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Confirm Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 8.dp))
+            TextField(
+                value = confirmPassword,
+                onValueChange = { 
+                    confirmPassword = it
+                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                },
+                placeholder = { Text("Confirm Password", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (confirmPasswordVisible) R.drawable.ic_view else R.drawable.ic_hide
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(painter = painterResource(id = image), null, modifier = Modifier.size(20.dp))
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color(0xFFE8E8E8),
+                    focusedContainerColor = Color(0xFFE8E8E8),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            if (hasAttemptedSubmit && !passwordsMatch && confirmPassword.isNotEmpty()) {
+                Text(text = "Passwords do not match", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Register Button
+        Button(
+            onClick = { 
+                if (isEmailValid && isPasswordValid && passwordsMatch) {
+                    // 🌟 Unified Logic: Set credentials and move to next step
+                    viewModel.setTempCredentials(email, password)
+                    navController.navigate(com.example.foodieheal.navigation.Screen.EditBodyStatus.route + "?fromRegister=true")
+                } else {
+                    hasAttemptedSubmit = true
+                }
+            },
+            modifier = Modifier
+                .width(150.dp)
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFFF0F0F0),
+                disabledContentColor = Color(0xFF666666)
+            ),
+            enabled = isFormValid && !viewModel.isProcessing
+        ) {
+            if (viewModel.isProcessing) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("NEXT", fontWeight = FontWeight.Bold, fontSize = 16.sp) // 🌟 Changed to "NEXT"
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Footer
+        Text(
+            text = "Already have an account? Login here!",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { navController.popBackStack() }
+        )
 
         if (viewModel.errorMessage.isNotEmpty()) {
-            val isAlreadyRegistered = viewModel.errorMessage.contains("already registered", ignoreCase = true)
             Spacer(modifier = Modifier.height(16.dp))
-            Surface(
-                color = if (isAlreadyRegistered) Color(0xFFE3F2FD) else Color(0xFFFFEBEE),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = if (isAlreadyRegistered) com.example.foodieheal.R.drawable.ic_help else com.example.foodieheal.R.drawable.cancel),
-                        contentDescription = null,
-                        tint = if (isAlreadyRegistered) Color(0xFF1976D2) else Color(0xFFD32F2F),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = viewModel.errorMessage,
-                        color = if (isAlreadyRegistered) Color(0xFF1976D2) else Color(0xFFD32F2F),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+            Text(text = viewModel.errorMessage, color = Color.Red, fontSize = 12.sp)
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

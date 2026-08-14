@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -29,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Recipe
@@ -63,6 +64,19 @@ fun AddRecipeScreen(
     val coroutineScope = rememberCoroutineScope()
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
+    // 🌟 Validation logic: All fields must be filled and valid
+    val isFormValid by remember {
+        derivedStateOf {
+            recipeName.isNotBlank() &&
+            // 🌟 Description and Image are now optional, so they are removed from validation
+            totalTime.isNotBlank() &&
+            totalTime.toIntOrNull() != null &&
+            steps.isNotBlank() &&
+            ingredients.isNotEmpty() &&
+            ingredients.all { it.name.isNotBlank() && it.quantity.isNotBlank() && it.quantity.toDoubleOrNull() != null }
+        }
+    }
+
     val totalCalories = remember {
         derivedStateOf {
             ingredients.sumOf { input ->
@@ -79,11 +93,19 @@ fun AddRecipeScreen(
 
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.bookmarkMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.addRecipeSuccess.collect { success ->
             if (success) {
-                // 🌟 SUCCESS: land back on "My Recipes" tab
+                // 🌟 SUCCESS: Small delay so they can see the message
+                kotlinx.coroutines.delay(800)
                 viewModel.activeTab = 1
                 navController.popBackStack()
             }
@@ -107,6 +129,7 @@ fun AddRecipeScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Add Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
@@ -152,7 +175,7 @@ fun AddRecipeScreen(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_image),
+                            painter = painterResource(id = R.drawable.upload),
                             contentDescription = null,
                             modifier = Modifier.size(56.dp),
                             tint = Color.Gray
@@ -189,8 +212,15 @@ fun AddRecipeScreen(
                     LabelText("Total Time (min)")
                     AddRecipeTextField(
                         value = totalTime,
-                        onValueChange = { totalTime = it },
+                        onValueChange = { input -> 
+                            // 🌟 FIX: Allow ONLY digits for Total Time (No decimals allowed)
+                            if (input.all { it.isDigit() }) {
+                                totalTime = input
+                            }
+                        },
                         placeholder = "e.g. 30",
+                        // 🌟 Declared directly inside here
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
                     )
                 }
@@ -276,11 +306,30 @@ fun AddRecipeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (viewModel.errorMessage != null) {
+                // 🌟 FIX: Show only a clean, simple message and remove the "red wall" of technical text
+                val cleanError = viewModel.errorMessage!!.split("\n").firstOrNull() ?: "An error occurred"
+                Surface(
+                    color = Color(0xFFFFEBEE),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp).fillMaxWidth()
+                ) {
+                    Text(
+                        text = cleanError,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+
+            // 🌟 Form Validation Message
+            if (!isFormValid) {
                 Text(
-                    text = viewModel.errorMessage!!,
-                    color = Color.Red,
+                    text = "Please fill in all fields with valid information.",
+                    color = Color.Gray,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
                 )
             }
 
@@ -297,7 +346,8 @@ fun AddRecipeScreen(
 
                     val recipe = Recipe(
                         recipe_id = nextId,
-                        author_id = authViewModel.currentUser?.id,
+                        // 🌟 FIX: Use the short customId (U001) to match your search logic
+                        author_id = authViewModel.currentUser?.customId,
                         recipeName = recipeName,
                         recipeDescription = description,
                         recipeCourse = course,
@@ -315,8 +365,12 @@ fun AddRecipeScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                enabled = !viewModel.isLoading
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color(0xFFD1D1D1), // 🌟 Slightly lighter gray for better balance
+                    disabledContentColor = Color(0xFF666666)     // 🌟 Darker text color so the words "ADD RECIPE" are easy to read
+                ),
+                enabled = isFormValid && !viewModel.isLoading
             ) {
                 if (viewModel.isLoading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
@@ -373,6 +427,7 @@ fun AddRecipeTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     readOnly: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default, // 🌟 Accept standard options
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     TextField(
@@ -382,6 +437,7 @@ fun AddRecipeTextField(
         modifier = modifier.fillMaxWidth().then(if (singleLine) Modifier.height(52.dp) else Modifier),
         singleLine = singleLine,
         readOnly = readOnly,
+        keyboardOptions = keyboardOptions, // 🌟 Pass it through
         shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
@@ -533,10 +589,17 @@ fun IngredientRow(
                     
                     TextField(
                         value = item.quantity,
-                        onValueChange = { onUpdate(item.copy(quantity = it)) },
+                        onValueChange = { input ->
+                            // 🌟 FIX: Allow only digits and a SINGLE decimal point
+                            if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
+                                onUpdate(item.copy(quantity = input))
+                            }
+                        },
                         placeholder = { Text("0", fontSize = 14.sp, color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         singleLine = true,
+                        // 🌟 Declared directly inside here
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
                         trailingIcon = {

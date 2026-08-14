@@ -53,15 +53,29 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
     val bmiValue = bmiInfo.first
     val bmiCategory = bmiInfo.second
 
+    // 🌟 No more collection logic here, avoids the "kick back" bug entirely
+    DisposableEffect(Unit) {
+        authViewModel.clearProfileEvents()
+        onDispose { }
+    }
+
     Scaffold(
+        modifier = Modifier.imePadding().navigationBarsPadding(), // 🌟 Added IME and Navigation padding
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Body Status", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White) },
                 navigationIcon = {
-                    if (!fromRegister) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                    IconButton(onClick = { 
+                        if (fromRegister) {
+                            // 🌟 If we just registered, explicitly go back to Register screen
+                            navController.navigate(Screen.Register.route) {
+                                popUpTo(Screen.Register.route) { inclusive = true }
+                            }
+                        } else {
+                            navController.popBackStack() 
                         }
+                    }) {
+                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -180,6 +194,16 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 }
             }
 
+            if (authViewModel.errorMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = authViewModel.errorMessage,
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+
             Spacer(modifier = Modifier.height(40.dp))
 
             Row(
@@ -189,15 +213,16 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 if (fromRegister) {
                     OutlinedButton(
                         onClick = {
-                            // 🌟 FIX: Navigate to Home instead of Main
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
+                            // 🌟 SKIP during registration: Create account with empty body status
+                            authViewModel.registerWithProfile(
+                                weight = null, height = null, age = null, gender = "Male", bmi = null
+                            )
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        enabled = !authViewModel.isProcessing
                     ) {
                         Text("SKIP", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -205,24 +230,30 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
 
                 Button(
                     onClick = {
-                        authViewModel.updateProfile(
-                            name = user?.name ?: "",
-                            email = user?.email ?: "",
-                            profilePicUrl = user?.profilePicUrl ?: "",
-                            description = user?.description ?: "",
-                            weight = weight.toDoubleOrNull(),
-                            height = height.toDoubleOrNull(),
-                            age = age.toIntOrNull(),
-                            gender = gender,
-                            bmi = bmiValue.toDoubleOrNull()
-                        )
                         if (fromRegister) {
-                            // 🌟 FIX: Navigate to Home instead of Main
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
+                            // 🌟 SUBMIT during registration: Create account with full body status
+                            authViewModel.registerWithProfile(
+                                weight = weight.toDoubleOrNull(),
+                                height = height.toDoubleOrNull(),
+                                age = age.toIntOrNull(),
+                                gender = gender,
+                                bmi = bmiValue.toDoubleOrNull()
+                            )
                         } else {
-                            navController.popBackStack()
+                            // Regular update for existing users
+                            authViewModel.updateProfile(
+                                name = user?.name ?: "",
+                                email = user?.email ?: "",
+                                profilePicUrl = user?.profilePicUrl ?: "",
+                                description = user?.description ?: "",
+                                weight = weight.toDoubleOrNull(),
+                                height = height.toDoubleOrNull(),
+                                age = age.toIntOrNull(),
+                                gender = gender,
+                                bmi = bmiValue.toDoubleOrNull()
+                            ) {
+                                navController.popBackStack()
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -233,7 +264,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     if (authViewModel.isProcessing) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text("SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(if (fromRegister) "REGISTER" else "SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

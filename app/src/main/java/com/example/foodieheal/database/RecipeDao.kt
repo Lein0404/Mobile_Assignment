@@ -35,7 +35,7 @@ interface RecipeDao {
     suspend fun getBookmarkedRecipes(userId: String): List<RecipeEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBookmarks(bookmarks: List<BookmarkEntity>)
+    suspend fun insertBookmarks(bookmarks: List<RecipeBookmarkEntity>)
 
     @Query("DELETE FROM local_bookmarks WHERE userId = :userId AND recipeId = :recipeId")
     suspend fun deleteBookmark(userId: String, recipeId: String)
