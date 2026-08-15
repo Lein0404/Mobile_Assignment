@@ -112,6 +112,7 @@ fun AdminIngredientsScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_filter_alt),
                         contentDescription = "Filter",
+                        tint = if (uiState.selectedStatus != null) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                         modifier = Modifier
                             .clickable {
                                 tempSelectedStatus = uiState.selectedStatus
