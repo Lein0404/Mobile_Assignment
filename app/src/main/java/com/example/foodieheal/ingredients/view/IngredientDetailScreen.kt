@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,6 +63,7 @@ fun IngredientDetailScreen(
     }
 
     val isLoading = if (isRequest) requestUiState.isLoading else ingredientsUiState.isLoading
+    val isRefreshing = if (isRequest) requestUiState.isRefreshing else ingredientsUiState.isRefreshing
 
     if (isRequest && requestUiState.isStatusConflict) {
         AlertDialog(
@@ -120,183 +122,195 @@ fun IngredientDetailScreen(
             )
         }
     ) { paddingValues ->
-        if (isLoading) {
+        if (isLoading && !isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-            Box(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    if (isRequest) {
+                        requestViewModel.refreshRequestDetail(ingredientId)
+                    } else {
+                        ingredientsViewModel.refreshIngredientDetail(ingredientId)
+                    }
+                },
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .verticalScroll(rememberScrollState())
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    // Image display
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp)
-                            .background(Color(0xFFE0E0E0)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (!image.isNullOrEmpty()) {
-                            SubcomposeAsyncImage(
-                                model = image,
-                                contentDescription = name,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                loading = {
-                                    CircularProgressIndicator(modifier = Modifier.scale(0.5f)) // TODO: make the CPI smaller
-                                },
-                                error = { ImagePlaceholder() }
-                            )
-                        } else {
-                            ImagePlaceholder()
-                        }
-                    }
-
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = name ?: "", 
-                                    style = MaterialTheme.typography.headlineMedium, 
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = category ?: "Others", 
-                                    color = Color.Gray,
-                                    fontSize = 14.sp
-                                )
-                                
-                                if (isRequest) {
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    StatusBadge(status = requestDetail?.request?.requestStatus ?: Status.PENDING)
-                                }
-                            }
-                            
-                            if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
-                                IconButton(onClick = {
-                                    if (isRequest) {
-                                        requestDetail?.request?.let { request ->
-                                            val productionId = request.ingredientId
-                                            if (productionId != null) {
-                                                ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
-                                                Toast.makeText(context, "${request.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                Toast.makeText(context, "Error: Production ID missing for this request", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-                                    } else {
-                                        ingredientsUiState.ingredientDetail?.ingredient?.let {
-                                            ingredientsViewModel.addToShoppingList(it)
-                                            Toast.makeText(context, "${it.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_add_to_shopping_cart),
-                                        contentDescription = "Add to shopping list",
-                                        tint = Color.Black
-                                    )
-                                }
-                            }
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 16.dp), 
-                            thickness = 1.dp, 
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
-                        Text(
-                            text = description?.ifEmpty { "No description available." } ?: "No description available.",
-                            color = Color.Black,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
-                            color = Color.Black
-                        )
-
-                        if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(
-                                text = requestDetail?.request?.rejectedReason ?: "Unspecified.",
-                                color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-
-                        if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(
-                                text = requestDetail?.request?.adminNote ?: "",
-                                color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(120.dp))
-                    }
-                }
-
-
-                // Floating Action Buttons for Pending Request (only when online)
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 16.dp),
-                    verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable) {
-                        Row(
+                        // Image display
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                .height(250.dp)
+                                .background(Color(0xFFE0E0E0)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Button(
-                                onClick = { showDeleteDialog = true },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ),
-                                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                            if (!image.isNullOrEmpty()) {
+                                SubcomposeAsyncImage(
+                                    model = image,
+                                    contentDescription = name,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    loading = {
+                                        CircularProgressIndicator(modifier = Modifier.scale(0.5f)) // TODO: make the CPI smaller
+                                    },
+                                    error = { ImagePlaceholder() }
+                                )
+                            } else {
+                                ImagePlaceholder()
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = name ?: "", 
+                                        style = MaterialTheme.typography.headlineMedium, 
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = category ?: "Others", 
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                    
+                                    if (isRequest) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        StatusBadge(status = requestDetail?.request?.requestStatus ?: Status.PENDING)
+                                    }
+                                }
+                                
+                                if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
+                                    IconButton(onClick = {
+                                        if (isRequest) {
+                                            requestDetail?.request?.let { request ->
+                                                val productionId = request.ingredientId
+                                                if (productionId != null) {
+                                                    ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
+                                                    Toast.makeText(context, "${request.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, "Error: Production ID missing for this request", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        } else {
+                                            ingredientsUiState.ingredientDetail?.ingredient?.let {
+                                                ingredientsViewModel.addToShoppingList(it)
+                                                Toast.makeText(context, "${it.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_add_to_shopping_cart),
+                                            contentDescription = "Add to shopping list",
+                                            tint = Color.Black
+                                        )
+                                    }
+                                }
+                            }
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 16.dp), 
+                                thickness = 1.dp, 
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = description?.ifEmpty { "No description available." } ?: "No description available.",
+                                color = Color.Black,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
+                                color = Color.Black
+                            )
+
+                            if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
-                                    text = stringResource(R.string.delete_request),
-                                    style = MaterialTheme.typography.labelLarge
+                                    text = requestDetail?.request?.rejectedReason ?: "Unspecified.",
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
-                            PrimaryButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
-                                },
-                                textID = R.string.edit_request
-                            )
+
+                            if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(
+                                    text = requestDetail?.request?.adminNote ?: "",
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(120.dp))
+                        }
+                    }
+
+
+                    // Floating Action Buttons for Pending Request (only when online)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp),
+                        verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        if (isRequest && requestDetail?.request?.requestStatus == Status.PENDING && requestUiState.isNetworkAvailable) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Button(
+                                    onClick = { showDeleteDialog = true },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.delete_request),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                                PrimaryButton(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        navController.navigate(Screen.IngredientRequestForm.createRoute(ingredientId))
+                                    },
+                                    textID = R.string.edit_request
+                                )
+                            }
                         }
                     }
                 }

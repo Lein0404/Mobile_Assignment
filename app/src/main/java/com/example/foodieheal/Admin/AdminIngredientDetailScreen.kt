@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ fun AdminIngredientDetailScreen(
     val requestItem by viewModel.requestDetail.collectAsState()
     val actionUiState by viewModel.uiState.collectAsState()
     val isLoading = actionUiState.isLoading
+    val isRefreshing = actionUiState.isRefreshing
     
     var showRejectDialog by remember { mutableStateOf(false) }
 
@@ -98,7 +100,7 @@ fun AdminIngredientDetailScreen(
             )
         }
     ) { paddingValues ->
-        if (isLoading) {
+        if (isLoading && !isRefreshing) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -106,166 +108,172 @@ fun AdminIngredientDetailScreen(
                 CircularProgressIndicator()
             }
         } else {
-            requestItem?.let { info ->
-                val request = info.request
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
-                            .verticalScroll(rememberScrollState())
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refreshRequestDetail(requestId) },
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+            ) {
+                requestItem?.let { info ->
+                    val request = info.request
+                    Box(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        // 1. Image
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp)
-                                .background(Color(0xFFE0E0E0)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (!request.ingredientImage.isNullOrEmpty()) {
-                                SubcomposeAsyncImage(
-                                    model = request.ingredientImage,
-                                    contentDescription = request.ingredientName,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                    loading = { CircularProgressIndicator(modifier = Modifier.scale(0.5f)) }, // TODO: make the CPI smaller
-                                    error = { ImagePlaceholder() }
-                                )
-                            } else {
-                                ImagePlaceholder()
-                            }
-                        }
-
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
+                                .verticalScroll(rememberScrollState())
                         ) {
-                            // 2. Title & Category
-                            Text(
-                                text = request.ingredientName,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = request.ingredientCategory?.categoryName ?: "Others",
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            StatusBadge(status = request.requestStatus)
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 16.dp),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-
-                            // 3. Description
-                            Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(
-                                text = request.ingredientDesc.ifEmpty { "No description available." },
-                                color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            // 4. Calorie Information
-                            Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = info.calorieSummary.ifEmpty { "No calorie information available." },
-                                color = Color.Black
-                            )
-
-                            // 5. Rejected Reason (if applicable)
-                            if (request.requestStatus == Status.REJECTED) {
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(
-                                    text = request.rejectedReason ?: "Unspecified.",
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-
-                            if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(
-                                    text = request.adminNote,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 16.dp),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-
-                            // 6. Request Information
-                            Text("Request Information", fontWeight = FontWeight.Bold, color = Color.Black)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("User ID: ${info.requesterCustomId}", fontSize = 14.sp)
-                            Text("User Name: ${info.requesterName}", fontSize = 14.sp)
-                            Text("Created date: ${formatDisplayDateTime(request.datetimeCreated)}", fontSize = 14.sp)
-
-                            Spacer(modifier = Modifier.height(120.dp))
-                        }
-                    }
-
-                    // 7. Admin Action Buttons (for Pending)
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = 16.dp),
-                        verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ){
-                        if (request.requestStatus == Status.PENDING && actionUiState.isNetworkAvailable) {
-                            Row(
+                            // 1. Image
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    .height(250.dp)
+                                    .background(Color(0xFFE0E0E0)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Button(
-                                    onClick = { showRejectDialog = true },
-                                    modifier = Modifier.weight(0.45f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    ),
-                                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
-                                ) {
+                                if (!request.ingredientImage.isNullOrEmpty()) {
+                                    SubcomposeAsyncImage(
+                                        model = request.ingredientImage,
+                                        contentDescription = request.ingredientName,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.5f)) }, // TODO: make the CPI smaller
+                                        error = { ImagePlaceholder() }
+                                    )
+                                } else {
+                                    ImagePlaceholder()
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                // 2. Title & Category
+                                Text(
+                                    text = request.ingredientName,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = request.ingredientCategory?.categoryName ?: "Others",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                StatusBadge(status = request.requestStatus)
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
+                                // 3. Description
+                                Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(
+                                    text = request.ingredientDesc.ifEmpty { "No description available." },
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // 4. Calorie Information
+                                Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = info.calorieSummary.ifEmpty { "No calorie information available." },
+                                    color = Color.Black
+                                )
+
+                                // 5. Rejected Reason (if applicable)
+                                if (request.requestStatus == Status.REJECTED) {
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
                                     Text(
-                                        text = stringResource(R.string.reject),
-                                        style = MaterialTheme.typography.labelLarge
+                                        text = request.rejectedReason ?: "Unspecified.",
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
-                                PrimaryButton(
-                                    modifier = Modifier.weight(0.55f),
-                                    onClick = {
-                                        navController.navigate(Screen.AdminIngredientReview.createRoute(requestId))
-                                    },
-                                    textID = R.string.review_approve
+
+                                if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(
+                                        text = request.adminNote,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
+
+                                // 6. Request Information
+                                Text("Request Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("User ID: ${info.requesterCustomId}", fontSize = 14.sp)
+                                Text("User Name: ${info.requesterName}", fontSize = 14.sp)
+                                Text("Created date: ${formatDisplayDateTime(request.datetimeCreated)}", fontSize = 14.sp)
+
+                                Spacer(modifier = Modifier.height(120.dp))
+                            }
+                        }
+
+                        // 7. Admin Action Buttons (for Pending)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 16.dp),
+                            verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            if (request.requestStatus == Status.PENDING && actionUiState.isNetworkAvailable) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Button(
+                                        onClick = { showRejectDialog = true },
+                                        modifier = Modifier.weight(0.45f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        ),
+                                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.reject),
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
+                                    PrimaryButton(
+                                        modifier = Modifier.weight(0.55f),
+                                        onClick = {
+                                            navController.navigate(Screen.AdminIngredientReview.createRoute(requestId))
+                                        },
+                                        textID = R.string.review_approve
+                                    )
+                                }
                             }
                         }
                     }
+                } ?:
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Request not found")
                 }
-            } ?:
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Request not found")
             }
         }
     }

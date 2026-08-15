@@ -146,9 +146,16 @@ class IngredientsViewModel(
         _uiState.update { it.copy(isLoading = loading) }
     }
 
-    fun fetchIngredientDetail(id: String) {
+    fun fetchIngredientDetail(
+        id: String,
+        isRefreshing: Boolean = false
+    ) {
         viewModelScope.launch {
-            updateLoading(true)
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                updateLoading(true)
+            }
             try {
                 val ingredient = repository.getIngredientById(id)
                 if (ingredient != null) {
@@ -167,15 +174,19 @@ class IngredientsViewModel(
                     val calorieSummary = calorieEntries.joinToString("\n") { entry ->
                         "${entry.calories.toInt()} kcal / ${entry.quantity.toInt()} ${entry.unitName}"
                     }
-                    _uiState.update { it.copy(ingredientDetail = IngredientDetailInfo(ingredient, calorieEntries, calorieSummary)) }
+                    _uiState.update { it.copy(ingredientDetail = IngredientDetailInfo(ingredient, calorieEntries, calorieSummary), isRefreshing = false) }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredient details") }
+                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredient details", isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }
         }
+    }
+
+    fun refreshIngredientDetail(id: String) {
+        fetchIngredientDetail(id, isRefreshing = true)
     }
 
     fun addToShoppingList(ingredient: Ingredients) {

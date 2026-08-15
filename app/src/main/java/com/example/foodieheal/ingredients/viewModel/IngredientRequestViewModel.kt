@@ -143,9 +143,16 @@ class IngredientRequestViewModel(
         }
     }
 
-    fun fetchRequestDetail(requestId: String) {
+    fun fetchRequestDetail(
+        requestId: String,
+        isRefreshing: Boolean = false
+    ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true) }
+            }
             try {
                 val request = repository.getIngredientRequestById(requestId)
                 if (request != null) {
@@ -160,12 +167,16 @@ class IngredientRequestViewModel(
                     }
                     _requestDetail.value = IngredientRequestItem(request, summary)
                 }
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch request detail") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch request detail") }
             }
         }
+    }
+
+    fun refreshRequestDetail(requestId: String) {
+        fetchRequestDetail(requestId, isRefreshing = true)
     }
 
     fun deleteRequest(requestId: String, onComplete: () -> Unit) {

@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 data class AdminIngredientRequestUiState(
     val isNetworkAvailable: Boolean = true,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isDeletedByUser: Boolean = false,
     val isAlreadyProcessed: Boolean = false,
     val errorMessage: String? = null
@@ -63,13 +64,20 @@ class AdminIngredientRequestViewModel(
         }
     }
 
-    fun fetchRequestDetail(requestId: String) {
+    fun fetchRequestDetail(
+        requestId: String,
+        isRefreshing: Boolean = false
+    ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, isDeletedByUser = false, isAlreadyProcessed = false) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, isDeletedByUser = false, isAlreadyProcessed = false) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, isDeletedByUser = false, isAlreadyProcessed = false) }
+            }
             try {
                 val request = repository.getIngredientRequestById(requestId)
                 if (request == null) {
-                    _uiState.update { it.copy(isLoading = false, isDeletedByUser = true) }
+                    _uiState.update { it.copy(isLoading = false, isRefreshing = false, isDeletedByUser = true) }
                     return@launch
                 }
 
@@ -89,12 +97,16 @@ class AdminIngredientRequestViewModel(
                     requesterCustomId = user?.customId ?: "Unknown",
                     calorieSummary = summary
                 )
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             }
         }
+    }
+
+    fun refreshRequestDetail(requestId: String) {
+        fetchRequestDetail(requestId, isRefreshing = true)
     }
 
     fun populateFormForReview(requestId: String) {
