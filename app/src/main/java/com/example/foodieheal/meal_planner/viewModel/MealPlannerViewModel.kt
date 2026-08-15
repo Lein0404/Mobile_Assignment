@@ -327,8 +327,10 @@ class MealPlannerViewModel(
         }
     }
 
-    fun getCurrentWeekDays(baseDate: LocalDate = LocalDate.now()): List<LocalDate> {
-        val sunday = baseDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-        return (0..6).map { sunday.plusDays(it.toLong()) }
+    fun getCurrentWeekDays(referenceDate: LocalDate): List<LocalDate> {
+        val monday = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        return (0..6).map { dayOffset ->
+            monday.plusDays(dayOffset.toLong())
+        }
     }
 }

@@ -22,8 +22,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "foodieheal_database"
                 )
-                .fallbackToDestructiveMigration() // Wipes old data if version changes to prevent crashes
-                .build()
+                    .fallbackToDestructiveMigration() // Wipes old data if version changes to prevent crashes
+                    .build()
                 INSTANCE = instance
                 instance
             }

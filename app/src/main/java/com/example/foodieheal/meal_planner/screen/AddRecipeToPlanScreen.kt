@@ -72,7 +72,7 @@ fun AddRecipeToPlanScreen(
 ) {
     if (recipe == null) {
         Box(
-            modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -248,7 +248,8 @@ fun AddRecipeBottomActionBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         OutlinedButton(

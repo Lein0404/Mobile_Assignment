@@ -112,7 +112,7 @@ fun MealPlannerContent(
             modifier = Modifier.fillMaxSize(),
             beyondViewportPageCount = 1
         ) { page ->
-            val pageDate = remember(page) { anchorDate.plusDays(page.toLong()) }
+            val pageDate = remember(page, anchorDate) { anchorDate.plusDays(page.toLong()) }
 
             LaunchedEffect(pageDate) {
                 onLoadPlanForDate(pageDate)

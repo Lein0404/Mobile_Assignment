@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -351,6 +352,8 @@ class MainActivity : ComponentActivity() {
                                     val typeString =
                                         backStackEntry.arguments?.getString("type") ?: ""
 
+                                    // 🌟 Convert strings safely to LocalDate and MealType enum
+                                    val date: LocalDate = if (dateString.isNotEmpty()) LocalDate.parse(dateString) else LocalDate.now()
                                     val type: MealType = try {
                                         MealType.valueOf(typeString)
                                     } catch (e: IllegalArgumentException) {
@@ -406,7 +409,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(
-                                    route = Screen.AddEditTemplate.route, // e.g., "add_edit_template?planId={planId}"
+                                    route = Screen.AddEditTemplate.route,
                                     arguments = listOf(
                                         navArgument("planId") {
                                             type = NavType.StringType
@@ -819,7 +822,7 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 fun SplashLogoOverlay() {
     val primaryColor = MaterialTheme.colorScheme.primary
     val view = LocalView.current
-    
+
     // 🌟 Sync Status Bar immediately to orange
     SideEffect {
         val window = (view.context as Activity).window
