@@ -21,6 +21,7 @@ data class IngredientRequestUiState(
     val requests: List<IngredientRequestItem> = emptyList(),
     val filteredRequests: List<IngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isStatusConflict: Boolean = false,
     val errorMessage: String? = null,
     val isNetworkAvailable: Boolean = true
@@ -96,10 +97,14 @@ class IngredientRequestViewModel(
         }
     }
 
-    fun fetchRequests() {
+    fun fetchRequests(isRefreshing: Boolean = false) {
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val requests = repository.getIngredientRequests(currentUserId)
                 val allUnits = repository.getUnits().associateBy { it.unitID }
@@ -115,13 +120,17 @@ class IngredientRequestViewModel(
                     }
                     IngredientRequestItem(request, summary)
                 }
-                _uiState.update { it.copy(requests = items, isLoading = false) }
+                _uiState.update { it.copy(requests = items, isLoading = false, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch requests") }
             }
         }
+    }
+
+    fun refresh() {
+        fetchRequests(isRefreshing = true)
     }
     
     private fun fetchUnits() {

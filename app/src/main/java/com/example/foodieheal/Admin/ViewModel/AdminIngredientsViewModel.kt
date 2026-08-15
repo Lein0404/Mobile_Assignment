@@ -2,8 +2,6 @@ package com.example.foodieheal.Admin.ViewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequest
@@ -17,13 +15,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AdminIngredientRequestUiState(
+data class AdminIngredientsUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null, // null means "All"
     val requests: List<AdminIngredientRequestItem> = emptyList(),
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val isNetworkAvailable: Boolean = true
 )
@@ -41,8 +40,8 @@ class AdminIngredientsViewModel(
     private val userRepository: UserRepository
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(AdminIngredientRequestUiState())
-    val uiState: StateFlow<AdminIngredientRequestUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AdminIngredientsUiState())
+    val uiState: StateFlow<AdminIngredientsUiState> = _uiState.asStateFlow()
 
     private val networkMonitor = NetworkMonitor(application)
 
@@ -62,9 +61,13 @@ class AdminIngredientsViewModel(
         }
     }
 
-    fun fetchRequests() {
+    fun fetchRequests(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val requests = repository.getAllIngredientRequests()
                 val users = userRepository.getAllUsers().associateBy { it.id }
@@ -87,13 +90,17 @@ class AdminIngredientsViewModel(
                         calorieSummary = summary
                     )
                 }
-                _uiState.update { it.copy(requests = items, isLoading = false) }
+                _uiState.update { it.copy(requests = items, isLoading = false, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch requests") }
             }
         }
+    }
+
+    fun refresh() {
+        fetchRequests(isRefreshing = true)
     }
 
     fun onSearchQueryChange(query: String) {

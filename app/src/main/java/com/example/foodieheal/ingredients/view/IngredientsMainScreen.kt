@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -281,7 +282,7 @@ fun IngredientRequestsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (uiState.isLoading) {
+        if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -301,21 +302,28 @@ fun IngredientRequestsScreen(
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+            
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refresh() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                grouped.forEach { (category, items) ->
-                    item {
-                        Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    }
-                    items(items) { item ->
-                        IngredientRequestCard(item) {
-                            navController.navigate(Screen.IngredientDetail.createRoute(item.request.ingredientRequestId, true))
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    grouped.forEach { (category, items) ->
+                        item {
+                            Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        items(items) { item ->
+                            IngredientRequestCard(item) {
+                                navController.navigate(Screen.IngredientDetail.createRoute(item.request.ingredientRequestId, true))
+                            }
                         }
                     }
+                    item { Spacer(modifier = Modifier.height(80.dp)) } // FAB space
                 }
-                item { Spacer(modifier = Modifier.height(80.dp)) } // FAB space
             }
         }
     }
@@ -390,7 +398,7 @@ fun IngredientsExistingScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (uiState.isLoading) {
+        if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -413,23 +421,30 @@ fun IngredientsExistingScreen(
         }
 
         val grouped = uiState.filteredIngredients.groupBy { it.ingredient.ingredientCategory ?: IngredientCategory.OTHERS }
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            grouped.forEach { (category, items) ->
-                item {
-                    Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                grouped.forEach { (category, items) ->
+                    item {
+                        Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    }
+                    // TODO: when logic is all done, improve the UI!
+                    items(items) { item ->
+                        IngredientCard(
+                            item = item,
+                            onClick = {
+                                navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
+                            },
+                            onAddToCart = { onAddToCart(item.ingredient) }
+                        )
+                    }
                 }
-                // TODO: when logic is all done, improve the UI!
-                items(items) { item ->
-                    IngredientCard(
-                        item = item,
-                        onClick = {
-                            navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
-                        },
-                        onAddToCart = { onAddToCart(item.ingredient) }
-                    )
-                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }

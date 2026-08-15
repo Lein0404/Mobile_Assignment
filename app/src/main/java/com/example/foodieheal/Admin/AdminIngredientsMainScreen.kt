@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -174,7 +175,7 @@ fun AdminIngredientsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (uiState.isLoading) {
+        if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -194,21 +195,28 @@ fun AdminIngredientsScreen(
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+            
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refresh() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                grouped.forEach { (category, items) ->
-                    item {
-                        Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    }
-                    items(items) { item ->
-                        AdminIngredientRequestCard(item) {
-                            navController.navigate(Screen.AdminIngredientDetail.createRoute(item.request.ingredientRequestId))
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    grouped.forEach { (category, items) ->
+                        item {
+                            Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        items(items) { item ->
+                            AdminIngredientRequestCard(item) {
+                                navController.navigate(Screen.AdminIngredientDetail.createRoute(item.request.ingredientRequestId))
+                            }
                         }
                     }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
-                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
     }

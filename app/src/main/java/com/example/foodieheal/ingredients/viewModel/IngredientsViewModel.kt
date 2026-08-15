@@ -21,6 +21,7 @@ data class IngredientsUiState(
     val ingredients: List<IngredientItem> = emptyList(),
     val filteredIngredients: List<IngredientItem> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val ingredientDetail: IngredientDetailInfo? = null,
     val errorMessage: String? = null,
     val isNetworkAvailable: Boolean = true
@@ -71,9 +72,13 @@ class IngredientsViewModel(
         }
     }
 
-    fun fetchIngredients() {
+    fun fetchIngredients(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val ingredients = repository.getIngredients()
                 val allUnits = repository.getUnits().associateBy { it.unitID }
@@ -90,15 +95,19 @@ class IngredientsViewModel(
                     IngredientItem(ingredient, summary)
                 }
 
-                _uiState.update { it.copy(ingredients = ingredientItems, errorMessage = null) }
+                _uiState.update { it.copy(ingredients = ingredientItems, errorMessage = null, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredients") }
+                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredients", isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }
         }
+    }
+
+    fun refresh() {
+        fetchIngredients(isRefreshing = true)
     }
 
     fun onTabChange(index: Int) {

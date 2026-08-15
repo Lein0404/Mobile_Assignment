@@ -2,11 +2,7 @@ package com.example.foodieheal.Admin.ViewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestItem
-import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientUnits
 import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
@@ -25,7 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AdminRequestActionUiState(
+data class AdminIngredientRequestUiState(
     val isNetworkAvailable: Boolean = true,
     val isLoading: Boolean = false,
     val isDeletedByUser: Boolean = false,
@@ -40,8 +36,8 @@ class AdminIngredientRequestViewModel(
     private val productionRepository: IngredientsRepository
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(AdminRequestActionUiState())
-    val uiState: StateFlow<AdminRequestActionUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AdminIngredientRequestUiState())
+    val uiState: StateFlow<AdminIngredientRequestUiState> = _uiState.asStateFlow()
 
     private val _requestDetail = MutableStateFlow<AdminIngredientRequestItem?>(null)
     val requestDetail: StateFlow<AdminIngredientRequestItem?> = _requestDetail.asStateFlow()
