@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,10 +18,12 @@ import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -101,54 +104,62 @@ import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
+
     private val mealPlannerViewModel: MealPlannerViewModel by viewModels {
         MealPlannerViewModelFactory(application)
     }
+
     companion object {
+        private const val TAG = "ColdStartDebug"
         var appContext: Context? = null
             private set
     }
+
+    private var pendingDeepLinkRoute by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appContext = applicationContext
         enableEdgeToEdge()
-        intent?.data?.let { uri ->
-            processDeepLink(uri)
-        }
+
+        // 1. Process deep link on initial cold start
+        handleDeepLink(intent)
+
         setContent {
             FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
-                val lifecycleOwner = LocalLifecycleOwner.current
+                val sharedAuthViewModel: AuthViewModel = viewModel()
 
-                LaunchedEffect(lifecycleOwner) {
-                    lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        mealPlannerViewModel.navigationEvent.collect { route ->
-                            // 1. Prevent the crash: If NavHost isn't ready, wait until the graph is attached
-                            while (runCatching { navController.graph }.isFailure) {
-                                delay(50.milliseconds)
-                            }
-
-                            val currentDest = navController.currentBackStackEntry?.destination?.route
-                            val hasLoginOnStack = currentDest == Screen.Login.route
-
+                // 1. Unified Entry Navigation Logic (Cold & Warm Start)
+                LaunchedEffect(sharedAuthViewModel.loginSuccess, sharedAuthViewModel.isInitializing, pendingDeepLinkRoute) {
+                    if (sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
+                        val route = pendingDeepLinkRoute
+                        if (route != null) {
+                            Log.d(TAG, "Navigating to deep link route: $route")
                             navController.navigate(route) {
-                                if (hasLoginOnStack) {
-                                    // Cold start handling: wipe the placeholder/login screens out completely
-                                    popUpTo(0) { inclusive = true }
-                                } else {
-                                    // Warm start handling: preserve user stack state safely
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
+                                // Clear whatever was there (Login or Splash)
+                                popUpTo(0) { inclusive = true }
+                            }
+                            pendingDeepLinkRoute = null
+                            mealPlannerViewModel.consumeDeepLinkProcessed()
+                        } else {
+                            // Handle Initial Login Landing (Standard Redirect)
+                            val currentRoute = navController.currentDestination?.route
+                            if (currentRoute == null || currentRoute == Screen.Login.route) {
+                                val dest = when {
+                                    sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route
+                                    sharedAuthViewModel.isChef -> Screen.ChefMain.route
+                                    else -> Screen.Home.route
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                                Log.d(TAG, "Standard login landing. Navigating to: $dest")
+                                navController.navigate(dest) {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
                         }
                     }
                 }
-                val sharedAuthViewModel: AuthViewModel = viewModel()
+
                 val sharedRecipeViewModel: RecipeViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
@@ -213,12 +224,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        val startRoute = when {
-                            sharedAuthViewModel.loginSuccess && sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route
-                            sharedAuthViewModel.loginSuccess && sharedAuthViewModel.isChef -> Screen.ChefMain.route
-                            sharedAuthViewModel.loginSuccess -> Screen.Home.route
-                            else -> Screen.Login.route
-                        }
+                        // 🌟 Stable Start Route: The NavHost always starts at Login, 
+                        // and LaunchedEffects handle the redirection once Auth is ready.
+                        val startRoute = Screen.Login.route
 
                         // Use a Box to keep the NavHost full screen and avoid resizing lag
                         Box(modifier = Modifier
@@ -298,7 +306,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             )
                                         },
-                                        onEdit = {id->navController.navigate(Screen.AddEditTemplate.createRoute(id)) }//Check
+                                        onEdit = { id -> navController.navigate(Screen.AddEditTemplate.createRoute(id)) }
                                     )
                                 }
 
@@ -346,41 +354,43 @@ class MainActivity : ComponentActivity() {
                                         navArgument("type") { type = NavType.StringType }
                                     )
                                 ) { backStackEntry ->
-                                    val dateString =
-                                        backStackEntry.arguments?.getString("date") ?: ""
-                                    val typeString =
-                                        backStackEntry.arguments?.getString("type") ?: ""
+                                    val dateString = backStackEntry.arguments?.getString("date") ?: ""
+                                    val typeString = backStackEntry.arguments?.getString("type") ?: ""
 
-                                    val type: MealType = try {
-                                        MealType.valueOf(typeString)
-                                    } catch (e: IllegalArgumentException) {
-                                        MealType.BREAKFAST
-                                    }
+                                    // 1. Safely parse MealType enum
+                                    val type: MealType = runCatching {
+                                        MealType.valueOf(typeString.uppercase())
+                                    }.getOrDefault(MealType.BREAKFAST)
 
-                                    val dayOfWeek: DayOfWeek? =
-                                        runCatching { DayOfWeek.valueOf(dateString.uppercase()) }.getOrNull()
-                                    val localDate: LocalDate? = if (dayOfWeek == null) {
-                                        runCatching { LocalDate.parse(dateString) }.getOrElse { LocalDate.now() }
+                                    // 2. Parse DayOfWeek first ("MONDAY", "TUESDAY", etc.)
+                                    val dayOfWeek: DayOfWeek? = runCatching {
+                                        DayOfWeek.valueOf(dateString.uppercase())
+                                    }.getOrNull()
+
+                                    // 3. Only parse LocalDate if dayOfWeek is null ("2026-08-18")
+                                    val localDate: LocalDate? = if (dayOfWeek == null && dateString.isNotEmpty()) {
+                                        runCatching { LocalDate.parse(dateString) }.getOrNull()
                                     } else null
 
-                                    val addEditTemplateViewModel: AddEditTemplateViewModel? =
-                                        if (dayOfWeek != null) {
-                                            val parentEntry = remember(backStackEntry) {
-                                                runCatching { navController.getBackStackEntry(Screen.AddEditTemplate.route) }.getOrNull()
-                                            }
-                                            parentEntry?.let { viewModel(it) }
-                                        } else null
+                                    // 4. Retrieve AddEditTemplateViewModel safely if backstack entry exists
+                                    val addEditTemplateViewModel: AddEditTemplateViewModel? = if (dayOfWeek != null) {
+                                        val parentEntry = remember(backStackEntry) {
+                                            runCatching {
+                                                navController.getBackStackEntry(Screen.AddEditTemplate.route)
+                                            }.getOrNull()
+                                        }
+                                        parentEntry?.let { viewModel(it) }
+                                    } else null
 
                                     RecipesSelectingScreen(
                                         recipeViewModel = sharedRecipeViewModel,
                                         authViewModel = sharedAuthViewModel,
                                         onSave = { selectedIds ->
-                                            val selectedRecipes =
-                                                selectedIds.mapNotNull { recipeId ->
-                                                    sharedRecipeViewModel.recipeList.find { it.recipe_id == recipeId }
-                                                        ?: sharedRecipeViewModel.myRecipes.find { it.recipe_id == recipeId }
-                                                        ?: sharedRecipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
-                                                }
+                                            val selectedRecipes = selectedIds.mapNotNull { recipeId ->
+                                                sharedRecipeViewModel.recipeList.find { it.recipe_id == recipeId }
+                                                    ?: sharedRecipeViewModel.myRecipes.find { it.recipe_id == recipeId }
+                                                    ?: sharedRecipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
+                                            }
 
                                             if (dayOfWeek != null && addEditTemplateViewModel != null) {
                                                 selectedRecipes.forEach { recipe ->
@@ -406,7 +416,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(
-                                    route = Screen.AddEditTemplate.route, // e.g., "add_edit_template?planId={planId}"
+                                    route = Screen.AddEditTemplate.route,
                                     arguments = listOf(
                                         navArgument("planId") {
                                             type = NavType.StringType
@@ -453,7 +463,6 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
                                         onNavigateToProfile = { navController.navigate(Screen.EditBodyStatus.route) },
-                                        navController = navController
                                     )
                                 }
 
@@ -464,7 +473,7 @@ class MainActivity : ComponentActivity() {
                                             type = NavType.StringType
                                         },
                                         navArgument("isMyTemplate") {
-                                            type = NavType.BoolType // Changed type to BoolType if it was registered as Boolean, or leave as string parsing if passed as String
+                                            type = NavType.BoolType
                                         }
                                     )
                                 ) { backStackEntry ->
@@ -508,25 +517,45 @@ class MainActivity : ComponentActivity() {
                                                     template = plan,
                                                     startDate = startDate
                                                 )
+                                                Toast.makeText(appContext, "Template applied to meal planner!", Toast.LENGTH_SHORT).show()
                                                 navController.popBackStack()
                                             },
                                             onBack = { navController.popBackStack() },
-                                            maxCalories = calculateSuggestedDailyCalories(
-                                                sharedAuthViewModel.currentUser
-                                            ),
+                                            mealPlannerViewModel = mealPlannerViewModel,
+                                            maxCalories = calculateSuggestedDailyCalories(sharedAuthViewModel.currentUser),
                                             onRecipeDetails = { id ->
-                                                navController.navigate(
-                                                    Screen.RecipeDetails.createRoute(
-                                                        id
-                                                    )
-                                                )
+                                                navController.navigate(Screen.RecipeDetails.createRoute(id))
                                             },
                                             onNavigateToProfile = { navController.navigate(Screen.EditBodyStatus.route) },
-                                            onRecipeAdd = { date, mealType -> navController.navigate(Screen.RecipeSelection.createRoute(date = date,type = mealType)) },
-                                            onRecipeDelete = {recipeId -> templateViewModel.deleteRecipeFromTemplate(recipeId) },
-                                            onEdit = {navController.navigate(Screen.AddEditTemplate.createRoute(plan.planId)) },
-                                            onDelete = { templateViewModel.deleteWeeklyPlan(plan.planId)
-                                            navController.popBackStack()}
+                                            onRecipeAdd = { date, mealType ->
+                                                navController.navigate(Screen.RecipeSelection.createRoute(date = date, type = mealType))
+                                            },
+                                            onRecipeDelete = { recipeId ->
+                                                templateViewModel.deleteRecipeFromTemplate(recipeId)
+                                                Toast.makeText(appContext, "Recipe removed from template", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onEdit = { navController.navigate(Screen.AddEditTemplate.createRoute(plan.planId)) },
+                                            onDelete = {
+                                                templateViewModel.deleteWeeklyPlan(
+                                                    planId = plan.planId,
+                                                    onSuccess = {
+                                                        Toast.makeText(appContext, "Template deleted successfully!", Toast.LENGTH_SHORT).show()
+                                                        navController.popBackStack()
+                                                    }
+                                                )
+                                            },
+                                            onAdd = {
+                                                templateViewModel.duplicateTemplate(
+                                                    sourcePlanId = plan.planId,
+                                                    currentUserId = sharedAuthViewModel.currentUser?.id ?: "",
+                                                    onSuccess = { newPlanId ->
+                                                        Toast.makeText(appContext, "Template saved to your collection!", Toast.LENGTH_SHORT).show()
+                                                    },
+                                                    onError = { error ->
+                                                        Toast.makeText(appContext, error, Toast.LENGTH_SHORT).show()
+                                                    }
+                                                )
+                                            }
                                         )
                                     } ?: Box(
                                         modifier = Modifier.fillMaxSize(),
@@ -787,15 +816,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent) // Update activity intent
-        intent.data?.let { uri ->
+        setIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        intent?.data?.let { uri ->
             processDeepLink(uri)
+            // 🌟 CRITICAL: Consume the URI so it isn't re-processed on Activity restart/resume
+            intent.data = null
         }
     }
 
     private fun processDeepLink(uri: Uri) {
         Log.d("DeepLink", "Processing URI: $uri")
-
         val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io" && uri.path?.startsWith("/share") == true
         val isCustomScheme = uri.scheme == "foodieheal" && uri.host == "share"
 
@@ -804,6 +838,9 @@ class MainActivity : ComponentActivity() {
                 runCatching {
                     LocalDate.parse(dateStr)
                 }.onSuccess { startDate ->
+                    Log.d("DeepLink", "Successfully parsed start date: $startDate")
+                    // Store pending route for the NavHost
+                    pendingDeepLinkRoute = Screen.Planner.route
                     mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
                 }.onFailure { e ->
                     Log.e("DeepLink", "Failed to parse date: $dateStr", e)
@@ -819,7 +856,7 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 fun SplashLogoOverlay() {
     val primaryColor = MaterialTheme.colorScheme.primary
     val view = LocalView.current
-    
+
     // 🌟 Sync Status Bar immediately to orange
     SideEffect {
         val window = (view.context as Activity).window

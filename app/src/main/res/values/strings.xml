@@ -494,7 +494,7 @@
     <string name="currency_prefix">RM </string>
 
     <string name="profile_updated_success">Profile updated successfully!</string>
-
+    <string name="null_string"> </string>
 
     <!-- Meal Planner Categories -->
     <string name="category_high_protein">High Protein</string>

@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -112,7 +113,7 @@ fun MealPlannerContent(
             modifier = Modifier.fillMaxSize(),
             beyondViewportPageCount = 1
         ) { page ->
-            val pageDate = remember(page) { anchorDate.plusDays(page.toLong()) }
+            val pageDate = remember(page, anchorDate) { anchorDate.plusDays(page.toLong()) }
 
             LaunchedEffect(pageDate) {
                 onLoadPlanForDate(pageDate)
@@ -245,7 +246,7 @@ fun MealPageContent(
             val dinnerRecipes = dailyPlan?.meals?.filter { it.mealType == MealType.DINNER }?.flatMap { it.recipes } ?: emptyList()
             val snackRecipes = dailyPlan?.meals?.filter { it.mealType == MealType.SNACK }?.flatMap { it.recipes } ?: emptyList()
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
                 Text(
                     text = dailyBannerText,
                     fontSize = 18.sp,
@@ -302,6 +303,7 @@ fun MealPageContent(
                             )
                         }
                     }
+                    Spacer(Modifier.height(90.dp))
                 }
             }
         }

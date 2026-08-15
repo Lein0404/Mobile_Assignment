@@ -1,5 +1,6 @@
 package com.example.foodieheal.meal_planner.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +52,7 @@ import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.DailyPlan
+import com.example.foodieheal.model.User
 import com.example.foodieheal.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -72,7 +74,7 @@ fun AddRecipeToPlanScreen(
 ) {
     if (recipe == null) {
         Box(
-            modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -85,29 +87,16 @@ fun AddRecipeToPlanScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(selectedDate) {
-        if (isNetworkAvailable) {
-            mealPlannerViewModel.loadPlanForDate(selectedDate)
-        }
+    // 1. Derive weekDays directly from selectedDate (Always guarantees selectedDate is in weekDays)
+    val weekDays = remember(selectedDate) {
+        mealPlannerViewModel.getCurrentWeekDays(selectedDate)
     }
-
-    var currentWeekStart by remember {
-        mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
-    }
-
-    val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${
         weekEndDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     } ${weekEndDate.year}"
 
     var showDatePicker by remember { mutableStateOf(false) }
-
-    LaunchedEffect(key1 = true) {
-        mealPlannerViewModel.uiEvent.collect { message ->
-            snackBarHostState.showSnackbar(message = message)
-        }
-    }
 
     val selectedSlots = remember { mutableStateMapOf<String, Set<MealType>>() }
     val anchorDate = remember { LocalDate.now().minusYears(1) }
@@ -118,37 +107,40 @@ fun AddRecipeToPlanScreen(
         pageCount = { 730 }
     )
 
+    // 2. Synchronize Pager scroll -> selectedDate
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
             val targetDate = anchorDate.plusDays(page.toLong())
-            if (targetDate != selectedDate) {
+            if (targetDate != selectedDate && pagerState.currentPage == page) {
                 selectedDate = targetDate
-                currentWeekStart = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
             }
         }
     }
 
+    // 3. Synchronize selectedDate -> Pager scroll
     LaunchedEffect(selectedDate) {
+        if (isNetworkAvailable) {
+            mealPlannerViewModel.loadPlanForDate(selectedDate)
+        }
         val targetPage = ChronoUnit.DAYS.between(anchorDate, selectedDate).toInt()
         if (pagerState.currentPage != targetPage && targetPage in 0 until 730) {
-            pagerState.animateScrollToPage(targetPage)
+            pagerState.scrollToPage(targetPage)
         }
     }
 
     if (showDatePicker) {
-        MealDatePickerDialog(
+        CustomizedDatePickerDialog(
             initialDate = selectedDate,
-            titleText = stringResource(R.string.daily_date_picker_dialog),
             onDateSelected = { newDate ->
                 selectedDate = newDate
-                currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
             },
-            onDismiss = { showDatePicker = false }
+            onDismiss = { showDatePicker = false },
+            mealPlannerViewModel = mealPlannerViewModel,
+            maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
         )
     }
 
     val totalSelectionsCount = if (isNetworkAvailable) selectedSlots.values.sumOf { it.size } else 0
-    val successMessage = stringResource(R.string.meals_added_successfully)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -170,7 +162,6 @@ fun AddRecipeToPlanScreen(
                             }
                         }
                         selectedSlots.clear()
-//                        snackBarHostState.showSnackbar(message = successMessage)
                         onExecutionComplete()
                     }
                 }
@@ -188,11 +179,9 @@ fun AddRecipeToPlanScreen(
                 selectedDate = selectedDate,
                 onDateBackward = {
                     selectedDate = selectedDate.minusWeeks(1)
-                    currentWeekStart = currentWeekStart.minusWeeks(1)
                 },
                 onDateForward = {
                     selectedDate = selectedDate.plusWeeks(1)
-                    currentWeekStart = currentWeekStart.plusWeeks(1)
                 },
                 onCalendarClick = { showDatePicker = true },
                 onDateSelected = { newDate -> selectedDate = newDate },
@@ -248,7 +237,8 @@ fun AddRecipeBottomActionBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         OutlinedButton(
@@ -260,7 +250,7 @@ fun AddRecipeBottomActionBar(
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.error
             ),
-            border = androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+            border = BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = stringResource(android.R.string.cancel),
@@ -303,7 +293,7 @@ fun AddRecipePageContent(
     isNetworkAvailable: Boolean,
     dailyPlan: DailyPlan?, // <-- Fix: Using shared package DailyPlan model explicitly
     selectedSlots: SnapshotStateMap<String, Set<MealType>>,
-    currentUser: com.example.foodieheal.model.User?,
+    currentUser: User?,
     onNavigateToProfile: () -> Unit
 ) {
     val pageDateStr = remember(pageDate) { pageDate.toString() }

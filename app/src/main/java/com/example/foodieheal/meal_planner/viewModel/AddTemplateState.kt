@@ -8,6 +8,7 @@ import java.time.DayOfWeek
 data class AddTemplateUiState(
     val planName: String = "",
     val category: PlanCategory? = null,
+    val isPublic: Boolean = false,
     val dailyPlans: Map<DayOfWeek, List<RealMealSlot>> = DayOfWeek.entries.associateWith {
         MealType.entries.map { type -> RealMealSlot(mealType = type, recipes = emptyList()) }
     },

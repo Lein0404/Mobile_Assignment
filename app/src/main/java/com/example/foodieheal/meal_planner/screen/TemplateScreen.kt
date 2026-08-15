@@ -1,5 +1,6 @@
 package com.example.foodieheal.meal_planner.screen
 
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -8,9 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -26,6 +29,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +42,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +71,7 @@ fun TemplatesContent(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel,
     onAddTemplateClick: () -> Unit,
-    onPlanDetails: (String,Boolean) -> Unit,
+    onPlanDetails: (recipeId: String, isMyTemplate: Boolean) -> Unit,
     onEdit: (String) -> Unit
 ) {
     val tabs = listOf( "All", "My Templates")
@@ -170,10 +175,25 @@ fun AllTemplatesScreen(
     templateViewModel: TemplateViewModel,
     onPlanDetails:(String,Boolean)-> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        val allPlans by templateViewModel.allWeeklyPlans.collectAsStateWithLifecycle()
+    val allPlans by templateViewModel.publicCommunityPlans.collectAsStateWithLifecycle()
+    var query by remember { mutableStateOf("") }
+    val filteredContacts = remember(query, allPlans) {
+        if (query.isBlank()) allPlans
+        else allPlans.filter { it.planName.contains(query, ignoreCase = true)
+                || it.category.toString().contains(query, ignoreCase = true)
+                || it.planId.contains(query, ignoreCase = false)}
+    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text("Search Template") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
         CategorizedTemplatesScreen(
-            weeklyPlans = allPlans,
+            weeklyPlans = filteredContacts,
             onPlanDetails = {id ->  onPlanDetails(id,false) },
         )
     }
@@ -186,6 +206,8 @@ fun MyTemplatesScreen(
     onPlanDetails: (String,Boolean) -> Unit,
     onEdit: (String) -> Unit
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 120.dp),
         floatingActionButton = {
@@ -210,10 +232,17 @@ fun MyTemplatesScreen(
 
             CategorizedTemplatesScreen(
                 weeklyPlans = userPlans,
-                onDelete = {id -> templateViewModel.deleteWeeklyPlan(id) },
+                onDelete = { id ->
+                    templateViewModel.deleteWeeklyPlan(
+                        planId = id,
+                        onSuccess = {
+                            Toast.makeText(context, "Template deleted successfully!", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
                 onPlanDetails = { id -> onPlanDetails(id,true) },
                 onEdit =  onEdit,
-                editable = true
+                isMyTemplate = true
             )
         }
     }
@@ -223,7 +252,7 @@ fun MyTemplatesScreen(
 fun CategorizedTemplatesScreen(
     weeklyPlans: List<WeeklyPlan>,
     onPlanDetails:(String)->Unit,
-    editable: Boolean = false,
+    isMyTemplate: Boolean = false,
     onEdit: (String) -> Unit = {},
     onDelete:(String)-> Unit = {}
 ) {
@@ -269,7 +298,7 @@ fun CategorizedTemplatesScreen(
                         PlanCard(
                             plan = plan,
                             onPlanDetails = { onPlanDetails(plan.planId) },
-                            editable = editable,
+                            isMyTemplate = isMyTemplate,
                             onEdit = { onEdit(plan.planId) },
                             onDelete = { onDelete(plan.planId) }
                         )
@@ -284,7 +313,7 @@ fun CategorizedTemplatesScreen(
 fun PlanCard(
     plan: WeeklyPlan,
     onPlanDetails: () -> Unit,
-    editable: Boolean,
+    isMyTemplate: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -313,12 +342,13 @@ fun PlanCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                if (editable) {
+                if (isMyTemplate) {
                     OtherIconButton(
                         showMenu = showMenu,
                         onShowMenuChange = {showMenu = it},
                         onEdit = onEdit,
-                        onDelete = onDelete
+                        onDelete = onDelete,
+                        isMyTemplate = isMyTemplate
                     )
                 }
             }
@@ -342,8 +372,10 @@ fun OtherIconButton(
     color: Color = MaterialTheme.colorScheme.onBackground,
     showMenu: Boolean,
     onShowMenuChange:(Boolean)-> Unit,
+    isMyTemplate: Boolean,
     onEdit:()->Unit,
-    onDelete:()-> Unit
+    onDelete:()-> Unit,
+    onAdd:()-> Unit = {}
 ){
     Box {
         Icon(
@@ -357,20 +389,30 @@ fun OtherIconButton(
             expanded = showMenu,
             onDismissRequest = { onShowMenuChange(false) }
         ) {
-            DropdownMenuItem(
-                text = { Text("Edit") },
-                onClick = {
-                    onShowMenuChange(false)
-                    onEdit()
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("Delete") },
-                onClick = {
-                    onShowMenuChange(false)
-                    onDelete()
-                }
-            )
+            if (isMyTemplate) {
+                DropdownMenuItem(
+                    text = { Text("Edit") },
+                    onClick = {
+                        onShowMenuChange(false)
+                        onEdit()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Delete") },
+                    onClick = {
+                        onShowMenuChange(false)
+                        onDelete()
+                    }
+                )
+            }else{
+                DropdownMenuItem(
+                    text = { Text("Add to my template") },
+                    onClick = {
+                        onShowMenuChange(false)
+                        onAdd()
+                    }
+                )
+            }
         }
     }
 }

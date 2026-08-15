@@ -96,6 +96,10 @@ class AuthViewModel : ViewModel() {
 
                 if (currentUser != null || currentChef != null) {
                     loginSuccess = true
+                    // Restore admin status if cached user is the admin
+                    if (currentUser?.email == "admin@gmail.com") {
+                        isAdmin = true
+                    }
                 }
 
                 val user = client.auth.currentUserOrNull()
@@ -111,7 +115,7 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.w("AuthViewModel", "Init error: ${e.message}")
             } finally {
-                delay(500)
+                delay(200)
                 isInitializing = false
             }
         }

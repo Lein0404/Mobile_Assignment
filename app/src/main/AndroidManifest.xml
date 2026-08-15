@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Existing permission -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- ADD THIS LINE BELOW TO FIX THE CRASH -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -21,37 +19,40 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.MobileAssignmentLoginPart"
-            android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.MobileAssignmentLoginPart"
+            android:windowSoftInputMode="adjustResize"
             tools:ignore="LockedOrientationActivity">
 
-            <!--App Icon Launcher -->
+            <!-- App Icon Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Password Reset / Custom Scheme Deep Link -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="foodieheal" android:host="share" />
-            </intent-filter>
-
-            <!-- App Links (HTTPS Domain Routing) -->
-            <intent-filter android:autoVerify="true" android:label="Share Meal Plan">
-                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:scheme="https"
+                    android:host="share"
+                    android:scheme="foodieheal" />
+            </intent-filter>
+
+            <!-- App Links (https://tzh652.github.io/share) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="tzh652.github.io"
-                    android:pathPrefix="/share" />
+                    android:pathPrefix="/share"
+                    android:scheme="https" />
             </intent-filter>
 
         </activity>

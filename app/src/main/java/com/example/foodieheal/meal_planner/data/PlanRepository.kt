@@ -1,5 +1,6 @@
 package com.example.foodieheal.meal_planner.data
 
+import android.util.Log
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
@@ -89,9 +90,16 @@ class PlanRepository {
     /**
      * Updates an existing template plan in Supabase.
      */
-    suspend fun updateTemplate(plan: WeeklyPlan) = withContext(Dispatchers.IO) {
-        val entity = plan.toEntity()
-        postgrest.upsert(entity)
+    suspend fun updatePlan(entity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
+        runCatching {
+            postgrest.update(entity) {
+                filter {
+                    eq("planId", entity.planId)
+                }
+            }
+        }.onFailure { error ->
+            Log.e("PlanRepository", "Failed to update plan ${entity.planId}", error)
+        }
     }
 
 }

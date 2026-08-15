@@ -1,5 +1,6 @@
 package com.example.foodieheal.meal_planner.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,7 +31,6 @@ import com.example.foodieheal.ui.theme.Green
 import com.example.foodieheal.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
-import kotlin.Unit
 
 @Composable
 fun AddEditTemplateRoute(
@@ -40,23 +41,33 @@ fun AddEditTemplateRoute(
     onNavigateToAddRecipe: (DayOfWeek, MealType) -> Unit,
     onRecipeClick: (String) -> Unit,
     onNavigateToProfile: () -> Unit,
-    navController: NavHostController
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.isSavedSuccess) {
         if (uiState.isSavedSuccess) {
+            // 👈 Show dynamic Toast based on create vs edit mode
+            val message = if (viewModel.isEditMode) {
+                "Template updated successfully!"
+            } else {
+                "Template created successfully!"
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
             onBackClick()
         }
     }
 
     AddEditTemplateScreen(
         modifier = modifier,
-        isEditMode = viewModel.isEditMode, // Pass edit mode state
+        isEditMode = viewModel.isEditMode,
         planName = uiState.planName,
         onPlanNameChange = viewModel::updatePlanName,
-        selectedCategory = uiState.category,
+        selectedCategory = uiState.category?.displayNameRes?:R.string.null_string,
         onCategorySelected = viewModel::updateCategoryByString,
+        isPublic = uiState.isPublic,
+        onPublicChange = viewModel::updateIsPublic,
         maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser),
         dailyPlans = uiState.dailyPlans,
         onAddMealRecipe = { day, mealType -> onNavigateToAddRecipe(day, mealType) },
@@ -67,7 +78,6 @@ fun AddEditTemplateRoute(
         onBackClick = onBackClick,
         onSave = {
             viewModel.saveTemplate()
-            navController.popBackStack()
         },
         onNavigateToProfile = onNavigateToProfile
     )
@@ -76,12 +86,13 @@ fun AddEditTemplateRoute(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddEditTemplateScreen(
-    modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
     planName: String,
     onPlanNameChange: (String) -> Unit,
-    selectedCategory: PlanCategory?,
+    selectedCategory: Int,
     onCategorySelected: (String) -> Unit,
+    isPublic: Boolean,
+    onPublicChange: (Boolean) -> Unit,
     maxCalories: Int,
     dailyPlans: Map<DayOfWeek, List<RealMealSlot>>,
     onAddMealRecipe: (DayOfWeek, MealType) -> Unit,
@@ -90,6 +101,7 @@ fun AddEditTemplateScreen(
     onBackClick: () -> Unit,
     onSave: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember { DayOfWeek.entries.toList() }
     val pagerState = rememberPagerState(pageCount = { daysOfWeek.size })
@@ -110,11 +122,6 @@ fun AddEditTemplateScreen(
     val hasEnteredData = remember(dailyPlans) {
         dailyPlans.values.any { slotList -> slotList.any { it.recipes.isNotEmpty() } }
     }
-
-    // Convert PlanCategory enum to string for DropDownList display
-    val categoryDisplayString = selectedCategory?.let {
-        stringResource(it.displayNameRes)
-    } ?: stringResource(R.string.category_others)
 
     // --- Discard Confirmation Dialog ---
     if (showDiscardDialog) {
@@ -180,7 +187,10 @@ fun AddEditTemplateScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showNameDialog = false }) {
+                TextButton(onClick = {
+                    onPlanNameChange("")
+                    showNameDialog = false
+                }) {
                     Text("Cancel")
                 }
             }
@@ -206,7 +216,7 @@ fun AddEditTemplateScreen(
             ) {
                 IconButton(
                     onClick = {
-                        if (hasEnteredData || selectedCategory != null || planName.isNotBlank()) {
+                        if (hasEnteredData || selectedCategory != R.string.null_string || planName.isNotBlank()) {
                             showDiscardDialog = true
                         } else {
                             onBackClick()
@@ -237,7 +247,7 @@ fun AddEditTemplateScreen(
                             onSave()
                         }
                     },
-                    enabled = selectedCategory != null,
+                    enabled = selectedCategory != R.string.null_string,
                     shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Green,
@@ -257,13 +267,38 @@ fun AddEditTemplateScreen(
         DropDownList(
             labelId = R.string.category,
             placeholderId = R.string.category,
-            selectedValue = categoryDisplayString,
+            selectedValue = stringResource(selectedCategory),
             onOptionSelected = onCategorySelected,
             options = PlanCategory.catList,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp)
         )
+
+        // --- Public / Private Toggle Row ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Make Plan Public",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = if (isPublic) "Visible to all community users" else "Only visible to you",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = isPublic,
+                onCheckedChange = onPublicChange
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 

@@ -1,6 +1,7 @@
 package com.example.foodieheal.meal_planner.screen
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,9 +44,11 @@ import com.example.foodieheal.viewmodel.RecipeViewModel
 fun RecipesSelectingScreen(
     recipeViewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
-    onSave:(List<String>)->Unit,
-    onBackClick:()-> Unit
+    onSave: (List<String>) -> Unit,
+    onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current // 👈 Get current Compose context
+
     val selectedTab = recipeViewModel.activeTab
     val tabs = listOf("Popular", "My Recipes", "Bookmarks")
 
@@ -112,7 +116,7 @@ fun RecipesSelectingScreen(
                             painter = painterResource(id = R.drawable.ic_arrowback),
                             contentDescription = "Menu",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp).clickable(onClick = {onBackClick()})
+                            modifier = Modifier.size(24.dp).clickable(onClick = { onBackClick() })
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
@@ -125,7 +129,6 @@ fun RecipesSelectingScreen(
                 }
             }
         },
-        // 🌟 Add Button layout anchored cleanly at the bottom container zone
         bottomBar = {
             AnimatedVisibility(
                 visible = selectedRecipeIds.isNotEmpty(),
@@ -144,7 +147,12 @@ fun RecipesSelectingScreen(
                             .padding(16.dp)
                     ) {
                         Button(
-                            onClick = {onSave(selectedRecipeIds)},
+                            onClick = {
+                                val count = selectedRecipeIds.size
+                                val message = if (count == 1) "1 recipe added!" else "$count recipes added!"
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show() // 👈 Toast trigger
+                                onSave(selectedRecipeIds)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
