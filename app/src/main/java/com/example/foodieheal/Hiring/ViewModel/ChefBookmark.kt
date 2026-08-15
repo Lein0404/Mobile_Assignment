@@ -3,6 +3,7 @@ package com.example.foodieheal.Hiring.ViewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.model.Appointment
 import io.github.jan.supabase.postgrest.from
 import com.example.foodieheal.model.ChefBookmark
 import com.example.mobileassignmentloginpart.Model.Chef
@@ -70,14 +71,37 @@ class ChefBookmark : ViewModel() {
             if (chefIds.isEmpty()) return emptyList()
 
             // Fetch matching chefs from 'Chef' table
-            client
+            val chefs = client
                 .from("Chef")
                 .select {
                     filter {
-                        isIn("chefId", chefIds) // Update to "id" if Chef PK is named 'id'
+                        isIn("chefId", chefIds)
                     }
                 }
                 .decodeList<Chef>()
+
+            val ratedAppointments = client
+                .from("Appointment")
+                .select {
+                    filter {
+                        gt("rating", 0)
+                    }
+                }
+                .decodeList<Appointment>()
+
+            chefs.map { chef ->
+                val idToMatch = chef.chefId.ifEmpty { chef.id }
+
+                val chefRatings = ratedAppointments
+                    .filter { it.chefId == idToMatch }
+                    .mapNotNull { it.rating }
+
+                val avgRating = if (chefRatings.isNotEmpty()) {
+                    (chefRatings.average() * 10).toInt() / 10.0
+                } else null
+
+                chef.copy(averagerating = avgRating)
+            }
 
         } catch (e: Exception) {
             Log.e("ChefBookmark", "Error fetching bookmarked chefs", e)
