@@ -1,6 +1,7 @@
 package com.example.foodieheal.Admin
 
 import android.app.Application
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,6 +44,8 @@ fun AdminIngredientsScreen(
         factory = AdminViewModelFactory(application)
     )
     val uiState by viewModel.uiState.collectAsState()
+    var showStatusFilterDialog by remember { mutableStateOf(false) }
+    var tempSelectedStatus by remember { mutableStateOf(uiState.selectedStatus) }
 
     LaunchedEffect(Unit) {
         viewModel.fetchRequests()
@@ -95,10 +98,38 @@ fun AdminIngredientsScreen(
         OutlinedTextField(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
-            placeholder = { Text("Search requested ingredients here") },
+            placeholder = { Text(
+                text = "Search ingredient requests here",
+                style = MaterialTheme.typography.labelLarge
+            ) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
+            trailingIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_filter_alt),
+                        contentDescription = "Filter",
+                        modifier = Modifier
+                            .clickable {
+                                tempSelectedStatus = uiState.selectedStatus
+                                showStatusFilterDialog = true
+                            }
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clickable {
+                                tempSelectedStatus = uiState.selectedStatus
+                                showStatusFilterDialog = true
+                            }
+                    )
+                }
+            },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -107,7 +138,7 @@ fun AdminIngredientsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         Text("Categories", fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // 2. Category Chips
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -118,58 +149,6 @@ fun AdminIngredientsScreen(
                     label = { Text(category.categoryName) },
                     shape = RoundedCornerShape(20.dp),
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 3. Filter by Status
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Filter by Status:", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            
-            var expanded by remember { mutableStateOf(false) }
-            val statusOptions = listOf("All", "Pending", "Approved", "Rejected")
-            
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.width(180.dp)
-            ) {
-                OutlinedTextField(
-                    value = uiState.selectedStatus?.statusName ?: "All",
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    statusOptions.forEach { statusName ->
-                        DropdownMenuItem(
-                            text = { Text(statusName) },
-                            onClick = {
-                                val status = when (statusName) {
-                                    "Pending" -> Status.PENDING
-                                    "Approved" -> Status.APPROVED
-                                    "Rejected" -> Status.REJECTED
-                                    else -> null
-                                }
-                                viewModel.onStatusFilterChange(status)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
             }
         }
 
@@ -219,6 +198,54 @@ fun AdminIngredientsScreen(
                 }
             }
         }
+    }
+
+    if (showStatusFilterDialog) {
+        AlertDialog(
+            onDismissRequest = { showStatusFilterDialog = false },
+            title = { Text("Filter by Status", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    val options = listOf(
+                        "All" to null,
+                        "Pending" to Status.PENDING,
+                        "Approved" to Status.APPROVED,
+                        "Rejected" to Status.REJECTED
+                    )
+                    options.forEach { (label, status) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { tempSelectedStatus = status }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            RadioButton(
+                                selected = tempSelectedStatus == status,
+                                onClick = { tempSelectedStatus = status }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = label)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onStatusFilterChange(tempSelectedStatus)
+                        showStatusFilterDialog = false
+                    }
+                ) {
+                    Text("Apply Filter", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStatusFilterDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
     }
 }
 

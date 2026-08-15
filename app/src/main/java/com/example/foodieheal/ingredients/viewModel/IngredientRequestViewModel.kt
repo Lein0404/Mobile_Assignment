@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter
 data class IngredientRequestUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val selectedStatus: Status? = null,
     val requests: List<IngredientRequestItem> = emptyList(),
     val filteredRequests: List<IngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -255,11 +256,17 @@ class IngredientRequestViewModel(
         applyFilters()
     }
 
+    fun onStatusFilterChange(status: Status?) {
+        _uiState.update { it.copy(selectedStatus = status) }
+        applyFilters()
+    }
+
     private fun applyFilters() {
         _uiState.update { state ->
             val filtered = state.requests.filter { item ->
                 (state.searchQuery.isEmpty() || item.request.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
-                (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory))
+                (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory)) &&
+                (state.selectedStatus == null || item.request.requestStatus == state.selectedStatus)
             }
             state.copy(filteredRequests = filtered)
         }
