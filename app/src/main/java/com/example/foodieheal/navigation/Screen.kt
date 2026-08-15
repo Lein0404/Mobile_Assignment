@@ -14,7 +14,9 @@ sealed class Screen(val route: String) {
         fun createRoute(recipeId: String): String = "recipe_details/$recipeId"
     }
     object Planner : Screen("planner")
-    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}")
+    object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
+        fun createRoute(id: String) = "add_recipe_to_planner/$id"
+    }
     object RecipeSelection : Screen("recipe_selection/{date}/{type}") {
         fun createRoute(date: LocalDate, type: MealType) = "recipe_selection/$date/$type"
         fun createRoute(date: DayOfWeek, type: MealType) = "recipe_selection/${date.name}/$type"
@@ -36,6 +38,9 @@ sealed class Screen(val route: String) {
     object Hiring : Screen("hiring")
     object Profile : Screen("profile")
     object AddRecipe : Screen("add_recipe")
+    object EditRecipe : Screen("edit_recipe/{recipeId}") {
+        fun createRoute(recipeId: String): String = "edit_recipe/$recipeId"
+    }
     object Welcome : Screen("welcome")
     object BasicInfo : Screen("basicInfo")
     object Contact : Screen("contactInfo")

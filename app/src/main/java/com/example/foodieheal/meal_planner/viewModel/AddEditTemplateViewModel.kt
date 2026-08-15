@@ -1,8 +1,5 @@
 package com.example.foodieheal.meal_planner.viewModel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,8 +8,10 @@ import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
+import com.example.foodieheal.meal_planner.model.toDomain
 import com.example.foodieheal.meal_planner.model.toEntity
 import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.repository.RecipeRepository
 import com.example.foodieheal.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,36 +24,64 @@ import java.util.UUID
 class AddEditTemplateViewModel(
     savedStateHandle: SavedStateHandle,
     private val planRepository: PlanRepository,
+    private val recipeRepository: RecipeRepository,
     private val authViewModel: AuthViewModel
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddTemplateUiState())
     val uiState: StateFlow<AddTemplateUiState> = _uiState.asStateFlow()
 
-    // Retrieve planId from navigation arguments (null if creating)
-    val editingPlanId: String? = savedStateHandle.get<String>("planId")
-    val isEditMode: Boolean = !editingPlanId.isNullOrEmpty()
-
-    // Form state fields
-    var planName by mutableStateOf("")
-        private set
-
-    var selectedCategory by mutableStateOf(PlanCategory.BALANCED)
-        private set
+    // Retrieve planId from navigation arguments
+    val planId: String? = savedStateHandle.get<String>("planId")
+    val isEditMode: Boolean = !planId.isNullOrEmpty()
 
     init {
-        if (isEditMode && editingPlanId != null) {
-            loadExistingPlan(editingPlanId)
+        // FIXED BUG 1: Used `planId` instead of non-existent `editingPlanId`
+        if (isEditMode && planId != null) {
+            loadExistingPlan(planId)
         }
     }
 
-    private fun loadExistingPlan(planId: String) {
+    private fun loadExistingPlan(id: String) {
         viewModelScope.launch {
-            val existingPlan = planRepository.getWeeklyPlanById(planId)
-            existingPlan?.let { plan ->
-                planName = plan.planName
-                selectedCategory = plan.category
-                // Pre-fill additional fields/meals here if needed
+            _uiState.update { currentState -> currentState.copy(isLoading = true) }
+            try {
+                val existingPlanDto = planRepository.getWeeklyPlanById(id)
+                if (existingPlanDto != null) {
+
+                    // 1. Collect all unique recipe IDs referenced in the saved plan
+                    val allRecipeIds = existingPlanDto.dailyPlans.values
+                        .flatten()
+                        .flatMap { slotDto -> slotDto.recipes.map { ref -> ref.recipeId } }
+                        .distinct()
+
+                    // 2. Fetch full Recipe objects using RecipeRepository
+                    val recipeList = recipeRepository.getRecipesByIds(allRecipeIds).getOrDefault(emptyList())
+                    val recipeMap = recipeList
+                        .filter { !it.recipe_id.isNullOrEmpty() }
+                        .associateBy { it.recipe_id!! }
+
+                    // 3. Convert DTO to Domain using the recipe map
+                    val domainDailyPlans = existingPlanDto.dailyPlans.toDomain(recipeMap)
+
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            planName = existingPlanDto.planName,
+                            category = existingPlanDto.category,
+                            dailyPlans = domainDailyPlans,
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { currentState -> currentState.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        errorMessage = e.localizedMessage ?: "Failed to load template"
+                    )
+                }
             }
         }
     }
@@ -63,26 +90,17 @@ class AddEditTemplateViewModel(
         _uiState.update { it.copy(planName = newName) }
     }
 
-    /**
-     * Updates the category directly using a PlanCategory enum.
-     */
     fun updateCategory(newCategory: PlanCategory) {
         _uiState.update { it.copy(category = newCategory) }
     }
 
-    /**
-     * Helper function to match string output from DropDownList UI component.
-     */
     fun updateCategoryByString(categoryName: String) {
         val matchedCategory = PlanCategory.entries.find {
-            it.name.equals(categoryName, ignoreCase = true) || it.name.equals(categoryName, ignoreCase = true)
+            it.name.equals(categoryName, ignoreCase = true)
         }
         _uiState.update { it.copy(category = matchedCategory) }
     }
 
-    /**
-     * Adds a recipe to a specific day and meal slot.
-     */
     fun addRecipeToSlot(day: DayOfWeek, mealType: MealType, recipe: Recipe) {
         _uiState.update { currentState ->
             val updatedDailyPlans = currentState.dailyPlans.toMutableMap()
@@ -91,7 +109,6 @@ class AddEditTemplateViewModel(
             val slotIndex = existingSlots.indexOfFirst { it.mealType == mealType }
             if (slotIndex != -1) {
                 val currentSlot = existingSlots[slotIndex]
-                // Prevent duplicate recipe entries inside the same meal slot
                 if (currentSlot.recipes.none { it.recipe_id == recipe.recipe_id }) {
                     existingSlots[slotIndex] = currentSlot.copy(
                         recipes = currentSlot.recipes + recipe
@@ -106,9 +123,6 @@ class AddEditTemplateViewModel(
         }
     }
 
-    /**
-     * Removes a recipe from a specific day and meal slot.
-     */
     fun removeRecipeFromSlot(day: DayOfWeek, mealType: MealType, recipe: Recipe) {
         _uiState.update { currentState ->
             val updatedDailyPlans = currentState.dailyPlans.toMutableMap()
@@ -126,9 +140,6 @@ class AddEditTemplateViewModel(
         }
     }
 
-    /**
-     * Converts state into entity DTO and saves it to the database.
-     */
     fun saveTemplate() {
         val currentState = _uiState.value
 
@@ -147,15 +158,22 @@ class AddEditTemplateViewModel(
             try {
                 val currentUserId = authViewModel.currentUser?.id ?: ""
 
-                val newPlan = WeeklyPlan(
-                    planId = UUID.randomUUID().toString(),
+                // FIXED BUG 4: Keep original `planId` in edit mode; generate UUID only for new plans
+                val finalPlanId = if (isEditMode && !planId.isNullOrEmpty()) {
+                    planId
+                } else {
+                    UUID.randomUUID().toString()
+                }
+
+                val planToSave = WeeklyPlan(
+                    planId = finalPlanId,
                     planName = currentState.planName.trim(),
                     userId = currentUserId,
                     category = currentState.category,
                     dailyPlans = currentState.dailyPlans
                 )
 
-                planRepository.insertPlan(newPlan.toEntity())
+                planRepository.insertPlan(planToSave.toEntity())
                 _uiState.update { it.copy(isLoading = false, isSavedSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update {

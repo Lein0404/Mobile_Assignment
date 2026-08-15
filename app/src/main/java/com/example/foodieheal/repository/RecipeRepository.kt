@@ -8,6 +8,12 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class RecipeRepository(
     private val supabaseClient: SupabaseClient
@@ -22,7 +28,7 @@ class RecipeRepository(
     suspend fun getMyRecipes(authorId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             val response = supabaseClient.postgrest.from("recipes")
-                .select { filter { eq("author_id", authorId) } }
+                .select { filter { eq("recipe_author", authorId) } }
             response.decodeList<Recipe>()
         }
     }
@@ -34,14 +40,36 @@ class RecipeRepository(
         }
     }
 
+    suspend fun updateRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            supabaseClient.postgrest.from("recipes").update(recipe) {
+                filter { eq("recipe_id", recipe.recipe_id ?: "") }
+            }
+            Unit
+        }
+    }
+
     suspend fun uploadRecipeImage(recipeId: String, imageBytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val bucket = supabaseClient.storage.from("recipes")
-            val fileName = "recipe_$recipeId.jpg"
-            bucket.upload(fileName, imageBytes) {
-                upsert = true
+            // 🌟 Updated to use Cloudinary with modern OkHttp standards
+            val client = OkHttpClient()
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("upload_preset", com.example.foodieheal.Cloudinary.CloudinaryConfig.UPLOAD_PRESET)
+                .addFormDataPart("file", "recipe_$recipeId.jpg", imageBytes.toRequestBody("image/*".toMediaType()))
+                .build()
+
+            val request = Request.Builder()
+                .url("https://api.cloudinary.com/v1_1/${com.example.foodieheal.Cloudinary.CloudinaryConfig.CLOUD_NAME}/image/upload")
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw Exception("Cloudinary failed: ${response.message}")
+                val responseBody = response.body?.string() ?: ""
+                val json = JSONObject(responseBody)
+                json.getString("secure_url")
             }
-            bucket.publicUrl(fileName)
         }
     }
 
@@ -55,22 +83,20 @@ class RecipeRepository(
 
     suspend fun toggleBookmark(userId: String, recipeId: String, isBookmarked: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            val table = supabaseClient.postgrest.from("recipe_bookmarks")
             if (isBookmarked) {
-                // Remove bookmark matching BOTH user and recipe
-                supabaseClient.postgrest.from("recipe_bookmarks").delete {
+                table.delete {
                     filter {
                         eq("user_id", userId)
                         eq("recipe_id", recipeId)
                     }
                 }
             } else {
-                // 🌟 FIX: Use a simple Map with exact column names. 
-                // Ensure userId is the SUPABASE UUID string.
                 val data = mapOf(
                     "user_id" to userId,
                     "recipe_id" to recipeId
                 )
-                supabaseClient.postgrest.from("recipe_bookmarks").insert(data)
+                table.insert(data)
             }
             Unit
         }
@@ -78,7 +104,6 @@ class RecipeRepository(
 
     suspend fun getBookmarkedRecipes(userId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            // 1. Fetch the list of recipe IDs this user has bookmarked
             val idResponse = supabaseClient.postgrest.from("recipe_bookmarks")
                 .select(io.github.jan.supabase.postgrest.query.Columns.list("recipe_id")) {
                     filter { eq("user_id", userId) }
@@ -87,7 +112,6 @@ class RecipeRepository(
 
             if (bookmarkedIds.isEmpty()) return@runCatching emptyList<Recipe>()
 
-            // 2. Fetch the actual recipe details from the main recipes table
             val recipeResponse = supabaseClient.postgrest.from("recipes")
                 .select {
                     filter {
@@ -104,7 +128,6 @@ class RecipeRepository(
                 .select(io.github.jan.supabase.postgrest.query.Columns.list("recipe_id")) {
                     filter { eq("user_id", userId) }
                 }
-            // Return just the list of IDs for quick UI checking
             response.decodeList<BookmarkId>().map { it.recipe_id }
         }
     }
@@ -124,8 +147,20 @@ class RecipeRepository(
                 .select {
                     filter { eq("recipe_id", recipeId) }
                 }
-            // decodeSingle() handles throwing an exception if the row doesn't exist
             response.decodeSingle<Recipe>()
+        }
+    }
+
+    suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (recipeIds.isEmpty()) return@runCatching emptyList()
+            val response = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter {
+                        isIn("recipe_id", recipeIds)
+                    }
+                }
+            response.decodeList<Recipe>()
         }
     }
 

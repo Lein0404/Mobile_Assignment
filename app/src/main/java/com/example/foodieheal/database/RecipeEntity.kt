@@ -16,7 +16,8 @@ data class RecipeEntity(
     val estimatedBudget: String,
     val recipeStep: String,
     val recipeImageUrl: String?,
-    val ingredientsJson: String // Stored as encoded JSON string
+    val ingredientsJson: String,
+    val lastUpdated: String? // 🌟 New column
 )
 
 @Entity(tableName = "local_ingredients")

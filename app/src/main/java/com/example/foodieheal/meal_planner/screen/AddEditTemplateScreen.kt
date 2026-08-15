@@ -32,7 +32,7 @@ import java.time.DayOfWeek
 import kotlin.Unit
 
 @Composable
-fun AddTemplateRoute(
+fun AddEditTemplateRoute(
     modifier: Modifier,
     viewModel: AddEditTemplateViewModel,
     authViewModel: AuthViewModel,
@@ -50,7 +50,7 @@ fun AddTemplateRoute(
         }
     }
 
-    AddTemplateScreen(
+    AddEditTemplateScreen(
         modifier = modifier,
         isEditMode = viewModel.isEditMode, // Pass edit mode state
         planName = uiState.planName,
@@ -75,7 +75,8 @@ fun AddTemplateRoute(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AddTemplateScreen(
+fun AddEditTemplateScreen(
+    modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
     planName: String,
     onPlanNameChange: (String) -> Unit,
@@ -89,7 +90,6 @@ fun AddTemplateScreen(
     onBackClick: () -> Unit,
     onSave: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember { DayOfWeek.entries.toList() }
     val pagerState = rememberPagerState(pageCount = { daysOfWeek.size })

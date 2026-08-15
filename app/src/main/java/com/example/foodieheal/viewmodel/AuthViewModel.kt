@@ -18,6 +18,9 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel // 🌟 Added Channel for one-time events
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow // 🌟 Added receiveAsFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
@@ -45,6 +48,15 @@ class AuthViewModel : ViewModel() {
     var registerSuccess by mutableStateOf(false)
         private set
 
+    // 🌟 Temporary holders for registration data
+    private var tempEmail = ""
+    private var tempPassword = ""
+
+    fun setTempCredentials(email: String, password: String) {
+        tempEmail = email
+        tempPassword = password
+    }
+
     var isProcessing by mutableStateOf(false)
         private set
 
@@ -54,11 +66,28 @@ class AuthViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
         private set
 
+    var passwordErrorMessage by mutableStateOf("") // 🌟 Specific holder for password errors
+        private set
+
+    var profileMessage by mutableStateOf("") // 🌟 Specific holder for profile updates
+        private set
+
     var CheferrorMessage by mutableStateOf<String?>(null)
         private set
 
-    var passwordUpdateSuccess by mutableStateOf(false)
-        private set
+    // 🌟 Professional One-Time Event System (Channel ensures the message only shows ONCE)
+    sealed class ProfileEvent {
+        object PasswordSuccess : ProfileEvent()
+        object ProfileSuccess : ProfileEvent()
+        object BodyStatusSuccess : ProfileEvent()
+    }
+
+    private val _profileEvents = Channel<ProfileEvent>(Channel.BUFFERED)
+    val profileEvents = _profileEvents.receiveAsFlow()
+
+    fun clearProfileEvents() {
+        // Channels clear automatically when received, so this is mostly for safety
+    }
 
     init {
         viewModelScope.launch {
@@ -249,24 +278,60 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun register(emailInput: String, passwordInput: String) {
+    // 🌟 Unified Registration: Creates Auth + User Profile at once
+    fun registerWithProfile(
+        weight: Double?, height: Double?, age: Int?, gender: String, bmi: Double?
+    ) {
+        if (tempEmail.isBlank() || tempPassword.isBlank()) {
+            errorMessage = "Registration data lost. Please try again."
+            return
+        }
+
         isProcessing = true
         errorMessage = ""
         viewModelScope.launch {
             try {
+                // 1. Create Auth Account
                 client.auth.signUpWith(Email) {
-                    email = emailInput
-                    password = passwordInput
+                    email = tempEmail
+                    password = tempPassword
                 }
-                val user = client.auth.currentUserOrNull()
-                if (user != null) {
-                    setupNewUser(user.id, emailInput)
-                } else {
-                    errorMessage = "Registration successful! Please check your email."
-                    isProcessing = false
-                }
+
+                val authUser = client.auth.currentUserOrNull() ?: throw Exception("Auth failed")
+                val uid = authUser.id
+
+                // 2. Generate Custom ID
+                val allUsers = client.postgrest.from("users").select().decodeList<User>()
+                val maxIdNum = allUsers.mapNotNull { it.customId?.removePrefix("U")?.toIntOrNull() }.maxOrNull() ?: 0
+                val customId = "U${(maxIdNum + 1).toString().padStart(3, '0')}"
+
+                // 3. Create full profile including BMI info
+                val newUser = User(
+                    id = uid,
+                    customId = customId,
+                    email = tempEmail,
+                    name = "User ($customId)",
+                    weight = weight,
+                    height = height,
+                    age = age,
+                    gender = gender,
+                    bmi = bmi
+                )
+
+                client.postgrest.from("users").insert(newUser)
+                
+                // 4. Finalize
+                this@AuthViewModel.currentUser = newUser
+                saveUserToCache(newUser)
+                loginSuccess = true
+                
+                // 🌟 Emit success event to trigger navigation and show message
+                _profileEvents.send(ProfileEvent.BodyStatusSuccess)
+                
+                registerSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Register Failed: ${e.message}"
+                errorMessage = "Registration Failed: ${e.message}"
+            } finally {
                 isProcessing = false
             }
         }
@@ -285,6 +350,9 @@ class AuthViewModel : ViewModel() {
                 client.postgrest.from("users").insert(newUser)
                 this@AuthViewModel.currentUser = newUser
                 saveUserToCache(newUser)
+                
+                // 🌟 FIX: Explicitly set loginSuccess so the Bottom Navigation Bar appears immediately
+                loginSuccess = true
                 registerSuccess = true
             } catch (e: Exception) {
                 errorMessage = "Database Error: ${e.message}"
@@ -325,7 +393,8 @@ class AuthViewModel : ViewModel() {
 
     fun updateProfile(
         name: String, email: String, profilePicUrl: String, description: String = "",
-        weight: Double? = null, height: Double? = null, age: Int? = null, gender: String? = null, bmi: Double? = null
+        weight: Double? = null, height: Double? = null, age: Int? = null, gender: String? = null, bmi: Double? = null,
+        onSuccess: () -> Unit = {} // 🌟 Added callback for reliable navigation
     ) {
         val uid = currentUser?.id ?: return
         isProcessing = true
@@ -346,30 +415,56 @@ class AuthViewModel : ViewModel() {
                 if (client.auth.currentUserOrNull()?.email != email && email.isNotEmpty()) {
                     client.auth.updateUser { this.email = email }
                 }
-                errorMessage = "Profile Updated"
+                
+                // 🌟 Send one-time success events
+                if (weight != null || height != null || age != null || bmi != null) {
+                    _profileEvents.send(ProfileEvent.BodyStatusSuccess)
+                } else {
+                    _profileEvents.send(ProfileEvent.ProfileSuccess)
+                }
+                
+                errorMessage = ""
+                profileMessage = "Profile Updated" // 🌟 Uses dedicated profile holder
+                onSuccess() 
             } catch (e: Exception) {
-                errorMessage = "Update Failed"
+                profileMessage = "Update Failed"
             } finally {
                 isProcessing = false
             }
         }
     }
 
-    fun changePassword(oldPassword: String, newPassword: String) {
-        if (newPassword.length < 8) {
-            errorMessage = "New password must be at least 8 characters"
-            return
-        }
+    fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit = {}) {
         val email = currentUser?.email ?: return
         isProcessing = true
         errorMessage = ""
         viewModelScope.launch {
             try {
-                client.auth.signInWith(Email) { this.email = email; this.password = oldPassword }
+                // 1. Always verify identity with OLD password first
+                client.auth.signInWith(Email) { 
+                    this.email = email
+                    this.password = oldPassword 
+                }
+                
+                // 2. ONLY proceed if the password is correct AND meets our 8-20 rule
+                if (newPassword.length !in 8..20) {
+                    errorMessage = "Password must be 8-20 characters"
+                    isProcessing = false
+                    return@launch
+                }
+
+                // 3. Update to the NEW password
                 client.auth.updateUser { password = newPassword }
-                errorMessage = "Password successfully changed"
+                
+                _profileEvents.send(ProfileEvent.PasswordSuccess)
+                passwordErrorMessage = "" // 🌟 Clear errors on success
+                onSuccess() 
             } catch (e: Exception) {
-                errorMessage = "Failed to change password."
+                val msg = e.message ?: ""
+                passwordErrorMessage = when { // 🌟 Uses dedicated password holder
+                    msg.contains("Invalid login credentials", ignoreCase = true) -> "Invalid current password"
+                    else -> "Failed to change password. Please try again."
+                }
             } finally {
                 isProcessing = false
             }
@@ -435,7 +530,14 @@ class AuthViewModel : ViewModel() {
         isAdmin = false
     }
 
+    // 🌟 Added to allow going back to Register screen to fix details
+    fun resetRegisterState() {
+        registerSuccess = false
+    }
+
     fun resetPasswordState() {
         errorMessage = ""
+        passwordErrorMessage = ""
+        profileMessage = ""
     }
 }

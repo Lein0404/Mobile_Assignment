@@ -1,5 +1,6 @@
 package com.example.foodieheal
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -19,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +69,7 @@ import com.example.foodieheal.ingredients.view.ShoppingListScreen
 import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
-import com.example.foodieheal.meal_planner.screen.AddTemplateRoute
+import com.example.foodieheal.meal_planner.screen.AddEditTemplateRoute
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
 import com.example.foodieheal.meal_planner.screen.RecipesSelectingScreen
 import com.example.foodieheal.meal_planner.screen.TemplateDetailsScreen
@@ -83,9 +86,11 @@ import com.example.foodieheal.view.AppointmentHistoryScreen
 import com.example.foodieheal.view.ChangePasswordScreen
 import com.example.foodieheal.view.EditBodyStatusScreen
 import com.example.foodieheal.view.EditProfileScreen
+import com.example.foodieheal.view.EditRecipeScreen
 import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
 import com.example.foodieheal.view.ProfileScreen
+import com.example.foodieheal.view.RecipeDetailsScreen
 import com.example.foodieheal.view.RecipesScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
@@ -155,9 +160,8 @@ class MainActivity : ComponentActivity() {
                 val hiringViewModel: HiringViewModel = viewModel()
                 val chefViewModel: chefRegisterViewModel = viewModel()
 
-                if (sharedAuthViewModel.isInitializing) {
-                    SplashLogoOverlay()
-                } else {
+                // 🌟 FIX: The curtain strategy. Content loads first, Splash sits on top.
+                Box(modifier = Modifier.fillMaxSize()) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
 
@@ -169,6 +173,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         // 🌟 contentWindowInsets=0 ensures the orange header reaches the top without gaps
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        containerColor = Color(0xFFF8F8F8), // 🌟 FIX: Stop the "black gap" during transitions
                         bottomBar = {
                             if (shouldShowBottomBar) {
                                 NavigationBar(
@@ -297,7 +302,14 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                composable(Screen.AddRecipeToPlanner.route) { backStackEntry ->
+                                composable(route = Screen.AddRecipeToPlanner.route,
+                                    arguments = listOf(
+                                        navArgument("recipeId") {
+                                            type = NavType.StringType
+                                            nullable = false
+                                        }
+                                    )
+                                ) { backStackEntry ->
                                     val recipeId = backStackEntry.arguments?.getString("recipeId")
 
                                     // Trigger fetch only if the ID is valid
@@ -326,6 +338,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }
+
                                 composable(
                                     route = Screen.RecipeSelection.route,
                                     arguments = listOf(
@@ -393,7 +406,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(
-                                    route = Screen.AddEditTemplate.route,
+                                    route = Screen.AddEditTemplate.route, // e.g., "add_edit_template?planId={planId}"
                                     arguments = listOf(
                                         navArgument("planId") {
                                             type = NavType.StringType
@@ -402,6 +415,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                 ) { backStackEntry ->
+                                    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
                                     val addEditTemplateViewModel: AddEditTemplateViewModel = viewModel(
                                         factory = object : ViewModelProvider.Factory {
                                             @Suppress("UNCHECKED_CAST")
@@ -413,12 +427,14 @@ class MainActivity : ComponentActivity() {
                                                 return AddEditTemplateViewModel(
                                                     planRepository = PlanRepository(),
                                                     authViewModel = sharedAuthViewModel,
-                                                    savedStateHandle = savedStateHandle // Pass savedStateHandle here
+                                                    recipeRepository = recipeRepository,
+                                                    savedStateHandle = savedStateHandle
                                                 ) as T
                                             }
                                         }
                                     )
-                                    AddTemplateRoute(
+
+                                    AddEditTemplateRoute(
                                         modifier = Modifier.padding(innerPadding),
                                         viewModel = addEditTemplateViewModel,
                                         authViewModel = sharedAuthViewModel,
@@ -649,6 +665,14 @@ class MainActivity : ComponentActivity() {
 
 
                                 composable(Screen.AddRecipe.route) { AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
+                                composable(Screen.EditRecipe.route) { backStackEntry ->
+                                    val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                                    EditRecipeScreen(navController, recipeId, sharedRecipeViewModel, sharedAuthViewModel)
+                                }
+                                composable(Screen.RecipeDetails.route) { backStackEntry ->
+                                    val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                                    RecipeDetailsScreen(navController, recipeId, sharedRecipeViewModel, sharedAuthViewModel)
+                                }
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
 
                                 composable(Screen.AppoinmtmentHistory.route) {
@@ -741,6 +765,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    // 🌟 The Curtain: Fades away to reveal the Login screen already sitting underneath
+                    AnimatedVisibility(
+                        visible = sharedAuthViewModel.isInitializing,
+                        enter = fadeIn(),
+                        exit = fadeOut(animationSpec = tween(600))
+                    ) {
+                        SplashLogoOverlay()
+                    }
+
                     // Global Logout Logic
                     LaunchedEffect(sharedAuthViewModel.loginSuccess) {
                         if (!sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
@@ -784,26 +817,48 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 
 @Composable
 fun SplashLogoOverlay() {
-    Box(
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val view = LocalView.current
+    
+    // 🌟 Sync Status Bar immediately to orange
+    SideEffect {
+        val window = (view.context as Activity).window
+        window.statusBarColor = primaryColor.toArgb()
+        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
+            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Foodie Heal",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Nourishing every bite.",
-                color = Color.Gray,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+        // 🌟 Orange Strip Sync
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(primaryColor)
+                .statusBarsPadding()
+        )
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Foodie Heal",
+                    color = primaryColor,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Nourishing every bite.",
+                    color = Color.Gray,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

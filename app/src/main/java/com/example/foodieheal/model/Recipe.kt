@@ -16,7 +16,8 @@ data class Recipe(
     @SerialName("estimated_budget") val estimatedBudget: String = "",
     @SerialName("recipe_steps") val recipeStep: String = "",
     @SerialName("recipe_image_url") val recipeImageUrl: String? = null,
-    @SerialName("recipe_ingredients") val ingredients: List<IngredientItem> = emptyList()
+    @SerialName("recipe_ingredients") val ingredients: List<IngredientItem> = emptyList(),
+    @SerialName("last_updated") val lastUpdated: String? = null // 🌟 New column
 )
 
 @Serializable
