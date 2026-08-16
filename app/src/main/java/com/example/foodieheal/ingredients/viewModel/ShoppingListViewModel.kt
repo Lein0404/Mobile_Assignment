@@ -52,6 +52,7 @@ class ShoppingListViewModel(
                 val items = entities.map { entity ->
                     val ingredient = ingredientsMap[entity.ingredientId]
                     val category = ingredient?.ingredientCategory
+                    val description = ingredient?.ingredientDesc ?: ""
                     
                     val unitsForIngredient = allIngredientUnits.filter { it.ingredientID == entity.ingredientId }
                     val summary = unitsForIngredient.joinToString(", ") { iu ->
@@ -61,7 +62,7 @@ class ShoppingListViewModel(
                         "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${name}"
                     }
                     
-                    ShoppingListItem(entity, category, summary)
+                    ShoppingListItem(entity, category, summary, description)
                 }
                 
                 _uiState.update { 

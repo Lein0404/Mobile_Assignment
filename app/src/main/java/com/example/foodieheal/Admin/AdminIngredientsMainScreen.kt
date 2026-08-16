@@ -397,17 +397,21 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(item.request.ingredientName, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Text(item.calorieSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                Text("Requested By: ${item.requesterName}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = item.request.ingredientName,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = "Requested By: ${item.requesterName}",
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
             
             StatusBadge(status = item.request.requestStatus)

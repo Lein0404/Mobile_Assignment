@@ -424,14 +424,26 @@ fun IngredientRequestCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(item.request.ingredientName, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Text(item.calorieSummary, color = Color.Gray, fontSize = 14.sp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = item.request.ingredientName,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = item.request.ingredientDesc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             
             StatusBadge(status = item.request.requestStatus)
@@ -563,12 +575,16 @@ fun IngredientCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(item.ingredient.ingredientName, style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = item.calorieSummary,
+                    text = item.ingredient.ingredientName,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = item.ingredient.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
             }
             if (showAddToCart) {

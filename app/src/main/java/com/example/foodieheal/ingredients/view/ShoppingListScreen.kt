@@ -288,7 +288,7 @@ fun ShoppingListItemCard(
                     color = Color.Black
                 )
                 Text(
-                    text = item.calorieSummary,
+                    text = item.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,

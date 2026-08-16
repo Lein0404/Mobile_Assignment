@@ -5,5 +5,6 @@ import com.example.foodieheal.ingredients.local.ShoppingListEntity
 data class ShoppingListItem(
     val entity: ShoppingListEntity,
     val category: IngredientCategory?,
-    val calorieSummary: String = ""
+    val calorieSummary: String = "",
+    val ingredientDesc: String = ""
 )

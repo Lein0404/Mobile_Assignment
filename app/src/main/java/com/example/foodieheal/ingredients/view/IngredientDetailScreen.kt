@@ -85,11 +85,27 @@ fun IngredientDetailScreen(
         )
     }
 
-    val name = if (isRequest) requestDetail?.request?.ingredientName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientName
-    val category = if (isRequest) requestDetail?.request?.ingredientCategory?.categoryName else ingredientsUiState.ingredientDetail?.ingredient?.ingredientCategory?.categoryName
-    val image = if (isRequest) requestDetail?.request?.ingredientImage else ingredientsUiState.ingredientDetail?.ingredient?.ingredientImage
-    val description = if (isRequest) requestDetail?.request?.ingredientDesc else ingredientsUiState.ingredientDetail?.ingredient?.ingredientDesc
-    val calorieInfo = if (isRequest) requestDetail?.calorieSummary else ingredientsUiState.ingredientDetail?.calorieSummary
+    val displayData = remember(isRequest, requestDetail, ingredientsUiState.ingredientDetail) {
+        if (isRequest) {
+            val req = requestDetail?.request
+            IngredientDisplayData(
+                name = req?.ingredientName,
+                category = req?.ingredientCategory?.categoryName,
+                image = req?.ingredientImage,
+                description = req?.ingredientDesc,
+                calorieInfo = requestDetail?.calorieSummary
+            )
+        } else {
+            val detail = ingredientsUiState.ingredientDetail
+            IngredientDisplayData(
+                name = detail?.ingredient?.ingredientName,
+                category = detail?.ingredient?.ingredientCategory?.categoryName,
+                image = detail?.ingredient?.ingredientImage,
+                description = detail?.ingredient?.ingredientDesc,
+                calorieInfo = detail?.calorieSummary
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -156,10 +172,10 @@ fun IngredientDetailScreen(
                                 .background(Color(0xFFE0E0E0)),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (!image.isNullOrEmpty()) {
+                            if (!displayData.image.isNullOrEmpty()) {
                                 SubcomposeAsyncImage(
-                                    model = image,
-                                    contentDescription = name,
+                                    model = displayData.image,
+                                    contentDescription = displayData.name,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                     loading = {
@@ -184,13 +200,13 @@ fun IngredientDetailScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = name ?: "", 
+                                        text = displayData.name ?: "", 
                                         style = MaterialTheme.typography.headlineMedium, 
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
                                     )
                                     Text(
-                                        text = category ?: "Others", 
+                                        text = displayData.category ?: "Others", 
                                         color = Color.Gray,
                                         fontSize = 14.sp
                                     )
@@ -237,7 +253,7 @@ fun IngredientDetailScreen(
 
                             Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(
-                                text = description?.ifEmpty { "No description available." } ?: "No description available.",
+                                text = displayData.description?.ifEmpty { "No description available." } ?: "No description available.",
                                 color = Color.Black,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -247,7 +263,7 @@ fun IngredientDetailScreen(
                             Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
+                                text = displayData.calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
                                 color = Color.Black
                             )
 
@@ -357,3 +373,11 @@ fun ImagePlaceholder() {
         Text("No image available", color = Color.Gray)
     }
 }
+
+private data class IngredientDisplayData(
+    val name: String? = null,
+    val category: String? = null,
+    val image: String? = null,
+    val description: String? = null,
+    val calorieInfo: String? = null
+)
