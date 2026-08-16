@@ -43,9 +43,6 @@ class ShoppingListViewModel(
             _uiState.update { it.copy(isLoading = true) }
             
             val ingredients = try { ingredientsRepo.getIngredients() } catch (_: Exception) { emptyList() }
-            val allUnits = try { ingredientsRepo.getUnits() } catch (_: Exception) { emptyList() }.associateBy { it.unitID }
-            val allIngredientUnits = try { ingredientsRepo.getAllIngredientUnits() } catch (_: Exception) { emptyList() }
-
             val ingredientsMap = ingredients.associateBy { it.ingredientId }
 
             shoppingRepo.getShoppingList(currentUserId).collectLatest { entities ->
@@ -54,15 +51,7 @@ class ShoppingListViewModel(
                     val category = ingredient?.ingredientCategory
                     val description = ingredient?.ingredientDesc ?: ""
                     
-                    val unitsForIngredient = allIngredientUnits.filter { it.ingredientID == entity.ingredientId }
-                    val summary = unitsForIngredient.joinToString(", ") { iu ->
-                        val unit = allUnits[iu.unitID]
-                        val qty = unit?.defaultQuantity?.toInt() ?: 0
-                        val name = unit?.unitName ?: ""
-                        "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${name}"
-                    }
-                    
-                    ShoppingListItem(entity, category, summary, description)
+                    ShoppingListItem(entity, category, description)
                 }
                 
                 _uiState.update { 
