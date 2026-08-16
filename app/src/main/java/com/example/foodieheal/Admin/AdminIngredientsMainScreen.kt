@@ -157,8 +157,7 @@ fun AdminIngredientsScreen(
         if (selectedTab == 0 && ingredientsUiState.isNetworkAvailable) {
             FloatingActionButton(
                 onClick = { 
-                    // TODO: navController.navigate(Screen.AdminAddIngredient.createRoute())
-                    // Just a placeholder for now
+                    navController.navigate(Screen.AdminAddIngredient.route)
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,

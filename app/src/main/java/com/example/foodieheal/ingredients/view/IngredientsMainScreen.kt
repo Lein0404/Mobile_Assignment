@@ -168,8 +168,6 @@ fun IngredientsMainScreen(
                     onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White,
-                    /*shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.padding(bottom = 16.dp),*/
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
