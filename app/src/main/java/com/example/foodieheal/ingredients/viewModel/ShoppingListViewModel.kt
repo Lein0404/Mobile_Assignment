@@ -3,12 +3,12 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.R
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,7 +19,7 @@ data class ShoppingListUiState(
     val items: List<ShoppingListItem> = emptyList(),
     val filteredItems: List<ShoppingListItem> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: Int? = null
 )
 
 class ShoppingListViewModel(
@@ -58,7 +58,7 @@ class ShoppingListViewModel(
                     it.copy(
                         items = items,
                         isLoading = false,
-                        errorMessage = if (ingredients.isEmpty()) "Using local data only." else null
+                        errorMessage = if (ingredients.isEmpty()) R.string.shopping_list_error_local_data else null
                     ) 
                 }
                 applyFilters()

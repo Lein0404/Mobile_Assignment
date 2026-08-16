@@ -2,7 +2,6 @@ package com.example.foodieheal.ingredients.view
 
 import android.app.Application
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,7 +56,7 @@ fun AddShoppingListItemScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Add to Shopping List",
+                        text = stringResource(R.string.add_shopping_item_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -65,7 +65,7 @@ fun AddShoppingListItemScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.shopping_list_back)
                         )
                     }
                 },
@@ -94,7 +94,7 @@ fun AddShoppingListItemScreen(
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { ingredientsViewModel.onSearchQueryChange(it) },
-                    placeholder = { Text("Search ingredients in My Pantry", fontSize = 14.sp) },
+                    placeholder = { Text(stringResource(R.string.add_shopping_item_search_placeholder), fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
@@ -105,7 +105,7 @@ fun AddShoppingListItemScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Categories", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Categories chips
@@ -128,7 +128,7 @@ fun AddShoppingListItemScreen(
                     }
                 } else if (uiState.filteredIngredients.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "No ingredients found.")
+                        Text(text = stringResource(R.string.add_shopping_item_no_ingredients))
                     }
                 } else {
                     val grouped = uiState.filteredIngredients.groupBy { it.ingredient.ingredientCategory ?: IngredientCategory.OTHERS }
@@ -173,6 +173,7 @@ fun AddShoppingListItemScreen(
                 verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
+                val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedIngredients.size)
                 Button(
                     onClick = {
                         if (selectedIngredients.isNotEmpty()) {
@@ -186,7 +187,7 @@ fun AddShoppingListItemScreen(
                                 )
                             }
                             shoppingListViewModel.addItems(entities)
-                            Toast.makeText(context, "${entities.size} item(s) added to Shopping List", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
                         }
                     },
@@ -202,7 +203,7 @@ fun AddShoppingListItemScreen(
                     enabled = selectedIngredients.isNotEmpty()
                 ) {
                     Text(
-                        text = "Add ${selectedIngredients.size} Item(s) to Shopping List",
+                        text = stringResource(R.string.add_shopping_item_button, selectedIngredients.size),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White

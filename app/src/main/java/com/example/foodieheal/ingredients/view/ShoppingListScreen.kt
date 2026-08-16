@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +56,7 @@ fun ShoppingListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Shopping List",
+                        text = stringResource(R.string.shopping_list_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -64,7 +65,7 @@ fun ShoppingListScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.shopping_list_back)
                         )
                     }
                 },
@@ -81,8 +82,6 @@ fun ShoppingListScreen(
                     onClick = { showMenu = !showMenu },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White,
-                    /*shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.padding(bottom = 16.dp),*/
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
@@ -90,7 +89,7 @@ fun ShoppingListScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_horiz_more),
-                        contentDescription = "Options",
+                        contentDescription = stringResource(R.string.shopping_list_options),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -101,31 +100,31 @@ fun ShoppingListScreen(
                     modifier = Modifier.background(Color(0xFFEBE6EF)) // Match subtle purple background
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Add items", fontSize = 12.sp) },
+                        text = { Text(stringResource(R.string.shopping_list_add_items), fontSize = 12.sp) },
                         onClick = {
                             showMenu = false
                             navController.navigate(Screen.AddShoppingListItem.route)
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Clear checked items", fontSize = 12.sp) },
+                        text = { Text(stringResource(R.string.shopping_list_clear_checked), fontSize = 12.sp) },
                         onClick = {
                             showMenu = false
                             if (checkedCount > 0) {
                                 showClearCheckedDialog = true
                             } else {
-                                Toast.makeText(context, "No checked items to clear.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.shopping_list_no_checked_items, Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Clear all items", fontSize = 12.sp) },
+                        text = { Text(stringResource(R.string.shopping_list_clear_all), fontSize = 12.sp) },
                         onClick = {
                             showMenu = false
                             if (uiState.items.isNotEmpty()) {
                                 showClearAllDialog = true
                             } else {
-                                Toast.makeText(context, "Shopping List is already empty.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.shopping_list_already_empty, Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -146,7 +145,7 @@ fun ShoppingListScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
-                placeholder = { Text("Search ingredients here", fontSize = 14.sp) },
+                placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
@@ -157,7 +156,10 @@ fun ShoppingListScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Categories", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(
+                stringResource(R.string.shopping_list_categories),
+                fontWeight = FontWeight.Bold, fontSize = 16.sp
+            )
             Spacer(modifier = Modifier.height(8.dp))
 
             // Categories chips
@@ -180,7 +182,12 @@ fun ShoppingListScreen(
                 }
             } else if (uiState.filteredItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = if (uiState.searchQuery.isEmpty()) "Your shopping list is empty. Add new item now!" else "No items match your search.")
+                    Text(
+                        text = if (uiState.searchQuery.isEmpty()) 
+                            stringResource(R.string.shopping_list_empty_state) 
+                        else 
+                            stringResource(R.string.shopping_list_no_match)
+                    )
                 }
             } else {
                 val grouped = uiState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
@@ -213,20 +220,21 @@ fun ShoppingListScreen(
     if (showClearCheckedDialog) {
         AlertDialog(
             onDismissRequest = { showClearCheckedDialog = false },
-            title = { Text("Clear Checked Items") },
-            text = { Text("There are $checkedCount checked item(s) to be clear from your Shopping List. Are you sure?") },
+            title = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_title)) },
+            text = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_text, checkedCount)) },
             confirmButton = {
+                val toastMessage = stringResource(R.string.shopping_list_clear_checked_toast, checkedCount)
                 TextButton(onClick = {
                     viewModel.clearChecked()
-                    Toast.makeText(context, "$checkedCount checked item(s) cleared from your Shopping List", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
                     showClearCheckedDialog = false
                 }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearCheckedDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                 }
             }
         )
@@ -235,20 +243,20 @@ fun ShoppingListScreen(
     if (showClearAllDialog) {
         AlertDialog(
             onDismissRequest = { showClearAllDialog = false },
-            title = { Text("Clear All Items") },
-            text = { Text("All items will be cleared from your Shopping List. Are you sure?") },
+            title = { Text(stringResource(R.string.shopping_list_clear_all_dialog_title)) },
+            text = { Text(stringResource(R.string.shopping_list_clear_all_dialog_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearAll()
-                    Toast.makeText(context, "All items cleared from your Shopping List", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.shopping_list_clear_all_toast, Toast.LENGTH_SHORT).show()
                     showClearAllDialog = false
                 }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                 }
             }
         )
