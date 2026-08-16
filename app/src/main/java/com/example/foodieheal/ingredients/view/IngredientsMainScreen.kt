@@ -87,7 +87,10 @@ fun IngredientsMainScreen(
         }
     }
 
-    val tabs = listOf("Existing", "Requests")
+    val tabs = listOf(
+        stringResource(R.string.ingredients_tab_existing),
+        stringResource(R.string.ingredients_tab_requests)
+    )
     
     // Refresh data when screen becomes active
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -108,7 +111,7 @@ fun IngredientsMainScreen(
                     TopAppBar(
                         title = {
                             Text(
-                                text = "Ingredients",
+                                text = stringResource(R.string.ingredients_title),
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -117,7 +120,7 @@ fun IngredientsMainScreen(
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
+                                    contentDescription = stringResource(R.string.shopping_list_back)
                                 )
                             }
                         },
@@ -175,7 +178,7 @@ fun IngredientsMainScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_outline_add),
-                        contentDescription = "New Request",
+                        contentDescription = stringResource(R.string.ingredients_fab_new_request),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -195,7 +198,11 @@ fun IngredientsMainScreen(
                     navController = navController,
                     onAddToCart = { ingredient ->
                         viewModel.addToShoppingList(ingredient)
-                        Toast.makeText(context, "${ingredient.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
             } else {
@@ -236,14 +243,14 @@ fun IngredientRequestsScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.title_no_internet),
+                    text = stringResource(R.string.no_internet_connection),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Please connect to the internet to view ingredient requests",
+                    text = stringResource(R.string.ingredients_no_internet_requests),
                     fontSize = 15.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.Center
@@ -259,7 +266,7 @@ fun IngredientRequestsScreen(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(
-                text = "Search ingredient requests here",
+                text = stringResource(R.string.ingredients_requests_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
             modifier = Modifier.fillMaxWidth(),
@@ -271,7 +278,7 @@ fun IngredientRequestsScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_filter_alt),
-                        contentDescription = "Filter",
+                        contentDescription = stringResource(R.string.ingredients_requests_apply_filter),
                         tint = if (uiState.selectedStatus != null) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                         modifier = Modifier
                             .clickable {
@@ -298,7 +305,10 @@ fun IngredientRequestsScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Categories", fontWeight = FontWeight.Bold)
+        Text(
+            text = stringResource(R.string.shopping_list_categories),
+            fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(6.dp))
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -321,16 +331,22 @@ fun IngredientRequestsScreen(
         } else if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                    Text(
+                        text = stringResource(uiState.errorMessage),
+                        color = MaterialTheme.colorScheme.error
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = { viewModel.fetchRequests() }) {
-                        Text("Retry")
+                        Text(stringResource(R.string.btn_retry))
                     }
                 }
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No requests found.", color = Color.Gray)
+                Text(
+                    text = stringResource(R.string.ingredients_requests_empty),
+                    color = Color.Gray
+                )
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
@@ -363,14 +379,19 @@ fun IngredientRequestsScreen(
     if (showStatusFilterDialog) {
         AlertDialog(
             onDismissRequest = { showStatusFilterDialog = false },
-            title = { Text("Filter by Status", fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    text = stringResource(R.string.ingredients_requests_filter_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     val options = listOf(
-                        "All" to null,
-                        "Pending" to Status.PENDING,
-                        "Approved" to Status.APPROVED,
-                        "Rejected" to Status.REJECTED
+                        stringResource(R.string.ingredients_requests_filter_all) to null,
+                        stringResource(R.string.ingredients_requests_filter_pending) to Status.PENDING,
+                        stringResource(R.string.ingredients_requests_filter_approved) to Status.APPROVED,
+                        stringResource(R.string.ingredients_requests_filter_rejected) to Status.REJECTED
                     )
                     options.forEach { (label, status) ->
                         Row(
@@ -397,12 +418,18 @@ fun IngredientRequestsScreen(
                         showStatusFilterDialog = false
                     }
                 ) {
-                    Text("Apply Filter", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.ingredients_requests_apply_filter),
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStatusFilterDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(
+                        text = stringResource(R.string.dialog_cancel),
+                        color = Color.Gray
+                    )
                 }
             }
         )
@@ -465,7 +492,7 @@ fun IngredientsExistingScreen(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(
-                text = "Search ingredients here",
+                text = stringResource(R.string.ingredients_existing_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
             modifier = Modifier.fillMaxWidth(),
@@ -482,7 +509,7 @@ fun IngredientsExistingScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Categories", fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -506,17 +533,20 @@ fun IngredientsExistingScreen(
         if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                    Text(
+                        text = stringResource(uiState.errorMessage),
+                        color = MaterialTheme.colorScheme.error
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = { viewModel.fetchIngredients() }) {
-                        Text("Retry")
+                        Text(text = stringResource(R.string.btn_retry))
                     }
                 }
             }
         }
         if (uiState.filteredIngredients.isEmpty() && !uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No ingredients match your search.")
+                Text(text = stringResource(R.string.ingredients_existing_empty))
             }
         }
 
@@ -589,7 +619,11 @@ fun IngredientCard(
             }
             if (showAddToCart) {
                 IconButton(onClick = { onAddToCart() }) {
-                    Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to shopping list", tint = Color.Black)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_add_to_shopping_cart),
+                        contentDescription = stringResource(R.string.desc_add_recipe),
+                        tint = Color.Black
+                    )
                 }
             }
         }

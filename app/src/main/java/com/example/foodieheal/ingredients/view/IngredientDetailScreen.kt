@@ -69,8 +69,15 @@ fun IngredientDetailScreen(
     if (isRequest && requestUiState.isStatusConflict) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has already been approved or rejected by an administrator and can no longer be deleted.") },
+            title = {
+                Text(
+                    text = stringResource(R.string.ingredient_detail_request_processed_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.ingredient_detail_request_processed_text))
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -79,7 +86,7 @@ fun IngredientDetailScreen(
                         requestViewModel.fetchRequestDetail(ingredientId)
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -112,7 +119,7 @@ fun IngredientDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isRequest) "View Request" else "View Ingredient",
+                        text = if (isRequest) stringResource(R.string.ingredient_detail_title_request) else stringResource(R.string.ingredient_detail_title_ingredient),
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
@@ -130,7 +137,7 @@ fun IngredientDetailScreen(
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back", 
+                            contentDescription = stringResource(R.string.back), 
                             tint = Color.White
                         )
                     }
@@ -206,7 +213,7 @@ fun IngredientDetailScreen(
                                         color = Color.Black
                                     )
                                     Text(
-                                        text = displayData.category ?: "Others", 
+                                        text = displayData.category ?: stringResource(R.string.shopping_list_categories), 
                                         color = Color.Gray,
                                         fontSize = 14.sp
                                     )
@@ -224,21 +231,29 @@ fun IngredientDetailScreen(
                                                 val productionId = request.ingredientId
                                                 if (productionId != null) {
                                                     ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
-                                                    Toast.makeText(context, "${request.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        application.getString(R.string.ingredients_toast_added, request.ingredientName),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 } else {
-                                                    Toast.makeText(context, "Error: Production ID missing for this request", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        R.string.ingredient_detail_production_id_missing,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
                                             }
                                         } else {
                                             ingredientsUiState.ingredientDetail?.ingredient?.let {
                                                 ingredientsViewModel.addToShoppingList(it)
-                                                Toast.makeText(context, "${it.ingredientName} added to Shopping List", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, application.getString(R.string.ingredients_toast_added, it.ingredientName), Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     }) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_add_to_shopping_cart),
-                                            contentDescription = "Add to shopping list",
+                                            contentDescription = stringResource(R.string.desc_add_recipe),
                                             tint = Color.Black
                                         )
                                     }
@@ -251,27 +266,27 @@ fun IngredientDetailScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
 
-                            Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(
-                                text = displayData.description?.ifEmpty { "No description available." } ?: "No description available.",
+                                text = displayData.description?.ifEmpty { stringResource(R.string.ingredient_detail_no_description) } ?: stringResource(R.string.ingredient_detail_no_description),
                                 color = Color.Black,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = displayData.calorieInfo?.ifEmpty { "No calorie information available." } ?: "No calorie information available.",
+                                text = displayData.calorieInfo?.ifEmpty { stringResource(R.string.ingredient_detail_no_calorie_info) } ?: stringResource(R.string.ingredient_detail_no_calorie_info),
                                 color = Color.Black
                             )
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
                                 Spacer(modifier = Modifier.height(24.dp))
-                                Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
-                                    text = requestDetail?.request?.rejectedReason ?: "Unspecified.",
+                                    text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
                                     color = Color.Black,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
@@ -279,7 +294,7 @@ fun IngredientDetailScreen(
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(24.dp))
-                                Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
                                     text = requestDetail?.request?.adminNote ?: "",
                                     color = Color.Black,
@@ -338,22 +353,22 @@ fun IngredientDetailScreen(
     if (showDeleteDialog && isRequest) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Request") },
-            text = { Text("Are you sure you want to delete this request?") },
+            title = { Text(stringResource(R.string.ingredient_detail_delete_title)) },
+            text = { Text(stringResource(R.string.ingredient_detail_delete_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     requestViewModel.deleteRequest(ingredientId) {
-                        Toast.makeText(context, "Request deleted", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.ingredient_detail_toast_deleted, Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
                     }
                     showDeleteDialog = false
                 }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                 }
             }
         )
@@ -370,7 +385,7 @@ fun ImagePlaceholder() {
             tint = Color.Gray
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text("No image available", color = Color.Gray)
+        Text(stringResource(R.string.image_unavailable), color = Color.Gray)
     }
 }
 

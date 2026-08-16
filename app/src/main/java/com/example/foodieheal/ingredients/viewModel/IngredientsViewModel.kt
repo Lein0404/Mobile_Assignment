@@ -3,6 +3,7 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
@@ -23,7 +24,7 @@ data class IngredientsUiState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val ingredientDetail: IngredientDetailInfo? = null,
-    val errorMessage: String? = null,
+    val errorMessage: Int? = null,
     val isNetworkAvailable: Boolean = true
 )
 
@@ -99,7 +100,7 @@ class IngredientsViewModel(
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredients", isRefreshing = false) }
+                _uiState.update { it.copy(errorMessage = R.string.ingredients_error_fetch_ingredients, isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }
@@ -178,7 +179,7 @@ class IngredientsViewModel(
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredient details", isRefreshing = false) }
+                _uiState.update { it.copy(errorMessage = R.string.ingredients_error_fetch_details, isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }

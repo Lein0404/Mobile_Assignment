@@ -55,7 +55,7 @@ fun AdminAddIngredientScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Add New Ingredient",
+                        text = stringResource(R.string.admin_add_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -64,7 +64,7 @@ fun AdminAddIngredientScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -97,7 +97,7 @@ fun AdminAddIngredientScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "You need to be online to add new ingredients",
+                            text = stringResource(R.string.admin_add_offline_message),
                             color = Color.Gray,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -123,9 +123,9 @@ fun AdminAddIngredientScreen(
                         modifier = Modifier.fillMaxWidth(),
                         isError = formState.nameError != null
                     )
-                    if (formState.nameError != null) {
+                    formState.nameError?.let { resId ->
                         Text(
-                            text = formState.nameError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -141,7 +141,7 @@ fun AdminAddIngredientScreen(
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
-                        placeholder = "e.g. Vegetables",
+                        placeholder = stringResource(R.string.admin_add_category_placeholder),
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -162,9 +162,9 @@ fun AdminAddIngredientScreen(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         )
                     )
-                    if (formState.categoryError != null) {
+                    formState.categoryError?.let { resId ->
                         Text(
-                            text = formState.categoryError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -182,9 +182,9 @@ fun AdminAddIngredientScreen(
                         maxLines = 8,
                         isError = formState.descriptionError != null
                     )
-                    if (formState.descriptionError != null) {
+                    formState.descriptionError?.let { resId ->
                         Text(
-                            text = formState.descriptionError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -198,9 +198,9 @@ fun AdminAddIngredientScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    if (formState.unitRowsError != null) {
+                    formState.unitRowsError?.let { resId ->
                         Text(
-                            text = formState.unitRowsError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -247,13 +247,14 @@ fun AdminAddIngredientScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Text("Add Unit")
+                            Text(stringResource(R.string.ingredient_form_add_unit))
                         }
                     }
 
-                    if (uiState.errorMessage != null) {
+                    // TODO: change to AlertDialog / Toast
+                    uiState.errorMessage?.let { resId ->
                         Text(
-                            text = uiState.errorMessage!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp)
@@ -261,6 +262,7 @@ fun AdminAddIngredientScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+                    val successToastMsg = stringResource(R.string.admin_add_toast_success)
                     Button(
                         onClick = {
                             scope.launch {
@@ -273,7 +275,7 @@ fun AdminAddIngredientScreen(
                                 viewModel.submitIngredient(
                                     imageUrl = imageUrl,
                                     onComplete = {
-                                        Toast.makeText(context, "Ingredient added successfully", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
                                         navController.popBackStack()
                                     }
                                 )
@@ -290,7 +292,7 @@ fun AdminAddIngredientScreen(
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
                             Text(
-                                text = "Add Ingredient",
+                                text = stringResource(R.string.admin_add_button),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                                 color = Color.White

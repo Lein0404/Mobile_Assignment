@@ -11,6 +11,7 @@ import com.example.foodieheal.ingredients.model.Units
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestFormUiState
+import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.UnitRowState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
@@ -100,7 +101,7 @@ class AdminIngredientRequestViewModel(
                 _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = getApplication<Application>().getString(R.string.ingredients_error_fetch_details)) }
             }
         }
     }
@@ -205,7 +206,7 @@ class AdminIngredientRequestViewModel(
 
         val state = _formState.value
         if (state.requestId == null) {
-            _formState.update { it.copy(errorMessage = "Error: Request ID is missing") }
+            _formState.update { it.copy(errorMessage = R.string.admin_error_request_id_missing) }
             return
         }
 
@@ -251,7 +252,7 @@ class AdminIngredientRequestViewModel(
                 }
 
                 if (units.any { it.unitID.isEmpty() }) {
-                    throw Exception("One or more serving units are not selected")
+                    throw Exception(getApplication<Application>().getString(R.string.admin_error_serving_units_missing))
                 }
 
                 productionRepository.insertIngredientUnits(units)
@@ -259,7 +260,7 @@ class AdminIngredientRequestViewModel(
                 // 4. Synchronize and Update Request History (Original request records)
                 val originalRequest = _requestDetail.value?.request
                 if (originalRequest == null) {
-                    throw Exception("Original request metadata missing. Please try again.")
+                    throw Exception(getApplication<Application>().getString(R.string.admin_error_original_metadata_missing))
                 }
 
                 val updatedRequestRecord = originalRequest.copy(
@@ -289,7 +290,13 @@ class AdminIngredientRequestViewModel(
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _formState.update { it.copy(isSubmitting = false, errorMessage = "Approval failed: ${e.localizedMessage}") }
+                _formState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        //TODO:errorMessage = getApplication<Application>().getString(R.string.admin_error_approval_failed, e.localizedMessage ?: "Unknown error")
+                        errorMessage = R.string.error_unknown
+                        )
+                }
             }
         }
     }
@@ -322,39 +329,39 @@ class AdminIngredientRequestViewModel(
 
         val nameError = if (state.ingredientName.isBlank()) {
             isValid = false
-            "Ingredient name is required"
+            R.string.error_name_required
         } else null
 
         val categoryError = if (state.category == null) {
             isValid = false
-            "Category is required"
+            R.string.error_category_required
         } else null
 
         val descriptionError = if (state.description.isBlank()) {
             isValid = false
-            "Description is required"
+            R.string.error_description_required
         } else null
 
         // Validate unit rows: at least one must be fully filled
         val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
         val unitRowsError = if (!hasAtLeastOneFilledRow) {
             isValid = false
-            "At least one calorie information entry is required"
+            R.string.error_at_least_one_unit_required
         } else null
 
         // Per-row validation for partially filled rows
         val validatedRows = state.unitRows.map { row ->
             val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
                 isValid = false
-                "Serving unit is required"
+                R.string.error_unit_required
             } else null
 
             val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
                 isValid = false
-                "Calories value is required"
+                R.string.error_calories_required
             } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
                 isValid = false
-                "Must be a valid number"
+                R.string.error_invalid_number
             } else null
 
             row.copy(unitError = unitError, caloriesError = caloriesError)

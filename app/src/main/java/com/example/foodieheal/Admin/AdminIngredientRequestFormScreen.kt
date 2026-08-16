@@ -92,7 +92,7 @@ fun AdminIngredientRequestFormScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Review Ingredient Request",
+                        text = stringResource(R.string.admin_review_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -101,7 +101,7 @@ fun AdminIngredientRequestFormScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -134,7 +134,7 @@ fun AdminIngredientRequestFormScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "You need to be online to review and approve requests",
+                            text = stringResource(R.string.admin_add_offline_message),
                             color = Color.Gray,
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
@@ -162,9 +162,9 @@ fun AdminIngredientRequestFormScreen(
                         modifier = Modifier.fillMaxWidth(),
                         isError = formState.nameError != null
                     )
-                    if (formState.nameError != null) {
+                    formState.nameError?.let { resId ->
                         Text(
-                            text = formState.nameError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -180,7 +180,7 @@ fun AdminIngredientRequestFormScreen(
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
-                        placeholder = "e.g. Vegetables",
+                        placeholder = stringResource(R.string.admin_add_category_placeholder),
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -201,9 +201,9 @@ fun AdminIngredientRequestFormScreen(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         )
                     )
-                    if (formState.categoryError != null) {
+                    formState.categoryError?.let { resId ->
                         Text(
-                            text = formState.categoryError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -221,9 +221,9 @@ fun AdminIngredientRequestFormScreen(
                         maxLines = 8,
                         isError = formState.descriptionError != null
                     )
-                    if (formState.descriptionError != null) {
+                    formState.descriptionError?.let { resId ->
                         Text(
-                            text = formState.descriptionError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -237,9 +237,9 @@ fun AdminIngredientRequestFormScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    if (formState.unitRowsError != null) {
+                    formState.unitRowsError?.let { resId ->
                         Text(
-                            text = formState.unitRowsError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -285,20 +285,20 @@ fun AdminIngredientRequestFormScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Text("Add Unit")
+                            Text(stringResource(R.string.ingredient_form_add_unit))
                         }
                     }
 
                     Spacer(modifier = Modifier.height(100.dp))
                 }
 
-                // Floating Approve Button
+                val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
                 Button(
                     onClick = {
                         if (viewModel.validateForm()) {
                             showApproveDialog = true
                         } else {
-                            Toast.makeText(context, "Please fix the errors in the form", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier
@@ -312,10 +312,10 @@ fun AdminIngredientRequestFormScreen(
                     enabled = !formState.isSubmitting && requestDetail != null && !isLoading
                 ) {
                     if (formState.isSubmitting || (isLoading && requestDetail == null)) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     } else {
                         Text(
-                            text = "APPROVE INGREDIENT REQUEST",
+                            text = stringResource(R.string.admin_approve_ingredient_request),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = Color.White
@@ -326,6 +326,7 @@ fun AdminIngredientRequestFormScreen(
         }
     }
 
+    val requestApprovedMsg = stringResource(R.string.admin_request_approved)
     if (showApproveDialog) {
         ApproveRequestDialog(
             onDismiss = { showApproveDialog = false },
@@ -342,7 +343,7 @@ fun AdminIngredientRequestFormScreen(
                         imageUrl = imageUrl,
                         adminNote = if (adminNote.isBlank()) null else adminNote,
                         onComplete = {
-                            Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, requestApprovedMsg, Toast.LENGTH_SHORT).show()
                             navController.navigate(Screen.AdminChefScreen.route) {
                                 popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
                             }
@@ -359,10 +360,13 @@ fun AdminIngredientRequestFormScreen(
                 showErrorDialog = false
                 viewModel.clearError()
             },
-            title = { Text("Approval Failed", fontWeight = FontWeight.Bold) },
+            title = { Text(
+                text = stringResource(R.string.admin_approval_failed_dialog_title),
+                fontWeight = FontWeight.Bold)
+            },
             text = { 
                 Text(
-                    text = errorMessage,
+                    text = stringResource(errorMessage),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -371,7 +375,10 @@ fun AdminIngredientRequestFormScreen(
                     showErrorDialog = false
                     viewModel.clearError()
                 }) {
-                    Text("OK", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = stringResource(R.string.ok),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         )
@@ -387,21 +394,21 @@ fun ApproveRequestDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Approve Request", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.admin_approve_request_dialog_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Warning: You are unable to edit the request after approving it!", // TODO: newline in strings.xml
+                    text = stringResource(R.string.admin_approve_request_dialog_warning),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )
-                Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
+                Text(stringResource(R.string.admin_approve_request_dialog_note))
                 OutlinedTextField(
                     value = adminNote,
                     onValueChange = { adminNote = it },
-                    placeholder = { Text("Note (Optional)") },
+                    placeholder = { Text(stringResource(R.string.admin_approve_request_dialog_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(120.dp)
                 )
             }
@@ -410,12 +417,18 @@ fun ApproveRequestDialog(
             TextButton(onClick = {
                 onConfirm(adminNote)
             }) {
-                Text("Approve", color = MaterialTheme.colorScheme.primary)
+                Text(
+                    text = stringResource(R.string.approve),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color.Gray)
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = Color.Gray
+                )
             }
         }
     )
@@ -431,22 +444,22 @@ private fun RequestConflictDialog(
     if (isDeleted) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Deleted", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has been deleted by the user.") },
+            title = { Text(stringResource(R.string.admin_detail_conflict_deleted_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_deleted_text)) },
             confirmButton = {
                 TextButton(onClick = onDeletedConfirm) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
     } else if (isProcessed) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has already been approved or rejected by another administrator.") },
+            title = { Text(stringResource(R.string.admin_detail_conflict_processed_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_processed_title)) },
             confirmButton = {
                 TextButton(onClick = onProcessedConfirm) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )

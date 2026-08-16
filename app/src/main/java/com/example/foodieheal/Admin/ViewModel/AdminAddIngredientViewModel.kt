@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import kotlinx.coroutines.flow.*
@@ -12,14 +13,14 @@ import kotlinx.coroutines.launch
 data class AdminAddIngredientUiState(
     val isNetworkAvailable: Boolean = true,
     val isSubmitting: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: Int? = null
 )
 
 data class UnitRowState(
     val selectedUnit: Units? = null,
     val calories: String = "",
-    val unitError: String? = null,
-    val caloriesError: String? = null,
+    val unitError: Int? = null,
+    val caloriesError: Int? = null,
 )
 
 data class AdminAddIngredientFormState(
@@ -30,10 +31,10 @@ data class AdminAddIngredientFormState(
     val unitRows: List<UnitRowState> = listOf(UnitRowState()),
     
     // Per-field validation errors
-    val nameError: String? = null,
-    val categoryError: String? = null,
-    val descriptionError: String? = null,
-    val unitRowsError: String? = null
+    val nameError: Int? = null,
+    val categoryError: Int? = null,
+    val descriptionError: Int? = null,
+    val unitRowsError: Int? = null
 )
 
 class AdminAddIngredientViewModel(
@@ -103,41 +104,42 @@ class AdminAddIngredientViewModel(
 
     fun validateForm(): Boolean {
         val state = _formState.value
+        val app = getApplication<Application>()
         var isValid = true
 
         val nameError = if (state.ingredientName.isBlank()) {
             isValid = false
-            "Ingredient name is required"
+            R.string.error_name_required
         } else null
 
         val categoryError = if (state.category == null) {
             isValid = false
-            "Category is required"
+            R.string.error_category_required
         } else null
 
         val descriptionError = if (state.description.isBlank()) {
             isValid = false
-            "Description is required"
+            R.string.error_description_required
         } else null
 
         val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
         val unitRowsError = if (!hasAtLeastOneFilledRow) {
             isValid = false
-            "At least one calorie information entry is required"
+            R.string.error_at_least_one_unit_required
         } else null
 
         val validatedRows = state.unitRows.map { row ->
             val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
                 isValid = false
-                "Serving unit is required"
+                R.string.error_unit_required
             } else null
 
             val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
                 isValid = false
-                "Calories value is required"
+                R.string.error_calories_required
             } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
                 isValid = false
-                "Must be a valid number"
+                R.string.error_invalid_number
             } else null
 
             row.copy(unitError = unitError, caloriesError = caloriesError)
@@ -191,7 +193,13 @@ class AdminAddIngredientViewModel(
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isSubmitting = false, errorMessage = "Submission failed: ${e.message}") }
+                _uiState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        //TODO: errorMessage = getApplication<Application>().getString(R.string.admin_error_submission_failed, e.message ?: R.string.error_unknown)
+                        errorMessage = R.string.error_unknown
+                    )
+                }
             }
         }
     }

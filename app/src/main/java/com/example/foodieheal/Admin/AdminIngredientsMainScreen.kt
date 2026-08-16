@@ -68,7 +68,10 @@ fun AdminIngredientsScreen(
     }
 
     var selectedTab by remember { mutableIntStateOf(0) } // Default to Community tab
-    val tabs = listOf("Community", "Requests")
+    val tabs = listOf(
+        stringResource(R.string.admin_tab_community),
+        stringResource(R.string.admin_tab_requests)
+    )
 
     Box(
         modifier = Modifier
@@ -87,7 +90,7 @@ fun AdminIngredientsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Admin Ingredients",
+                        text = stringResource(R.string.admin_ingredients_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -168,7 +171,7 @@ fun AdminIngredientsScreen(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
-                    contentDescription = "Add New Ingredient",
+                    contentDescription = stringResource(R.string.admin_fab_add_ingredient),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -201,7 +204,7 @@ fun AdminOfflineMessage() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Please connect to the internet to manage ingredients and requests",
+                text = stringResource(R.string.admin_offline_manage_message),
                 fontSize = 15.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
@@ -232,7 +235,7 @@ fun AdminIngredientRequestsScreen(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(
-                text = "Search ingredient requests here",
+                text = stringResource(R.string.admin_requests_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
             modifier = Modifier.fillMaxWidth(),
@@ -271,7 +274,7 @@ fun AdminIngredientRequestsScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Categories", fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.admin_categories_header), fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(6.dp))
 
         // 2. Category Chips
@@ -295,16 +298,16 @@ fun AdminIngredientRequestsScreen(
         } else if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+                    Text(text = stringResource(uiState.errorMessage!!), color = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = { viewModel.fetchRequests() }) {
-                        Text("Retry")
+                        Text(stringResource(R.string.btn_retry))
                     }
                 }
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No requests found.", color = Color.Gray)
+                Text(text = stringResource(R.string.admin_no_requests_found), color = Color.Gray)
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
@@ -337,14 +340,14 @@ fun AdminIngredientRequestsScreen(
     if (showStatusFilterDialog) {
         AlertDialog(
             onDismissRequest = { showStatusFilterDialog = false },
-            title = { Text("Filter by Status", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.admin_filter_status_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     val options = listOf(
-                        "All" to null,
-                        "Pending" to Status.PENDING,
-                        "Approved" to Status.APPROVED,
-                        "Rejected" to Status.REJECTED
+                        stringResource(R.string.admin_filter_all) to null,
+                        stringResource(R.string.admin_filter_pending) to Status.PENDING,
+                        stringResource(R.string.admin_filter_approved) to Status.APPROVED,
+                        stringResource(R.string.admin_filter_rejected) to Status.REJECTED
                     )
                     options.forEach { (label, status) ->
                         Row(
@@ -371,12 +374,12 @@ fun AdminIngredientRequestsScreen(
                         showStatusFilterDialog = false
                     }
                 ) {
-                    Text("Apply Filter", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.admin_apply_filter), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStatusFilterDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                 }
             }
         )
@@ -409,7 +412,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = "Requested By: ${item.requesterName}",
+                    text = stringResource(R.string.admin_requested_by, item.requesterName),
                     style = MaterialTheme.typography.bodySmall
                 )
             }

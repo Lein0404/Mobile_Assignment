@@ -76,7 +76,7 @@ fun AdminIngredientDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "View Request",
+                        text = stringResource(R.string.admin_detail_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                     )
@@ -87,7 +87,7 @@ fun AdminIngredientDetailScreen(
                     {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -159,7 +159,7 @@ fun AdminIngredientDetailScreen(
                                     color = Color.Black
                                 )
                                 Text(
-                                    text = request.ingredientCategory?.categoryName ?: "Others",
+                                    text = request.ingredientCategory?.categoryName ?: stringResource(R.string.none),
                                     color = Color.Gray,
                                     fontSize = 14.sp
                                 )
@@ -173,9 +173,9 @@ fun AdminIngredientDetailScreen(
                                 )
 
                                 // 3. Description
-                                Text("Description", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
-                                    text = request.ingredientDesc.ifEmpty { "No description available." },
+                                    text = request.ingredientDesc.ifEmpty { stringResource(R.string.admin_detail_no_description) },
                                     color = Color.Black,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
@@ -183,19 +183,19 @@ fun AdminIngredientDetailScreen(
                                 Spacer(modifier = Modifier.height(24.dp))
 
                                 // 4. Calorie Information
-                                Text("Calorie Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = info.calorieSummary.ifEmpty { "No calorie information available." },
+                                    text = info.calorieSummary.ifEmpty { stringResource(R.string.admin_detail_no_calorie_info) },
                                     color = Color.Black
                                 )
 
                                 // 5. Rejected Reason (if applicable)
                                 if (request.requestStatus == Status.REJECTED) {
                                     Spacer(modifier = Modifier.height(24.dp))
-                                    Text("Rejected Reason", fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                     Text(
-                                        text = request.rejectedReason ?: "Unspecified.",
+                                        text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
                                         color = Color.Black,
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
@@ -203,7 +203,7 @@ fun AdminIngredientDetailScreen(
 
                                 if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
                                     Spacer(modifier = Modifier.height(24.dp))
-                                    Text("Admin Notes", fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                     Text(
                                         text = request.adminNote,
                                         color = Color.Black,
@@ -218,11 +218,11 @@ fun AdminIngredientDetailScreen(
                                 )
 
                                 // 6. Request Information
-                                Text("Request Information", fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.admin_detail_request_info_header), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text("User ID: ${info.requesterCustomId}", fontSize = 14.sp)
-                                Text("User Name: ${info.requesterName}", fontSize = 14.sp)
-                                Text("Created date: ${formatDisplayDateTime(request.datetimeCreated)}", fontSize = 14.sp)
+                                Text(stringResource(R.string.admin_detail_user_id, info.requesterCustomId), fontSize = 14.sp)
+                                Text(stringResource(R.string.admin_detail_user_name, info.requesterName), fontSize = 14.sp)
+                                Text(stringResource(R.string.admin_detail_created_date, formatDisplayDateTime(request.datetimeCreated)), fontSize = 14.sp)
 
                                 Spacer(modifier = Modifier.height(120.dp))
                             }
@@ -272,7 +272,7 @@ fun AdminIngredientDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Request not found")
+                    Text(stringResource(R.string.admin_detail_request_not_found))
                 }
             }
         }
@@ -283,7 +283,7 @@ fun AdminIngredientDetailScreen(
             onDismiss = { showRejectDialog = false },
             onConfirm = { reason ->
                 viewModel.rejectRequest(requestId, reason) {
-                    Toast.makeText(context, "Request rejected", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.admin_detail_toast_rejected, Toast.LENGTH_SHORT).show()
                     showRejectDialog = false
                     navController.popBackStack()
                 }
@@ -310,14 +310,14 @@ fun RejectRequestDialog(
     onConfirm: (String) -> Unit
 ) {
     var reason by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<Int?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Reject Request", fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                Text("Please provide a reason for rejecting this Ingredient Request.")
+                Text(stringResource(R.string.admin_detail_reject_prompt))
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = reason,
@@ -325,11 +325,15 @@ fun RejectRequestDialog(
                         reason = it
                         if (it.isNotBlank()) error = null
                     },
-                    placeholder = { Text("Rejected reason") },
+                    placeholder = { Text(stringResource(R.string.admin_detail_reject_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                     isError = error != null,
                     supportingText = {
-                        if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error)
+                        error?.let { errorResId ->
+                            Text(
+                                text = stringResource(errorResId),
+                                color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 )
             }
@@ -337,17 +341,17 @@ fun RejectRequestDialog(
         confirmButton = {
             TextButton(onClick = {
                 if (reason.isBlank()) {
-                    error = "Reason cannot be empty"
+                    error = R.string.admin_detail_error_reason_empty
                 } else {
                     onConfirm(reason)
                 }
             }) {
-                Text("Reject Request", color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.admin_detail_reject_title), color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color.Gray)
+                Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
             }
         }
     )
@@ -363,22 +367,22 @@ private fun RequestConflictDialog(
     if (isDeleted) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Deleted", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has been deleted by the user.") },
+            title = { Text(stringResource(R.string.admin_detail_conflict_deleted_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_deleted_text)) },
             confirmButton = {
                 TextButton(onClick = onDeletedConfirm) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
     } else if (isProcessed) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has already been approved or rejected by another administrator.") },
+            title = { Text(stringResource(R.string.admin_detail_conflict_processed_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_processed_text)) },
             confirmButton = {
                 TextButton(onClick = onProcessedConfirm) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )

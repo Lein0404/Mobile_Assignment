@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.repo.UserRepository
@@ -23,7 +24,7 @@ data class AdminIngredientsUiState(
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: Int? = null,
     val isNetworkAvailable: Boolean = true
 )
 
@@ -94,7 +95,7 @@ class AdminIngredientsViewModel(
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.admin_error_fetch_requests) }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
@@ -24,7 +25,7 @@ data class IngredientRequestUiState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isStatusConflict: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: Int? = null,
     val isNetworkAvailable: Boolean = true
 )
 
@@ -37,13 +38,13 @@ data class IngredientRequestFormUiState(
     val unitRows: List<UnitRowState> = listOf(UnitRowState()),
     val isSubmitting: Boolean = false,
     val isStatusConflict: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: Int? = null,
 
     // Per-field validation errors
-    val nameError: String? = null,
-    val categoryError: String? = null,
-    val descriptionError: String? = null,
-    val unitRowsError: String? = null,
+    val nameError: Int? = null,
+    val categoryError: Int? = null,
+    val descriptionError: Int? = null,
+    val unitRowsError: Int? = null,
 )
 
 data class IngredientRequestItem(
@@ -54,8 +55,8 @@ data class IngredientRequestItem(
 data class UnitRowState(
     val selectedUnit: Units? = null,
     val calories: String = "",
-    val unitError: String? = null,
-    val caloriesError: String? = null,
+    val unitError: Int? = null,
+    val caloriesError: Int? = null,
 )
 
 class IngredientRequestViewModel(
@@ -125,7 +126,7 @@ class IngredientRequestViewModel(
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_requests) }
             }
         }
     }
@@ -171,7 +172,7 @@ class IngredientRequestViewModel(
                 _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = "Failed to fetch request detail") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_details) }
             }
         }
     }
@@ -308,39 +309,39 @@ class IngredientRequestViewModel(
 
         val nameError = if (state.ingredientName.isBlank()) {
             isValid = false
-            "Ingredient name is required"
+            R.string.error_name_required
         } else null
 
         val categoryError = if (state.category == null) {
             isValid = false
-            "Category is required"
+            R.string.error_category_required
         } else null
 
         val descriptionError = if (state.description.isBlank()) {
             isValid = false
-            "Description is required"
+            R.string.error_description_required
         } else null
 
         // Validate unit rows: at least one must be fully filled
         val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
         val unitRowsError = if (!hasAtLeastOneFilledRow) {
             isValid = false
-            "At least one calorie information entry is required"
+            R.string.error_at_least_one_unit_required
         } else null
 
         // Per-row validation for partially filled rows
         val validatedRows = state.unitRows.map { row ->
             val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
                 isValid = false
-                "Serving unit is required"
+                R.string.error_unit_required
             } else null
 
             val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
                 isValid = false
-                "Calories value is required"
+                R.string.error_calories_required
             } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
                 isValid = false
-                "Must be a valid number"
+                R.string.error_invalid_number
             } else null
 
             row.copy(unitError = unitError, caloriesError = caloriesError)
@@ -417,7 +418,12 @@ class IngredientRequestViewModel(
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _formState.update { it.copy(isSubmitting = false, errorMessage = "Submission failed: ${e.message}") }
+                _formState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        errorMessage = R.string.error_unknown
+                    )
+                }
             }
         }
     }

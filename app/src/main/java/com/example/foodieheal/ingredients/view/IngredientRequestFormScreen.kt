@@ -60,15 +60,18 @@ fun IngredientRequestFormScreen(
     if (formState.isStatusConflict) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Request Processed", fontWeight = FontWeight.Bold) },
-            text = { Text("This request has already been processed by an administrator and can no longer be modified.") },
+            title = { Text(
+                text = stringResource(R.string.ingredient_form_processed_title),
+                fontWeight = FontWeight.Bold)
+            },
+            text = { Text(stringResource(R.string.ingredient_form_processed_text)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         navController.popBackStack()
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -94,7 +97,7 @@ fun IngredientRequestFormScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (requestId == null) "Add Ingredient" else "Update Ingredient",
+                        text = if (requestId == null) stringResource(R.string.ingredient_form_title_add) else stringResource(R.string.ingredient_form_title_update),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -105,7 +108,7 @@ fun IngredientRequestFormScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -141,7 +144,7 @@ fun IngredientRequestFormScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "You need to be online to submit a request",
+                            text = stringResource(R.string.ingredient_form_online_required),
                             color = Color.Gray,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -167,9 +170,9 @@ fun IngredientRequestFormScreen(
                         modifier = Modifier.fillMaxWidth(),
                         isError = formState.nameError != null
                     )
-                    if (formState.nameError != null) {
+                    formState.nameError?.let { resId ->
                         Text(
-                            text = formState.nameError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -185,7 +188,7 @@ fun IngredientRequestFormScreen(
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
-                        placeholder = "e.g. Vegetables",
+                        placeholder = stringResource(R.string.ingredient_form_category_placeholder),
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -206,9 +209,9 @@ fun IngredientRequestFormScreen(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         )
                     )
-                    if (formState.categoryError != null) {
+                    formState.categoryError?.let { resId ->
                         Text(
-                            text = formState.categoryError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -226,9 +229,9 @@ fun IngredientRequestFormScreen(
                         maxLines = 8,
                         isError = formState.descriptionError != null
                     )
-                    if (formState.descriptionError != null) {
+                    formState.descriptionError?.let { resId ->
                         Text(
-                            text = formState.descriptionError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -242,9 +245,9 @@ fun IngredientRequestFormScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    if (formState.unitRowsError != null) {
+                    formState.unitRowsError?.let { resId ->
                         Text(
-                            text = formState.unitRowsError!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -291,21 +294,23 @@ fun IngredientRequestFormScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Text("Add Unit")
+                            Text(stringResource(R.string.ingredient_form_add_unit))
                         }
                     }
 
-                    // General error message
-                    if (formState.errorMessage != null) {
+                    // TODO: change to AlertDialog / Toast
+                    formState.errorMessage?.let { resId ->
                         Text(
-                            text = formState.errorMessage!!,
+                            text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+                    val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
+                    val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
                     Button(
                         onClick = {
                             scope.launch {
@@ -318,7 +323,11 @@ fun IngredientRequestFormScreen(
                                 viewModel.submitRequest(
                                     imageUrl = imageUrl,
                                     onComplete = {
-                                        Toast.makeText(context, if (requestId == null) "Request submitted successfully" else "Request updated successfully", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            if (requestId == null) successToastSubmitted else successToastUpdated,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                         navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
                                             popUpTo(Screen.Ingredients.route) { this.inclusive = true }
                                         }
@@ -337,7 +346,7 @@ fun IngredientRequestFormScreen(
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
                             Text(
-                                text = if (requestId == null) "Request New Ingredient" else "Update Request",
+                                text = if (requestId == null) stringResource(R.string.request_new_ingredient) else stringResource(R.string.update_request),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                                 color = Color.White
@@ -360,8 +369,8 @@ fun UnitRow(
     availableUnits: List<Units>,
     onUpdate: (Units?, String) -> Unit,
     onRemove: (() -> Unit)?,
-    unitError: String? = null,
-    caloriesError: String? = null
+    unitError: Int? = null,
+    caloriesError: Int? = null
 ) {
     Row(
         modifier = Modifier
@@ -371,13 +380,17 @@ fun UnitRow(
         verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Serving Unit", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(R.string.serving_unit),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
             LargeSearchableDropdownMenu(
                 modifier = Modifier.fillMaxWidth(),
                 selectedOption = selectedUnit,
                 onItemSelected = { onUpdate(it, calories) },
                 selectedItemToString = { it.unitName },
-                placeholder = "e.g. gram",
+                placeholder = stringResource(R.string.ingredient_form_serving_unit_placeholder),
                 // TODO: placeholderTextStyle
                 options = availableUnits,
                 drawItem = { item, selected, itemEnabled, onClick ->
@@ -401,7 +414,7 @@ fun UnitRow(
             )
             if (unitError != null) {
                 Text(
-                    text = unitError,
+                    text = stringResource(unitError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -410,11 +423,15 @@ fun UnitRow(
         }
 
         Column(modifier = Modifier.weight(1f)) {
-            Text("Calories", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(R.string.calories),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
             val placeholderText = if (selectedUnit != null) {
-                "per ${selectedUnit.defaultQuantity.toInt()} ${selectedUnit.unitDisplay}"
+                stringResource(R.string.ingredient_form_calories_placeholder_per, selectedUnit.defaultQuantity.toInt(), selectedUnit.unitDisplay)
             } else {
-                "e.g. per 100 g"
+                stringResource(R.string.ingredient_form_calories_placeholder_default)
             }
             OutlinedTextField(
                 value = calories,
@@ -438,7 +455,7 @@ fun UnitRow(
             )
             if (caloriesError != null) {
                 Text(
-                    text = caloriesError,
+                    text = stringResource(caloriesError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -448,7 +465,7 @@ fun UnitRow(
 
         if (onRemove != null) {
             IconButton(onClick = onRemove, modifier = Modifier.padding(top = 16.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = "Remove Unit",)
+                Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.ingredient_form_remove_unit),)
             }
         }
     }
