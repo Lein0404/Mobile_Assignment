@@ -1,18 +1,7 @@
 package com.example.foodieheal.Admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -83,26 +72,7 @@ fun AdminApprovalScreen(
 
     Scaffold(
         containerColor = Color(0xFFF7F8FC),
-        topBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Text(
-                        text = if (currentRoute == Screen.AdminIngredient.route) "Ingredients" else "Chef Approval",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
-                    )
-                }
-            }
-        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.tertiary,
@@ -172,7 +142,7 @@ fun AdminApprovalScreen(
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.AdminChefScreen.route) {
-                AdminChefApprovalContent(viewModel, parentNavController)
+                AdminChefApprovalContent(viewModel, navController)
             }
             composable(Screen.AdminIngredient.route) {
                 AdminIngredientsScreen(parentNavController)
@@ -186,47 +156,65 @@ fun AdminChefApprovalContent(
     viewModel: AdminApprovalViewModel,
     navController: NavController
 ) {
-    if (viewModel.pendingChefs.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_outline_account_circle),
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp),
-                    tint = Color.Gray
-                )
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
-
+            Column(modifier = Modifier.statusBarsPadding()) {
                 Text(
-                    "No pending applications",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Gray
+                    text = "Chef Approval",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
                 )
             }
         }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(viewModel.pendingChefs) { chef ->
-                ChefApprovalCard(
-                    chef = chef,
-                    onViewClick = {
-                        navController.navigate(
-                            "chefDetail/${chef.chefId}"
-                        )
-                    }
-                )
+
+        if (viewModel.pendingChefs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_outline_account_circle),
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                        tint = Color.Gray
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        "No pending applications",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Gray
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(viewModel.pendingChefs) { chef ->
+                    ChefApprovalCard(
+                        chef = chef,
+                        onViewClick = {
+                            navController.navigate(
+                                "chefDetail/${chef.chefId}"
+                            )
+                        }
+                    )
+                }
             }
         }
     }

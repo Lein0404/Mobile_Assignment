@@ -70,41 +70,60 @@ fun AdminIngredientsScreen(
     var selectedTab by remember { mutableIntStateOf(0) } // Default to Community tab
     val tabs = listOf("Community", "Requests")
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F8F8))) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // TabRow with primary background to match parent header
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF8F8F8))
+        ) {
+            // Header with Title and Tabs
             Surface(
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = Color.Transparent,
-                    contentColor = Color.White,
-                    indicator = { tabPositions ->
-                        if (selectedTab < tabPositions.size) {
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                height = 3.dp,
-                                color = Color.White
-                            )
-                        }
-                    },
-                    divider = {}
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            text = {
-                                Text(
-                                    text = title,
-                                    fontSize = 15.sp,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                Column {
+                    Text(
+                        text = "Admin Ingredients",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
+                    )
+                    
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White,
+                        indicator = { tabPositions ->
+                            if (selectedTab < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                    height = 3.dp,
+                                    color = Color.White
                                 )
                             }
-                        )
+                        },
+                        divider = {}
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        fontSize = 15.sp,
+                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
