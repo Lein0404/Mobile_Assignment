@@ -446,7 +446,8 @@ fun IngredientsExistingScreen(
     viewModel: IngredientsViewModel,
     uiState: IngredientsUiState,
     navController: NavController,
-    onAddToCart: (Ingredients) -> Unit
+    onAddToCart: (Ingredients) -> Unit = {},
+    showAddToCart: Boolean = true
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -454,7 +455,7 @@ fun IngredientsExistingScreen(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
             placeholder = { Text(
-                text = "Search ingredient requests here",
+                text = "Search ingredients here",
                 style = MaterialTheme.typography.labelLarge
             ) },
             modifier = Modifier.fillMaxWidth(),
@@ -521,14 +522,14 @@ fun IngredientsExistingScreen(
                     item {
                         Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     }
-                    // TODO: when logic is all done, improve the UI!
                     items(items) { item ->
                         IngredientCard(
                             item = item,
                             onClick = {
-                                navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId))
+                                navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId, showAddToCart = showAddToCart))
                             },
-                            onAddToCart = { onAddToCart(item.ingredient) }
+                            onAddToCart = { onAddToCart(item.ingredient) },
+                            showAddToCart = showAddToCart
                         )
                     }
                 }
@@ -542,7 +543,8 @@ fun IngredientsExistingScreen(
 fun IngredientCard(
     item: IngredientItem,
     onClick: () -> Unit,
-    onAddToCart: () -> Unit
+    onAddToCart: () -> Unit = {},
+    showAddToCart: Boolean = true
 ) {
     Card(
         modifier = Modifier
@@ -571,8 +573,10 @@ fun IngredientCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            IconButton(onClick = { onAddToCart() }) {
-                Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to shopping list", tint = Color.Black)
+            if (showAddToCart) {
+                IconButton(onClick = { onAddToCart() }) {
+                    Icon(painter = painterResource(R.drawable.ic_add_to_shopping_cart), contentDescription = "Add to shopping list", tint = Color.Black)
+                }
             }
         }
     }

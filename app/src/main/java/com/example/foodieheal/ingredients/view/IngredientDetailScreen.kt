@@ -39,7 +39,8 @@ import com.example.foodieheal.ui.components.StatusBadge
 fun IngredientDetailScreen(
     navController: NavController,
     ingredientId: String,
-    isRequest: Boolean = false
+    isRequest: Boolean = false,
+    showAddToCart: Boolean = true
 ) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
@@ -200,7 +201,7 @@ fun IngredientDetailScreen(
                                     }
                                 }
                                 
-                                if (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED)) {
+                                if (showAddToCart && (!isRequest || (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED))) {
                                     IconButton(onClick = {
                                         if (isRequest) {
                                             requestDetail?.request?.let { request ->

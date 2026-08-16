@@ -94,7 +94,7 @@ fun AdminApprovalScreen(
             ) {
                 Column(modifier = Modifier.statusBarsPadding()) {
                     Text(
-                        text = if (currentRoute == Screen.AdminIngredient.route) "Ingredient Requests" else "Chef Approval",
+                        text = if (currentRoute == Screen.AdminIngredient.route) "Ingredients" else "Chef Approval",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,

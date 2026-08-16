@@ -357,12 +357,14 @@ class MainActivity : ComponentActivity() {
                                     route = Screen.IngredientDetail.route,
                                     arguments = listOf(
                                         navArgument("id") { type = NavType.StringType },
-                                        navArgument("isRequest") { type = NavType.BoolType }
+                                        navArgument("isRequest") { type = NavType.BoolType },
+                                        navArgument("showAddToCart") { type = NavType.BoolType; defaultValue = true }
                                     )
                                 ) { backStackEntry ->
                                     val id = backStackEntry.arguments?.getString("id") ?: ""
                                     val isRequest = backStackEntry.arguments?.getBoolean("isRequest") ?: false
-                                    IngredientDetailScreen(navController, id, isRequest)
+                                    val showAddToCart = backStackEntry.arguments?.getBoolean("showAddToCart") ?: true
+                                    IngredientDetailScreen(navController, id, isRequest, showAddToCart)
                                 }
                                 composable(
                                     route = Screen.IngredientRequestForm.route,
