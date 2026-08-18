@@ -50,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
@@ -66,10 +67,12 @@ fun UserAppointmentDetailScreen(
     viewModel: HiringViewModel = viewModel(),
     onBackClick: () -> Unit,
     onRescheduleClick: (Appointment) -> Unit,
+    onPayClick: (Appointment) -> Unit, // Callback to navigate to payment screen
     onRatingClick: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val appointmentsState by viewModel.userAppointmentsState.collectAsState()
+    val appointmentsState by viewModel.userAppointmentsState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Extract appointment and users map from State
     val successState = appointmentsState as? UserAppointmentsUiState.Success
@@ -91,6 +94,8 @@ fun UserAppointmentDetailScreen(
     val isCancelled = appointment.Status.equals("cancelled", ignoreCase = true)
     val isConfirmed = appointment.Status.equals("confirmed", ignoreCase = true)
     val isCompleted = appointment.Status.equals("completed", ignoreCase = true)
+    val isUnpaid = appointment.Status.equals("unpaid", ignoreCase = true)
+    val isRejected = appointment.Status.equals("rejected", ignoreCase = true)
 
     val completedToast = stringResource(R.string.toast_booking_completed)
     val cancelledToast = stringResource(R.string.toast_appointment_cancelled)
@@ -98,7 +103,7 @@ fun UserAppointmentDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Column {
                         Text(stringResource(R.string.booking_details), fontWeight = FontWeight.Bold)
                         Text("ID: $appointmentId", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
@@ -224,6 +229,39 @@ fun UserAppointmentDetailScreen(
                 }
             }
 
+            // Rejection Reason Card (Shown only if status is Rejected)
+            if (isRejected) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_rejection_reason),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                        )
+                        Text(
+                            text = appointment.Reject_Reason ?: stringResource(R.string.no_rejection_reason),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
             // Location & Address Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -297,7 +335,32 @@ fun UserAppointmentDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // "Complete Booking" Button
+                // "Pay Now" Button (Only for Unpaid Status)
+                if (isUnpaid) {
+                    Button(
+                        onClick = { onPayClick(appointment) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.dollar_symbol),
+                            contentDescription = stringResource(R.string.pay_now),
+                            modifier = Modifier.padding(end = 8.dp).size(24.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.pay_now),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                // "Complete Booking" Button (Only for Confirmed Status)
                 if (isConfirmed) {
                     Button(
                         onClick = { showCompleteDialog = true },
@@ -322,7 +385,8 @@ fun UserAppointmentDetailScreen(
                     }
                 }
 
-                if (!isCancelled && !isCompleted) {
+                // Reschedule and Cancel buttons (For Pending, Unpaid, and Confirmed statuses)
+                if (!isCancelled && !isCompleted && !isRejected) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -347,7 +411,7 @@ fun UserAppointmentDetailScreen(
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isConfirmed) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                containerColor = MaterialTheme.colorScheme.secondary
                             )
                         ) {
                             Text(stringResource(R.string.reschedule), fontWeight = FontWeight.Bold)
@@ -429,8 +493,9 @@ fun UserAppointmentDetailScreen(
 private fun StatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
         "confirmed" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+        "unpaid" -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Distinct orange alert badge for Unpaid status
         "pending" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        "cancelled" -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        "rejected", "cancelled" -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
         "completed" -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
         else -> MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurfaceVariant
     }

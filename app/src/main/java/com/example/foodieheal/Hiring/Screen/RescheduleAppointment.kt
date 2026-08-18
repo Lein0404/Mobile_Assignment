@@ -397,7 +397,7 @@ fun RescheduleAppointmentScreen(
                 onClick = {
                     hasAttemptedSubmit = true
 
-                    validationErrors = viewModel.validateAndReschedule(
+                    viewModel.rescheduleAppointment(
                         appointmentId = appointment.AppointmentID.orEmpty(),
                         newDate = selectedDate,
                         newStartTime = startTime,
@@ -405,7 +405,7 @@ fun RescheduleAppointmentScreen(
                         newAddress = address,
                         newPostcode = postcode,
                         newState = selectedState,
-                        newServingSize = servingSize,
+                        newServingSize = servingSize.toIntOrNull() ?: 0,
                         newDescription = description,
                         onSuccess = {
                             Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()

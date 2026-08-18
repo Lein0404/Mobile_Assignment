@@ -32,6 +32,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -232,12 +233,15 @@ class MainActivity : ComponentActivity() {
                                         sharedAuthViewModel,
                                         onChefClick = { chef ->
                                             hiringViewModel.selectChef(chef)
-                                            navController.navigate(Screen.HiringChefDetails.route) {
+                                            val chefId = chef.chefId ?: chef.id
+                                            navController.navigate("${Screen.HiringChefDetails.route}/$chefId") {
                                                 launchSingleTop = true
                                             }
                                         }
-                                        ) }
+                                    )
+                                    }
                                 }
+
                                 composable(Screen.Recipes.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { RecipesScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
                                 }
@@ -291,7 +295,9 @@ class MainActivity : ComponentActivity() {
                                             authViewModel = sharedAuthViewModel,
                                             onChefClick = { chef ->
                                                 hiringViewModel.selectChef(chef)
-                                                navController.navigate(Screen.HiringChefDetails.route)
+                                                // Access chefId (or chef.id depending on your model definition)
+                                                val chefId = chef.chefId ?: chef.id
+                                                navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
                                             },
                                             onAppointmentClick = { appointment ->
                                                 val id = appointment.AppointmentID.orEmpty()
@@ -302,34 +308,58 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                composable(Screen.HiringChefDetails.route) {
+                                composable(
+                                    route = "${Screen.HiringChefDetails.route}/{chefId}"
+                                ) { backStackEntry ->
+                                    val chefId = backStackEntry.arguments?.getString("chefId").orEmpty()
                                     val userId = sharedAuthViewModel.currentUser?.id.orEmpty()
                                     val profileVM: BookmarkViewModel = viewModel()
-                                    hiringViewModel.selectedChef?.let { chef ->
+
+                                    // Collect the StateFlow properly as Compose state
+                                    val selectedChefState by hiringViewModel.selectedChef.collectAsStateWithLifecycle()
+
+                                    // Match selected chef against the route argument
+                                    val chef = selectedChefState?.takeIf { (it.chefId ?: it.id) == chefId }
+
+                                    if (chef != null) {
                                         HiringChefDetails(
                                             chef = chef,
                                             userId = userId,
                                             viewModel = profileVM,
                                             onBackClick = { navController.popBackStack() },
-                                            onHireClick = { navController.navigate(Screen.HiringAppointment.route) })
+                                            onHireClick = {
+                                                navController.navigate("${Screen.HiringAppointment.route}/$chefId")
+                                            }
+                                        )
+                                    } else {
+                                        LaunchedEffect(Unit) {
+                                            navController.popBackStack()
+                                        }
                                     }
                                 }
 
-                                composable(Screen.HiringAppointment.route) { backStackEntry ->
-                                    val parentEntry = remember(backStackEntry) {
-                                        navController.getBackStackEntry(Screen.HiringChefDetails.route)
-                                    }
-                                    val chef = hiringViewModel.selectedChef
+                                composable(
+                                    route = "${Screen.HiringAppointment.route}/{chefId}"
+                                ) { backStackEntry ->
+                                    val chefId = backStackEntry.arguments?.getString("chefId").orEmpty()
+
+                                    // Collect the StateFlow properly as Compose state
+                                    val selectedChefState by hiringViewModel.selectedChef.collectAsStateWithLifecycle()
+                                    val chef = selectedChefState?.takeIf { (it.chefId ?: it.id) == chefId }
 
                                     if (chef != null) {
                                         HiringAppointment(
                                             chef = chef,
                                             onBackClick = { navController.popBackStack() },
                                             onAddAppointmentClick = { chosenDate ->
-                                                hiringViewModel.updateSelectedDate(chosenDate) // Update selected date (passing data)
+                                                hiringViewModel.updateSelectedDate(chosenDate)
                                                 navController.navigate(Screen.AddHiringAppointment.route)
                                             }
                                         )
+                                    } else {
+                                        LaunchedEffect(Unit) {
+                                            navController.popBackStack()
+                                        }
                                     }
                                 }
 
@@ -368,7 +398,8 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onRatingClick = { targetAppointmentId ->
                                             navController.navigate(Screen.RateChef.createRoute(targetAppointmentId))
-                                        }
+                                        },
+                                        onPayClick = {}
                                     )
                                 }
 

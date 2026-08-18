@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import coil.compose.AsyncImage
@@ -38,6 +39,10 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefCli
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val chefs by chefViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefViewModel.errorMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
@@ -94,11 +99,11 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefCli
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
                 ChefListSection(
-                    chefs = chefViewModel.chefList,
-                    isLoading = chefViewModel.isProcessing,
-                    errorMessage = chefViewModel.errorMessage,
-                    bookmarkViewModel = bookmarkViewModel,
+                    chefs = chefs,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
                     onChefClick = onChefClick
                 )
 

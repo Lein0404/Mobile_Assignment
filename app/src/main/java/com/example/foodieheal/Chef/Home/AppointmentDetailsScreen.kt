@@ -296,7 +296,7 @@ fun AppointmentDetailScreen(
                     onClick = {
                         showAcceptDialog = false
                         Toast.makeText(context, acceptedToastMsg, Toast.LENGTH_SHORT).show()
-                        onStatusChange("Confirmed", null)
+                        onStatusChange("Unpaid", null)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary

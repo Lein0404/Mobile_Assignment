@@ -70,10 +70,13 @@ fun AppointmentReviewScreen(
     onFinalConfirm: () -> Unit
 ) {
     val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedChef by viewModel.selectedChef.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
 
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    val selectedChef = viewModel.selectedChef
+
     val chefId = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
     val chefPicture = selectedChef?.profilePictureUrl.orEmpty()
     val chefName = selectedChef?.name ?: stringResource(R.string.default_selected_chef_name)
@@ -92,8 +95,7 @@ fun AppointmentReviewScreen(
 
     val currentUserId = authViewModel.currentUser?.id.orEmpty()
 
-    // Extract time details
-    val selectedDateString = viewModel.selectedDate.toString()
+    val selectedDateString = selectedDate.toString()
     val timeRange = uiState.appointmentTime.split(" - ")
     val startTime = timeRange.getOrNull(0).orEmpty()
     val endTime = timeRange.getOrNull(1).orEmpty()

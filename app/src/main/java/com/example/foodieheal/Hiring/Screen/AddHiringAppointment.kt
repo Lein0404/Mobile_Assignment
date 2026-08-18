@@ -78,33 +78,33 @@ fun AddAppointmentFormScreen(
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
-    val chefId = viewModel.currentChefId
+    val selectedChef by viewModel.selectedChef.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(chefId, viewModel.selectedDate) {
+    val chefId = viewModel.currentChefId
+    val focusManager = LocalFocusManager.current
+
+    // Fetch appointments for this specific chef whenever chef ID or date updates
+    LaunchedEffect(chefId, selectedDate) {
         if (chefId.isNotBlank()) {
             viewModel.fetchAppointmentsForChef(chefId)
         }
     }
-
-    val selectedChef = viewModel.selectedChef
-    val hourlyPrice = selectedChef?.Pricing ?: 0.0
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
-
-    // Local states for Start & End Time
     var startTimeFormatted by remember { mutableStateOf("09:00 AM") }
     var endTimeFormatted by remember { mutableStateOf("11:00 AM") }
 
-    // Dialog Visibility States
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
-    // Helper to update ViewModel time slot
     fun updateAppointmentTimeSlot(start: String, end: String) {
         startTimeFormatted = start
         endTimeFormatted = end
         viewModel.onAppointmentTimeChanged("$start - $end")
     }
+
+    val hasInvalidTimeError = uiState.errors.contains(AppointmentValidationError.InvalidTime)
+    val hasTimeSlotOccupiedError = uiState.errors.contains(AppointmentValidationError.TimeSlotOccupied)
 
     Scaffold(
         topBar = {
@@ -194,12 +194,12 @@ fun AddAppointmentFormScreen(
             }
 
             AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasInvalidTimeError,
+                visible = uiState.hasAttemptedSubmit && hasInvalidTimeError,
                 message = stringResource(R.string.error_invalid_time_range)
             )
 
             AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasTimeSlotOccupiedError,
+                visible = uiState.hasAttemptedSubmit && hasTimeSlotOccupiedError,
                 message = stringResource(R.string.error_time_slot_occupied)
             )
 

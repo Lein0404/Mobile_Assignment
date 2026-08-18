@@ -37,7 +37,9 @@ enum class AppointmentFilterOption(val displayName: String) {
     PENDING("Pending"),
     CONFIRMED("Confirmed"),
     COMPLETED("Completed"),
-    CANCELLED("Cancelled")
+    CANCELLED("Cancelled"),
+
+    REJECTED("Rejected")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +72,7 @@ fun AppointmentHistoryScreen(
             AppointmentFilterOption.CONFIRMED -> allAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
             AppointmentFilterOption.COMPLETED -> allAppointments.filter { it.Status.equals("completed", ignoreCase = true) }
             AppointmentFilterOption.CANCELLED -> allAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
+            AppointmentFilterOption.REJECTED -> allAppointments.filter { it.Status.equals("rejected", ignoreCase = true) }
         }
     }
 

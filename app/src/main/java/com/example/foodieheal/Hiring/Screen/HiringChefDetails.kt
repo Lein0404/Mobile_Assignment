@@ -201,7 +201,9 @@ fun HiringChefDetails(
                             onClick = {
                                 viewModel.onBookmarkToggled(
                                     userId = userId,
-                                    chefId = currentChefId
+                                    chefId = currentChefId,
+                                    context = context,
+                                    chefName = chef.name
                                 )
                             },
                             modifier = Modifier.align(Alignment.TopEnd)

@@ -348,6 +348,7 @@
 
     <string name="label_status">Status</string>
     <string name="label_service_location">Service Location</string>
+    <string name="label_rejection_reason">Rejected Reason</string>
 
     <string name="address_not_provided">Address not provided</string>
     <string name="serving_size_format">%1$s pax</string>
@@ -361,6 +362,8 @@
     <string name="not_yet">Not Yet</string>
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
+    <string name="pay_now">Pay Now</string>
+    <string name ="no_rejection_reason">No Rejected Reason</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>

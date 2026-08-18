@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.AppointmentCard
@@ -60,9 +61,9 @@ fun HiringScreen(
 ) {
     val currentUser = authViewModel.currentUser
     val currentUserId = currentUser?.id.orEmpty()
-    val chefs = hiringViewModel.chefList
-    val isLoading = hiringViewModel.isProcessing
-    val errorMessage = hiringViewModel.errorMessage
+    val chefs by hiringViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by hiringViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by hiringViewModel.errorMessage.collectAsStateWithLifecycle()
 
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -166,7 +167,7 @@ fun HiringScreen(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+                            Text(text = errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
                                 onClick = { hiringViewModel.fetchAllChefs() },
@@ -248,7 +249,7 @@ fun HiringScreen(
                             val activeAppointments = remember(currentState.appointments) {
                                 currentState.appointments.filter { appointment ->
                                     val status = appointment.Status.orEmpty().lowercase(Locale.US)
-                                    status == "pending" || status == "confirmed"
+                                    status == "pending" || status == "confirmed" || status == "unpaid"
                                 }
                             }
 
