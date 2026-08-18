@@ -42,7 +42,7 @@ import com.example.foodieheal.Admin.AdminApprovalScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
 import com.example.foodieheal.Chef.Register.*
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.Hiring.Screen.HiringAppointment
 import com.example.foodieheal.Hiring.Screen.HiringChefDetails
 import com.example.foodieheal.Hiring.Screen.HiringScreen
@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
                 val hiringViewModel: HiringViewModel = viewModel()
-                val chefViewModel: chefRegisterViewModel = viewModel()
+                val chefViewModel: ChefRegisterViewModel = viewModel()
 
                 // 🌟 FIX: The curtain strategy. Content loads first, Splash sits on top.
                 Box(modifier = Modifier.fillMaxSize()) {

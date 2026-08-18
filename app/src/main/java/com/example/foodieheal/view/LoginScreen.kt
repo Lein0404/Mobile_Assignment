@@ -27,7 +27,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.viewmodel.AuthViewModel
 
@@ -36,7 +36,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    val chefRegisterViewModel: chefRegisterViewModel = viewModel()   
+    val chefRegisterViewModel: ChefRegisterViewModel = viewModel()
     
     // 🌟 Track if user has tried to submit for validation display
     var hasAttemptedSubmit by remember { mutableStateOf(false) }

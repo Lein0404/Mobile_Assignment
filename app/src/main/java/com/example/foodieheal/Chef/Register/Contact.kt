@@ -27,7 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.ui.components.CommonInputField
@@ -36,7 +36,7 @@ import com.example.foodieheal.ui.components.CommonInputField
 @Composable
 fun contactInfo(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
     val viewModel: AuthViewModel = viewModel()
     val isEmailError = chefViewModel.showContactErrorMessage && !chefViewModel.isValidEmail()

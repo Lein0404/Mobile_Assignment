@@ -37,17 +37,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChefPictureScreen(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
 
-    val isImageError = chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidProfilePicture()
+    val isImageError = chefViewModel.showProfilePictureErrorMessage && !chefViewModel.isValidProfilePicture()
 
     //Photo picker launching
     val launcher = rememberLauncherForActivityResult(
@@ -184,8 +184,7 @@ fun ChefPictureScreen(
 
             Button(
                 onClick = {
-                    chefViewModel.validateProfilePicture()
-                    if (chefViewModel.canProceedReviewPage()) {
+                    if (chefViewModel.validateProfilePicture()) {
                         navController.navigate("reviewInfo")
                     }
                 },

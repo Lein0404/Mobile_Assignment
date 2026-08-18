@@ -29,13 +29,13 @@ import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun addressInfo(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
 
     val isAddressError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidAddress()

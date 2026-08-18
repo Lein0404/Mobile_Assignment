@@ -270,7 +270,6 @@ class HiringViewModel : ViewModel() {
     }
 
     // Value update handlers
-    // Value update handlers
     fun onAppointmentTimeChanged(time: String) {
         _uiState.update { it.copy(appointmentTime = time) }
         validateTimeSlot(time)
