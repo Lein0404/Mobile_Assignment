@@ -57,6 +57,7 @@ import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.DetailRow
 import java.util.Locale
 
@@ -198,7 +199,7 @@ fun UserAppointmentDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
-                        StatusBadge(status = appointment.Status)
+                        AppointmentStatusBadge(status = appointment.Status.orEmpty())
                     }
 
                     HorizontalDivider()
@@ -485,31 +486,6 @@ fun UserAppointmentDetailScreen(
                     Text(stringResource(R.string.keep_booking))
                 }
             }
-        )
-    }
-}
-
-@Composable
-private fun StatusBadge(status: String) {
-    val (backgroundColor, textColor) = when (status.lowercase()) {
-        "confirmed" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        "unpaid" -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Distinct orange alert badge for Unpaid status
-        "pending" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        "rejected", "cancelled" -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        "completed" -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Surface(
-        color = backgroundColor,
-        shape = RoundedCornerShape(50),
-    ) {
-        Text(
-            text = status.uppercase(),
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
 }

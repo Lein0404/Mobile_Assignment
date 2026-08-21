@@ -441,22 +441,4 @@ class HiringViewModel(
             }
         }
     }
-
-    fun submitReview(
-        appointmentId: String,
-        rating: Int,
-        comment: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            try {
-                repository.submitReview(appointmentId, rating, comment)
-                fetchAppointmentsForCurrentUser()
-                onSuccess()
-            } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to submit review")
-            }
-        }
-    }
 }

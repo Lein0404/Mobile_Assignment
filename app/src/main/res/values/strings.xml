@@ -226,9 +226,11 @@
     <!--Hiring Appointment -->
     <string name="title_appointment">Appointment</string>
     <string name="title_select_appointment_date">Select Appointment Date</string>
+    <string name = "review">Review</string>
     <string name="label_appointment">Appointment</string>
 
     <string name="empty_no_appointments_for_date">No appointments booked for this date.</string>
+    <string name = "no_comment_provided">No comment provided</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
@@ -239,6 +241,8 @@
     <string name="pick_date">Pick Date</string>
     <string name="add_booking">Add Booking</string>
     <string name="add_appointment">Add Appointment</string>
+    <string name = "user">User</string>
+    <string name = "no_review">No Review</string>
 
     <!-- Add Hiring Appointment -->
     <string name="next">Next</string>

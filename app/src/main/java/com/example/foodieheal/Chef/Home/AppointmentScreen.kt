@@ -143,7 +143,7 @@ fun AppointmentsScreen(
                     val filteredAppointments = state.appointments.filter { appointment ->
                         selectedStatusFilter == "All" ||
                                 appointment.Status.equals(selectedStatusFilter, ignoreCase = true)
-                    }
+                    }.sortedByDescending { it.created_at }
 
                     LazyColumn(
                         modifier = Modifier

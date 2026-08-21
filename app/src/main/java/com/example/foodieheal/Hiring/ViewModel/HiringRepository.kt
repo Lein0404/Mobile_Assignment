@@ -2,6 +2,7 @@ package com.example.foodieheal.Hiring.ViewModel
 
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.model.ReviewWithUser
 import com.example.foodieheal.model.User
 import com.example.mobileassignmentloginpart.Model.Chef
 import io.github.jan.supabase.auth.auth
@@ -114,6 +115,38 @@ class HiringRepository {
         }
         client.from("Appointment").update(updateData) {
             filter { eq("AppointmentID", appointmentId) }
+        }
+    }
+
+    suspend fun fetchChefReviews(chefId: String): List<ReviewWithUser> = withContext(Dispatchers.IO) {
+        val appointments = client.from("Appointment")
+            .select {
+                filter {
+                    eq("chefId", chefId)
+                    gt("rating", 0)
+                }
+            }
+            .decodeList<Appointment>()
+            .filter { !it.Comment.isNullOrBlank() || (it.rating ?: 0) > 0 }
+
+        if (appointments.isEmpty()) return@withContext emptyList()
+
+        val userIds = appointments.map { it.userId }.filter { it.isNotBlank() }.distinct()
+        val usersMap = if (userIds.isNotEmpty()) {
+            client.from("users")
+                .select { filter { isIn("id", userIds) } }
+                .decodeList<User>()
+                .associateBy { it.id }
+        } else {
+            emptyMap()
+        }
+
+        appointments.map { appointment ->
+            val user = usersMap[appointment.userId]
+            ReviewWithUser(
+                appointment = appointment,
+                userName = user?.name?.ifBlank { null } ?: "Customer"
+            )
         }
     }
 

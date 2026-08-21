@@ -155,6 +155,12 @@ fun ProfileScreen(
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
                     }
+                    DrawerItem("Payment Methods", R.drawable.dollar_symbol) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.PaymentMethod.route)
+                        }
+                    }
                     DrawerItem("Change Password", R.drawable.changepassword4) {                 
                         scope.launch {
                             drawerState.close()

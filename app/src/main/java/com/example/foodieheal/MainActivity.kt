@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,6 +62,12 @@ import com.example.foodieheal.Hiring.Screen.AppointmentReviewScreen
 import com.example.foodieheal.Hiring.Screen.RateChefScreen
 import com.example.foodieheal.Hiring.Screen.RescheduleAppointmentScreen
 import com.example.foodieheal.Hiring.Screen.UserAppointmentDetailScreen
+import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
+import com.example.foodieheal.Payment.Screen.PaymentScreen
+import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
+import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
+import com.example.foodieheal.Payment.local.PayMethodDatabase
+import com.example.foodieheal.Payment.repo.PaymentRepository
 import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
@@ -80,6 +88,7 @@ import com.example.foodieheal.view.EditProfileScreen
 import com.example.foodieheal.view.EditRecipeScreen
 import com.example.foodieheal.view.HomeScreen
 import com.example.foodieheal.view.LoginScreen
+import com.example.foodieheal.view.PaymentMethodScreen
 import com.example.foodieheal.view.ProfileScreen
 import com.example.foodieheal.view.RecipeDetailsScreen
 import com.example.foodieheal.view.RecipesScreen
@@ -399,7 +408,46 @@ class MainActivity : ComponentActivity() {
                                         onRatingClick = { targetAppointmentId ->
                                             navController.navigate(Screen.RateChef.createRoute(targetAppointmentId))
                                         },
-                                        onPayClick = {}
+                                        onPayClick = { appointment ->
+                                            navController.navigate("payment_screen/${appointment.AppointmentID.orEmpty()}")
+                                        }
+                                    )
+                                }
+
+                                composable(
+                                    route = "payment_screen/{appointmentId}",
+                                    arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val context = LocalContext.current
+                                    val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
+
+                                    val paymentViewModel: PaymentViewModel = viewModel()
+
+                                    val database = remember { PayMethodDatabase.getDatabase(context) }
+                                    val repository = remember {
+                                        PaymentRepository(
+                                            dao = database.paymentMethodDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+
+                                    val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
+                                        factory = PaymentMethodViewModel.Factory(repository)
+                                    )
+
+                                    PaymentScreen(
+                                        appointmentId = appointmentId,
+                                        paymentViewModel = paymentViewModel,
+                                        paymentMethodViewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onPaymentSuccess = { transactionId ->
+                                            // Refresh main appointment list when payment completes
+                                            hiringViewModel.fetchAppointmentsForCurrentUser()
+                                            navController.popBackStack()
+                                        },
+                                        onPaymentError = { error ->
+                                            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                        }
                                     )
                                 }
 
@@ -455,6 +503,30 @@ class MainActivity : ComponentActivity() {
                                         onAppointmentClick = { appointmentId ->
                                             navController.navigate(Screen.UserAppointmentDetail.createRoute(appointmentId))
                                         }
+                                    )
+                                }
+
+                                composable(route = Screen.PaymentMethod.route) {
+                                    val context = LocalContext.current
+                                    val database = remember { PayMethodDatabase.getDatabase(context) }
+                                    val repository = remember {
+                                        PaymentRepository(
+                                            dao = database.paymentMethodDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+
+                                    val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
+                                        factory = PaymentMethodViewModel.Factory(repository)
+                                    )
+
+                                    // Retrieve current logged-in user ID from your Auth State / Session
+                                    val currentUserId = sharedAuthViewModel.currentUser?.id.orEmpty()
+
+                                    PaymentMethodScreen(
+                                        userId = currentUserId,
+                                        viewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() }
                                     )
                                 }
 

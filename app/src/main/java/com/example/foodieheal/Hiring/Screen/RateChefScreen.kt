@@ -55,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter.State.Empty.painter
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
+import com.example.foodieheal.Hiring.ViewModel.ReviewViewModel
 import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
 
@@ -63,6 +64,7 @@ import com.example.foodieheal.R
 fun RateChefScreen(
     appointmentId: String,
     viewModel: HiringViewModel = viewModel(),
+    reviewViewModel : ReviewViewModel = viewModel(),
     onSubmitSuccess: () -> Unit
 ) {
     val context = LocalContext.current
@@ -251,7 +253,7 @@ fun RateChefScreen(
                     if (appointment == null || rating == 0) return@Button
                     isSubmitting = true
 
-                    viewModel.submitReview(
+                    reviewViewModel.submitReview(
                         appointmentId = appointment.AppointmentID.orEmpty(),
                         rating = rating,
                         comment = comment.trim(),

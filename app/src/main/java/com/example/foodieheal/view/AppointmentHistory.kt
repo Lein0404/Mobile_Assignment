@@ -66,7 +66,7 @@ fun AppointmentHistoryScreen(
 
     // Filter appointments based on selection
     val filteredAppointments = remember(allAppointments, selectedFilter) {
-        when (selectedFilter) {
+        val filtered = when (selectedFilter) {
             AppointmentFilterOption.ALL -> allAppointments
             AppointmentFilterOption.PENDING -> allAppointments.filter { it.Status.equals("pending", ignoreCase = true) }
             AppointmentFilterOption.CONFIRMED -> allAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
@@ -74,6 +74,7 @@ fun AppointmentHistoryScreen(
             AppointmentFilterOption.CANCELLED -> allAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
             AppointmentFilterOption.REJECTED -> allAppointments.filter { it.Status.equals("rejected", ignoreCase = true) }
         }
+        filtered.sortedByDescending { it.created_at }
     }
 
     val isRefreshing = appointmentsState is UserAppointmentsUiState.Loading
