@@ -1,20 +1,14 @@
-package com.example.foodieheal.Hiring.ViewModel
+package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.ReviewWithUser
+import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.hiring.model.ReviewsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-sealed interface ReviewsUiState {
-    object Loading : ReviewsUiState
-    data class Success(val reviews: List<ReviewWithUser>) : ReviewsUiState
-    data class Error(val message: String) : ReviewsUiState
-}
 
 class ReviewViewModel(
     private val repository: HiringRepository = HiringRepository()
@@ -29,10 +23,10 @@ class ReviewViewModel(
         viewModelScope.launch {
             _reviewsState.value = ReviewsUiState.Loading
             try {
-                // Use the new fetchChefReviews method added to HiringRepository
                 val reviews = repository.fetchChefReviews(chefId)
                 _reviewsState.value = ReviewsUiState.Success(reviews)
             } catch (e: Exception) {
+                Log.e("ReviewViewModel", "Error fetching chef reviews", e)
                 _reviewsState.value = ReviewsUiState.Error(
                     e.localizedMessage ?: "Failed to load reviews"
                 )

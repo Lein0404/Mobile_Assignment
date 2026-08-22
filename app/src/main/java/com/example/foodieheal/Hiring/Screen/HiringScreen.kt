@@ -1,6 +1,5 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -34,29 +33,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.AppointmentCard
-import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
-import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
+import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.mobileassignmentloginpart.Model.Chef
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringScreen(
-    hiringViewModel: HiringViewModel = viewModel(),
+    chefListViewModel: ChefListViewModel = viewModel(),
+    userAppointmentViewModel: UserAppointmentViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel(),
     onChefClick: (Chef) -> Unit,
@@ -64,9 +61,9 @@ fun HiringScreen(
 ) {
     val currentUser = authViewModel.currentUser
     val currentUserId = currentUser?.id.orEmpty()
-    val chefs by hiringViewModel.chefList.collectAsStateWithLifecycle()
-    val isLoading by hiringViewModel.isProcessing.collectAsStateWithLifecycle()
-    val errorMessage by hiringViewModel.errorMessage.collectAsStateWithLifecycle()
+    val chefs by chefListViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefListViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefListViewModel.errorMessage.collectAsStateWithLifecycle()
 
     var selectedSortOrder by rememberSaveable { mutableStateOf(RateSortOrder.NONE) }
     var selectedStateFilter by rememberSaveable { mutableStateOf<String?>(null) }
@@ -113,7 +110,7 @@ fun HiringScreen(
     // Fetch all chefs on initial screen launch
     LaunchedEffect(Unit) {
         if (chefs.isEmpty()) {
-            hiringViewModel.fetchAllChefs()
+            chefListViewModel.fetchAllChefs()
         }
     }
 
@@ -121,7 +118,7 @@ fun HiringScreen(
     LaunchedEffect(selectedTabIndex, currentUserId) {
         if (currentUserId.isNotEmpty()) {
             when (selectedTabIndex) {
-                1 -> hiringViewModel.fetchAppointmentsForCurrentUser()
+                1 -> userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                 2 -> bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
             }
         }
@@ -211,7 +208,7 @@ fun HiringScreen(
                             Text(text = errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
-                                onClick = { hiringViewModel.fetchAllChefs() },
+                                onClick = { chefListViewModel.fetchAllChefs() },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Text(stringResource(R.string.btn_retry))
@@ -292,7 +289,7 @@ fun HiringScreen(
 
                 // 1 -> Appointment Tab
                 1 -> {
-                    val state by hiringViewModel.userAppointmentsState.collectAsState()
+                    val state by userAppointmentViewModel.userAppointmentsState.collectAsState()
 
                     when (val currentState = state) {
                         is UserAppointmentsUiState.Loading -> {
@@ -318,7 +315,7 @@ fun HiringScreen(
                                         fontSize = 14.sp
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Button(onClick = { hiringViewModel.fetchAppointmentsForCurrentUser() }) {
+                                    Button(onClick = { userAppointmentViewModel.fetchAppointmentsForCurrentUser() }) {
                                         Text(stringResource(R.string.btn_retry))
                                     }
                                 }
@@ -865,35 +862,3 @@ fun FilterBottomSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-
-
-private val sampleChef = Chef(
-    chefId = "chef_123",
-    id = "1",
-    name = "Gordon Ramsay",
-    email = "gordon@kitchen.com",
-    phoneNumber = "0234567 8900",
-    description = "Passionate executive chef with over 15 years of culinary experience in high-end fine dining and custom home catering.",
-    Pricing = 120.0,
-    experience = 15,
-    averagerating = 4.9,
-    gender = "Male",
-    state = "California",
-    postcode = "90210",
-    address = "123 Culinary Way",
-    status = "approved",
-    profilePictureUrl = "null",
-    age = 50
-)
-
-//@Preview(showBackground = true)
-//@Composable
-//fun HiringChefDetailsPreview() {
-//    MaterialTheme {
-//        HiringChefDetails(
-//            chef = sampleChef,
-//            onBackClick = {},
-//            onBookClick = {}
-//        )
-//    }
-//}

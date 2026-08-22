@@ -1,4 +1,4 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import android.content.Intent
 import android.net.Uri
@@ -57,15 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.ReviewViewModel
-import com.example.foodieheal.Hiring.ViewModel.ReviewsUiState
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.ReviewsUiState
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ReviewViewModel
 import com.example.foodieheal.model.ReviewWithUser
 import com.example.foodieheal.ui.components.DetailSectionCard
-import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,13 +73,11 @@ fun HiringChefDetails(
     userId: String,
     viewModel: BookmarkViewModel = viewModel(),
     reviewViewModel: ReviewViewModel = viewModel(),
+    bookingViewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
     onHireClick: (Chef) -> Unit
 ) {
     val context = LocalContext.current
-    val hiringViewModel: HiringViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel()
-    val user = authViewModel.currentUser
     val currentChefId = chef.chefId.ifEmpty { chef.id }
     val isBookmarked = viewModel.isChefBookmarked(currentChefId)
     val reviewsState by reviewViewModel.reviewsState.collectAsState()
@@ -100,7 +96,7 @@ fun HiringChefDetails(
 
     DisposableEffect(Unit) {
         onDispose {
-            hiringViewModel.clearAppointmentForm()
+            bookingViewModel.clearAppointmentForm()
         }
     }
 
@@ -334,7 +330,7 @@ fun HiringChefDetails(
                 }
             }
 
-            //Review section
+            // Review section
             DetailSectionCard(title = stringResource(R.string.review)) {
                 when (val state = reviewsState) {
                     is ReviewsUiState.Loading -> {
@@ -374,7 +370,6 @@ fun HiringChefDetails(
                     }
                 }
             }
-
         }
     }
 }

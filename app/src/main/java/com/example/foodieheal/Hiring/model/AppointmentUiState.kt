@@ -1,7 +1,4 @@
-package com.example.foodieheal.Hiring.ViewModel
-
-import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+package com.example.foodieheal.hiring.model
 
 sealed interface AppointmentValidationError {
     data object InvalidTime : AppointmentValidationError
@@ -12,22 +9,6 @@ sealed interface AppointmentValidationError {
     data object InvalidServingSize : AppointmentValidationError
     data object InvalidDescription : AppointmentValidationError
 }
-
-sealed interface UserAppointmentsUiState {
-    data object Loading : UserAppointmentsUiState
-    data class Success(
-        val appointments: List<Appointment>,
-        val usersMap: Map<String, User> = emptyMap()
-    ) : UserAppointmentsUiState
-    data class Error(val message: String) : UserAppointmentsUiState
-}
-
-data class ChefAppointmentsUiState(
-    val isLoading: Boolean = false,
-    val appointments: List<Appointment> = emptyList(),
-    val chefUser: User? = null,
-    val errorMessage: String? = null
-)
 
 data class AppointmentUiState(
     val appointmentTime: String = "",

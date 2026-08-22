@@ -1,34 +1,27 @@
-package com.example.foodieheal.Hiring.ViewModel
+package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.hiring.model.AppointmentUiState
+import com.example.foodieheal.hiring.model.AppointmentValidationError
+import com.example.foodieheal.hiring.model.ChefAppointmentsUiState
 import com.example.foodieheal.model.Appointment
 import com.example.mobileassignmentloginpart.Model.Chef
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
-import kotlin.coroutines.cancellation.CancellationException
 
-class HiringViewModel(
+class AppointmentBookingViewModel(
     private val repository: HiringRepository = HiringRepository()
 ) : ViewModel() {
-
-    // --- StateFlow Declarations ---
-    private val _uiState = MutableStateFlow(AppointmentUiState())
-    val uiState: StateFlow<AppointmentUiState> = _uiState.asStateFlow()
-
-    private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
-    val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
-
-    private val _chefAppointmentsState = MutableStateFlow(ChefAppointmentsUiState())
-    val chefAppointmentsState: StateFlow<ChefAppointmentsUiState> = _chefAppointmentsState.asStateFlow()
-
-    private val _chefList = MutableStateFlow<List<Chef>>(emptyList())
-    val chefList: StateFlow<List<Chef>> = _chefList.asStateFlow()
 
     private val _selectedChef = MutableStateFlow<Chef?>(null)
     val selectedChef: StateFlow<Chef?> = _selectedChef.asStateFlow()
@@ -36,28 +29,26 @@ class HiringViewModel(
     private val _selectedDate = MutableStateFlow<LocalDate>(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    private val _selectedTabIndex = MutableStateFlow(0)
-    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+    private val _uiState = MutableStateFlow(AppointmentUiState())
+    val uiState: StateFlow<AppointmentUiState> = _uiState.asStateFlow()
 
-    private val _isProcessing = MutableStateFlow(false)
-    val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _chefAppointmentsState = MutableStateFlow(ChefAppointmentsUiState())
+    val chefAppointmentsState: StateFlow<ChefAppointmentsUiState> = _chefAppointmentsState.asStateFlow()
 
     val currentChefId: String
         get() = selectedChef.value?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
 
-    init {
-        fetchAppointmentsForCurrentUser()
+    fun selectChef(chef: Chef) {
+        _selectedChef.value = chef
     }
 
-    // --- Selection & Form Handlers ---
+    fun updateSelectedDate(date: LocalDate) {
+        _selectedDate.value = date
+    }
 
-    fun onTabSelected(index: Int) { _selectedTabIndex.value = index }
-    fun selectChef(chef: Chef) { _selectedChef.value = chef }
-    fun updateSelectedDate(date: LocalDate) { _selectedDate.value = date }
-    fun clearSelectedChef() { _selectedChef.value = null }
+    fun clearSelectedChef() {
+        _selectedChef.value = null
+    }
 
     fun onAppointmentTimeChanged(time: String) {
         _uiState.update { it.copy(appointmentTime = time) }
@@ -96,10 +87,28 @@ class HiringViewModel(
 
     fun clearAppointmentForm() {
         _uiState.value = AppointmentUiState()
-        _errorMessage.value = null
     }
 
-    // --- Validation Logic ---
+    fun fetchAppointmentsForChef(chefId: String) {
+        if (chefId.isBlank()) return
+        viewModelScope.launch {
+            _chefAppointmentsState.update { it.copy(isLoading = true) }
+            try {
+                val (appointments, chefUser) = repository.fetchChefAppointments(chefId)
+                _chefAppointmentsState.value = ChefAppointmentsUiState(
+                    isLoading = false,
+                    appointments = appointments,
+                    chefUser = chefUser
+                )
+            } catch (e: Exception) {
+                Log.e("BookingViewModel", "Error fetching appointments for chef $chefId", e)
+                _chefAppointmentsState.value = ChefAppointmentsUiState(
+                    isLoading = false,
+                    errorMessage = e.localizedMessage ?: "Failed to load details"
+                )
+            }
+        }
+    }
 
     private fun validateTimeSlot(timeSlot: String) {
         val isOccupied = checkTimeSlotOverlap(timeSlot)
@@ -124,7 +133,7 @@ class HiringViewModel(
         }
     }
 
-    private fun checkTimeSlotOverlap(
+    fun checkTimeSlotOverlap(
         timeSlot: String,
         targetDateStr: String? = null,
         currentAppointmentId: String? = null
@@ -267,73 +276,6 @@ class HiringViewModel(
         }
     }
 
-    // --- Business Actions Calling Repository ---
-
-    fun fetchAllChefs() {
-        viewModelScope.launch {
-            _isProcessing.value = true
-            _errorMessage.value = null
-
-            try {
-                _chefList.value = repository.fetchAllChefs()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.e("HiringViewModel", "Error fetching chefs list", e)
-                _errorMessage.value = e.message ?: "Failed to fetch chef profiles"
-            } finally {
-                _isProcessing.value = false
-            }
-        }
-    }
-
-    fun fetchAppointmentsForCurrentUser() {
-        viewModelScope.launch {
-            _userAppointmentsState.value = UserAppointmentsUiState.Loading
-            try {
-                val currentUserId = repository.getCurrentUserId()
-                if (currentUserId.isNullOrEmpty()) {
-                    _userAppointmentsState.value = UserAppointmentsUiState.Error("User not logged in.")
-                    return@launch
-                }
-
-                val appointments = repository.fetchAppointmentsForUser(currentUserId)
-                val chefsMap = repository.fetchChefsMapForAppointments(appointments)
-
-                _userAppointmentsState.value = UserAppointmentsUiState.Success(
-                    appointments = appointments,
-                    usersMap = chefsMap
-                )
-            } catch (e: Exception) {
-                Log.e("HiringViewModel", "Error fetching user appointments", e)
-                _userAppointmentsState.value = UserAppointmentsUiState.Error(
-                    e.localizedMessage ?: "Failed to load appointments"
-                )
-            }
-        }
-    }
-
-    fun fetchAppointmentsForChef(chefId: String) {
-        if (chefId.isBlank()) return
-        viewModelScope.launch {
-            _chefAppointmentsState.update { it.copy(isLoading = true) }
-            try {
-                val (appointments, chefUser) = repository.fetchChefAppointments(chefId)
-                _chefAppointmentsState.value = ChefAppointmentsUiState(
-                    isLoading = false,
-                    appointments = appointments,
-                    chefUser = chefUser
-                )
-            } catch (e: Exception) {
-                Log.e("HiringViewModel", "Error fetching appointments for chef $chefId", e)
-                _chefAppointmentsState.value = ChefAppointmentsUiState(
-                    isLoading = false,
-                    errorMessage = e.localizedMessage ?: "Failed to load details"
-                )
-            }
-        }
-    }
-
     fun createAppointment(
         userId: String,
         chefId: String,
@@ -377,67 +319,6 @@ class HiringViewModel(
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSubmitting = false) }
                 onError(e.localizedMessage ?: "An error occurred while creating appointment")
-            }
-        }
-    }
-
-    fun updateAppointmentStatus(
-        appointmentId: String,
-        newStatus: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            try {
-                repository.updateAppointmentStatus(appointmentId, newStatus)
-                fetchAppointmentsForCurrentUser()
-                onSuccess()
-            } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to update appointment status")
-            }
-        }
-    }
-
-    fun cancelAppointment(
-        appointmentId: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        updateAppointmentStatus(
-            appointmentId = appointmentId,
-            newStatus = "Cancelled",
-            onSuccess = onSuccess,
-            onError = { rawError ->
-                val ErrorMessage = "Failed to cancel appointment: $rawError"
-                onError(ErrorMessage)
-            }
-        )
-    }
-
-
-    fun rescheduleAppointment(
-        appointmentId: String,
-        newDate: String,
-        newStartTime: String,
-        newEndTime: String,
-        newAddress: String,
-        newPostcode: String,
-        newState: String,
-        newServingSize: Int,
-        newDescription: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            try {
-                repository.rescheduleAppointment(
-                    appointmentId, newDate, newStartTime, newEndTime,
-                    newAddress, newPostcode, newState, newServingSize, newDescription
-                )
-                fetchAppointmentsForCurrentUser()
-                onSuccess()
-            } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to reschedule appointment")
             }
         }
     }

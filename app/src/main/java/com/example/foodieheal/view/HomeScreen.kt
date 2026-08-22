@@ -25,8 +25,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
@@ -35,7 +35,7 @@ import com.example.mobileassignmentloginpart.Model.Chef
 fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefClick : (Chef) -> Unit) {
 
     val bookmarkViewModel: BookmarkViewModel = viewModel()
-    val chefViewModel : HiringViewModel = viewModel()
+    val chefViewModel : ChefListViewModel = viewModel()
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary

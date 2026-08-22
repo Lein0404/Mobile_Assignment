@@ -46,23 +46,24 @@ import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
 import com.example.foodieheal.Chef.Register.*
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
-import com.example.foodieheal.Hiring.Screen.HiringAppointment
-import com.example.foodieheal.Hiring.Screen.HiringChefDetails
-import com.example.foodieheal.Hiring.Screen.HiringScreen
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.hiring.screen.HiringAppointment
+import com.example.foodieheal.hiring.screen.HiringChefDetails
+import com.example.foodieheal.hiring.screen.HiringScreen
+import com.example.foodieheal.hiring.screen.AddAppointmentFormScreen
+import com.example.foodieheal.hiring.screen.AppointmentReviewScreen
+import com.example.foodieheal.hiring.screen.RateChefScreen
+import com.example.foodieheal.hiring.screen.RescheduleAppointmentScreen
+import com.example.foodieheal.hiring.screen.UserAppointmentDetailScreen
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.local.HiringDatabase
+import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.hiring.data.BookmarkRepository
 import com.example.foodieheal.Admin.AdminIngredientDetailScreen
 import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
 import com.example.foodieheal.Admin.AdminIngredientsScreen
-import com.example.foodieheal.Hiring.Screen.AddAppointmentFormScreen
-import com.example.foodieheal.Hiring.Screen.AppointmentReviewScreen
-import com.example.foodieheal.Hiring.Screen.RateChefScreen
-import com.example.foodieheal.Hiring.Screen.RescheduleAppointmentScreen
-import com.example.foodieheal.Hiring.Screen.UserAppointmentDetailScreen
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.Payment.Screen.PaymentScreen
 import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
@@ -156,7 +157,46 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 )
-                val hiringViewModel: HiringViewModel = viewModel()
+                val context = LocalContext.current
+                val hiringDb = remember { HiringDatabase.getInstance(context) }
+                val hiringRepo = remember {
+                    HiringRepository(
+                        chefDao = hiringDb.chefDao(),
+                        appointmentDao = hiringDb.appointmentDao(),
+                        reviewDao = hiringDb.chefReviewDao()
+                    )
+                }
+                val bookmarkRepo = remember {
+                    BookmarkRepository(
+                        bookmarkDao = hiringDb.chefBookmarkDao(),
+                        chefDao = hiringDb.chefDao()
+                    )
+                }
+
+                val chefListViewModel: ChefListViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = ChefListViewModel(hiringRepo) as T
+                    }
+                )
+                val bookingViewModel: AppointmentBookingViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = AppointmentBookingViewModel(hiringRepo) as T
+                    }
+                )
+                val userAppointmentViewModel: UserAppointmentViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = UserAppointmentViewModel(hiringRepo) as T
+                    }
+                )
+                val bookmarkViewModel: BookmarkViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = BookmarkViewModel(bookmarkRepo) as T
+                    }
+                )
                 val chefViewModel: ChefRegisterViewModel = viewModel()
 
                 // 🌟 FIX: The curtain strategy. Content loads first, Splash sits on top.
@@ -241,8 +281,9 @@ class MainActivity : ComponentActivity() {
                                         navController,
                                         sharedAuthViewModel,
                                         onChefClick = { chef ->
-                                            hiringViewModel.selectChef(chef)
-                                            val chefId = chef.chefId ?: chef.id
+                                            chefListViewModel.selectChef(chef)
+                                            bookingViewModel.selectChef(chef)
+                                            val chefId = chef.chefId.ifEmpty { chef.id }
                                             navController.navigate("${Screen.HiringChefDetails.route}/$chefId") {
                                                 launchSingleTop = true
                                             }
@@ -300,12 +341,14 @@ class MainActivity : ComponentActivity() {
                                 composable(Screen.Hiring.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                                         HiringScreen(
-                                            hiringViewModel = hiringViewModel,
+                                            chefListViewModel = chefListViewModel,
+                                            userAppointmentViewModel = userAppointmentViewModel,
                                             authViewModel = sharedAuthViewModel,
+                                            bookmarkViewModel = bookmarkViewModel,
                                             onChefClick = { chef ->
-                                                hiringViewModel.selectChef(chef)
-                                                // Access chefId (or chef.id depending on your model definition)
-                                                val chefId = chef.chefId ?: chef.id
+                                                chefListViewModel.selectChef(chef)
+                                                bookingViewModel.selectChef(chef)
+                                                val chefId = chef.chefId.ifEmpty { chef.id }
                                                 navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
                                             },
                                             onAppointmentClick = { appointment ->
@@ -322,19 +365,19 @@ class MainActivity : ComponentActivity() {
                                 ) { backStackEntry ->
                                     val chefId = backStackEntry.arguments?.getString("chefId").orEmpty()
                                     val userId = sharedAuthViewModel.currentUser?.id.orEmpty()
-                                    val profileVM: BookmarkViewModel = viewModel()
 
                                     // Collect the StateFlow properly as Compose state
-                                    val selectedChefState by hiringViewModel.selectedChef.collectAsStateWithLifecycle()
+                                    val selectedChefState by bookingViewModel.selectedChef.collectAsStateWithLifecycle()
 
                                     // Match selected chef against the route argument
-                                    val chef = selectedChefState?.takeIf { (it.chefId ?: it.id) == chefId }
+                                    val chef = selectedChefState?.takeIf { (it.chefId.ifEmpty { it.id }) == chefId }
 
                                     if (chef != null) {
                                         HiringChefDetails(
                                             chef = chef,
                                             userId = userId,
-                                            viewModel = profileVM,
+                                            viewModel = bookmarkViewModel,
+                                            bookingViewModel = bookingViewModel,
                                             onBackClick = { navController.popBackStack() },
                                             onHireClick = {
                                                 navController.navigate("${Screen.HiringAppointment.route}/$chefId")
@@ -353,15 +396,16 @@ class MainActivity : ComponentActivity() {
                                     val chefId = backStackEntry.arguments?.getString("chefId").orEmpty()
 
                                     // Collect the StateFlow properly as Compose state
-                                    val selectedChefState by hiringViewModel.selectedChef.collectAsStateWithLifecycle()
-                                    val chef = selectedChefState?.takeIf { (it.chefId ?: it.id) == chefId }
+                                    val selectedChefState by bookingViewModel.selectedChef.collectAsStateWithLifecycle()
+                                    val chef = selectedChefState?.takeIf { (it.chefId.ifEmpty { it.id }) == chefId }
 
                                     if (chef != null) {
                                         HiringAppointment(
                                             chef = chef,
+                                            bookingViewModel = bookingViewModel,
                                             onBackClick = { navController.popBackStack() },
                                             onAddAppointmentClick = { chosenDate ->
-                                                hiringViewModel.updateSelectedDate(chosenDate)
+                                                bookingViewModel.updateSelectedDate(chosenDate)
                                                 navController.navigate(Screen.AddHiringAppointment.route)
                                             }
                                         )
@@ -374,7 +418,7 @@ class MainActivity : ComponentActivity() {
 
                                 composable(Screen.AddHiringAppointment.route) {
                                     AddAppointmentFormScreen(
-                                        viewModel = hiringViewModel, // PASS SHARED VIEWMODEL
+                                        viewModel = bookingViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onSuccessConfirm = {
                                             navController.navigate(Screen.AppointmentReview.route)
@@ -384,7 +428,8 @@ class MainActivity : ComponentActivity() {
 
                                 composable(Screen.AppointmentReview.route) {
                                     AppointmentReviewScreen(
-                                        viewModel = hiringViewModel,
+                                        viewModel = bookingViewModel,
+                                        authViewModel = sharedAuthViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onFinalConfirm = {
                                             navController.popBackStack(Screen.Home.route, inclusive = false)
@@ -400,7 +445,7 @@ class MainActivity : ComponentActivity() {
 
                                     UserAppointmentDetailScreen(
                                         appointmentId = appointmentId,
-                                        viewModel = hiringViewModel,
+                                        viewModel = userAppointmentViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onRescheduleClick = { appointment ->
                                             navController.navigate(Screen.RescheduleAppointment.createRoute(appointment.AppointmentID.orEmpty()))
@@ -442,7 +487,7 @@ class MainActivity : ComponentActivity() {
                                         onBackClick = { navController.popBackStack() },
                                         onPaymentSuccess = { transactionId ->
                                             // Refresh main appointment list when payment completes
-                                            hiringViewModel.fetchAppointmentsForCurrentUser()
+                                            userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                                             navController.popBackStack()
                                         },
                                         onPaymentError = { error ->
@@ -461,7 +506,7 @@ class MainActivity : ComponentActivity() {
 
                                     RateChefScreen(
                                         appointmentId = appointmentId,
-                                        viewModel = hiringViewModel,
+                                        userViewModel = userAppointmentViewModel,
                                         onSubmitSuccess = {
                                             navController.popBackStack()
                                         }
@@ -476,7 +521,8 @@ class MainActivity : ComponentActivity() {
 
                                     RescheduleAppointmentScreen(
                                         appointmentId = appointmentId,
-                                        viewModel = hiringViewModel,
+                                        userViewModel = userAppointmentViewModel,
+                                        bookingViewModel = bookingViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onRescheduleSuccess = {
                                             navController.popBackStack()
@@ -498,7 +544,7 @@ class MainActivity : ComponentActivity() {
 
                                 composable(Screen.AppoinmtmentHistory.route) {
                                     AppointmentHistoryScreen(
-                                        viewModel = hiringViewModel,
+                                        viewModel = userAppointmentViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onAppointmentClick = { appointmentId ->
                                             navController.navigate(Screen.UserAppointmentDetail.createRoute(appointmentId))

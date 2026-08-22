@@ -1,9 +1,6 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import android.R.attr.timeZone
-import android.widget.TimePicker
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,9 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -62,30 +56,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.Chef.States
-import com.example.foodieheal.Hiring.ViewModel.AppointmentValidationError
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.AppointmentValidationError
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.ui.components.TimePickerDialog
-import java.util.TimeZone
 import java.text.SimpleDateFormat
-import java.time.ZoneId
-import kotlin.time.ExperimentalTime
-import java.time.Instant
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RescheduleAppointmentScreen(
     appointmentId: String,
-    viewModel: HiringViewModel = viewModel(),
+    userViewModel: UserAppointmentViewModel = viewModel(),
+    bookingViewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
     onRescheduleSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val appointmentsState by viewModel.userAppointmentsState.collectAsState()
+    val appointmentsState by userViewModel.userAppointmentsState.collectAsState()
 
     // Find target appointment
     val appointment = (appointmentsState as? UserAppointmentsUiState.Success)
@@ -101,7 +94,7 @@ fun RescheduleAppointmentScreen(
 
     LaunchedEffect(appointment.chefId) {
         appointment.chefId?.let { chefId ->
-            viewModel.fetchAppointmentsForChef(chefId)
+            bookingViewModel.fetchAppointmentsForChef(chefId)
         }
     }
 
@@ -130,7 +123,7 @@ fun RescheduleAppointmentScreen(
 
     LaunchedEffect(selectedDate, startTime, endTime) {
         if (hasAttemptedSubmit) {
-            val errors = viewModel.validateFormValues(
+            val errors = bookingViewModel.validateFormValues(
                 appointmentTime = "$startTime - $endTime",
                 address = address,
                 postcode = postcode,
@@ -397,7 +390,7 @@ fun RescheduleAppointmentScreen(
                 onClick = {
                     hasAttemptedSubmit = true
 
-                    viewModel.rescheduleAppointment(
+                    userViewModel.rescheduleAppointment(
                         appointmentId = appointment.AppointmentID.orEmpty(),
                         newDate = selectedDate,
                         newStartTime = startTime,

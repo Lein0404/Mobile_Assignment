@@ -44,7 +44,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.repository.RecipeRepository
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

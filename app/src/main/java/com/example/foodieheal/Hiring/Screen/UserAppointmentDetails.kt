@@ -1,4 +1,4 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -29,12 +29,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,9 +51,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.DetailRow
@@ -65,22 +63,21 @@ import java.util.Locale
 @Composable
 fun UserAppointmentDetailScreen(
     appointmentId: String,
-    viewModel: HiringViewModel = viewModel(),
+    viewModel: UserAppointmentViewModel = viewModel(),
     onBackClick: () -> Unit,
     onRescheduleClick: (Appointment) -> Unit,
-    onPayClick: (Appointment) -> Unit, // Callback to navigate to payment screen
+    onPayClick: (Appointment) -> Unit,
     onRatingClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     val appointmentsState by viewModel.userAppointmentsState.collectAsStateWithLifecycle()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Extract appointment and users map from State
     val successState = appointmentsState as? UserAppointmentsUiState.Success
     val appointment = successState?.appointments?.find { it.AppointmentID?.trim() == appointmentId.trim() }
 
     // Grab matching Chef User details from usersMap
-    val chefUser = appointment?.let { successState?.usersMap?.get(it.chefId) }
+    val chefUser = appointment?.let { successState.usersMap[it.chefId] }
 
     var showCancelDialog by remember { mutableStateOf(false) }
     var showCompleteDialog by remember { mutableStateOf(false) }
