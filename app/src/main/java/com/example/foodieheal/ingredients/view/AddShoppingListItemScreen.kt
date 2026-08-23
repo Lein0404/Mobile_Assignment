@@ -86,9 +86,9 @@ fun AddShoppingListItemScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l))
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                 // Search Bar
                 OutlinedTextField(
@@ -101,7 +101,7 @@ fun AddShoppingListItemScreen(
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                     trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -109,23 +109,23 @@ fun AddShoppingListItemScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
                 Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
 
                 // Categories chips
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
                     items(IngredientCategory.entries) { category ->
                         FilterChip(
                             selected = uiState.selectedCategories.contains(category),
                             onClick = { ingredientsViewModel.toggleCategory(category) },
                             label = { Text(category.categoryName, style = MaterialTheme.typography.bodyMedium) },
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_md)),
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                 if (uiState.isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -138,7 +138,7 @@ fun AddShoppingListItemScreen(
                 } else {
                     val grouped = uiState.filteredIngredients.groupBy { it.ingredient.ingredientCategory ?: IngredientCategory.OTHERS }
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         grouped.forEach { (category, items) ->
@@ -174,7 +174,7 @@ fun AddShoppingListItemScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = dimensionResource(id = R.dimen.padding_l)),
                 verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
@@ -198,7 +198,7 @@ fun AddShoppingListItemScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                        .padding(horizontal = dimensionResource(id = R.dimen.padding_l), vertical = dimensionResource(id = R.dimen.padding_l)),
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -227,20 +227,20 @@ fun SelectableIngredientCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onToggleSelection() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(dimensionResource(id = R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
                     text = item.ingredient.ingredientName,

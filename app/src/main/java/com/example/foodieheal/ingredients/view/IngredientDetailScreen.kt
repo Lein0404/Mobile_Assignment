@@ -197,7 +197,7 @@ fun IngredientDetailScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(dimensionResource(id = R.dimen.padding_l))
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -220,7 +220,7 @@ fun IngredientDetailScreen(
                                     )
                                     
                                     if (isRequest) {
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                                         StatusBadge(status = requestDetail?.request?.requestStatus ?: Status.PENDING)
                                     }
                                 }
@@ -262,7 +262,7 @@ fun IngredientDetailScreen(
                             }
 
                             HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 16.dp), 
+                                modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_l)), 
                                 thickness = 1.dp, 
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -273,16 +273,17 @@ fun IngredientDetailScreen(
                                 color = Color.Black,
                             )
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
 
                             Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
+                            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                             Text(
                                 text = displayData.calorieInfo?.ifEmpty { stringResource(R.string.ingredient_detail_no_calorie_info) } ?: stringResource(R.string.ingredient_detail_no_calorie_info),
                                 color = Color.Black
                             )
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
-                                Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
                                 Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
                                     text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
@@ -291,7 +292,7 @@ fun IngredientDetailScreen(
                             }
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
                                 Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Text(
                                     text = requestDetail?.request?.adminNote ?: "",
@@ -308,7 +309,7 @@ fun IngredientDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 16.dp),
+                            .padding(bottom = dimensionResource(id = R.dimen.padding_l)),
                         verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
@@ -316,8 +317,8 @@ fun IngredientDetailScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    .padding(dimensionResource(id = R.dimen.padding_l)),
+                                horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                             ) {
                                 Button(
                                     onClick = { showDeleteDialog = true },
@@ -378,10 +379,10 @@ fun ImagePlaceholder() {
         Icon(
             painter = painterResource(R.drawable.ic_no_image_available),
             contentDescription = null,
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
             tint = Color.Gray
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
         Text(stringResource(R.string.image_unavailable), color = Color.Gray)
     }
 }

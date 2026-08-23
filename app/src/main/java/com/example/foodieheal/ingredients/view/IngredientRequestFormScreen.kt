@@ -17,11 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
@@ -141,10 +141,10 @@ fun IngredientRequestFormScreen(
                         Icon(
                             painter = painterResource(R.drawable.wifi_off),
                             contentDescription = null,
-                            modifier = Modifier.size(70.dp),
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
                             tint = Color.Gray
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                         Text(
                             text = stringResource(R.string.ingredient_form_online_required),
                             color = Color.Gray,
@@ -157,12 +157,12 @@ fun IngredientRequestFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .padding(dimensionResource(id = R.dimen.padding_l))
                         .imePadding(), // prevent keyboard from hiding input box
                 ) {
                     // 1. Cloudinary Upload
                     CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 2. Ingredient Name
                     CommonInputField(
@@ -177,14 +177,14 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 3. Ingredient Category
                     LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = dimensionResource(id = R.dimen.padding_xxsm)),
                         title = stringResource(R.string.category),
                         fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
                         selectedOption = formState.category,
@@ -201,7 +201,7 @@ fun IngredientRequestFormScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(enabled = itemEnabled, onClick = onClick)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l), vertical = dimensionResource(id = R.dimen.padding_md))
                             ) {
                                 Text(
                                     text = item.categoryName,
@@ -222,17 +222,19 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 4. Description
                     CommonInputField(
                         value = formState.description,
                         onValueChange = { viewModel.updateFormDescription(it) },
                         textId = R.string.description,
-                        modifier = Modifier.height(200.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .height(dimensionResource(R.dimen.large_OutlinedTextField_size))
+                            .fillMaxWidth(),
                         singleLine = false,
                         maxLines = 8,
                         isError = formState.descriptionError != null
@@ -242,10 +244,10 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 5. Calorie Information (Dynamic Rows)
                     Text(
@@ -258,10 +260,10 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
 
                     if (availableUnits.isNotEmpty()) {
                         formState.unitRows.forEachIndexed { index, row ->
@@ -280,14 +282,16 @@ fun IngredientRequestFormScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 16.dp),
+                                .padding(vertical = dimensionResource(id = R.dimen.padding_l)),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_large_size))
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                     TextButton(
                         onClick = { viewModel.addUnitRow() },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -295,12 +299,12 @@ fun IngredientRequestFormScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_smd))
                         ){
                             Icon(
                                 painter = painterResource(R.drawable.ic_outline_add),
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
                             )
                             Text(stringResource(R.string.ingredient_form_add_unit))
                         }
@@ -311,11 +315,11 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(R.dimen.padding_xxsm))
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                     val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
                     val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
                     PrimaryButton(
@@ -347,7 +351,7 @@ fun IngredientRequestFormScreen(
                         enabled = !formState.isSubmitting
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
                 }
             }
 
@@ -380,8 +384,8 @@ fun UnitRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(bottom = dimensionResource(id = R.dimen.padding_xsm)),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
         verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -405,7 +409,7 @@ fun UnitRow(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(enabled = itemEnabled, onClick = onClick)
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .padding(horizontal = dimensionResource(id = R.dimen.padding_l), vertical = dimensionResource(id = R.dimen.padding_md))
                     ) {
                         Text(
                             text = item.unitName,
@@ -425,7 +429,7 @@ fun UnitRow(
                     text = stringResource(unitError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                 )
             }
         }
@@ -457,7 +461,7 @@ fun UnitRow(
                     ) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = caloriesError != null,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(dimensionResource(id = R.dimen.padding_smd)),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -472,14 +476,14 @@ fun UnitRow(
                     text = stringResource(caloriesError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                 )
             }
         }
 
         if (onRemove != null) {
-            IconButton(onClick = onRemove, modifier = Modifier.padding(top = 16.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.ingredient_form_remove_unit),)
+            IconButton(onClick = onRemove, modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_l))) {
+                Icon(painter = painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.ingredient_form_remove_unit))
             }
         }
     }

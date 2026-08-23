@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,9 +32,7 @@ import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModel
 import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.model.Ingredients
 import com.example.foodieheal.ingredients.view.IngredientsExistingScreen
-import com.example.foodieheal.ingredients.viewModel.IngredientsUiState
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ui.components.StatusBadge
@@ -101,7 +100,11 @@ fun AdminIngredientsScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .statusBarsPadding()
-                            .padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
+                            .padding(
+                                start = dimensionResource(id = R.dimen.corner_radius_md),
+                                top = dimensionResource(id = R.dimen.padding_l),
+                                bottom = dimensionResource(id = R.dimen.padding_md)
+                            )
                     )
                     
                     TabRow(
@@ -176,13 +179,13 @@ fun AdminIngredientsScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape,
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(dimensionResource(id = R.dimen.padding_l))
                     .align(Alignment.BottomEnd)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
                     contentDescription = stringResource(R.string.admin_fab_add_ingredient),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(dimensionResource(id = R.dimen.padding_xxl))
                 )
             }
         }
@@ -196,23 +199,23 @@ fun AdminOfflineMessage() {
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(id = R.dimen.padding_xxl)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.wifi_off),
                 contentDescription = stringResource(R.string.desc_no_network),
                 tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(70.dp)
+                modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size))
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
             Text(
                 text = stringResource(R.string.title_no_internet),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
             Text(
                 text = stringResource(R.string.admin_offline_manage_message),
                 style = MaterialTheme.typography.titleMedium,
@@ -236,9 +239,9 @@ fun AdminIngredientRequestsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = dimensionResource(id = R.dimen.padding_l))
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
         // 1. Search Bar
         OutlinedTextField(
@@ -249,11 +252,11 @@ fun AdminIngredientRequestsScreen(
                 style = MaterialTheme.typography.labelLarge
             ) },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
             trailingIcon = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = 12.dp)
+                    modifier = Modifier.padding(end = dimensionResource(id = R.dimen.padding_md))
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_filter_alt),
@@ -265,7 +268,7 @@ fun AdminIngredientRequestsScreen(
                                 showStatusFilterDialog = true
                             }
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
                         contentDescription = null,
@@ -283,23 +286,23 @@ fun AdminIngredientRequestsScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
         Text(stringResource(R.string.admin_categories_header), fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
 
         // 2. Category Chips
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
             items(IngredientCategory.entries) { category ->
                 FilterChip(
                     selected = uiState.selectedCategories.contains(category),
                     onClick = { viewModel.toggleCategory(category) },
                     label = { Text(category.categoryName) },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
         if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -309,7 +312,7 @@ fun AdminIngredientRequestsScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = stringResource(uiState.errorMessage!!), color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                     Button(onClick = { viewModel.fetchRequests() }) {
                         Text(stringResource(R.string.btn_retry))
                     }
@@ -328,7 +331,7 @@ fun AdminIngredientRequestsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     grouped.forEach { (category, items) ->
@@ -341,7 +344,7 @@ fun AdminIngredientRequestsScreen(
                             }
                         }
                     }
-                    item { Spacer(modifier = Modifier.height(32.dp)) }
+                    item { Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl))) }
                 }
             }
         }
@@ -365,13 +368,13 @@ fun AdminIngredientRequestsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { tempSelectedStatus = status }
-                                .padding(vertical = 4.dp)
+                                .padding(vertical = dimensionResource(id = R.dimen.padding_xsm))
                         ) {
                             RadioButton(
                                 selected = tempSelectedStatus == status,
                                 onClick = { tempSelectedStatus = status }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
                             Text(text = label)
                         }
                     }
@@ -402,20 +405,20 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(dimensionResource(id = R.dimen.padding_l))
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
                     text = item.request.ingredientName,

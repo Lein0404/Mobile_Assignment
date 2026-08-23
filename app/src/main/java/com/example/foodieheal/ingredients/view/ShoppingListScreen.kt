@@ -19,12 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
@@ -83,13 +83,13 @@ fun ShoppingListScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     modifier = Modifier
-                        .size(64.dp)
-                        .offset(y = (-32).dp)
+                        .size(dimensionResource(R.dimen.icon_xlarge_size))
+                        .offset(y = (-dimensionResource(id = R.dimen.padding_xxl)))
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_horiz_more),
                         contentDescription = stringResource(R.string.shopping_list_options),
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(dimensionResource(R.dimen.padding_xxl))
                     )
                 }
 
@@ -156,9 +156,9 @@ fun ShoppingListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = dimensionResource(R.dimen.padding_l))
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
 
             // Search Bar
             OutlinedTextField(
@@ -166,7 +166,7 @@ fun ShoppingListScreen(
                 onValueChange = { viewModel.onSearchQueryChange(it) },
                 placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), style = MaterialTheme.typography.bodyMedium) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
                 trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -174,26 +174,28 @@ fun ShoppingListScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
             Text(
                 stringResource(R.string.shopping_list_categories),
                 fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_smd)))
 
             // Categories chips
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_smd))
+            ) {
                 items(IngredientCategory.entries) { category ->
                     FilterChip(
                         selected = uiState.selectedCategories.contains(category),
                         onClick = { viewModel.toggleCategory(category) },
                         label = { Text(category.categoryName, style = MaterialTheme.typography.bodyMedium) },
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_md)),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -211,7 +213,7 @@ fun ShoppingListScreen(
             } else {
                 val grouped = uiState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_l)),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     grouped.forEach { (category, items) ->
@@ -229,7 +231,7 @@ fun ShoppingListScreen(
                             }
                         }
                     }
-                    item { Spacer(modifier = Modifier.height(32.dp)) } // Space for FAB
+                    item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xxl))) } // Space for FAB
                 }
             }
         }
@@ -291,20 +293,20 @@ fun ShoppingListItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.padding_xsm)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(dimensionResource(R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_sm))
             ) {
                 Text(
                     text = item.entity.ingredientName,

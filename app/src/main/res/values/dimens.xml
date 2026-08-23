@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="padding_xxl">35dp</dimen>
-    <dimen name="padding_xl">30dp</dimen>
+    <dimen name="padding_xxxl">35dp</dimen>
+    <dimen name="padding_xxl">32dp</dimen>
+    <dimen name="padding_xl">24dp</dimen>
     <dimen name="padding_l">16dp</dimen>
     <dimen name="padding_md">12dp</dimen>
-    <dimen name="padding_sm">6dp</dimen> <!-- new -->
+    <dimen name="padding_smd">8dp</dimen> 
+    <dimen name="padding_sm">6dp</dimen> 
     <dimen name="padding_xsm">4dp</dimen>
-    <dimen name="padding_xxsm">2dp</dimen> <!-- new -->
+    <dimen name="padding_xxsm">2dp</dimen> 
+    <dimen name="corner_radius_md">20dp</dimen> 
     <dimen name="corner_radius_sm">12dp</dimen>
     <dimen name="bottom_nav_icon_size">24dp</dimen>
+    <dimen name="icon_xlarge_size">64dp</dimen>
     <dimen name="icon_large_size">24dp</dimen>
     <dimen name="icon_medium_size">20dp</dimen>
     <dimen name="icon_small_size">16dp</dimen>
+    <dimen name="large_OutlinedTextField_size">200dp</dimen>
 </resources>

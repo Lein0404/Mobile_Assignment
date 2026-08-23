@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -129,16 +129,16 @@ fun AdminIngredientRequestFormScreen(
                         Icon(
                             painter = painterResource(R.drawable.wifi_off),
                             contentDescription = null,
-                            modifier = Modifier.size(70.dp),
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
                             tint = Color.Gray
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                         Text(
                             text = stringResource(R.string.admin_add_offline_message),
                             color = Color.Gray,
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 32.dp)
+                            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_xxl))
                         )
                     }
                 }
@@ -147,12 +147,12 @@ fun AdminIngredientRequestFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .padding(dimensionResource(id = R.dimen.padding_l))
                         .imePadding(),
                 ) {
                     // 1. Cloudinary Upload
                     CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 2. Ingredient Name
                     CommonInputField(
@@ -167,14 +167,14 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 3. Category
                     LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = dimensionResource(id = R.dimen.padding_xxsm)),
                         title = stringResource(R.string.category),
                         fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
                         selectedOption = formState.category,
@@ -191,7 +191,7 @@ fun AdminIngredientRequestFormScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(enabled = itemEnabled, onClick = onClick)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l), vertical = dimensionResource(id = R.dimen.padding_md))
                             ) {
                                 Text(
                                     text = item.categoryName,
@@ -212,17 +212,19 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 4. Description
                     CommonInputField(
                         value = formState.description,
                         onValueChange = { viewModel.updateFormDescription(it) },
                         textId = R.string.description,
-                        modifier = Modifier.height(200.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .height(dimensionResource(R.dimen.large_OutlinedTextField_size))
+                            .fillMaxWidth(),
                         singleLine = false,
                         maxLines = 8,
                         isError = formState.descriptionError != null
@@ -232,10 +234,10 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                     // 5. Calorie Information
                     Text(
@@ -248,10 +250,10 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
 
                     if (availableUnits.isNotEmpty()) {
                         formState.unitRows.forEachIndexed { index, row ->
@@ -270,32 +272,34 @@ fun AdminIngredientRequestFormScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 16.dp),
+                                .padding(vertical = dimensionResource(id = R.dimen.padding_l)),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_large_size))
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                     TextButton(
                         onClick = { viewModel.addUnitRow() },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
                         ){
                             Icon(
                                 painter = painterResource(R.drawable.ic_outline_add),
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
                             )
                             Text(stringResource(R.string.ingredient_form_add_unit))
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                     val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
                     PrimaryButton(
                         modifier = Modifier.fillMaxWidth(),
@@ -309,7 +313,7 @@ fun AdminIngredientRequestFormScreen(
                         textID = R.string.admin_approve_ingredient_request,
                         enabled = !formState.isSubmitting && requestDetail != null && !isLoading
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
                 }
             }
 
@@ -399,7 +403,7 @@ fun ApproveRequestDialog(
         title = { Text(stringResource(R.string.admin_approve_request_dialog_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
             ) {
                 Text(
                     text = stringResource(R.string.admin_approve_request_dialog_warning),

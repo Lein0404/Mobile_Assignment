@@ -148,7 +148,7 @@ fun AdminIngredientDetailScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
+                                    .padding(dimensionResource(id = R.dimen.padding_l))
                             ) {
                                 // 2. Title & Category
                                 Text(
@@ -162,11 +162,11 @@ fun AdminIngredientDetailScreen(
                                     style = MaterialTheme.typography.labelLarge,
                                     color = Color.Gray,
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                                 StatusBadge(status = request.requestStatus)
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_l)),
                                     thickness = 1.dp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -178,11 +178,11 @@ fun AdminIngredientDetailScreen(
                                     color = Color.Black,
                                 )
 
-                                Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
 
                                 // 4. Calorie Information
                                 Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     text = info.calorieSummary.ifEmpty { stringResource(R.string.admin_detail_no_calorie_info) },
                                     color = Color.Black
@@ -190,7 +190,7 @@ fun AdminIngredientDetailScreen(
 
                                 // 5. Rejected Reason (if applicable)
                                 if (request.requestStatus == Status.REJECTED) {
-                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                                     Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                     Text(
                                         text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
@@ -199,7 +199,7 @@ fun AdminIngredientDetailScreen(
                                 }
 
                                 if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
-                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                                     Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
                                     Text(
                                         text = request.adminNote,
@@ -208,14 +208,14 @@ fun AdminIngredientDetailScreen(
                                 }
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_l)),
                                     thickness = 1.dp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
 
                                 // 6. Request Information
                                 Text(stringResource(R.string.admin_detail_request_info_header), fontWeight = FontWeight.Bold, color = Color.Black)
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     stringResource(R.string.admin_detail_user_id, info.requesterCustomId),
                                     style = MaterialTheme.typography.bodyMedium
@@ -237,7 +237,7 @@ fun AdminIngredientDetailScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(bottom = 16.dp),
+                                .padding(bottom = dimensionResource(id = R.dimen.padding_l)),
                             verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
                             horizontalAlignment = Alignment.CenterHorizontally
                         ){
@@ -245,8 +245,8 @@ fun AdminIngredientDetailScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        .padding(dimensionResource(id = R.dimen.padding_l)),
+                                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                                 ) {
                                     Button(
                                         onClick = { showRejectDialog = true },
@@ -323,7 +323,7 @@ fun RejectRequestDialog(
         text = {
             Column {
                 Text(stringResource(R.string.admin_detail_reject_prompt))
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
                 OutlinedTextField(
                     value = reason,
                     onValueChange = {
