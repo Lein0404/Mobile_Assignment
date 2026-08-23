@@ -1,5 +1,6 @@
 package com.example.foodieheal.meal_planner.screen
 
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -8,11 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -32,6 +35,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +47,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
@@ -86,6 +93,15 @@ fun AddRecipeToPlanScreen(
     val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
     val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+    val view = LocalView.current
+    val backgroundColor = MaterialTheme.colorScheme.background
+
+    // 🌟 Sync Status Bar to background color
+    SideEffect {
+        val window = (view.context as Activity).window
+        window.statusBarColor = backgroundColor.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+    }
 
     // 1. Derive weekDays directly from selectedDate (Always guarantees selectedDate is in weekDays)
     val weekDays = remember(selectedDate) {
@@ -144,6 +160,7 @@ fun AddRecipeToPlanScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets.statusBars,
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
             AddRecipeBottomActionBar(

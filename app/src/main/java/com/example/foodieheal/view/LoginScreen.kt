@@ -47,13 +47,14 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     val view = LocalView.current
+    val backgroundColor = Color(0xFFF8F8F8)
     val primaryColor = MaterialTheme.colorScheme.primary
 
     // Update Status Bar Color
     SideEffect {
         val window = (view.context as Activity).window
-        window.statusBarColor = primaryColor.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        window.statusBarColor = backgroundColor.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
     }
 
     LaunchedEffect(Unit) {
@@ -88,11 +89,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             .fillMaxSize()
             .background(Color(0xFFF8F8F8))
     ) {
-        // 🌟 Seamless Orange Status Bar Strip
+        // 🌟 Seamless Background Status Bar Strip
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(primaryColor)
+                .background(Color(0xFFF8F8F8))
                 .statusBarsPadding()
         )
 

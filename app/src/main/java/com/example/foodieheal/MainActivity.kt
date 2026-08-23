@@ -140,10 +140,23 @@ class MainActivity : ComponentActivity() {
                         val route = pendingDeepLinkRoute
                         if (route != null) {
                             Log.d(TAG, "Navigating to deep link route: $route")
-                            navController.navigate(route) {
-                                // Clear whatever was there (Login or Splash)
+
+                            // 🌟 FIX: Construct a Synthetic Backstack (Landing -> DeepLink)
+                            // This ensures that when the user presses 'Back', they go to Home instead of exiting.
+                            val landingDest = when {
+                                sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route
+                                sharedAuthViewModel.isChef -> Screen.ChefMain.route
+                                else -> Screen.Home.route
+                            }
+
+                            // 1. Reset to the appropriate root screen first
+                            navController.navigate(landingDest) {
                                 popUpTo(0) { inclusive = true }
                             }
+
+                            // 2. Push the deep link target on top of the root
+                            navController.navigate(route)
+
                             pendingDeepLinkRoute = null
                             mealPlannerViewModel.consumeDeepLinkProcessed()
                         } else {
@@ -969,20 +982,29 @@ class MainActivity : ComponentActivity() {
 
     private fun processDeepLink(uri: Uri) {
         Log.d("DeepLink", "Processing URI: $uri")
-        val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io" && uri.path?.startsWith("/share") == true
-        val isCustomScheme = uri.scheme == "foodieheal" && uri.host == "share"
+        val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io"
+        val isCustomScheme = uri.scheme == "foodieheal"
 
         if (isHttpsLink || isCustomScheme) {
-            uri.getQueryParameter("sourceStart")?.let { dateStr ->
-                runCatching {
-                    LocalDate.parse(dateStr)
-                }.onSuccess { startDate ->
-                    Log.d("DeepLink", "Successfully parsed start date: $startDate")
-                    // Store pending route for the NavHost
-                    pendingDeepLinkRoute = Screen.Planner.route
-                    mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
-                }.onFailure { e ->
-                    Log.e("DeepLink", "Failed to parse date: $dateStr", e)
+            when {
+                // 1. Weekly Plan Share (Original)
+                uri.path?.startsWith("/share") == true || uri.host == "share" -> {
+                    uri.getQueryParameter("sourceStart")?.let { dateStr ->
+                        runCatching { LocalDate.parse(dateStr) }.onSuccess { startDate ->
+                            Log.d("DeepLink", "Successfully parsed start date: $startDate")
+                            pendingDeepLinkRoute = Screen.Planner.route
+                            mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
+                        }
+                    }
+                }
+                // 2. Template Share (New)
+                uri.path?.startsWith("/template") == true || uri.host == "template" -> {
+                    val planId = uri.getQueryParameter("id") ?: uri.getQueryParameter("templateId")
+
+                    planId?.let { id ->
+                        Log.d("DeepLink", "Successfully parsed template ID: $id")
+                        pendingDeepLinkRoute = Screen.TemplateDetails.createRoute(id, false)
+                    }
                 }
             }
         }
@@ -994,25 +1016,26 @@ data class NavigationItem(val route: String, val label: String, val icon: Int)
 @Composable
 fun SplashLogoOverlay() {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = Color(0xFFF8F8F8)
     val view = LocalView.current
 
-    // 🌟 Sync Status Bar immediately to orange
+    // 🌟 Sync Status Bar to background color
     SideEffect {
         val window = (view.context as Activity).window
-        window.statusBarColor = primaryColor.toArgb()
-        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        window.statusBarColor = backgroundColor.toArgb()
+        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
+            .background(backgroundColor)
     ) {
-        // 🌟 Orange Strip Sync
+        // 🌟 Seamless Background Spacer
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(primaryColor)
+                .background(backgroundColor)
                 .statusBarsPadding()
         )
 

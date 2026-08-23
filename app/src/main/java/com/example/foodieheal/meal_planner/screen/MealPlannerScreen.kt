@@ -194,25 +194,6 @@ fun MealPlannerScreen(
         )
     }
 
-    if (showWeeklyPasteDatePicker) {
-        CustomizedDatePickerDialog(
-            initialDate = currentWeekStart,
-            onDateSelected = { targetDate ->
-                val daysToCopy = mealPlannerViewModel.deepLinkSourceDays ?: weekDays
-                mealPlannerViewModel.copyWeeklyPlanToDate(daysToCopy, targetDate)
-                Toast.makeText(context, weeklyCopySuccessMessage, Toast.LENGTH_SHORT).show()
-                showWeeklyPasteDatePicker = false
-                mealPlannerViewModel.clearDeepLinkState()
-            },
-            onDismiss = {
-                showWeeklyPasteDatePicker = false
-                mealPlannerViewModel.clearDeepLinkState()
-            },
-            mealPlannerViewModel = mealPlannerViewModel,
-            maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser),
-            isRangeMode = true
-        )
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

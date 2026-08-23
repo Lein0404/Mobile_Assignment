@@ -3,6 +3,7 @@ package com.example.foodieheal.meal_planner.screen
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -97,6 +98,17 @@ fun TemplateDetailsScreen(
         Toast.makeText(context, "Plan ID copied to clipboard", Toast.LENGTH_SHORT).show()
     }
 
+    fun shareTemplate(id: String) {
+        val shareUrl = "https://tzh652.github.io/template?id=$id"
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "Check out this meal plan template on Foodie Heal: $shareUrl")
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        context.startActivity(shareIntent)
+    }
+
     Scaffold(
         modifier = Modifier.navigationBarsPadding(),
         topBar = {
@@ -166,7 +178,8 @@ fun TemplateDetailsScreen(
                         isMyTemplate = isMyTemplate,
                         onEdit = { onEdit() },
                         onDelete = { onDelete() },
-                        onAdd = { onAdd() }
+                        onAdd = { onAdd() },
+                        onShare = { shareTemplate(plan.planId) }
                     )
                 },
             )

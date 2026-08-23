@@ -41,8 +41,16 @@ class TemplateViewModel(
 
     private val planId: String? = savedStateHandle.get<String>("planId")
 
+    var currentUserId: String? = null
+        private set
+
     init {
         Log.d(TAG, "Initialized TemplateViewModel | SavedStateHandle planId: $planId")
+        viewModelScope.launch {
+            currentUserIdFlow.collect { id ->
+                currentUserId = id
+            }
+        }
     }
 
     private val refreshTrigger = MutableStateFlow(0)

@@ -1,8 +1,10 @@
 package com.example.foodieheal.meal_planner.screen
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,12 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -41,17 +45,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.data.PlanRepository
@@ -175,6 +183,7 @@ fun AllTemplatesScreen(
     templateViewModel: TemplateViewModel,
     onPlanDetails:(String,Boolean)-> Unit
 ) {
+    val context = LocalContext.current
     val allPlans by templateViewModel.publicCommunityPlans.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     val filteredContacts = remember(query, allPlans) {
@@ -183,6 +192,18 @@ fun AllTemplatesScreen(
                 || it.category.toString().contains(query, ignoreCase = true)
                 || it.planId.contains(query, ignoreCase = false)}
     }
+
+    fun shareTemplate(id: String) {
+        val shareUrl = "https://tzh652.github.io/template?id=$id"
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "Check out this meal plan template on Foodie Heal: $shareUrl")
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        context.startActivity(shareIntent)
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = query,
@@ -195,6 +216,19 @@ fun AllTemplatesScreen(
         CategorizedTemplatesScreen(
             weeklyPlans = filteredContacts,
             onPlanDetails = {id ->  onPlanDetails(id,false) },
+            onShare = { id -> shareTemplate(id) },
+            onAdd = { id ->
+                templateViewModel.duplicateTemplate(
+                    sourcePlanId = id,
+                    currentUserId = templateViewModel.currentUserId ?: "",
+                    onSuccess = {
+                        Toast.makeText(context, "Template added to your collection!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         )
     }
 }
@@ -207,6 +241,17 @@ fun MyTemplatesScreen(
     onEdit: (String) -> Unit
 ) {
     val context = LocalContext.current
+
+    fun shareTemplate(id: String) {
+        val shareUrl = "https://tzh652.github.io/template?id=$id"
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "Check out my meal plan template on Foodie Heal: $shareUrl")
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        context.startActivity(shareIntent)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 120.dp),
@@ -242,6 +287,7 @@ fun MyTemplatesScreen(
                 },
                 onPlanDetails = { id -> onPlanDetails(id,true) },
                 onEdit =  onEdit,
+                onShare = { id -> shareTemplate(id) },
                 isMyTemplate = true
             )
         }
@@ -254,7 +300,9 @@ fun CategorizedTemplatesScreen(
     onPlanDetails:(String)->Unit,
     isMyTemplate: Boolean = false,
     onEdit: (String) -> Unit = {},
-    onDelete:(String)-> Unit = {}
+    onDelete:(String)-> Unit = {},
+    onShare: (String) -> Unit = {},
+    onAdd: (String) -> Unit = {}
 ) {
     val categorizedPlans = remember(weeklyPlans) {
         weeklyPlans.groupBy { it.category }
@@ -300,7 +348,9 @@ fun CategorizedTemplatesScreen(
                             onPlanDetails = { onPlanDetails(plan.planId) },
                             isMyTemplate = isMyTemplate,
                             onEdit = { onEdit(plan.planId) },
-                            onDelete = { onDelete(plan.planId) }
+                            onDelete = { onDelete(plan.planId) },
+                            onShare = { onShare(plan.planId) },
+                            onAdd = { onAdd(plan.planId) }
                         )
                     }
                 }
@@ -315,7 +365,9 @@ fun PlanCard(
     onPlanDetails: () -> Unit,
     isMyTemplate: Boolean,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onShare: () -> Unit = {},
+    onAdd: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -342,14 +394,43 @@ fun PlanCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                if (isMyTemplate) {
-                    OtherIconButton(
-                        showMenu = showMenu,
-                        onShowMenuChange = {showMenu = it},
-                        onEdit = onEdit,
-                        onDelete = onDelete,
-                        isMyTemplate = isMyTemplate
-                    )
+                OtherIconButton(
+                    showMenu = showMenu,
+                    onShowMenuChange = {showMenu = it},
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onShare = onShare,
+                    onAdd = onAdd,
+                    isMyTemplate = isMyTemplate
+                )
+            }
+
+            // 🌟 Extract unique recipe images to display a preview
+            val recipeImages = remember(plan) {
+                plan.dailyPlans.values
+                    .flatten()
+                    .flatMap { it.recipes }
+                    .mapNotNull { it.recipeImageUrl }
+                    .distinct()
+                    .take(4)
+            }
+
+            if (recipeImages.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    recipeImages.forEach { imageUrl ->
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
 
@@ -375,7 +456,8 @@ fun OtherIconButton(
     isMyTemplate: Boolean,
     onEdit:()->Unit,
     onDelete:()-> Unit,
-    onAdd:()-> Unit = {}
+    onAdd:()-> Unit = {},
+    onShare:()-> Unit = {}
 ){
     Box {
         Icon(
@@ -413,6 +495,13 @@ fun OtherIconButton(
                     }
                 )
             }
+            DropdownMenuItem(
+                text = { Text("Share") },
+                onClick = {
+                    onShowMenuChange(false)
+                    onShare()
+                }
+            )
         }
     }
 }
