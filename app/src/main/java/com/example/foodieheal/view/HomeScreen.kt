@@ -24,8 +24,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
@@ -34,10 +35,14 @@ import com.example.mobileassignmentloginpart.Model.Chef
 fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefClick : (Chef) -> Unit) {
 
     val bookmarkViewModel: BookmarkViewModel = viewModel()
-    val chefViewModel : HiringViewModel = viewModel()
+    val chefViewModel : ChefListViewModel = viewModel()
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val chefs by chefViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefViewModel.errorMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
@@ -94,11 +99,11 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefCli
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
                 ChefListSection(
-                    chefs = chefViewModel.chefList,
-                    isLoading = chefViewModel.isProcessing,
-                    errorMessage = chefViewModel.errorMessage,
-                    bookmarkViewModel = bookmarkViewModel,
+                    chefs = chefs,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
                     onChefClick = onChefClick
                 )
 

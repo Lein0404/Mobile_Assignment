@@ -228,9 +228,11 @@
     <!--Hiring Appointment -->
     <string name="title_appointment">Appointment</string>
     <string name="title_select_appointment_date">Select Appointment Date</string>
+    <string name = "review">Review</string>
     <string name="label_appointment">Appointment</string>
 
     <string name="empty_no_appointments_for_date">No appointments booked for this date.</string>
+    <string name = "no_comment_provided">No comment provided</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
@@ -241,6 +243,8 @@
     <string name="pick_date">Pick Date</string>
     <string name="add_booking">Add Booking</string>
     <string name="add_appointment">Add Appointment</string>
+    <string name = "user">User</string>
+    <string name = "no_review">No Review</string>
 
     <!-- Add Hiring Appointment -->
     <string name="next">Next</string>
@@ -350,6 +354,7 @@
 
     <string name="label_status">Status</string>
     <string name="label_service_location">Service Location</string>
+    <string name="label_rejection_reason">Rejected Reason</string>
 
     <string name="address_not_provided">Address not provided</string>
     <string name="serving_size_format">%1$s pax</string>
@@ -363,6 +368,8 @@
     <string name="not_yet">Not Yet</string>
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
+    <string name="pay_now">Pay Now</string>
+    <string name ="no_rejection_reason">No Rejected Reason</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>
@@ -486,7 +493,7 @@
 
     <string name="personal_details">Personal Details</string>
     <string name="contact_location">Contact &amp; Location</string>
-    <string name="label_full_name">Full Name</string>
+    <string name="label_full_name">Name</string>
     <string name="label_years_of_experience">Years of Experience</string>
     <string name="label_price_currency">Price (RM)</string>
     <string name="label_phone_number">Phone Number</string>

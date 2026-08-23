@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 
@@ -24,7 +24,7 @@ import com.example.foodieheal.navigation.Screen
 @Composable
 fun ChefWelcomeScreen(
     navController: NavController,
-    chefRegisterViewModel: chefRegisterViewModel
+    chefRegisterViewModel: ChefRegisterViewModel
 ) {
 
     Scaffold(
@@ -69,7 +69,7 @@ fun ChefWelcomeScreen(
             ) {
                 // Image for deco
                 Image(
-                    painter = painterResource(id = R.drawable.ic_hiring),
+                    painter = painterResource(R.drawable.ic_hiring),
                     contentDescription = "Chef Illustration",
                     modifier = Modifier
                         .size(220.dp)
