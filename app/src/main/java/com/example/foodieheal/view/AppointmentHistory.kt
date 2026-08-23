@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import java.util.Locale
@@ -37,13 +37,15 @@ enum class AppointmentFilterOption(val displayName: String) {
     PENDING("Pending"),
     CONFIRMED("Confirmed"),
     COMPLETED("Completed"),
-    CANCELLED("Cancelled")
+    CANCELLED("Cancelled"),
+
+    REJECTED("Rejected")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentHistoryScreen(
-    viewModel: HiringViewModel,
+    viewModel: UserAppointmentViewModel,
     onBackClick: () -> Unit,
     onAppointmentClick: (String) -> Unit
 ) {
@@ -64,13 +66,15 @@ fun AppointmentHistoryScreen(
 
     // Filter appointments based on selection
     val filteredAppointments = remember(allAppointments, selectedFilter) {
-        when (selectedFilter) {
+        val filtered = when (selectedFilter) {
             AppointmentFilterOption.ALL -> allAppointments
             AppointmentFilterOption.PENDING -> allAppointments.filter { it.Status.equals("pending", ignoreCase = true) }
             AppointmentFilterOption.CONFIRMED -> allAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
             AppointmentFilterOption.COMPLETED -> allAppointments.filter { it.Status.equals("completed", ignoreCase = true) }
             AppointmentFilterOption.CANCELLED -> allAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
+            AppointmentFilterOption.REJECTED -> allAppointments.filter { it.Status.equals("rejected", ignoreCase = true) }
         }
+        filtered.sortedByDescending { it.created_at }
     }
 
     val isRefreshing = appointmentsState is UserAppointmentsUiState.Loading

@@ -1,8 +1,8 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -31,28 +33,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.AppointmentCard
-import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
-import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
+import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.mobileassignmentloginpart.Model.Chef
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringScreen(
-    hiringViewModel: HiringViewModel = viewModel(),
+    chefListViewModel: ChefListViewModel = viewModel(),
+    userAppointmentViewModel: UserAppointmentViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel(),
     onChefClick: (Chef) -> Unit,
@@ -60,9 +61,44 @@ fun HiringScreen(
 ) {
     val currentUser = authViewModel.currentUser
     val currentUserId = currentUser?.id.orEmpty()
-    val chefs = hiringViewModel.chefList
-    val isLoading = hiringViewModel.isProcessing
-    val errorMessage = hiringViewModel.errorMessage
+    val chefs by chefListViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefListViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefListViewModel.errorMessage.collectAsStateWithLifecycle()
+
+    var selectedSortOrder by rememberSaveable { mutableStateOf(RateSortOrder.NONE) }
+    var selectedStateFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedAgeRangeFilter by rememberSaveable { mutableStateOf<AgeRange?>(null) }
+    var showFilterBottomSheet by remember { mutableStateOf(false) }
+
+    val availableStates = remember(chefs) {
+        chefs.mapNotNull { it.state }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+
+    // Filter Chef List
+    val filteredChefs = remember(chefs, selectedSortOrder, selectedStateFilter, selectedAgeRangeFilter) {
+        chefs.filter { chef ->
+            // Filter by State
+            val matchesState = selectedStateFilter == null || chef.state.equals(selectedStateFilter, ignoreCase = true)
+
+            // Filter by Age
+            val chefAge = chef.age ?: 0
+            val matchesAge = selectedAgeRangeFilter == null || when (selectedAgeRangeFilter) {
+                AgeRange.YOUNG -> chefAge in 18..30
+                AgeRange.MID -> chefAge in 31..45
+                AgeRange.SENIOR -> chefAge > 45
+                else -> true
+            }
+
+            matchesState && matchesAge
+        }.let { list ->
+            // Sort by Rate
+            when (selectedSortOrder) {
+                RateSortOrder.ASCENDING -> list.sortedBy { it.averagerating ?: 0.0 }
+                RateSortOrder.DESCENDING -> list.sortedByDescending { it.averagerating ?: 0.0 }
+                RateSortOrder.NONE -> list
+            }
+        }
+    }
 
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -74,7 +110,7 @@ fun HiringScreen(
     // Fetch all chefs on initial screen launch
     LaunchedEffect(Unit) {
         if (chefs.isEmpty()) {
-            hiringViewModel.fetchAllChefs()
+            chefListViewModel.fetchAllChefs()
         }
     }
 
@@ -82,11 +118,15 @@ fun HiringScreen(
     LaunchedEffect(selectedTabIndex, currentUserId) {
         if (currentUserId.isNotEmpty()) {
             when (selectedTabIndex) {
-                1 -> hiringViewModel.fetchAppointmentsForCurrentUser()
+                1 -> userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                 2 -> bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
             }
         }
     }
+
+    val isFilterActive = selectedSortOrder != RateSortOrder.NONE ||
+            selectedStateFilter != null ||
+            selectedAgeRangeFilter != null
 
     Column(
         modifier = Modifier
@@ -154,7 +194,6 @@ fun HiringScreen(
                 .weight(1f)
         ) {
             when (selectedTabIndex) {
-                // 0 -> Popular Chefs Tab
                 0 -> {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -166,38 +205,77 @@ fun HiringScreen(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+                            Text(text = errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
-                                onClick = { hiringViewModel.fetchAllChefs() },
+                                onClick = { chefListViewModel.fetchAllChefs() },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Text(stringResource(R.string.btn_retry))
                             }
                         }
                     } else if (chefs.isNotEmpty()) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            item(span = { GridItemSpan(2) }) {
+                        if (filteredChefs.isEmpty()) {
+                            Column(
+                                modifier = Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = stringResource(R.string.header_chef),
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier.padding(bottom = 4.dp)
+                                    text = "No chefs match the selected filters",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 14.sp
                                 )
+                                TextButton(
+                                    onClick = {
+                                        selectedSortOrder = RateSortOrder.NONE
+                                        selectedStateFilter = null
+                                        selectedAgeRangeFilter = null
+                                    }
+                                ) {
+                                    Text("Reset Filters")
+                                }
                             }
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Header item with Title and Filter Icon Button
+                                item(span = { GridItemSpan(2) }) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.header_chef),
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
 
-                            items(chefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
-                                ChefHireItem(
-                                    chef = chef,
-                                    onClick = { onChefClick(chef) }
-                                )
+                                        IconButton(onClick = { showFilterBottomSheet = true }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.filter),
+                                                contentDescription = "Filter Chefs",
+                                                tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                items(filteredChefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
+                                    ChefHireItem(
+                                        chef = chef,
+                                        onClick = { onChefClick(chef) }
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -211,7 +289,7 @@ fun HiringScreen(
 
                 // 1 -> Appointment Tab
                 1 -> {
-                    val state by hiringViewModel.userAppointmentsState.collectAsState()
+                    val state by userAppointmentViewModel.userAppointmentsState.collectAsState()
 
                     when (val currentState = state) {
                         is UserAppointmentsUiState.Loading -> {
@@ -237,7 +315,7 @@ fun HiringScreen(
                                         fontSize = 14.sp
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Button(onClick = { hiringViewModel.fetchAppointmentsForCurrentUser() }) {
+                                    Button(onClick = { userAppointmentViewModel.fetchAppointmentsForCurrentUser() }) {
                                         Text(stringResource(R.string.btn_retry))
                                     }
                                 }
@@ -248,7 +326,7 @@ fun HiringScreen(
                             val activeAppointments = remember(currentState.appointments) {
                                 currentState.appointments.filter { appointment ->
                                     val status = appointment.Status.orEmpty().lowercase(Locale.US)
-                                    status == "pending" || status == "confirmed"
+                                    status == "pending" || status == "confirmed" || status == "unpaid"
                                 }
                             }
 
@@ -370,6 +448,28 @@ fun HiringScreen(
                     }
                 }
             }
+        }
+    }
+    if (showFilterBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFilterBottomSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            FilterBottomSheetContent(
+                sortOrder = selectedSortOrder,
+                onSortChange = { selectedSortOrder = it },
+                availableStates = availableStates,
+                selectedState = selectedStateFilter,
+                onStateChange = { selectedStateFilter = it },
+                selectedAgeRange = selectedAgeRangeFilter,
+                onAgeRangeChange = { selectedAgeRangeFilter = it },
+                onResetFilters = {
+                    selectedSortOrder = RateSortOrder.NONE
+                    selectedStateFilter = null
+                    selectedAgeRangeFilter = null
+                },
+                onApply = { showFilterBottomSheet = false }
+            )
         }
     }
 }
@@ -630,34 +730,135 @@ fun UserAppointmentCard(
     }
 }
 
+enum class RateSortOrder { NONE, ASCENDING, DESCENDING }
+enum class AgeRange(val label: String) {
+    YOUNG("18 - 30"),
+    MID("31 - 45"),
+    SENIOR("45+")
+}
 
-private val sampleChef = Chef(
-    chefId = "chef_123",
-    id = "1",
-    name = "Gordon Ramsay",
-    email = "gordon@kitchen.com",
-    phoneNumber = "0234567 8900",
-    description = "Passionate executive chef with over 15 years of culinary experience in high-end fine dining and custom home catering.",
-    Pricing = 120.0,
-    experience = 15,
-    averagerating = 4.9,
-    gender = "Male",
-    state = "California",
-    postcode = "90210",
-    address = "123 Culinary Way",
-    status = "approved",
-    profilePictureUrl = "null",
-    age = 50
-)
+@Composable
+fun FilterBottomSheetContent(
+    sortOrder: RateSortOrder,
+    onSortChange: (RateSortOrder) -> Unit,
+    availableStates: List<String>,
+    selectedState: String?,
+    onStateChange: (String?) -> Unit,
+    selectedAgeRange: AgeRange?,
+    onAgeRangeChange: (AgeRange?) -> Unit,
+    onResetFilters: () -> Unit,
+    onApply: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Filter Chefs",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = onResetFilters) {
+                Text("Reset All")
+            }
+        }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun HiringChefDetailsPreview() {
-//    MaterialTheme {
-//        HiringChefDetails(
-//            chef = sampleChef,
-//            onBackClick = {},
-//            onBookClick = {}
-//        )
-//    }
-//}
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Sort by Rate Section
+        Text(
+            text = "Hourly Rate",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = sortOrder == RateSortOrder.ASCENDING,
+                onClick = {
+                    onSortChange(if (sortOrder == RateSortOrder.ASCENDING) RateSortOrder.NONE else RateSortOrder.ASCENDING)
+                },
+                label = { Text("Low to High") }
+            )
+            FilterChip(
+                selected = sortOrder == RateSortOrder.DESCENDING,
+                onClick = {
+                    onSortChange(if (sortOrder == RateSortOrder.DESCENDING) RateSortOrder.NONE else RateSortOrder.DESCENDING)
+                },
+                label = { Text("High to Low") }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Age Filter Section
+        Text(
+            text = "Chef Age",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            AgeRange.entries.forEach { range ->
+                FilterChip(
+                    selected = selectedAgeRange == range,
+                    onClick = {
+                        onAgeRangeChange(if (selectedAgeRange == range) null else range)
+                    },
+                    label = { Text(range.label) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // State Filter Section
+        if (availableStates.isNotEmpty()) {
+            Text(
+                text = "State",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                availableStates.forEach { state ->
+                    FilterChip(
+                        selected = selectedState.equals(state, ignoreCase = true),
+                        onClick = {
+                            onStateChange(if (selectedState.equals(state, ignoreCase = true)) null else state)
+                        },
+                        label = { Text(state) }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // Apply Button
+        Button(
+            onClick = onApply,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Apply Filters")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}

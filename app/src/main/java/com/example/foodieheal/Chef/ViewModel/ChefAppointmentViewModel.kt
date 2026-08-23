@@ -121,7 +121,7 @@ class ChefPortalViewModel : ViewModel() {
                 }
 
                 val activeAppointments = appointments.filter {
-                    it.Status.lowercase() != "cancelled" && it.Status.lowercase() != "completed"
+                    it.Status.lowercase() != "cancelled" && it.Status.lowercase() != "completed" && it.Status.lowercase() != "rejected"
                 }
 
                 val nextApp = activeAppointments.firstOrNull()

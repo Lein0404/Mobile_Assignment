@@ -1,7 +1,5 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import android.app.TimePickerDialog
-import android.widget.TimePicker
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,7 +9,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,8 +42,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,51 +54,47 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.Chef.healthPreferencesList
-import com.example.foodieheal.Hiring.ViewModel.AppointmentValidationError
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.SupabaseClient.client
+import com.example.foodieheal.hiring.model.AppointmentValidationError
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.ui.components.TimePickerDialog
-import com.example.foodieheal.viewmodel.AuthViewModel
-import io.github.jan.supabase.auth.auth
-import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAppointmentFormScreen(
-    viewModel: HiringViewModel = viewModel(),
+    viewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
-    val chefId = viewModel.currentChefId
+    val selectedChef by viewModel.selectedChef.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(chefId, viewModel.selectedDate) {
+    val chefId = viewModel.currentChefId
+    val focusManager = LocalFocusManager.current
+
+    // Fetch appointments for this specific chef whenever chef ID or date updates
+    LaunchedEffect(chefId, selectedDate) {
         if (chefId.isNotBlank()) {
             viewModel.fetchAppointmentsForChef(chefId)
         }
     }
-
-    val selectedChef = viewModel.selectedChef
-    val hourlyPrice = selectedChef?.Pricing ?: 0.0
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
-
-    // Local states for Start & End Time
     var startTimeFormatted by remember { mutableStateOf("09:00 AM") }
     var endTimeFormatted by remember { mutableStateOf("11:00 AM") }
 
-    // Dialog Visibility States
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
-    // Helper to update ViewModel time slot
     fun updateAppointmentTimeSlot(start: String, end: String) {
         startTimeFormatted = start
         endTimeFormatted = end
         viewModel.onAppointmentTimeChanged("$start - $end")
     }
+
+    val hasInvalidTimeError = uiState.errors.contains(AppointmentValidationError.InvalidTime)
+    val hasTimeSlotOccupiedError = uiState.errors.contains(AppointmentValidationError.TimeSlotOccupied)
 
     Scaffold(
         topBar = {
@@ -194,12 +184,12 @@ fun AddAppointmentFormScreen(
             }
 
             AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasInvalidTimeError,
+                visible = uiState.hasAttemptedSubmit && hasInvalidTimeError,
                 message = stringResource(R.string.error_invalid_time_range)
             )
 
             AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasTimeSlotOccupiedError,
+                visible = uiState.hasAttemptedSubmit && hasTimeSlotOccupiedError,
                 message = stringResource(R.string.error_time_slot_occupied)
             )
 

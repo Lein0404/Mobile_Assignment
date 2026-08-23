@@ -1,13 +1,15 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +40,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,16 +50,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.ReviewsUiState
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ReviewViewModel
+import com.example.foodieheal.model.ReviewWithUser
 import com.example.foodieheal.ui.components.DetailSectionCard
-import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,15 +72,15 @@ fun HiringChefDetails(
     chef: Chef,
     userId: String,
     viewModel: BookmarkViewModel = viewModel(),
+    reviewViewModel: ReviewViewModel = viewModel(),
+    bookingViewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
     onHireClick: (Chef) -> Unit
 ) {
     val context = LocalContext.current
-    val hiringViewModel: HiringViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel()
-    val user = authViewModel.currentUser
     val currentChefId = chef.chefId.ifEmpty { chef.id }
     val isBookmarked = viewModel.isChefBookmarked(currentChefId)
+    val reviewsState by reviewViewModel.reviewsState.collectAsState()
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
@@ -77,9 +88,15 @@ fun HiringChefDetails(
         }
     }
 
+    LaunchedEffect(currentChefId) {
+        if (currentChefId.isNotBlank()) {
+            reviewViewModel.fetchChefReviews(currentChefId)
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose {
-            hiringViewModel.clearAppointmentForm()
+            bookingViewModel.clearAppointmentForm()
         }
     }
 
@@ -201,7 +218,9 @@ fun HiringChefDetails(
                             onClick = {
                                 viewModel.onBookmarkToggled(
                                     userId = userId,
-                                    chefId = currentChefId
+                                    chefId = currentChefId,
+                                    context = context,
+                                    chefName = chef.name
                                 )
                             },
                             modifier = Modifier.align(Alignment.TopEnd)
@@ -310,6 +329,47 @@ fun HiringChefDetails(
                     )
                 }
             }
+
+            // Review section
+            DetailSectionCard(title = stringResource(R.string.review)) {
+                when (val state = reviewsState) {
+                    is ReviewsUiState.Loading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
+                    }
+                    is ReviewsUiState.Error -> {
+                        Text(
+                            text = state.message,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+                    is ReviewsUiState.Success -> {
+                        if (state.reviews.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.no_review),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        } else {
+                            LazyRow(
+                                contentPadding = PaddingValues(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(state.reviews) { reviewWithUser ->
+                                    ReviewCard(review = reviewWithUser)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -378,6 +438,116 @@ private fun InfoRow(
             fontWeight = FontWeight.Medium,
             color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+fun ReviewCard(review: ReviewWithUser) {
+    val appointment = review.appointment
+
+    Card(
+        modifier = Modifier
+            .width(280.dp)
+            .height(130.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // User Initial / Avatar Placeholder
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = review.userName.take(1).uppercase(),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = review.userName,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (!appointment.Date.isNullOrBlank()) {
+                            Text(
+                                text = appointment.Date,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFFFFF8E1),
+                    border = BorderStroke(1.dp, Color(0xFFFFE082))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_star),
+                            contentDescription = null,
+                            tint = Color(0xFFFFB300),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = appointment.rating?.toString() ?: "-",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF8C6B00)
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = if (!appointment.Comment.isNullOrBlank()) {
+                    "\"${appointment.Comment}\""
+                } else {
+                    stringResource(R.string.no_comment_provided)
+                },
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                fontStyle = if (appointment.Comment.isNullOrBlank()) FontStyle.Italic else FontStyle.Normal,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            )
+        }
     }
 }
 
