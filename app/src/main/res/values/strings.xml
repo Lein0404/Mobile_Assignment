@@ -500,7 +500,6 @@
 
     <!-- Add Shopping List Item -->
     <string name="add_shopping_item_title">Add to Shopping List</string>
-    <string name="add_shopping_item_search_placeholder">Search ingredients in My Pantry</string>
     <string name="add_shopping_item_no_ingredients">No ingredients found.</string>
     <string name="add_shopping_item_toast_added">%1$d item(s) added to Shopping List</string>
     <string name="add_shopping_item_button">Add %1$d Item(s) to Shopping List</string>
@@ -560,8 +559,8 @@
     <!-- Ingredient Request Form -->
     <string name="ingredient_form_processed_title">Request Processed</string>
     <string name="ingredient_form_processed_text">This request has already been processed by an administrator and can no longer be modified.</string>
-    <string name="ingredient_form_title_add">Add Ingredient</string>
-    <string name="ingredient_form_title_update">Update Ingredient</string>
+    <string name="ingredient_form_title_add">Request Ingredient</string>
+    <string name="ingredient_form_title_update">Update Request</string>
     <string name="ingredient_form_online_required">You need to be online to submit a request</string>
     <string name="ingredient_form_category_placeholder">e.g. Vegetables</string>
     <string name="ingredient_form_add_unit">Add Unit</string>
@@ -633,7 +632,7 @@
 
     <!--Admin Review Ingredient Request -->
     <string name="admin_review_title">Review Ingredient Request</string>
-    <string name="admin_review_error_validate">Please fix the errors in the form</string>
+    <string name="admin_review_error_validate">Please fix the errors in the form!</string>
     <string name="admin_approve_ingredient_request">APPROVE INGREDIENT REQUEST</string>
     <string name="admin_request_approved">Request Approved Successfully!</string>
     <string name="admin_approval_failed_dialog_title">Approval Failed</string>

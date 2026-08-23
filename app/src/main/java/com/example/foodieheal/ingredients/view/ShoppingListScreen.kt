@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
@@ -57,7 +56,7 @@ fun ShoppingListScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.shopping_list_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -71,8 +70,8 @@ fun ShoppingListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -81,7 +80,7 @@ fun ShoppingListScreen(
                 FloatingActionButton(
                     onClick = { showMenu = !showMenu },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
@@ -97,17 +96,31 @@ fun ShoppingListScreen(
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
-                    modifier = Modifier.background(Color(0xFFEBE6EF)) // Match subtle purple background
+                    modifier = Modifier.background(
+                        color = MaterialTheme.colorScheme.surface
+                    )
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.shopping_list_add_items), fontSize = 12.sp) },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_add_items),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         onClick = {
                             showMenu = false
                             navController.navigate(Screen.AddShoppingListItem.route)
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.shopping_list_clear_checked), fontSize = 12.sp) },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_clear_checked),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         onClick = {
                             showMenu = false
                             if (checkedCount > 0) {
@@ -118,7 +131,13 @@ fun ShoppingListScreen(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.shopping_list_clear_all), fontSize = 12.sp) },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_clear_all),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         onClick = {
                             showMenu = false
                             if (uiState.items.isNotEmpty()) {
@@ -145,7 +164,7 @@ fun ShoppingListScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
-                placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), fontSize = 14.sp) },
+                placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), style = MaterialTheme.typography.bodyMedium) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
@@ -158,7 +177,7 @@ fun ShoppingListScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 stringResource(R.string.shopping_list_categories),
-                fontWeight = FontWeight.Bold, fontSize = 16.sp
+                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -168,7 +187,7 @@ fun ShoppingListScreen(
                     FilterChip(
                         selected = uiState.selectedCategories.contains(category),
                         onClick = { viewModel.toggleCategory(category) },
-                        label = { Text(category.categoryName, fontSize = 12.sp) },
+                        label = { Text(category.categoryName, style = MaterialTheme.typography.bodyMedium) },
                         shape = RoundedCornerShape(20.dp),
                     )
                 }
@@ -274,7 +293,7 @@ fun ShoppingListItemCard(
             .clickable { onCheckedChange() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier

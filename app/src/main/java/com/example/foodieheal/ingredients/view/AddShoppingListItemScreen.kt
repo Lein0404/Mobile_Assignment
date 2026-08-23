@@ -16,12 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
@@ -57,7 +57,7 @@ fun AddShoppingListItemScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.add_shopping_item_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -71,8 +71,8 @@ fun AddShoppingListItemScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -94,7 +94,12 @@ fun AddShoppingListItemScreen(
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { ingredientsViewModel.onSearchQueryChange(it) },
-                    placeholder = { Text(stringResource(R.string.add_shopping_item_search_placeholder), fontSize = 14.sp) },
+                    placeholder = {
+                        Text(
+                            stringResource(R.string.shopping_list_search_placeholder),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
@@ -105,7 +110,7 @@ fun AddShoppingListItemScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Categories chips
@@ -114,7 +119,7 @@ fun AddShoppingListItemScreen(
                         FilterChip(
                             selected = uiState.selectedCategories.contains(category),
                             onClick = { ingredientsViewModel.toggleCategory(category) },
-                            label = { Text(category.categoryName, fontSize = 12.sp) },
+                            label = { Text(category.categoryName, style = MaterialTheme.typography.bodyMedium) },
                             shape = RoundedCornerShape(20.dp),
                         )
                     }
@@ -193,20 +198,18 @@ fun AddShoppingListItemScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = Color.Gray
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = Color(0XFFC2C2C2) // TODO: add this as disabledColor to Theme.kt?
                     ),
                     enabled = selectedIngredients.isNotEmpty()
                 ) {
                     Text(
                         text = stringResource(R.string.add_shopping_item_button, selectedIngredients.size),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.White
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
             }
@@ -226,11 +229,11 @@ fun SelectableIngredientCard(
             .clickable { onToggleSelection() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -246,7 +249,7 @@ fun SelectableIngredientCard(
                     color = Color.Black
                 )
                 Text(
-                    text = item.calorieSummary,
+                    text = item.ingredient.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,

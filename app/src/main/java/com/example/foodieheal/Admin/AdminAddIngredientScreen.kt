@@ -2,6 +2,7 @@ package com.example.foodieheal.Admin
 
 import android.app.Application
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.Admin.ViewModel.AdminAddIngredientViewModel
@@ -30,6 +30,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.view.UnitRow
 import com.example.foodieheal.ui.components.CommonInputField
+import com.example.foodieheal.ui.components.PrimaryButton
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 import kotlinx.coroutines.launch
 
@@ -56,7 +57,7 @@ fun AdminAddIngredientScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.admin_add_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -70,8 +71,8 @@ fun AdminAddIngredientScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -128,20 +129,24 @@ fun AdminAddIngredientScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
 
                     // 3. Category
                     LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                         title = stringResource(R.string.category),
                         fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
                         placeholder = stringResource(R.string.admin_add_category_placeholder),
+                        placeholderTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                        ),
+                        textStyle = MaterialTheme.typography.bodyLarge,
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -160,14 +165,16 @@ fun AdminAddIngredientScreen(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        )
+                            errorContainerColor = MaterialTheme.colorScheme.background,
+                        ),
+                        isError = formState.categoryError != null
                     )
                     formState.categoryError?.let { resId ->
                         Text(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -187,7 +194,7 @@ fun AdminAddIngredientScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -203,7 +210,7 @@ fun AdminAddIngredientScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -251,7 +258,6 @@ fun AdminAddIngredientScreen(
                         }
                     }
 
-                    // TODO: change to AlertDialog / Toast
                     uiState.errorMessage?.let { resId ->
                         Text(
                             text = stringResource(id = resId),
@@ -263,7 +269,8 @@ fun AdminAddIngredientScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
                     val successToastMsg = stringResource(R.string.admin_add_toast_success)
-                    Button(
+                    PrimaryButton(
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             scope.launch {
                                 val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
@@ -281,25 +288,23 @@ fun AdminAddIngredientScreen(
                                 )
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        textID = R.string.admin_add_button,
                         enabled = !uiState.isSubmitting
-                    ) {
-                        if (uiState.isSubmitting) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                        } else {
-                            Text(
-                                text = stringResource(R.string.admin_add_button),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
+                    )
+
                     Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+
+            if (uiState.isSubmitting) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(enabled = false) {}, // Prevent interaction
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
         }

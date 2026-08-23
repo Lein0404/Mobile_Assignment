@@ -23,7 +23,9 @@ sealed class Screen(val route: String) {
     object Description : Screen("descriptionInfo")
     object ChefPicture : Screen("chefPicture")
     object Review : Screen("reviewInfo")
-    object AdminChefScreen : Screen("adminChefApproval")
+    object AdminChefScreen : Screen("adminChefApproval?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "adminChefApproval?tab=$tab"
+    }
     object ChefHomeScreen : Screen("chefHome")
     object ChefDetailScreen : Screen("chefDetail/{chefId}")
     object ChefProfileScreen : Screen("chefProfile")
@@ -51,7 +53,9 @@ sealed class Screen(val route: String) {
     }
     object ShoppingList : Screen("shopping_list")
     object AddShoppingListItem : Screen("add_shopping_list_item")
-    object AdminIngredient: Screen("admin_ingredient")
+    object AdminIngredient: Screen("admin_ingredient?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "admin_ingredient?tab=$tab"
+    }
     object AdminIngredientDetail : Screen("admin_ingredient_detail/{id}") {
         fun createRoute(id: String) = "admin_ingredient_detail/$id"
     }

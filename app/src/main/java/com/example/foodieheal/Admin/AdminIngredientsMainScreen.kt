@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -44,7 +43,8 @@ import com.example.foodieheal.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminIngredientsScreen(
-    navController: NavController
+    navController: NavController,
+    initialTab: Int = -1
 ) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
@@ -58,6 +58,13 @@ fun AdminIngredientsScreen(
     val adminUiState by adminViewModel.uiState.collectAsState()
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
 
+    // Sync tab state only if initialTab is explicitly provided (0 or 1)
+    LaunchedEffect(initialTab) {
+        if (initialTab != -1) {
+            adminViewModel.onTabChange(initialTab)
+        }
+    }
+
     // Refresh data when screen becomes active
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     LaunchedEffect(navBackStackEntry) {
@@ -67,7 +74,6 @@ fun AdminIngredientsScreen(
         }
     }
 
-    var selectedTab by remember { mutableIntStateOf(0) } // Default to Community tab
     val tabs = listOf(
         stringResource(R.string.admin_tab_community),
         stringResource(R.string.admin_tab_requests)
@@ -86,12 +92,12 @@ fun AdminIngredientsScreen(
             // Header with Title and Tabs
             Surface(
                 color = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Column {
                     Text(
                         text = stringResource(R.string.admin_ingredients_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .statusBarsPadding()
@@ -99,15 +105,15 @@ fun AdminIngredientsScreen(
                     )
                     
                     TabRow(
-                        selectedTabIndex = selectedTab,
+                        selectedTabIndex = adminUiState.selectedTab,
                         containerColor = Color.Transparent,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
+                            if (adminUiState.selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                    Modifier.tabIndicatorOffset(tabPositions[adminUiState.selectedTab]),
                                     height = 3.dp,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         },
@@ -115,14 +121,18 @@ fun AdminIngredientsScreen(
                     ) {
                         tabs.forEachIndexed { index, title ->
                             Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
+                                selected = adminUiState.selectedTab == index,
+                                onClick = { adminViewModel.onTabChange(index) },
                                 text = {
                                     Text(
                                         text = title,
-                                        fontSize = 15.sp,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = if (adminUiState.selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (adminUiState.selectedTab == index) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                        }
                                     )
                                 }
                             )
@@ -133,12 +143,12 @@ fun AdminIngredientsScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
                 // Network check for both tabs
-                val isNetworkAvailable = if (selectedTab == 0) ingredientsUiState.isNetworkAvailable else adminUiState.isNetworkAvailable
+                val isNetworkAvailable = if (adminUiState.selectedTab == 0) ingredientsUiState.isNetworkAvailable else adminUiState.isNetworkAvailable
                 
                 if (!isNetworkAvailable) {
                     AdminOfflineMessage()
                 } else {
-                    if (selectedTab == 0) {
+                    if (adminUiState.selectedTab == 0) {
                         IngredientsExistingScreen(
                             viewModel = ingredientsViewModel,
                             uiState = ingredientsUiState,
@@ -157,13 +167,13 @@ fun AdminIngredientsScreen(
         }
 
         // Floating Action Button for Community tab (only when online)
-        if (selectedTab == 0 && ingredientsUiState.isNetworkAvailable) {
+        if (adminUiState.selectedTab == 0 && ingredientsUiState.isNetworkAvailable) {
             FloatingActionButton(
                 onClick = { 
                     navController.navigate(Screen.AdminAddIngredient.route)
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape,
                 modifier = Modifier
                     .padding(16.dp)
@@ -198,15 +208,15 @@ fun AdminOfflineMessage() {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(R.string.title_no_internet),
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.admin_offline_manage_message),
-                fontSize = 15.sp,
-                color = Color.Gray,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
         }
@@ -394,7 +404,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier

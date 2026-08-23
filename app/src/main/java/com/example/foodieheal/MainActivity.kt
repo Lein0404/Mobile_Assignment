@@ -312,11 +312,19 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // --- ADMIN & CHEF ---
-                                composable(Screen.AdminChefScreen.route) {
-                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel)
+                                composable(
+                                    route = Screen.AdminChefScreen.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = 0; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel, initialTab = tab)
                                 }
-                                composable(Screen.AdminIngredient.route){
-                                    AdminIngredientsScreen(navController)
+                                composable(
+                                    route = Screen.AdminIngredient.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                                    AdminIngredientsScreen(navController, initialTab = tab)
                                 }
                                 composable(
                                     route = Screen.AdminIngredientDetail.route,

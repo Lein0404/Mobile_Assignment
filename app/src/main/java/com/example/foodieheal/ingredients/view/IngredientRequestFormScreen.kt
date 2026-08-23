@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
@@ -35,6 +34,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
+import com.example.foodieheal.ui.components.PrimaryButton
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,9 +60,11 @@ fun IngredientRequestFormScreen(
     if (formState.isStatusConflict) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text(
-                text = stringResource(R.string.ingredient_form_processed_title),
-                fontWeight = FontWeight.Bold)
+            title = {
+                Text(
+                    text = stringResource(R.string.ingredient_form_processed_title),
+                    fontWeight = FontWeight.Bold
+                )
             },
             text = { Text(stringResource(R.string.ingredient_form_processed_text)) },
             confirmButton = {
@@ -98,7 +100,7 @@ fun IngredientRequestFormScreen(
                 title = {
                     Text(
                         text = if (requestId == null) stringResource(R.string.ingredient_form_title_add) else stringResource(R.string.ingredient_form_title_update),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -114,8 +116,8 @@ fun IngredientRequestFormScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -175,20 +177,24 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
 
                     // 3. Ingredient Category
                     LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                         title = stringResource(R.string.category),
                         fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
                         placeholder = stringResource(R.string.ingredient_form_category_placeholder),
+                        placeholderTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                        ),
+                        textStyle = MaterialTheme.typography.bodyLarge,
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -207,14 +213,16 @@ fun IngredientRequestFormScreen(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        )
+                            errorContainerColor = MaterialTheme.colorScheme.background,
+                        ),
+                        isError = formState.categoryError != null
                     )
                     formState.categoryError?.let { resId ->
                         Text(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -234,7 +242,7 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -250,7 +258,7 @@ fun IngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -298,20 +306,20 @@ fun IngredientRequestFormScreen(
                         }
                     }
 
-                    // TODO: change to AlertDialog / Toast
                     formState.errorMessage?.let { resId ->
                         Text(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
                     val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
                     val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
-                    Button(
+                    PrimaryButton(
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             scope.launch {
                                 val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
@@ -335,26 +343,23 @@ fun IngredientRequestFormScreen(
                                 )
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        textID = if (requestId == null) R.string.request_new_ingredient else R.string.update_request,
                         enabled = !formState.isSubmitting
-                    ) {
-                        if (formState.isSubmitting) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                        } else {
-                            Text(
-                                text = if (requestId == null) stringResource(R.string.request_new_ingredient) else stringResource(R.string.update_request),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+
+            if (formState.isSubmitting) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(enabled = false) {}, // Prevent interaction
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -391,7 +396,9 @@ fun UnitRow(
                 onItemSelected = { onUpdate(it, calories) },
                 selectedItemToString = { it.unitName },
                 placeholder = stringResource(R.string.ingredient_form_serving_unit_placeholder),
-                // TODO: placeholderTextStyle
+                placeholderTextStyle = MaterialTheme.typography.labelMedium.copy(
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                ),
                 options = availableUnits,
                 drawItem = { item, selected, itemEnabled, onClick ->
                     Column(
@@ -410,14 +417,15 @@ fun UnitRow(
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                )
+                ),
+                isError = unitError != null
             )
             if (unitError != null) {
                 Text(
                     text = stringResource(unitError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
@@ -441,13 +449,19 @@ fun UnitRow(
                         onUpdate(selectedUnit, newValue)
                     }
                 },
-                placeholder = { Text(placeholderText, fontSize = 12.sp) },
+                placeholder = {
+                    Text(
+                        text = placeholderText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    ) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = caloriesError != null,
                 shape = RoundedCornerShape(8.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    errorContainerColor = MaterialTheme.colorScheme.background,
                 ),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number
@@ -458,7 +472,7 @@ fun UnitRow(
                     text = stringResource(caloriesError),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }

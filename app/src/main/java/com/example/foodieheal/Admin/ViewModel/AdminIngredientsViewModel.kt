@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AdminIngredientsUiState(
+    val selectedTab: Int = 0,
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null, // null means "All"
@@ -102,6 +103,10 @@ class AdminIngredientsViewModel(
 
     fun refresh() {
         fetchRequests(isRefreshing = true)
+    }
+
+    fun onTabChange(index: Int) {
+        _uiState.update { it.copy(selectedTab = index) }
     }
 
     fun onSearchQueryChange(query: String) {

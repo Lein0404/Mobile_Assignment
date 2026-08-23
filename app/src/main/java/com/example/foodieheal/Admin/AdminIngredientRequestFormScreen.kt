@@ -19,7 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
@@ -32,6 +31,7 @@ import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.view.UnitRow
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
+import com.example.foodieheal.ui.components.PrimaryButton
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +93,7 @@ fun AdminIngredientRequestFormScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.admin_review_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -107,8 +107,8 @@ fun AdminIngredientRequestFormScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -167,20 +167,24 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
 
                     // 3. Category
                     LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                         title = stringResource(R.string.category),
                         fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
                         selectedOption = formState.category,
                         onItemSelected = { viewModel.updateFormCategory(it) },
                         selectedItemToString = { it.categoryName },
                         placeholder = stringResource(R.string.admin_add_category_placeholder),
+                        placeholderTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                        ),
+                        textStyle = MaterialTheme.typography.bodyLarge,
                         options = IngredientCategory.entries,
                         drawItem = { item, selected, itemEnabled, onClick ->
                             Column(
@@ -199,14 +203,16 @@ fun AdminIngredientRequestFormScreen(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        )
+                            errorContainerColor = MaterialTheme.colorScheme.background,
+                        ),
+                        isError = formState.categoryError != null
                     )
                     formState.categoryError?.let { resId ->
                         Text(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -226,7 +232,7 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(Modifier.height(16.dp))
@@ -242,7 +248,7 @@ fun AdminIngredientRequestFormScreen(
                             text = stringResource(id = resId),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -289,38 +295,33 @@ fun AdminIngredientRequestFormScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+                    val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
+                    PrimaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            if (viewModel.validateForm()) {
+                                showApproveDialog = true
+                            } else {
+                                Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        textID = R.string.admin_approve_ingredient_request,
+                        enabled = !formState.isSubmitting && requestDetail != null && !isLoading
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
+            }
 
-                val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
-                Button(
-                    onClick = {
-                        if (viewModel.validateForm()) {
-                            showApproveDialog = true
-                        } else {
-                            Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
-                        }
-                    },
+            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
+                Box(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(16.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    enabled = !formState.isSubmitting && requestDetail != null && !isLoading
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(enabled = false) {}, // Prevent interaction
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (formState.isSubmitting || (isLoading && requestDetail == null)) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text(
-                            text = stringResource(R.string.admin_approve_ingredient_request),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -344,7 +345,8 @@ fun AdminIngredientRequestFormScreen(
                         adminNote = if (adminNote.isBlank()) null else adminNote,
                         onComplete = {
                             Toast.makeText(context, requestApprovedMsg, Toast.LENGTH_SHORT).show()
-                            navController.navigate(Screen.AdminChefScreen.route) {
+
+                            navController.navigate(Screen.AdminChefScreen.createRoute(tab = 1)) {
                                 popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
                             }
                         }

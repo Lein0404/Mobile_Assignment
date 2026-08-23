@@ -1,6 +1,7 @@
 package com.example.foodieheal.ui.components
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.model.Status
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 /**
  * Common is a helper class with composable templates such as Buttons, Carousels, Lists configured
@@ -100,6 +103,13 @@ fun SecondaryButton(
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
         enabled = enabled,
         modifier = finalModifier
     ) {

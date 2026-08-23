@@ -21,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
@@ -120,8 +119,8 @@ fun IngredientDetailScreen(
                 title = {
                     Text(
                         text = if (isRequest) stringResource(R.string.ingredient_detail_title_request) else stringResource(R.string.ingredient_detail_title_ingredient),
-                        color = Color.White,
-                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                 },
@@ -138,7 +137,7 @@ fun IngredientDetailScreen(
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = stringResource(R.string.back), 
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -186,7 +185,7 @@ fun IngredientDetailScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                     loading = {
-                                        CircularProgressIndicator(modifier = Modifier.scale(0.5f)) // TODO: make the CPI smaller
+                                        CircularProgressIndicator(modifier = Modifier.scale(0.2f)) // TODO: make the CPI smaller
                                     },
                                     error = { ImagePlaceholder() }
                                 )
@@ -205,17 +204,19 @@ fun IngredientDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                ) {
                                     Text(
                                         text = displayData.name ?: "", 
-                                        style = MaterialTheme.typography.headlineMedium, 
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
                                     )
                                     Text(
-                                        text = displayData.category ?: stringResource(R.string.shopping_list_categories), 
+                                        text = displayData.category ?: stringResource(R.string.shopping_list_categories),
+                                        style = MaterialTheme.typography.labelLarge,
                                         color = Color.Gray,
-                                        fontSize = 14.sp
                                     )
                                     
                                     if (isRequest) {
@@ -270,13 +271,11 @@ fun IngredientDetailScreen(
                             Text(
                                 text = displayData.description?.ifEmpty { stringResource(R.string.ingredient_detail_no_description) } ?: stringResource(R.string.ingredient_detail_no_description),
                                 color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
                             Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = displayData.calorieInfo?.ifEmpty { stringResource(R.string.ingredient_detail_no_calorie_info) } ?: stringResource(R.string.ingredient_detail_no_calorie_info),
                                 color = Color.Black
@@ -288,7 +287,6 @@ fun IngredientDetailScreen(
                                 Text(
                                     text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
                                     color = Color.Black,
-                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
 
@@ -298,7 +296,6 @@ fun IngredientDetailScreen(
                                 Text(
                                     text = requestDetail?.request?.adminNote ?: "",
                                     color = Color.Black,
-                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
                             

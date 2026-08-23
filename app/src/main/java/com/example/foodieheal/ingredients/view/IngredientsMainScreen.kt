@@ -2,8 +2,6 @@ package com.example.foodieheal.ingredients.view
 
 import android.app.Application
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -105,14 +102,14 @@ fun IngredientsMainScreen(
         topBar = {
             Surface(
                 color = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Column {
                     TopAppBar(
                         title = {
                             Text(
                                 text = stringResource(R.string.ingredients_title),
-                                fontSize = 24.sp,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
                         },
@@ -124,23 +121,29 @@ fun IngredientsMainScreen(
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
+                        /*colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
-                            titleContentColor = Color.White,
-                            navigationIconContentColor = Color.White
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        )*/
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     )
 
                     TabRow(
                         selectedTabIndex = uiState.selectedTab,
                         containerColor = Color.Transparent,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         indicator = { tabPositions ->
                             if (uiState.selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
                                     Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
                                     height = 3.dp,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         },
@@ -153,9 +156,13 @@ fun IngredientsMainScreen(
                                 text = {
                                     Text(
                                         text = title,
-                                        fontSize = 15.sp,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (uiState.selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                        color = if (uiState.selectedTab == index) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                        }
                                     )
                                 }
                             )
@@ -170,7 +177,7 @@ fun IngredientsMainScreen(
                 FloatingActionButton(
                     onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
@@ -244,15 +251,15 @@ fun IngredientRequestsScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(R.string.no_internet_connection),
-                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.ingredients_no_internet_requests),
-                    fontSize = 15.sp,
-                    color = Color.Gray,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }
@@ -447,7 +454,7 @@ fun IngredientRequestCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier
@@ -592,7 +599,7 @@ fun IngredientCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier

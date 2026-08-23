@@ -38,10 +38,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
 import com.example.foodieheal.NavigationItem
@@ -55,11 +57,12 @@ import com.example.foodieheal.viewmodel.AuthViewModel
 fun AdminApprovalScreen(
     parentNavController: NavHostController,
     viewModel: AdminApprovalViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    initialTab: Int = 0
 ) {
     val navController = rememberNavController()
-    // Using the passed-in authViewModel instead of creating a local one
-    // to ensure we share login state with MainActivity
+
+    val startDestination = if (initialTab == 1) Screen.AdminIngredient.route else Screen.AdminChefScreen.route
 
     val items = listOf(
         NavigationItem(Screen.AdminChefScreen.route, "Chef Approval", R.drawable.ic_outline_account_circle),
@@ -82,6 +85,11 @@ fun AdminApprovalScreen(
                 val currentDestination = navBackStackEntry?.destination
 
                 items.forEach { item ->
+                    val isSelected = currentDestination?.hierarchy?.any { 
+                        // Match either exact route or route without arguments
+                        it.route?.split("?")?.firstOrNull() == item.route.split("?")?.firstOrNull() 
+                    } == true
+                    
                     NavigationBarItem(
                         icon = {
                             Icon(
@@ -91,7 +99,7 @@ fun AdminApprovalScreen(
                             )
                         },
                         label = { Text(item.label, fontSize = 10.sp) },
-                        selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                        selected = isSelected,
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -138,14 +146,18 @@ fun AdminApprovalScreen(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.AdminChefScreen.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.AdminChefScreen.route) {
                 AdminChefApprovalContent(viewModel, navController)
             }
-            composable(Screen.AdminIngredient.route) {
-                AdminIngredientsScreen(parentNavController)
+            composable(
+                route = Screen.AdminIngredient.route,
+                arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+            ) { backStackEntry ->
+                val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                AdminIngredientsScreen(parentNavController, initialTab = tab)
             }
         }
     }

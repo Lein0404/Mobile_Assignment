@@ -21,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
@@ -77,7 +76,7 @@ fun AdminIngredientDetailScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.admin_detail_title),
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                 },
@@ -138,7 +137,7 @@ fun AdminIngredientDetailScreen(
                                         contentDescription = request.ingredientName,
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop,
-                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.5f)) }, // TODO: make the CPI smaller
+                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.2f)) }, // TODO: make the CPI smaller
                                         error = { ImagePlaceholder() }
                                     )
                                 } else {
@@ -154,14 +153,14 @@ fun AdminIngredientDetailScreen(
                                 // 2. Title & Category
                                 Text(
                                     text = request.ingredientName,
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black
                                 )
                                 Text(
                                     text = request.ingredientCategory?.categoryName ?: stringResource(R.string.none),
+                                    style = MaterialTheme.typography.labelLarge,
                                     color = Color.Gray,
-                                    fontSize = 14.sp
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 StatusBadge(status = request.requestStatus)
@@ -177,7 +176,6 @@ fun AdminIngredientDetailScreen(
                                 Text(
                                     text = request.ingredientDesc.ifEmpty { stringResource(R.string.admin_detail_no_description) },
                                     color = Color.Black,
-                                    modifier = Modifier.padding(top = 4.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(24.dp))
@@ -197,7 +195,6 @@ fun AdminIngredientDetailScreen(
                                     Text(
                                         text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
                                         color = Color.Black,
-                                        modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
 
@@ -207,7 +204,6 @@ fun AdminIngredientDetailScreen(
                                     Text(
                                         text = request.adminNote,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
 
@@ -220,9 +216,18 @@ fun AdminIngredientDetailScreen(
                                 // 6. Request Information
                                 Text(stringResource(R.string.admin_detail_request_info_header), fontWeight = FontWeight.Bold, color = Color.Black)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(stringResource(R.string.admin_detail_user_id, info.requesterCustomId), fontSize = 14.sp)
-                                Text(stringResource(R.string.admin_detail_user_name, info.requesterName), fontSize = 14.sp)
-                                Text(stringResource(R.string.admin_detail_created_date, formatDisplayDateTime(request.datetimeCreated)), fontSize = 14.sp)
+                                Text(
+                                    stringResource(R.string.admin_detail_user_id, info.requesterCustomId),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    stringResource(R.string.admin_detail_user_name, info.requesterName),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    stringResource(R.string.admin_detail_created_date, formatDisplayDateTime(request.datetimeCreated)),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
 
                                 Spacer(modifier = Modifier.height(120.dp))
                             }
