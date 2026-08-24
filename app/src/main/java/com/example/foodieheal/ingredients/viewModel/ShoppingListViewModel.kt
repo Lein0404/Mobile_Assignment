@@ -19,7 +19,9 @@ data class ShoppingListUiState(
     val items: List<ShoppingListItem> = emptyList(),
     val filteredItems: List<ShoppingListItem> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: Int? = null
+    val errorMessage: Int? = null,
+    val showClearCheckedDialog: Boolean = false,
+    val showClearAllDialog: Boolean = false
 )
 
 class ShoppingListViewModel(
@@ -69,6 +71,14 @@ class ShoppingListViewModel(
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
         applyFilters()
+    }
+
+    fun onShowClearCheckedDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearCheckedDialog = show) }
+    }
+
+    fun onShowClearAllDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearAllDialog = show) }
     }
 
     fun toggleCategory(category: IngredientCategory) {

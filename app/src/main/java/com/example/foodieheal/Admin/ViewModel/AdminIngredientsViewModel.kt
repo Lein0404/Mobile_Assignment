@@ -21,12 +21,14 @@ data class AdminIngredientsUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null, // null means "All"
+    val tempSelectedStatus: Status? = null,
     val requests: List<AdminIngredientRequestItem> = emptyList(),
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+    val isNetworkAvailable: Boolean = true,
     val errorMessage: Int? = null,
-    val isNetworkAvailable: Boolean = true
+    val showStatusFilterDialog: Boolean = false,
 )
 
 data class AdminIngredientRequestItem(
@@ -107,6 +109,14 @@ class AdminIngredientsViewModel(
 
     fun onTabChange(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun onShowStatusFilterDialog(show: Boolean) {
+        _uiState.update { it.copy(showStatusFilterDialog = show, tempSelectedStatus = it.selectedStatus) }
+    }
+
+    fun updateTempStatus(status: Status?) {
+        _uiState.update { it.copy(tempSelectedStatus = status) }
     }
 
     fun onSearchQueryChange(query: String) {

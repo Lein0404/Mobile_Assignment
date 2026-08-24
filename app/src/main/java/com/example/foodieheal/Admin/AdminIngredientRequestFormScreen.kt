@@ -67,14 +67,6 @@ fun AdminIngredientRequestFormScreen(
     )
 
     val errorMessage = formState.errorMessage
-    var showErrorDialog by remember { mutableStateOf(false) }
-    var showApproveDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(errorMessage) {
-        if (errorMessage != null) {
-            showErrorDialog = true
-        }
-    }
 
     LaunchedEffect(requestId) {
         viewModel.populateFormForReview(requestId)
@@ -304,7 +296,7 @@ fun AdminIngredientRequestFormScreen(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             if (viewModel.validateForm()) {
-                                showApproveDialog = true
+                                viewModel.onShowApproveDialog(true)
                             } else {
                                 Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                             }
@@ -331,11 +323,13 @@ fun AdminIngredientRequestFormScreen(
     }
 
     val requestApprovedMsg = stringResource(R.string.admin_request_approved)
-    if (showApproveDialog) {
+    if (actionUiState.showApproveDialog) {
         ApproveRequestDialog(
-            onDismiss = { showApproveDialog = false },
+            adminNote = actionUiState.adminNote,
+            onAdminNoteChange = { viewModel.onAdminNoteChange(it) },
+            onDismiss = { viewModel.onShowApproveDialog(false) },
             onConfirm = { adminNote ->
-                showApproveDialog = false
+                viewModel.onShowApproveDialog(false)
                 scope.launch {
                     val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
                         cloudinaryViewModel.uploadImage(context)
@@ -359,10 +353,10 @@ fun AdminIngredientRequestFormScreen(
         )
     }
 
-    if (showErrorDialog && errorMessage != null) {
+    if (actionUiState.showErrorDialog && errorMessage != null) {
         AlertDialog(
             onDismissRequest = { 
-                showErrorDialog = false
+                viewModel.onShowErrorDialog(false)
                 viewModel.clearError()
             },
             title = { Text(
@@ -377,7 +371,7 @@ fun AdminIngredientRequestFormScreen(
             },
             confirmButton = {
                 TextButton(onClick = { 
-                    showErrorDialog = false
+                    viewModel.onShowErrorDialog(false)
                     viewModel.clearError()
                 }) {
                     Text(
@@ -392,11 +386,11 @@ fun AdminIngredientRequestFormScreen(
 
 @Composable
 fun ApproveRequestDialog(
+    adminNote: String,
+    onAdminNoteChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var adminNote by remember { mutableStateOf("") }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.admin_approve_request_dialog_title), fontWeight = FontWeight.Bold) },
@@ -413,7 +407,7 @@ fun ApproveRequestDialog(
                 Text(stringResource(R.string.admin_approve_request_dialog_note))
                 OutlinedTextField(
                     value = adminNote,
-                    onValueChange = { adminNote = it },
+                    onValueChange = onAdminNoteChange,
                     placeholder = { Text(stringResource(R.string.admin_approve_request_dialog_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(120.dp)
                 )

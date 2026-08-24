@@ -233,9 +233,6 @@ fun AdminIngredientRequestsScreen(
     uiState: AdminIngredientsUiState,
     navController: NavController
 ) {
-    var showStatusFilterDialog by remember { mutableStateOf(false) }
-    var tempSelectedStatus by remember { mutableStateOf(uiState.selectedStatus) }
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -264,8 +261,7 @@ fun AdminIngredientRequestsScreen(
                         tint = if (uiState.selectedStatus != null) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                         modifier = Modifier
                             .clickable {
-                                tempSelectedStatus = uiState.selectedStatus
-                                showStatusFilterDialog = true
+                                viewModel.onShowStatusFilterDialog(true)
                             }
                     )
                     Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
@@ -274,8 +270,7 @@ fun AdminIngredientRequestsScreen(
                         contentDescription = stringResource(R.string.search),
                         modifier = Modifier
                             .clickable {
-                                tempSelectedStatus = uiState.selectedStatus
-                                showStatusFilterDialog = true
+                                viewModel.onShowStatusFilterDialog(true)
                             }
                     )
                 }
@@ -374,9 +369,9 @@ fun AdminIngredientRequestsScreen(
         }
     }
 
-    if (showStatusFilterDialog) {
+    if (uiState.showStatusFilterDialog) {
         AlertDialog(
-            onDismissRequest = { showStatusFilterDialog = false },
+            onDismissRequest = { viewModel.onShowStatusFilterDialog(false) },
             title = { Text(stringResource(R.string.admin_filter_status_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -391,12 +386,12 @@ fun AdminIngredientRequestsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { tempSelectedStatus = status }
+                                .clickable { viewModel.updateTempStatus(status) }
                                 .padding(vertical = dimensionResource(id = R.dimen.padding_xsm))
                         ) {
                             RadioButton(
-                                selected = tempSelectedStatus == status,
-                                onClick = { tempSelectedStatus = status }
+                                selected = uiState.tempSelectedStatus == status,
+                                onClick = { viewModel.updateTempStatus(status) }
                             )
                             Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
                             Text(text = label)
@@ -407,15 +402,15 @@ fun AdminIngredientRequestsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.onStatusFilterChange(tempSelectedStatus)
-                        showStatusFilterDialog = false
+                        viewModel.onStatusFilterChange(uiState.tempSelectedStatus)
+                        viewModel.onShowStatusFilterDialog(false)
                     }
                 ) {
                     Text(stringResource(R.string.admin_apply_filter), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showStatusFilterDialog = false }) {
+                TextButton(onClick = { viewModel.onShowStatusFilterDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

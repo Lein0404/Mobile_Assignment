@@ -44,8 +44,6 @@ fun ShoppingListScreen(
     val context = LocalContext.current
     
     var showMenu by remember { mutableStateOf(false) }
-    var showClearCheckedDialog by remember { mutableStateOf(false) }
-    var showClearAllDialog by remember { mutableStateOf(false) }
 
     val checkedCount = uiState.items.count { it.entity.isChecked }
 
@@ -123,7 +121,7 @@ fun ShoppingListScreen(
                         onClick = {
                             showMenu = false
                             if (checkedCount > 0) {
-                                showClearCheckedDialog = true
+                                viewModel.onShowClearCheckedDialog(true)
                             } else {
                                 Toast.makeText(context, R.string.shopping_list_no_checked_items, Toast.LENGTH_SHORT).show()
                             }
@@ -140,7 +138,7 @@ fun ShoppingListScreen(
                         onClick = {
                             showMenu = false
                             if (uiState.items.isNotEmpty()) {
-                                showClearAllDialog = true
+                                viewModel.onShowClearAllDialog(true)
                             } else {
                                 Toast.makeText(context, R.string.shopping_list_already_empty, Toast.LENGTH_SHORT).show()
                             }
@@ -261,9 +259,9 @@ fun ShoppingListScreen(
     }
 
     // Confirmation Dialogs
-    if (showClearCheckedDialog) {
+    if (uiState.showClearCheckedDialog) {
         AlertDialog(
-            onDismissRequest = { showClearCheckedDialog = false },
+            onDismissRequest = { viewModel.onShowClearCheckedDialog(false) },
             title = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_title)) },
             text = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_text, checkedCount)) },
             confirmButton = {
@@ -271,35 +269,35 @@ fun ShoppingListScreen(
                 TextButton(onClick = {
                     viewModel.clearChecked()
                     Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
-                    showClearCheckedDialog = false
+                    viewModel.onShowClearCheckedDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearCheckedDialog = false }) {
+                TextButton(onClick = { viewModel.onShowClearCheckedDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
     }
 
-    if (showClearAllDialog) {
+    if (uiState.showClearAllDialog) {
         AlertDialog(
-            onDismissRequest = { showClearAllDialog = false },
+            onDismissRequest = { viewModel.onShowClearAllDialog(false) },
             title = { Text(stringResource(R.string.shopping_list_clear_all_dialog_title)) },
             text = { Text(stringResource(R.string.shopping_list_clear_all_dialog_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearAll()
                     Toast.makeText(context, R.string.shopping_list_clear_all_toast, Toast.LENGTH_SHORT).show()
-                    showClearAllDialog = false
+                    viewModel.onShowClearAllDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearAllDialog = false }) {
+                TextButton(onClick = { viewModel.onShowClearAllDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

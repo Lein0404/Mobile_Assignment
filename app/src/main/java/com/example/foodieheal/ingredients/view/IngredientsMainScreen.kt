@@ -217,9 +217,6 @@ fun IngredientRequestsScreen(
     uiState: IngredientRequestUiState,
     navController: NavController
 ) {
-    var showStatusFilterDialog by remember { mutableStateOf(false) }
-    var tempSelectedStatus by remember { mutableStateOf(uiState.selectedStatus) }
-
     // Gate: show offline message when not connected
     if (!uiState.isNetworkAvailable) {
         Box(
@@ -281,8 +278,7 @@ fun IngredientRequestsScreen(
                         tint = if (uiState.selectedStatus != null) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                         modifier = Modifier
                             .clickable {
-                                tempSelectedStatus = uiState.selectedStatus
-                                showStatusFilterDialog = true
+                                viewModel.onShowStatusFilterDialog(true)
                             }
                     )
                     Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
@@ -291,8 +287,7 @@ fun IngredientRequestsScreen(
                         contentDescription = stringResource(R.string.search),
                         modifier = Modifier
                             .clickable {
-                                tempSelectedStatus = uiState.selectedStatus
-                                showStatusFilterDialog = true
+                                viewModel.onShowStatusFilterDialog(true)
                             }
                     )
                 }
@@ -396,9 +391,9 @@ fun IngredientRequestsScreen(
         }
     }
 
-    if (showStatusFilterDialog) {
+    if (uiState.showStatusFilterDialog) {
         AlertDialog(
-            onDismissRequest = { showStatusFilterDialog = false },
+            onDismissRequest = { viewModel.onShowStatusFilterDialog(false) },
             title = {
                 Text(
                     text = stringResource(R.string.ingredients_requests_filter_title),
@@ -418,12 +413,12 @@ fun IngredientRequestsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { tempSelectedStatus = status }
+                                .clickable { viewModel.updateTempStatus(status) }
                                 .padding(vertical = dimensionResource(id = R.dimen.padding_xsm))
                         ) {
                             RadioButton(
-                                selected = tempSelectedStatus == status,
-                                onClick = { tempSelectedStatus = status }
+                                selected = uiState.tempSelectedStatus == status,
+                                onClick = { viewModel.updateTempStatus(status) }
                             )
                             Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
                             Text(text = label)
@@ -434,8 +429,8 @@ fun IngredientRequestsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.onStatusFilterChange(tempSelectedStatus)
-                        showStatusFilterDialog = false
+                        viewModel.onStatusFilterChange(uiState.tempSelectedStatus)
+                        viewModel.onShowStatusFilterDialog(false)
                     }
                 ) {
                     Text(
@@ -445,7 +440,7 @@ fun IngredientRequestsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showStatusFilterDialog = false }) {
+                TextButton(onClick = { viewModel.onShowStatusFilterDialog(false) }) {
                     Text(
                         text = stringResource(R.string.dialog_cancel),
                         color = MaterialTheme.colorScheme.onSurfaceVariant

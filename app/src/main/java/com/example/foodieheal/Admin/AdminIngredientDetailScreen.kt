@@ -51,8 +51,6 @@ fun AdminIngredientDetailScreen(
     val isLoading = actionUiState.isLoading
     val isRefreshing = actionUiState.isRefreshing
     
-    var showRejectDialog by remember { mutableStateOf(false) }
-
     RequestConflictDialog(
         isDeleted = actionUiState.isDeletedByUser,
         isProcessed = actionUiState.isAlreadyProcessed,
@@ -250,7 +248,7 @@ fun AdminIngredientDetailScreen(
                                     horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                                 ) {
                                     Button(
-                                        onClick = { showRejectDialog = true },
+                                        onClick = { viewModel.onShowRejectDialog(true) },
                                         modifier = Modifier.weight(0.45f),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.error
@@ -285,13 +283,16 @@ fun AdminIngredientDetailScreen(
         }
     }
 
-    if (showRejectDialog) {
+    if (actionUiState.showRejectDialog) {
         RejectRequestDialog(
-            onDismiss = { showRejectDialog = false },
+            reason = actionUiState.rejectReason,
+            onReasonChange = { viewModel.onRejectReasonChange(it) },
+            error = actionUiState.rejectReasonError,
+            onDismiss = { viewModel.onShowRejectDialog(false) },
             onConfirm = { reason ->
                 viewModel.rejectRequest(requestId, reason) {
                     Toast.makeText(context, R.string.admin_detail_toast_rejected, Toast.LENGTH_SHORT).show()
-                    showRejectDialog = false
+                    viewModel.onShowRejectDialog(false)
                     navController.popBackStack()
                 }
             }
@@ -313,12 +314,12 @@ fun formatDisplayDateTime(isoDateTime: String?): String {
 
 @Composable
 fun RejectRequestDialog(
+    reason: String,
+    onReasonChange: (String) -> Unit,
+    error: Int?,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var reason by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<Int?>(null) }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Reject Request", fontWeight = FontWeight.Bold) },
@@ -328,10 +329,7 @@ fun RejectRequestDialog(
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
                 OutlinedTextField(
                     value = reason,
-                    onValueChange = {
-                        reason = it
-                        if (it.isNotBlank()) error = null
-                    },
+                    onValueChange = onReasonChange,
                     placeholder = { Text(stringResource(R.string.admin_detail_reject_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(240.dp),
                     isError = error != null,
@@ -347,11 +345,7 @@ fun RejectRequestDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                if (reason.isBlank()) {
-                    error = R.string.admin_detail_error_reason_empty
-                } else {
-                    onConfirm(reason)
-                }
+                onConfirm(reason)
             }) {
                 Text(stringResource(R.string.admin_detail_reject_title), color = MaterialTheme.colorScheme.primary)
             }

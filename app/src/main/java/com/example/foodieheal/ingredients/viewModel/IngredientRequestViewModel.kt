@@ -20,13 +20,16 @@ data class IngredientRequestUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null,
+    val tempSelectedStatus: Status? = null,
     val requests: List<IngredientRequestItem> = emptyList(),
     val filteredRequests: List<IngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isStatusConflict: Boolean = false,
+    val isNetworkAvailable: Boolean = true,
     val errorMessage: Int? = null,
-    val isNetworkAvailable: Boolean = true
+    val showDeleteDialog: Boolean = false,
+    val showStatusFilterDialog: Boolean = false,
 )
 
 data class IngredientRequestFormUiState(
@@ -179,6 +182,18 @@ class IngredientRequestViewModel(
 
     fun refreshRequestDetail(requestId: String) {
         fetchRequestDetail(requestId, isRefreshing = true)
+    }
+
+    fun onShowDeleteDialog(show: Boolean) {
+        _uiState.update { it.copy(showDeleteDialog = show) }
+    }
+
+    fun onShowStatusFilterDialog(show: Boolean) {
+        _uiState.update { it.copy(showStatusFilterDialog = show, tempSelectedStatus = it.selectedStatus) }
+    }
+
+    fun updateTempStatus(status: Status?) {
+        _uiState.update { it.copy(tempSelectedStatus = status) }
     }
 
     fun deleteRequest(requestId: String, onComplete: () -> Unit) {

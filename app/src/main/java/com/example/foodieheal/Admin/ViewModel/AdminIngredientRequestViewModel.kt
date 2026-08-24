@@ -28,7 +28,10 @@ data class AdminIngredientRequestUiState(
     val isRefreshing: Boolean = false,
     val isDeletedByUser: Boolean = false,
     val isAlreadyProcessed: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val showRejectDialog: Boolean = false,
+    val rejectReason: String = "",
+    val rejectReasonError: Int? = null
 )
 
 class AdminIngredientRequestViewModel(
@@ -63,6 +66,14 @@ class AdminIngredientRequestViewModel(
                 _uiState.update { it.copy(isNetworkAvailable = connected) }
             }
         }
+    }
+
+    fun onShowRejectDialog(show: Boolean) {
+        _uiState.update { it.copy(showRejectDialog = show, rejectReason = "", rejectReasonError = null) }
+    }
+
+    fun onRejectReasonChange(reason: String) {
+        _uiState.update { it.copy(rejectReason = reason, rejectReasonError = null) }
     }
 
     fun fetchRequestDetail(
@@ -173,9 +184,12 @@ class AdminIngredientRequestViewModel(
         reason: String,
         onComplete: () -> Unit
     ) {
-        if (reason.isBlank()) return
+        if (reason.isBlank()) {
+            _uiState.update { it.copy(rejectReasonError = R.string.admin_detail_error_reason_empty) }
+            return
+        }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, rejectReasonError = null) }
             try {
                 val current = repository.getIngredientRequestById(requestId)
                 if (current == null) {
@@ -293,9 +307,8 @@ class AdminIngredientRequestViewModel(
                 _formState.update {
                     it.copy(
                         isSubmitting = false,
-                        //TODO:errorMessage = getApplication<Application>().getString(R.string.admin_error_approval_failed, e.localizedMessage ?: "Unknown error")
                         errorMessage = R.string.error_unknown
-                        )
+                    )
                 }
             }
         }

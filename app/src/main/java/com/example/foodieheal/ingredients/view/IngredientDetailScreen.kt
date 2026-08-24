@@ -51,8 +51,6 @@ fun IngredientDetailScreen(
     val requestDetail by requestViewModel.requestDetail.collectAsState()
     val requestUiState by requestViewModel.uiState.collectAsState()
     
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     LaunchedEffect(ingredientId, isRequest) {
         if (isRequest) {
             requestViewModel.fetchRequestDetail(ingredientId)
@@ -323,7 +321,7 @@ fun IngredientDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                             ) {
                                 Button(
-                                    onClick = { showDeleteDialog = true },
+                                    onClick = { requestViewModel.onShowDeleteDialog(true) },
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.error
@@ -351,9 +349,9 @@ fun IngredientDetailScreen(
         }
     }
 
-    if (showDeleteDialog && isRequest) {
+    if (requestUiState.showDeleteDialog && isRequest) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { requestViewModel.onShowDeleteDialog(false) },
             title = { Text(stringResource(R.string.ingredient_detail_delete_title)) },
             text = { Text(stringResource(R.string.ingredient_detail_delete_text)) },
             confirmButton = {
@@ -362,13 +360,13 @@ fun IngredientDetailScreen(
                         Toast.makeText(context, R.string.ingredient_detail_toast_deleted, Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
                     }
-                    showDeleteDialog = false
+                    requestViewModel.onShowDeleteDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { requestViewModel.onShowDeleteDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
