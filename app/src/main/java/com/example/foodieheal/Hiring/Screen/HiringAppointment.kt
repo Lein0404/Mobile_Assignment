@@ -194,7 +194,9 @@ fun HiringAppointment(
                 selectedDate = selectedDate,
                 appointments = chefAppointmentsForSelectedDate,
                 onAddAppointmentClick = {
-                    onAddAppointmentClick(selectedDate)
+                    if (!selectedDate.isBefore(LocalDate.now())) {
+                        onAddAppointmentClick(selectedDate)
+                    }
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -224,6 +226,9 @@ private fun DayScheduleSection(
     val formattedTitle = remember(selectedDate) {
         selectedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMM"))
     }
+    val isPastDate = remember(selectedDate) {
+        selectedDate.isBefore(LocalDate.now())
+    }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -250,13 +255,15 @@ private fun DayScheduleSection(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    IconButton(onClick = onAddAppointmentClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_add_circle_outline),
-                            contentDescription = stringResource(R.string.cd_add_booking),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(32.dp)
-                        )
+                    if (!isPastDate) {
+                        IconButton(onClick = onAddAppointmentClick) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_add_circle_outline),
+                                contentDescription = stringResource(R.string.cd_add_booking),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -511,4 +511,17 @@
     <string name="category_low_carb">Low-carbohydrate</string>
     <string name="category_cost_friendly">Cost Friendly</string>
     <string name="category_others">Others</string>
+
+    <!-- Chef Change Password -->
+    <string name="change_password">Change Password</string>
+    <string name="secure_account_chef">Secure Your Chef Account</string>
+    <string name="change_password_subtitle">Enter your current and new password below to update your security credentials.</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="error_chef_password_rule">Password must be 8-30 characters with uppercase, lowercase, and numbers</string>
+    <string name="error_passwords_not_matching">Passwords do not match</string>
+    <string name="btn_update_password">UPDATE PASSWORD</string>
+    <string name="toast_password_updated_success">Password updated successfully!</string>
+    <string name="account_security">Account Security</string>
 </resources>
