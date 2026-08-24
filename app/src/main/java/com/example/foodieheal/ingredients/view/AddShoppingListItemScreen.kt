@@ -84,9 +84,7 @@ fun AddShoppingListItemScreen(
                 .padding(paddingValues)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+                modifier = Modifier.fillMaxSize()
             ) {
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
@@ -100,7 +98,9 @@ fun AddShoppingListItemScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                     trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
                     colors = TextFieldDefaults.colors(
@@ -110,17 +110,37 @@ fun AddShoppingListItemScreen(
                 )
 
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-                Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = stringResource(R.string.shopping_list_categories),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+                )
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
 
                 // Categories chips
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
+                ) {
                     items(IngredientCategory.entries) { category ->
                         FilterChip(
                             selected = uiState.selectedCategories.contains(category),
                             onClick = { ingredientsViewModel.toggleCategory(category) },
-                            label = { Text(category.categoryName, style = MaterialTheme.typography.bodyMedium) },
-                            shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_md)),
+                            label = {
+                                Text(
+                                    text = category.categoryName,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            },
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                labelColor = MaterialTheme.colorScheme.primary,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            border = null
                         )
                     }
                 }
@@ -139,7 +159,12 @@ fun AddShoppingListItemScreen(
                     val grouped = uiState.filteredIngredients.groupBy { it.ingredient.ingredientCategory ?: IngredientCategory.OTHERS }
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = dimensionResource(id = R.dimen.padding_l),
+                            end = dimensionResource(id = R.dimen.padding_l),
+                            bottom = 100.dp // Space for bottom button
+                        )
                     ) {
                         grouped.forEach { (category, items) ->
                             item {
@@ -165,7 +190,6 @@ fun AddShoppingListItemScreen(
                                 )
                             }
                         }
-                        item { Spacer(modifier = Modifier.height(100.dp)) } // Space for bottom button
                     }
                 }
             }

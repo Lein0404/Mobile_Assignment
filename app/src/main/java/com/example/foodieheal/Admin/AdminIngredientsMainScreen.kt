@@ -237,9 +237,7 @@ fun AdminIngredientRequestsScreen(
     var tempSelectedStatus by remember { mutableStateOf(uiState.selectedStatus) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+        modifier = Modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
@@ -251,7 +249,9 @@ fun AdminIngredientRequestsScreen(
                 text = stringResource(R.string.admin_requests_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
             shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
             trailingIcon = {
                 Row(
@@ -287,17 +287,37 @@ fun AdminIngredientRequestsScreen(
         )
 
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-        Text(stringResource(R.string.admin_categories_header), fontWeight = FontWeight.Bold)
+        Text(
+            text = stringResource(R.string.admin_categories_header),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+        )
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
 
         // 2. Category Chips
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
+        ) {
             items(IngredientCategory.entries) { category ->
+                val isSelected = uiState.selectedCategories.contains(category)
                 FilterChip(
-                    selected = uiState.selectedCategories.contains(category),
+                    selected = isSelected,
                     onClick = { viewModel.toggleCategory(category) },
-                    label = { Text(category.categoryName) },
+                    label = { 
+                        Text(
+                            text = category.categoryName,
+                            style = MaterialTheme.typography.bodyMedium
+                        ) 
+                    },
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        labelColor = MaterialTheme.colorScheme.primary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    border = null
                 )
             }
         }
@@ -332,7 +352,12 @@ fun AdminIngredientRequestsScreen(
             ) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = dimensionResource(id = R.dimen.padding_l),
+                        end = dimensionResource(id = R.dimen.padding_l),
+                        bottom = dimensionResource(id = R.dimen.padding_xxl)
+                    )
                 ) {
                     grouped.forEach { (category, items) ->
                         item {
@@ -344,7 +369,6 @@ fun AdminIngredientRequestsScreen(
                             }
                         }
                     }
-                    item { Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl))) }
                 }
             }
         }

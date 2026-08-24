@@ -268,7 +268,9 @@ fun IngredientRequestsScreen(
         return
     }
 
-    Column(modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
         OutlinedTextField(
             value = uiState.searchQuery,
@@ -277,7 +279,9 @@ fun IngredientRequestsScreen(
                 text = stringResource(R.string.ingredients_requests_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
             shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
             trailingIcon = {
                 Row(
@@ -315,17 +319,34 @@ fun IngredientRequestsScreen(
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
         Text(
             text = stringResource(R.string.shopping_list_categories),
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
         )
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
 
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
+        ) {
             items(IngredientCategory.entries) { category ->
+                val isSelected = uiState.selectedCategories.contains(category)
                 FilterChip(
-                    selected = uiState.selectedCategories.contains(category),
+                    selected = isSelected,
                     onClick = { viewModel.toggleCategory(category) },
-                    label = { Text(category.categoryName) },
+                    label = { 
+                        Text(
+                            text = category.categoryName,
+                            style = MaterialTheme.typography.bodyMedium
+                        ) 
+                    },
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        labelColor = MaterialTheme.colorScheme.primary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    border = null
                 )
             }
         }
@@ -366,7 +387,12 @@ fun IngredientRequestsScreen(
             ) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = dimensionResource(id = R.dimen.padding_l),
+                        end = dimensionResource(id = R.dimen.padding_l),
+                        bottom = 80.dp // Keep FAB space
+                    )
                 ) {
                     grouped.forEach { (category, items) ->
                         item {
@@ -378,7 +404,6 @@ fun IngredientRequestsScreen(
                             }
                         }
                     }
-                    item { Spacer(modifier = Modifier.height(80.dp)) } // FAB space
                 }
             }
         }
@@ -494,7 +519,9 @@ fun IngredientsExistingScreen(
     onAddToCart: (Ingredients) -> Unit = {},
     showAddToCart: Boolean = true
 ) {
-    Column(modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
         OutlinedTextField(
             value = uiState.searchQuery,
@@ -503,7 +530,9 @@ fun IngredientsExistingScreen(
                 text = stringResource(R.string.ingredients_existing_search_placeholder),
                 style = MaterialTheme.typography.labelLarge
             ) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
             shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
             trailingIcon = {
                 Icon(
@@ -517,16 +546,36 @@ fun IngredientsExistingScreen(
         )
 
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-        Text(stringResource(R.string.shopping_list_categories), fontWeight = FontWeight.Bold)
+        Text(
+            text = stringResource(R.string.shopping_list_categories),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+        )
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
 
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
+        ) {
             items(IngredientCategory.entries) { category ->
+                val isSelected = uiState.selectedCategories.contains(category)
                 FilterChip(
-                    selected = uiState.selectedCategories.contains(category),
+                    selected = isSelected,
                     onClick = { viewModel.toggleCategory(category) },
-                    label = { Text(category.categoryName) },
+                    label = { 
+                        Text(
+                            text = category.categoryName,
+                            style = MaterialTheme.typography.bodyMedium
+                        ) 
+                    },
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        labelColor = MaterialTheme.colorScheme.onSecondary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    border = null
                 )
             }
         }
@@ -565,7 +614,15 @@ fun IngredientsExistingScreen(
             onRefresh = { viewModel.refresh() },
             modifier = Modifier.fillMaxSize()
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = dimensionResource(id = R.dimen.padding_l),
+                    end = dimensionResource(id = R.dimen.padding_l),
+                    bottom = dimensionResource(id = R.dimen.padding_l)
+                )
+            ) {
                 grouped.forEach { (category, items) ->
                     item {
                         Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -581,7 +638,6 @@ fun IngredientsExistingScreen(
                         )
                     }
                 }
-                item { Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l))) }
             }
         }
     }

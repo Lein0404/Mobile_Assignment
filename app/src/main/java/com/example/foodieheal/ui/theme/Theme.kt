@@ -15,8 +15,8 @@ private val DarkColorScheme = darkColorScheme(
     primary = Color(0XFFF07F60),
     onPrimary = Color.White,
 
-    secondary = Color(0XFF7BA889),
-    onSecondary = Color.White,
+    secondary = Color(0X33EC5E3A),
+    onSecondary = Color(0XFFEC5E3A),
 
     tertiary = Color(0xFF2E2E2E),     // neutral card/surface tone
     onTertiary = Color.White,
@@ -32,8 +32,8 @@ private val LightColorScheme = lightColorScheme(
     primary = Color(0XFFEC5E3A),
     onPrimary = Color.White,
 
-    secondary = Color(0XFF5D8068),
-    onSecondary = Color.White,
+    secondary = Color(0X33EC5E3A),
+    onSecondary = Color(0XFFEC5E3A),
 
     tertiary = Color(0XFFE2E2E2),     // neutral card/surface tone
     onTertiary = Color.Black,
