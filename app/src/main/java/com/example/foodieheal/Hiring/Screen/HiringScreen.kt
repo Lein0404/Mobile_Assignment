@@ -54,15 +54,14 @@ fun HiringScreen(
 
     // Fetch all chefs on initial screen launch
     LaunchedEffect(Unit) {
-        if (chefs.isEmpty()) {
-            chefListViewModel.fetchAllChefs()
-        }
+        chefListViewModel.fetchAllChefs()
     }
 
     // Automatically fetch data whenever switching tabs
     LaunchedEffect(selectedTabIndex, currentUserId) {
         if (currentUserId.isNotEmpty()) {
             when (selectedTabIndex) {
+                0 -> chefListViewModel.fetchAllChefs()
                 1 -> userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                 2 -> bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
             }

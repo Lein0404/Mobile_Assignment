@@ -102,15 +102,16 @@ class UserAppointmentViewModel(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        updateAppointmentStatus(
-            appointmentId = appointmentId,
-            newStatus = "Cancelled",
-            onSuccess = onSuccess,
-            onError = { rawError ->
-                val errorMessage = "Failed to cancel appointment: $rawError"
+        viewModelScope.launch {
+            try {
+                repository.cancelAppointment(appointmentId)
+                fetchAppointmentsForCurrentUser(forceRefresh = true)
+                onSuccess()
+            } catch (e: Exception) {
+                val errorMessage = "Failed to cancel appointment: ${e.localizedMessage}"
                 onError(errorMessage)
             }
-        )
+        }
     }
 
     fun rescheduleAppointment(
@@ -129,6 +130,8 @@ class UserAppointmentViewModel(
     ) {
         viewModelScope.launch {
             try {
+                // Reschedules appointment: refunds previous payment (if confirmed/paid) and resets status to Pending
+                // TODO: In the future, integrate with digital wallet feature to credit refunded amount back to user's wallet balance
                 repository.rescheduleAppointment(
                     appointmentId, newDate, newStartTime, newEndTime,
                     newAddress, newPostcode, newState, newServingSize, newDescription, newTotalPrice

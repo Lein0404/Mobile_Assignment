@@ -45,7 +45,6 @@ fun PopularChefsTabContent(
 ) {
     var filterState by remember { mutableStateOf(ChefFilterState()) }
     var showFilterSheet by remember { mutableStateOf(false) }
-
     val filteredChefs = remember(chefs, filterState) {
         filterAndSortChefs(chefs, filterState)
     }

@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         ChefBookmarkEntity::class,
         ChefReviewEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class HiringDatabase : RoomDatabase() {
@@ -33,7 +33,7 @@ abstract class HiringDatabase : RoomDatabase() {
                     HiringDatabase::class.java,
                     "hiring_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }
             }

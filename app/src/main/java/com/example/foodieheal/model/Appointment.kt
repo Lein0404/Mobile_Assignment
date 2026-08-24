@@ -57,7 +57,10 @@ data class Appointment(
     val chefId : String ="",
 
     @SerialName("userId")
-    val userId : String = ""
+    val userId : String = "",
+
+    @SerialName("PaymentId")
+    val PaymentId : String? = null
 )
 
 data class ReviewWithUser(

@@ -90,7 +90,8 @@ data class AppointmentEntity(
     val comment: String?,
     val rejectReason: String?,
     val chefId: String,
-    val userId: String
+    val userId: String,
+    val paymentId: String? = null
 ) {
     fun toDomain(): Appointment {
         return Appointment(
@@ -111,7 +112,8 @@ data class AppointmentEntity(
             Comment = comment,
             Reject_Reason = rejectReason,
             chefId = chefId,
-            userId = userId
+            userId = userId,
+            PaymentId = paymentId
         )
     }
 }
@@ -135,7 +137,8 @@ fun Appointment.toEntity(): AppointmentEntity {
         comment = this.Comment,
         rejectReason = this.Reject_Reason,
         chefId = this.chefId,
-        userId = this.userId
+        userId = this.userId,
+        paymentId = this.PaymentId
     )
 }
 

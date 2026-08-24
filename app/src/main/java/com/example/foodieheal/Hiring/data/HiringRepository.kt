@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.data
 
 import android.util.Log
+import com.example.foodieheal.Payment.data.payment
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.hiring.local.AppointmentDao
 import com.example.foodieheal.hiring.local.ChefDao
@@ -17,6 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.util.Locale
+import java.util.UUID
 
 class HiringRepository(
     private val chefDao: ChefDao? = null,
@@ -30,16 +33,16 @@ class HiringRepository(
 
     suspend fun fetchAllChefs(): List<Chef> = withContext(Dispatchers.IO) {
         try {
-            val chefs = client.postgrest["Chef"]
+            val chefs = client.from("Chef")
                 .select { filter { ilike("Status", "approved") } }
                 .decodeList<Chef>()
 
             val ratedAppointments = try {
-                client.postgrest["Appointment"]
+                client.from("Appointment")
                     .select { filter { gt("rating", 0) } }
                     .decodeList<Appointment>()
             } catch (e: Exception) {
-                Log.e("HiringRepository", "Could not fetch rated appointments", e)
+                Log.e("HiringRepository", "Could not fetch rated appointments: ${e.localizedMessage}", e)
                 emptyList()
             }
 
@@ -137,8 +140,40 @@ class HiringRepository(
     }
 
     suspend fun createAppointment(appointment: Appointment) = withContext(Dispatchers.IO) {
-        client.from("Appointment").insert(appointment)
-        appointmentDao?.insertAppointment(appointment.toEntity())
+        val generatedAppointmentId = appointment.AppointmentID?.ifBlank { null } ?: UUID.randomUUID().toString()
+        val generatedPaymentId = appointment.PaymentId?.ifBlank { null } ?: UUID.randomUUID().toString()
+
+        val initialAppointment = appointment.copy(
+            AppointmentID = generatedAppointmentId,
+            PaymentId = null,
+            Status = appointment.Status.ifBlank { "Pending" }
+        )
+        client.from("Appointment").insert(initialAppointment)
+
+        val paymentRecord = payment(
+            paymentId = generatedPaymentId,
+            transactionId = null,
+            appointmentId = generatedAppointmentId,
+            userId = initialAppointment.userId,
+            totalAmount = initialAppointment.Total_Price,
+            paymentMethod = null,
+            paymentMethodId = null,
+            status = "Pending"
+        )
+        client.from("Payment").insert(paymentRecord)
+
+        client.from("Appointment").update(
+            {
+                set("PaymentId", generatedPaymentId)
+            }
+        ) {
+            filter {
+                eq("AppointmentID", generatedAppointmentId)
+            }
+        }
+
+        val finalAppointment = initialAppointment.copy(PaymentId = generatedPaymentId)
+        appointmentDao?.insertAppointment(finalAppointment.toEntity())
     }
 
     suspend fun updateAppointmentStatus(appointmentId: String, status: String) = withContext(Dispatchers.IO) {
@@ -147,6 +182,36 @@ class HiringRepository(
             filter { eq("AppointmentID", appointmentId) }
         }
         appointmentDao?.updateAppointmentStatus(appointmentId, status)
+    }
+
+    suspend fun cancelAppointment(appointmentId: String) = withContext(Dispatchers.IO) {
+        val currentAppt = try {
+            client.from("Appointment")
+                .select { filter { eq("AppointmentID", appointmentId) } }
+                .decodeSingleOrNull<Appointment>()
+        } catch (e: Exception) {
+            appointmentDao?.getAppointmentById(appointmentId)?.toDomain()
+        }
+
+        val originalStatus = currentAppt?.Status.orEmpty().trim().lowercase(Locale.US)
+        val linkedPaymentId = currentAppt?.PaymentId
+        val targetPaymentStatus = if (originalStatus == "confirmed") "Refunded" else "Cancelled"
+
+        updateAppointmentStatus(appointmentId, "Cancelled")
+
+        try {
+            if (!linkedPaymentId.isNullOrBlank()) {
+                client.from("Payment").update({ set("status", targetPaymentStatus) }) {
+                    filter { eq("paymentId", linkedPaymentId) }
+                }
+            } else {
+                client.from("Payment").update({ set("status", targetPaymentStatus) }) {
+                    filter { eq("appointmentID", appointmentId) }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error updating payment status on cancel: ${e.localizedMessage}", e)
+        }
     }
 
     suspend fun rescheduleAppointment(
@@ -161,6 +226,78 @@ class HiringRepository(
         newDescription: String,
         newTotalPrice: Double = 0.0
     ) = withContext(Dispatchers.IO) {
+
+        val currentAppt = try {
+            client.from("Appointment")
+                .select { filter { eq("AppointmentID", appointmentId) } }
+                .decodeSingleOrNull<Appointment>()
+        } catch (e: Exception) {
+            appointmentDao?.getAppointmentById(appointmentId)?.toDomain()
+        }
+
+        val originalStatus = currentAppt?.Status.orEmpty().trim().lowercase(Locale.US)
+        val oldPaymentId = currentAppt?.PaymentId
+        val finalPrice = if (newTotalPrice > 0.0) newTotalPrice else (currentAppt?.Total_Price ?: 0.0)
+
+        var newPaymentId: String? = oldPaymentId
+
+        if (originalStatus == "confirmed") {
+            // Appointment was already paid, refund previous payment
+            try {
+                if (!oldPaymentId.isNullOrBlank()) {
+                    client.from("Payment").update({ set("status", "Refunded") }) {
+                        filter { eq("paymentId", oldPaymentId) }
+                    }
+                } else {
+                    client.from("Payment").update({ set("status", "Refunded") }) {
+                        filter { eq("appointmentID", appointmentId) }
+                    }
+                }
+
+                // TODO: Future Wallet Feature - Credit the refunded amount (currentAppt.Total_Price) back to user's wallet balance
+                // like walletRepository.creditRefund(userId = currentAppt.userId, amount = currentAppt.Total_Price, appointmentId = appointmentId)
+
+                // Create a new pending payment record for the rescheduled appointment
+                val generatedPaymentId = UUID.randomUUID().toString()
+                newPaymentId = generatedPaymentId
+
+                val newPayment = payment(
+                    paymentId = generatedPaymentId,
+                    transactionId = null,
+                    appointmentId = appointmentId,
+                    userId = currentAppt?.userId.orEmpty(),
+                    totalAmount = finalPrice,
+                    paymentMethod = null,
+                    paymentMethodId = null,
+                    status = "Pending"
+                )
+                client.from("Payment").insert(newPayment)
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Error processing refund/payment on reschedule: ${e.localizedMessage}", e)
+            }
+        } else {
+            // update the existing payment with new total price
+            try {
+                if (!oldPaymentId.isNullOrBlank()) {
+                    client.from("Payment").update({
+                        set("totalAmount", finalPrice)
+                        set("status", "Pending")
+                    }) {
+                        filter { eq("paymentId", oldPaymentId) }
+                    }
+                } else {
+                    client.from("Payment").update({
+                        set("totalAmount", finalPrice)
+                        set("status", "Pending")
+                    }) {
+                        filter { eq("appointmentID", appointmentId) }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Error updating pending payment on reschedule: ${e.localizedMessage}", e)
+            }
+        }
+
         val updateData = buildJsonObject {
             put("Date", newDate)
             put("Start_Time", newStartTime)
@@ -171,14 +308,16 @@ class HiringRepository(
             put("Serving_Size", newServingSize)
             put("Note", newDescription)
             put("Status", "Pending")
-            if (newTotalPrice > 0.0) {
-                put("Total_Price", newTotalPrice)
+            put("Total_Price", finalPrice)
+            if (!newPaymentId.isNullOrBlank()) {
+                put("PaymentId", newPaymentId)
             }
         }
+
         client.from("Appointment").update(updateData) {
             filter { eq("AppointmentID", appointmentId) }
         }
-        // Update status in local database as well
+
         appointmentDao?.updateAppointmentStatus(appointmentId, "Pending")
     }
 
@@ -238,6 +377,42 @@ class HiringRepository(
         }
         client.from("Appointment").update(updateData) {
             filter { eq("AppointmentID", appointmentId) }
+        }
+
+        try {
+            val appt = client.from("Appointment")
+                .select { filter { eq("AppointmentID", appointmentId) } }
+                .decodeSingleOrNull<Appointment>()
+
+            val targetChefId = appt?.chefId
+            if (!targetChefId.isNullOrBlank()) {
+                val chefReviews = client.from("Appointment")
+                    .select {
+                        filter {
+                            eq("chefId", targetChefId)
+                            gt("rating", 0)
+                        }
+                    }
+                    .decodeList<Appointment>()
+
+                val allRatings = chefReviews.mapNotNull { it.rating }
+                val newAvg = if (allRatings.isNotEmpty()) {
+                    (allRatings.average() * 10).toInt() / 10.0
+                } else {
+                    rating.toDouble()
+                }
+
+                client.from("Chef").update(buildJsonObject { put("averagerating", newAvg) }) {
+                    filter {
+                        or {
+                            eq("chefId", targetChefId)
+                            eq("id", targetChefId)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error updating chef average rating: ${e.localizedMessage}", e)
         }
     }
 }

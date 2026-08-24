@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.util.UUID
 
 class PaymentViewModel(
@@ -90,8 +91,9 @@ class PaymentViewModel(
 
             try {
                 val transactionId = "TXN-${System.currentTimeMillis()}"
-                val generatedPaymentId = UUID.randomUUID().toString()
-                createdPaymentId = generatedPaymentId
+                val existingPaymentId = currentAppointment.PaymentId
+                val targetPaymentId = if (!existingPaymentId.isNullOrBlank()) existingPaymentId else UUID.randomUUID().toString()
+                createdPaymentId = targetPaymentId
 
                 val totalAmount = currentAppointment.Total_Price ?: 0.0
 
@@ -102,23 +104,24 @@ class PaymentViewModel(
                 val paymentMethodId = selectedMethod.id
 
                 val paymentRecord = payment(
-                    paymentId = generatedPaymentId,
+                    paymentId = targetPaymentId,
                     transactionId = transactionId,
                     appointmentId = appointmentId,
                     userId = currentAppointment.userId.orEmpty(),
                     totalAmount = totalAmount,
                     paymentMethod = methodString,
                     paymentMethodId = paymentMethodId,
-                    status = "Completed"
+                    status = "Completed",
+                    payAt = Instant.now().toString()
                 )
 
-                client.from("Payment").insert(paymentRecord)
+                client.from("Payment").upsert(paymentRecord)
                 isPaymentInserted = true
 
                 client.from("Appointment").update(
                     {
                         set("Status", "Confirmed")
-                        set("PaymentId", generatedPaymentId)
+                        set("PaymentId", targetPaymentId)
                     }
                 ) {
                     filter {
