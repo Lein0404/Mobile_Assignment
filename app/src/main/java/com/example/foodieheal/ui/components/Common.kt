@@ -1,5 +1,6 @@
 package com.example.foodieheal.ui.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -414,15 +415,16 @@ fun GenderDropdown(
 
 @Composable
 fun StatusBadge(status: Status) {
+    val isDark = isSystemInDarkTheme()
     val (color, text) = when (status) {
-        Status.APPROVED -> Color(0xFFB1E0C0) to Status.APPROVED.statusName
-        Status.PENDING -> Color(0xFFFFF3E0) to Status.PENDING.statusName
+        Status.APPROVED -> (if (isDark) Color(0xFF1B5E20) else Color(0xFFB1E0C0)) to Status.APPROVED.statusName
+        Status.PENDING -> (if (isDark) Color(0xFFE65100) else Color(0xFFFFF3E0)) to Status.PENDING.statusName
         Status.REJECTED -> MaterialTheme.colorScheme.errorContainer to Status.REJECTED.statusName
     }
 
     val textColor = when (status) {
-        Status.APPROVED -> Color(0xFF008000)
-        Status.PENDING -> Color(0xFFFF9800)
+        Status.APPROVED -> (if (isDark) Color(0xFFC8E6C9) else Color(0xFF008000))
+        Status.PENDING -> (if (isDark) Color(0xFFFFE0B2) else Color(0xFFFF9800))
         Status.REJECTED -> MaterialTheme.colorScheme.onErrorContainer
     }
 

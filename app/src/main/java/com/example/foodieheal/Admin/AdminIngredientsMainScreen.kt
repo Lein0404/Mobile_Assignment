@@ -86,7 +86,7 @@ fun AdminIngredientsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Header with Title and Tabs
             Surface(
@@ -271,7 +271,7 @@ fun AdminIngredientRequestsScreen(
                     Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.search),
                         modifier = Modifier
                             .clickable {
                                 tempSelectedStatus = uiState.selectedStatus
@@ -331,7 +331,7 @@ fun AdminIngredientRequestsScreen(
         } else if (uiState.errorMessage != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = stringResource(uiState.errorMessage!!), color = MaterialTheme.colorScheme.error)
+                    Text(text = stringResource(uiState.errorMessage), color = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                     Button(onClick = { viewModel.fetchRequests() }) {
                         Text(stringResource(R.string.btn_retry))
@@ -340,7 +340,7 @@ fun AdminIngredientRequestsScreen(
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = stringResource(R.string.admin_no_requests_found), color = Color.Gray)
+                Text(text = stringResource(R.string.admin_no_requests_found), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
@@ -416,7 +416,7 @@ fun AdminIngredientRequestsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStatusFilterDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -431,7 +431,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
             .clickable { onClick() },
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier

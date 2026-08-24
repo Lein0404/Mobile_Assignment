@@ -45,14 +45,6 @@ import com.example.foodieheal.ingredients.viewModel.IngredientsUiState
 import com.example.foodieheal.ui.components.StatusBadge
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 
-@Preview(showBackground = true)
-@Composable
-fun IngredientsScreenPreview() {
-    FoodieHealTheme {
-        IngredientsMainScreen(rememberNavController())
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngredientsMainScreen(
@@ -122,11 +114,6 @@ fun IngredientsMainScreen(
                                 )
                             }
                         },
-                        /*colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                        )*/
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -192,7 +179,7 @@ fun IngredientsMainScreen(
                 }
             }
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -301,7 +288,7 @@ fun IngredientRequestsScreen(
                     Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.search),
                         modifier = Modifier
                             .clickable {
                                 tempSelectedStatus = uiState.selectedStatus
@@ -333,16 +320,16 @@ fun IngredientRequestsScreen(
                 FilterChip(
                     selected = isSelected,
                     onClick = { viewModel.toggleCategory(category) },
-                    label = { 
+                    label = {
                         Text(
                             text = category.categoryName,
                             style = MaterialTheme.typography.bodyMedium
-                        ) 
+                        )
                     },
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
-                        labelColor = MaterialTheme.colorScheme.primary,
+                        labelColor = MaterialTheme.colorScheme.onSecondary,
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     ),
@@ -374,12 +361,12 @@ fun IngredientRequestsScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = stringResource(R.string.ingredients_requests_empty),
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
-            
+
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
                 onRefresh = { viewModel.refresh() },
@@ -461,7 +448,7 @@ fun IngredientRequestsScreen(
                 TextButton(onClick = { showStatusFilterDialog = false }) {
                     Text(
                         text = stringResource(R.string.dialog_cancel),
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -480,7 +467,7 @@ fun IngredientRequestCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -500,12 +487,12 @@ fun IngredientRequestCard(
                 Text(
                     text = item.request.ingredientDesc,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            
+
             StatusBadge(status = item.request.requestStatus)
         }
     }
@@ -537,7 +524,7 @@ fun IngredientsExistingScreen(
             trailingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_search),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.search)
                 ) },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -562,11 +549,11 @@ fun IngredientsExistingScreen(
                 FilterChip(
                     selected = isSelected,
                     onClick = { viewModel.toggleCategory(category) },
-                    label = { 
+                    label = {
                         Text(
                             text = category.categoryName,
                             style = MaterialTheme.typography.bodyMedium
-                        ) 
+                        )
                     },
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
                     colors = FilterChipDefaults.filterChipColors(
@@ -608,7 +595,7 @@ fun IngredientsExistingScreen(
         }
 
         val grouped = uiState.filteredIngredients.groupBy { it.ingredient.ingredientCategory ?: IngredientCategory.OTHERS }
-        
+
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refresh() },
@@ -656,7 +643,7 @@ fun IngredientCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -678,7 +665,7 @@ fun IngredientCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (showAddToCart) {
@@ -686,7 +673,7 @@ fun IngredientCard(
                     Icon(
                         painter = painterResource(R.drawable.ic_add_to_shopping_cart),
                         contentDescription = stringResource(R.string.desc_add_recipe),
-                        tint = Color.Black
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

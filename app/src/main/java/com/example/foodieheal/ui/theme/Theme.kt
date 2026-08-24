@@ -21,7 +21,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Color(0xFF2E2E2E),     // neutral card/surface tone
     onTertiary = Color.White,
 
-    surface = Color(0XFF1E1E1E),      // general surface background
+    surface = Color(0XFF303030),      // general surface background
     onSurface = Color(0XFFE6E6E6),    // soft white text (not too bright)
 
     background = Color(0XFF1C1C1C),   // main dark background

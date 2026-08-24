@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -76,7 +75,7 @@ fun AddShoppingListItemScreen(
                 )
             )
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -102,7 +101,12 @@ fun AddShoppingListItemScreen(
                         .fillMaxWidth()
                         .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
                     shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-                    trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_search),
+                            contentDescription = stringResource(R.string.search)
+                        )
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -172,7 +176,7 @@ fun AddShoppingListItemScreen(
                                     text = category.categoryName,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                             items(items) { item ->
@@ -227,7 +231,7 @@ fun AddShoppingListItemScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = Color(0XFFC2C2C2) // TODO: add this as disabledColor to Theme.kt?
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     ),
                     enabled = selectedIngredients.isNotEmpty()
                 ) {
@@ -253,7 +257,7 @@ fun SelectableIngredientCard(
             .clickable { onToggleSelection() },
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -270,14 +274,14 @@ fun SelectableIngredientCard(
                     text = item.ingredient.ingredientName,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = item.ingredient.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Checkbox(

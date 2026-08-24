@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -128,7 +127,7 @@ fun AdminIngredientDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(250.dp)
-                                    .background(Color(0xFFE0E0E0)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (!request.ingredientImage.isNullOrEmpty()) {
@@ -137,7 +136,7 @@ fun AdminIngredientDetailScreen(
                                         contentDescription = request.ingredientName,
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop,
-                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.2f)) }, // TODO: make the CPI smaller
+                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.2f)) },
                                         error = { ImagePlaceholder() }
                                     )
                                 } else {
@@ -155,12 +154,12 @@ fun AdminIngredientDetailScreen(
                                     text = request.ingredientName,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Text(
                                     text = request.ingredientCategory?.categoryName ?: stringResource(R.string.none),
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = Color.Gray,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                                 StatusBadge(status = request.requestStatus)
@@ -172,38 +171,40 @@ fun AdminIngredientDetailScreen(
                                 )
 
                                 // 3. Description
-                                Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     text = request.ingredientDesc.ifEmpty { stringResource(R.string.admin_detail_no_description) },
-                                    color = Color.Black,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                 )
 
                                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
 
                                 // 4. Calorie Information
-                                Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     text = info.calorieSummary.ifEmpty { stringResource(R.string.admin_detail_no_calorie_info) },
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
 
                                 // 5. Rejected Reason (if applicable)
                                 if (request.requestStatus == Status.REJECTED) {
                                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
-                                    Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                                     Text(
                                         text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
-                                        color = Color.Black,
+                                        color = MaterialTheme.colorScheme.onBackground,
                                     )
                                 }
 
                                 if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
                                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
-                                    Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                     Text(
                                         text = request.adminNote,
-                                        color = Color.Black,
+                                        color = MaterialTheme.colorScheme.onBackground,
                                     )
                                 }
 
@@ -214,19 +215,19 @@ fun AdminIngredientDetailScreen(
                                 )
 
                                 // 6. Request Information
-                                Text(stringResource(R.string.admin_detail_request_info_header), fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.admin_detail_request_info_header), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-                                Text(
-                                    stringResource(R.string.admin_detail_user_id, info.requesterCustomId),
-                                    style = MaterialTheme.typography.bodyMedium
+                                RequestInfoRow(
+                                    label = stringResource(R.string.admin_detail_user_id),
+                                    value = info.requesterCustomId
                                 )
-                                Text(
-                                    stringResource(R.string.admin_detail_user_name, info.requesterName),
-                                    style = MaterialTheme.typography.bodyMedium
+                                RequestInfoRow(
+                                    label = stringResource(R.string.admin_detail_user_name),
+                                    value = info.requesterName
                                 )
-                                Text(
-                                    stringResource(R.string.admin_detail_created_date, formatDisplayDateTime(request.datetimeCreated)),
-                                    style = MaterialTheme.typography.bodyMedium
+                                RequestInfoRow(
+                                    label = stringResource(R.string.admin_detail_created_date),
+                                    value = formatDisplayDateTime(request.datetimeCreated)
                                 )
 
                                 Spacer(modifier = Modifier.height(120.dp))
@@ -258,7 +259,8 @@ fun AdminIngredientDetailScreen(
                                     ) {
                                         Text(
                                             text = stringResource(R.string.reject),
-                                            style = MaterialTheme.typography.labelLarge
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onError
                                         )
                                     }
                                     PrimaryButton(
@@ -356,7 +358,7 @@ fun RejectRequestDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
+                Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -390,6 +392,32 @@ private fun RequestConflictDialog(
                     Text(stringResource(R.string.ok))
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun RequestInfoRow(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_xxsm)),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(0.4f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.6f)
         )
     }
 }

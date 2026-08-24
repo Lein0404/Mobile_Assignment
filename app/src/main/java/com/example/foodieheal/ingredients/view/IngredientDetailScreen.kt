@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -175,7 +174,7 @@ fun IngredientDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(250.dp)
-                                .background(Color(0xFFE0E0E0)),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
                             if (!displayData.image.isNullOrEmpty()) {
@@ -185,7 +184,7 @@ fun IngredientDetailScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                     loading = {
-                                        CircularProgressIndicator(modifier = Modifier.scale(0.2f)) // TODO: make the CPI smaller
+                                        CircularProgressIndicator(modifier = Modifier.scale(0.2f))
                                     },
                                     error = { ImagePlaceholder() }
                                 )
@@ -211,12 +210,12 @@ fun IngredientDetailScreen(
                                         text = displayData.name ?: "", 
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.Black
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
                                         text = displayData.category ?: stringResource(R.string.shopping_list_categories),
                                         style = MaterialTheme.typography.labelLarge,
-                                        color = Color.Gray,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     
                                     if (isRequest) {
@@ -255,7 +254,7 @@ fun IngredientDetailScreen(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_add_to_shopping_cart),
                                             contentDescription = stringResource(R.string.desc_add_recipe),
-                                            tint = Color.Black
+                                            tint = MaterialTheme.colorScheme.onBackground
                                         )
                                     }
                                 }
@@ -267,36 +266,39 @@ fun IngredientDetailScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
 
-                            Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(stringResource(R.string.ingredient_detail_description_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                             Text(
                                 text = displayData.description?.ifEmpty { stringResource(R.string.ingredient_detail_no_description) } ?: stringResource(R.string.ingredient_detail_no_description),
-                                color = Color.Black,
+                                color = MaterialTheme.colorScheme.onBackground,
                             )
 
                             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
 
-                            Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(stringResource(R.string.calorie_information), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                             Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                             Text(
                                 text = displayData.calorieInfo?.ifEmpty { stringResource(R.string.ingredient_detail_no_calorie_info) } ?: stringResource(R.string.ingredient_detail_no_calorie_info),
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
                                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
-                                Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
-                                    color = Color.Black,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                 )
                             }
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
-                                Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                 Text(
                                     text = requestDetail?.request?.adminNote ?: "",
-                                    color = Color.Black,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                 )
                             }
                             
@@ -330,7 +332,8 @@ fun IngredientDetailScreen(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.delete_request),
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onError
                                     )
                                 }
                                 PrimaryButton(
@@ -366,7 +369,7 @@ fun IngredientDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -380,10 +383,10 @@ fun ImagePlaceholder() {
             painter = painterResource(R.drawable.ic_no_image_available),
             contentDescription = null,
             modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
-            tint = Color.Gray
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-        Text(stringResource(R.string.image_unavailable), color = Color.Gray)
+        Text(stringResource(R.string.image_unavailable), color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

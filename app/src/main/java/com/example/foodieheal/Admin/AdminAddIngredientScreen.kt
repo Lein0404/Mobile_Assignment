@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -75,7 +74,7 @@ fun AdminAddIngredientScreen(
                 )
             )
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -93,12 +92,12 @@ fun AdminAddIngredientScreen(
                             painter = painterResource(R.drawable.wifi_off),
                             contentDescription = null,
                             modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                         Text(
                             text = stringResource(R.string.admin_add_offline_message),
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -157,7 +156,7 @@ fun AdminAddIngredientScreen(
                                 Text(
                                     text = item.categoryName,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Black
+                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         },
@@ -303,7 +302,7 @@ fun AdminAddIngredientScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.1f))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                         .clickable(enabled = false) {}, // Prevent interaction
                     contentAlignment = Alignment.Center
                 ) {

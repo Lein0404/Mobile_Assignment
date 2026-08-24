@@ -8,6 +8,7 @@
     <string name="show_password">Show password</string>
     <string name="nav_home">Home</string>
     <string name="topapp_back">To previous page</string>
+    <string name="search">Search</string>
 
     <!-- Login -->
     <string name="full_name">Name</string>
@@ -604,9 +605,9 @@
     <string name="admin_detail_no_description">No description available.</string>
     <string name="admin_detail_no_calorie_info">No calorie information available.</string>
     <string name="admin_detail_request_info_header">Request Information</string>
-    <string name="admin_detail_user_id">User ID: %1$s</string>
-    <string name="admin_detail_user_name">User Name: %1$s</string>
-    <string name="admin_detail_created_date">Created date: %1$s</string>
+    <string name="admin_detail_user_id">User ID : </string>
+    <string name="admin_detail_user_name">User Name : </string>
+    <string name="admin_detail_created_date">Created date : </string>
     <string name="admin_detail_request_not_found">Request not found</string>
     <string name="admin_detail_toast_rejected">Request rejected</string>
     <string name="admin_detail_reject_title">Reject Request</string>

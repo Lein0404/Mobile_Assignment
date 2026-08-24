@@ -17,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -150,7 +149,7 @@ fun ShoppingListScreen(
                 }
             }
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -168,7 +167,12 @@ fun ShoppingListScreen(
                     .fillMaxWidth()
                     .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
                 shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-                trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = stringResource(R.string.search)
+                    )
+                },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -242,7 +246,7 @@ fun ShoppingListScreen(
                                 text = category.categoryName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         items(items) { item ->
@@ -274,7 +278,7 @@ fun ShoppingListScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearCheckedDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -296,7 +300,7 @@ fun ShoppingListScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -314,7 +318,7 @@ fun ShoppingListItemCard(
             .clickable { onCheckedChange() },
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.padding_xsm)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -333,14 +337,14 @@ fun ShoppingListItemCard(
                         textDecoration = if (item.entity.isChecked) TextDecoration.LineThrough else TextDecoration.None
                     ),
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = item.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Checkbox(
