@@ -459,6 +459,18 @@
     <string name="booking_accepted">Booking accepted successfully!</string>
     <string name="booking_declined">Booking declined.</string>
 
+    <!-- Chef Profile Screen -->
+    <string name="account_settings">Account Settings</string>
+    <string name="chef_profile">Chef Profile</string>
+
+    <string name="label_price">Price</string>
+    <string name="label_chef_id">Chef ID</string>
+    <string name="label_bio_description">Bio / Description</string>
+    <string name="label_location">Location</string>
+    <string name="status_pending">Pending</string>
+
+    <string name="edit_profile">Edit Profile</string>
+
     <!-- Chef Edit Profile -->
     <string name="selected_picture">Selected Picture</string>
     <string name="current_picture">Current Picture</string>
