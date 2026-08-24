@@ -118,7 +118,8 @@
     <!-- Date Picker Dialog Header Texts -->
     <string name="dialog_title_select_date_view">Select Date to View</string>
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
-    <string name="dialog_title_choose_weekly_repeat_date">Choose any day within target week to repeat your weekly plan!</string>
+    <string name="dialog_title_choose_weekly_repeat_date">Choose a date range and repeat your weekly plan!</string>
+    <string name="dialog_title_choose_date_range_paste">Choose a date range to paste the weekly plan</string>
     <string name="daily_success_notify">Daily plan copied successfully!</string>
     <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
@@ -511,4 +512,65 @@
     <string name="category_low_carb">Low-carbohydrate</string>
     <string name="category_cost_friendly">Cost Friendly</string>
     <string name="category_others">Others</string>
+
+    <!-- Meal Planner -->
+    <string name="msg_recipe_removed">Recipe removed from meal</string>
+    <string name="share_weekly_plan">Share Weekly Meal Plan</string>
+    <string name="tab_planner">Planner</string>
+    <string name="tab_template">Template</string>
+    <string name="tab_all">All</string>
+    <string name="tab_my_templates">My Templates</string>
+    <string name="search_template">Search Template</string>
+    <string name="msg_template_added">Template added to your collection!</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_delete">Delete</string>
+    <string name="menu_add_to_my_template">Add to my template</string>
+    <string name="menu_share">Share</string>
+    <string name="meals_scheduled_count">%1$d meals scheduled this week</string>
+    <string name="btn_apply_template">Apply template to your plan</string>
+    <string name="dialog_title_apply_template">Apply Template to Weekly Planner</string>
+    <string name="placeholder_no_meals_scheduled">No meals scheduled for this day</string>
+    <string name="confirm">Confirm</string>
+    <string name="select_7_day_range">Select 7-Day Range</string>
+    <string name="select_date">Select Date</string>
+    <string name="dialog_discard_changes_title">Discard Changes?</string>
+    <string name="dialog_discard_draft_title">Discard Draft?</string>
+    <string name="dialog_discard_changes_msg">Are you sure you want to discard your edits? Changes will not be saved.</string>
+    <string name="dialog_discard_draft_msg">Are you sure you want to discard this template? Unsaved changes will be lost.</string>
+    <string name="btn_discard">Discard</string>
+    <string name="btn_continue_editing">Continue Editing</string>
+    <string name="dialog_edit_template_name_title">Edit Template Name</string>
+    <string name="dialog_set_template_name_title">Set Template Name</string>
+    <string name="dialog_template_name_prompt">Please enter a name for this meal plan template:</string>
+    <string name="label_template_name">Template Name</string>
+    <string name="placeholder_template_name_hint">e.g. High Protein Week</string>
+    <string name="title_edit_template">Edit Template</string>
+    <string name="title_create_template">Create Template</string>
+    <string name="label_make_plan_public">Make Plan Public</string>
+    <string name="msg_visible_to_community">Visible to all community users</string>
+    <string name="msg_only_visible_to_you">Only visible to you</string>
+    <string name="msg_template_updated">Template updated successfully!</string>
+    <string name="msg_template_created">Template created successfully!</string>
+    <string name="err_select_category">Please select a category</string>
+    <string name="err_empty_template_name">Template name cannot be empty</string>
+    <string name="err_failed_load_template">Failed to load template</string>
+    <string name="err_failed_save_template">Failed to save template</string>
+    <string name="placeholder_search_recipes">Search recipes here</string>
+    <string name="label_course">Course</string>
+    <string name="btn_apply_filters">Apply Filters</string>
+    <string name="btn_clear_all">Clear All</string>
+    <string name="title_filter_recipes">Filter Recipes</string>
+    <string name="label_max_prep_time">Max Prep Time (mins)</string>
+    <string name="label_max_calories">Max Calories (kcal)</string>
+    <string name="label_cooking_skill">Cooking Skill</string>
+    <string name="label_budget_rm">Budget (RM)</string>
+    <string name="msg_recipes_added_singular">1 recipe added!</string>
+    <string name="msg_recipes_added_plural">%1$d recipes added!</string>
+    <string name="btn_add_selected_recipes">Add Selected Recipes (%1$d)</string>
+    <string name="title_select_recipes">Select Recipes</string>
+    <string name="title_selected_count">%1$d Selected</string>
+
+    <string name="dialog_title_confirm_paste_week">Confirm Weekly Paste?</string>
+    <string name="dialog_msg_confirm_paste_week">This will overwrite any existing meals in the week of %1$s. Do you want to proceed?</string>
+    <string name="btn_paste">Paste</string>
 </resources>

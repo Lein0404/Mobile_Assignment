@@ -44,14 +44,16 @@ fun AddEditTemplateRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val templateUpdatedMsg = stringResource(R.string.msg_template_updated)
+    val templateCreatedMsg = stringResource(R.string.msg_template_created)
 
     LaunchedEffect(uiState.isSavedSuccess) {
         if (uiState.isSavedSuccess) {
             // 👈 Show dynamic Toast based on create vs edit mode
             val message = if (viewModel.isEditMode) {
-                "Template updated successfully!"
+                templateUpdatedMsg
             } else {
-                "Template created successfully!"
+                templateCreatedMsg
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 
@@ -127,11 +129,11 @@ fun AddEditTemplateScreen(
     if (showDiscardDialog) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },
-            title = { Text(if (isEditMode) "Discard Changes?" else "Discard Draft?") },
+            title = { Text(if (isEditMode) stringResource(R.string.dialog_discard_changes_title) else stringResource(R.string.dialog_discard_draft_title)) },
             text = {
                 Text(
-                    if (isEditMode) "Are you sure you want to discard your edits? Changes will not be saved."
-                    else "Are you sure you want to discard this template? Unsaved changes will be lost."
+                    if (isEditMode) stringResource(R.string.dialog_discard_changes_msg)
+                    else stringResource(R.string.dialog_discard_draft_msg)
                 )
             },
             confirmButton = {
@@ -141,12 +143,12 @@ fun AddEditTemplateScreen(
                         onBackClick()
                     }
                 ) {
-                    Text("Discard", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.btn_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDiscardDialog = false }) {
-                    Text("Continue Editing")
+                    Text(stringResource(R.string.btn_continue_editing))
                 }
             }
         )
@@ -156,19 +158,19 @@ fun AddEditTemplateScreen(
     if (showNameDialog) {
         AlertDialog(
             onDismissRequest = { showNameDialog = false },
-            title = { Text(if (isEditMode) "Edit Template Name" else "Set Template Name") },
+            title = { Text(if (isEditMode) stringResource(R.string.dialog_edit_template_name_title) else stringResource(R.string.dialog_set_template_name_title)) },
             text = {
                 Column {
                     Text(
-                        text = "Please enter a name for this meal plan template:",
+                        text = stringResource(R.string.dialog_template_name_prompt),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = planName,
                         onValueChange = onPlanNameChange,
-                        label = { Text("Template Name") },
-                        placeholder = { Text("e.g. High Protein Week") },
+                        label = { Text(stringResource(R.string.label_template_name)) },
+                        placeholder = { Text(stringResource(R.string.placeholder_template_name_hint)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -191,7 +193,7 @@ fun AddEditTemplateScreen(
                     onPlanNameChange("")
                     showNameDialog = false
                 }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
@@ -231,7 +233,7 @@ fun AddEditTemplateScreen(
                 }
 
                 Text(
-                    text = if (isEditMode) "Edit Template" else "Create Template",
+                    text = if (isEditMode) stringResource(R.string.title_edit_template) else stringResource(R.string.title_create_template),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(start = 8.dp)
@@ -285,11 +287,12 @@ fun AddEditTemplateScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Make Plan Public",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = stringResource(R.string.label_make_plan_public),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = if (isPublic) "Visible to all community users" else "Only visible to you",
+                    text = if (isPublic) stringResource(R.string.msg_visible_to_community) else stringResource(R.string.msg_only_visible_to_you),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

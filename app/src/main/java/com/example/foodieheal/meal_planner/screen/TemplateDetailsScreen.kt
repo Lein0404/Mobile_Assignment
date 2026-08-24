@@ -74,6 +74,7 @@ fun TemplateDetailsScreen(
     onAdd: () -> Unit
 ) {
     val context = LocalContext.current
+    val shareTitle = stringResource(R.string.menu_share)
     val coroutineScope = rememberCoroutineScope()
     val daysOfWeek = remember { DayOfWeek.entries }
     val pagerState = rememberPagerState(
@@ -105,7 +106,7 @@ fun TemplateDetailsScreen(
             putExtra(Intent.EXTRA_TEXT, "Check out this meal plan template on Foodie Heal: $shareUrl")
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        val shareIntent = Intent.createChooser(sendIntent, shareTitle)
         context.startActivity(shareIntent)
     }
 
@@ -191,7 +192,7 @@ fun TemplateDetailsScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Apply template to your plan")
+                Text(stringResource(R.string.btn_apply_template))
             }
         }
     ) { innerPadding ->
@@ -266,7 +267,7 @@ fun TemplateDetailsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No meals scheduled for this day",
+                            text = stringResource(R.string.placeholder_no_meals_scheduled),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -297,6 +298,7 @@ fun TemplateDetailsScreen(
         if (showDatePicker) {
             CustomizedDatePickerDialog(
                 initialDate = remember { LocalDate.now() },
+                title = stringResource(R.string.dialog_title_apply_template),
                 onDateSelected = { startDate ->
                     showDatePicker = false
                     onApply(startDate)

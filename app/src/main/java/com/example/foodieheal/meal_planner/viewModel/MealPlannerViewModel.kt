@@ -19,7 +19,6 @@ import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -28,7 +27,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
-import kotlin.time.Duration.Companion.milliseconds
 
 class MealPlannerViewModel(
     application: Application,
@@ -56,10 +54,17 @@ class MealPlannerViewModel(
     private var lastActiveDate: LocalDate = LocalDate.now()
     private var currentMaxCalories: Int = 2000
 
+    var sharerId by mutableStateOf<String?>(null)
+        private set
+
     var deepLinkSourceDays by mutableStateOf<List<LocalDate>?>(null)
         private set
 
     var selectedTabRoute by mutableStateOf(Screen.Home.route)
+        private set
+
+    private val conditionsCache = mutableMapOf<YearMonth, Map<LocalDate, DayCondition>>()
+    var monthConditions by mutableStateOf<Map<LocalDate, DayCondition>>(emptyMap())
         private set
 
     // Explicit flag to protect deep-link navigation transactions
@@ -73,25 +78,21 @@ class MealPlannerViewModel(
     }
 
     /**
-     * MUST be called ONLY AFTER NavController has finished executing navigate(route).
-     * We add a delay to ensure the target screen has completed its first composition
-     * and collected the deep link state before we clear it.
+     * Resets the deep link processing flag.
+     * The actual data (deepLinkSourceDays) is preserved until explicitly cleared by the UI.
      */
     fun consumeDeepLinkProcessed() {
-        viewModelScope.launch {
-            delay(500.milliseconds)
-            isProcessingDeepLink = false
-            deepLinkSourceDays = null
-        }
+        isProcessingDeepLink = false
     }
 
-    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate) {
+    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate, sourceSharerId: String?) {
         isProcessingDeepLink = true
         val days = getCurrentWeekDays(sourceWeekStart)
         deepLinkSourceDays = days
+        sharerId = sourceSharerId
         selectedTabRoute = Screen.Home.route
 
-        Log.d(TAG, "prepareSharedWeeklyPlan called with start date: $sourceWeekStart | DeepLinkDays set: ${days.size} days")
+        Log.d(TAG, "prepareSharedWeeklyPlan called with start date: $sourceWeekStart | Sharer: $sourceSharerId | DeepLinkDays set: ${days.size} days")
     }
 
     fun onTabSelected(route: String) {
@@ -102,11 +103,19 @@ class MealPlannerViewModel(
     fun clearDeepLinkState() {
         Log.d(TAG, "clearDeepLinkState called")
         isProcessingDeepLink = false
+        val wasShared = deepLinkSourceDays != null
         deepLinkSourceDays = null
+        sharerId = null
+        
+        // 🌟 If we were previewing a shared plan, refresh the current month to show our own data dots again
+        if (wasShared) {
+            invalidateConditionsCacheAndReload(lastActiveDate)
+        }
     }
 
     fun generateShareLink(currentWeekStart: LocalDate): String {
-        return "https://tzh652.github.io/share?sourceStart=$currentWeekStart"
+        val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+        return "https://tzh652.github.io/share?sourceStart=$currentWeekStart&sharerId=$currentUserId"
     }
 
     private fun observeNetworkStatus() {
@@ -128,39 +137,61 @@ class MealPlannerViewModel(
             SupabaseClient.client.auth.sessionStatus.collect { status ->
                 Log.d(TAG, "observeAuthState collected status: $status | deepLinkSourceDays: $deepLinkSourceDays")
                 if (status is SessionStatus.Authenticated) {
-                    Log.d(TAG, "Auth session restored. Reloading plan for: $lastActiveDate")
+                    Log.d(TAG, "Auth session restored. Clearing cache and reloading data.")
+                    clearAllCache()
+                    
+                    // 1. Reload the current focused date
                     loadPlanForDate(lastActiveDate, forceRefresh = true)
+                    
+                    // 2. Reload the calendar dots for the current month
+                    loadMonthConditions(YearMonth.from(lastActiveDate))
+                } else {
+                    // Clear data immediately on logout to prevent data leaking between users
+                    clearAllCache()
                 }
             }
         }
     }
 
+    private fun clearAllCache() {
+        Log.d(TAG, "clearAllCache() called")
+        // Defensive check against early auth status emissions before property initialization completes
+        runCatching { mealPlansCache.clear() }
+        runCatching { conditionsCache.clear() }
+        updateMonthConditionsState()
+    }
+
     fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
+        val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
+        if (currentUserId.isNullOrEmpty()) return
+
+        // 🌟 Determine who we are targeting: Me or the Sharer
+        val isSharedDate = deepLinkSourceDays?.contains(date) == true
+        val targetUserId = if (isSharedDate && sharerId != null) sharerId!! else currentUserId
+
+        // 🌟 OPTIMIZATION: Only skip if the cached plan belongs to the correct target user
+        val cachedPlan = mealPlansCache[date]
+        if (!forceRefresh && cachedPlan != null && cachedPlan.user_id == targetUserId) {
+            return
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
-            val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
-
-            if (currentUserId.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    mealPlansCache[date] = null
-                }
-                return@launch
-            }
-
             lastActiveDate = date
-
             withContext(Dispatchers.Main) { isLoading = true }
 
-            val result = repository.getDailyPlan(date)
+            val result = repository.getDailyPlan(date, targetUserId)
 
             withContext(Dispatchers.Main) {
                 result.onSuccess { plan ->
-                    if (plan != null && plan.user_id == currentUserId) {
-                        mealPlansCache[date] = plan
-                    } else {
+                    if (plan != null) {
+                        // 🌟 Ensure we only cache plans that belong to the intended target
+                        if (plan.user_id == targetUserId) {
+                            mealPlansCache[date] = plan
+                        }
+                    } else if (forceRefresh || !mealPlansCache.containsKey(date)) {
+                        // Only wipe cache if we're sure there's nothing on the server for this user/date
                         mealPlansCache[date] = null
                     }
-                }.onFailure {
-                    mealPlansCache[date] = null
                 }
                 isLoading = false
             }
@@ -264,30 +295,72 @@ class MealPlannerViewModel(
     }
 
     fun copyWeeklyPlanToDate(sourceWeekDays: List<LocalDate>, targetWeekStart: LocalDate) {
+        val capturedSharerId = sharerId
+        val myId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+
         viewModelScope.launch {
             if (!isNetworkAvailable) {
                 _uiEvent.emit("Cannot duplicate calendar schedules while offline.")
                 return@launch
             }
+
+            isLoading = true
+            var successCount = 0
+
+            // 🌟 STEP 1: Immediately clear the preview state
+            // This ensures swiping during the save process doesn't revert to sharer data
+            clearDeepLinkState()
+
             withContext(Dispatchers.IO) {
                 sourceWeekDays.forEachIndexed { index, sourceDate ->
                     val targetDate = targetWeekStart.plusDays(index.toLong())
-                    val sourcePlan = repository.getDailyPlan(sourceDate).getOrNull()
+                    
+                    // 🌟 STEP 2: Fetch the "pattern" from User B (the sharer)
+                    val sourcePlan = repository.getDailyPlan(sourceDate, capturedSharerId).getOrNull()
 
                     if (sourcePlan != null && sourcePlan.meals.any { it.recipes.isNotEmpty() }) {
+                        // 🌟 STEP 3: Create a NEW plan record owned by User A (me)
                         val clonedPlan = sourcePlan.copy(
+                            user_id = myId,
                             date = targetDate.toString(),
                             meals = sourcePlan.meals.map { slot -> slot.copy(recipes = slot.recipes.toList()) }
                         )
-                        repository.saveDailyPlan(clonedPlan)
-                        withContext(Dispatchers.Main) {
-                            mealPlansCache[targetDate] = clonedPlan
-                            invalidateConditionsCacheAndReload(targetDate)
+                        
+                        // Save to my personal planner in the DB
+                        val saveResult = repository.saveDailyPlan(clonedPlan)
+                        
+                        if (saveResult.isSuccess) {
+                            successCount++
+                            withContext(Dispatchers.Main) {
+                                // Update local memory immediately
+                                mealPlansCache[targetDate] = clonedPlan
+                            }
                         }
                     }
                 }
+
+                // STEP 4: Refresh nutritional indicators for the target week
+                val affectedMonths = targetWeekStart.let { start ->
+                    setOf(YearMonth.from(start), YearMonth.from(start.plusDays(6)))
+                }
+                withContext(Dispatchers.Main) {
+                    affectedMonths.forEach { conditionsCache.remove(it) }
+                    loadMonthConditions(YearMonth.from(targetWeekStart))
+                }
             }
-            _uiEvent.emit("Successfully duplicated the entire week schedule!")
+
+            isLoading = false
+            
+            if (successCount > 0) {
+                _uiEvent.emit("Successfully saved $successCount days to your planner!")
+                // 🌟 Final check: Ensure UI displays my new data correctly
+                sourceWeekDays.forEachIndexed { index, _ ->
+                    val targetDate = targetWeekStart.plusDays(index.toLong())
+                    loadPlanForDate(targetDate, forceRefresh = true)
+                }
+            } else {
+                _uiEvent.emit("No recipes found to copy.")
+            }
         }
     }
 
@@ -353,26 +426,26 @@ class MealPlannerViewModel(
         EXCESS_INTAKE
     }
 
-    private val conditionsCache = mutableMapOf<YearMonth, Map<LocalDate, DayCondition>>()
-
-    var monthConditions by mutableStateOf<Map<LocalDate, DayCondition>>(emptyMap())
-        private set
-
     fun loadMonthConditions(month: YearMonth, maxCalories: Int = currentMaxCalories) {
         if (maxCalories > 0) {
             currentMaxCalories = maxCalories
         }
 
         if (conditionsCache.containsKey(month)) {
-            monthConditions = conditionsCache[month].orEmpty()
+            updateMonthConditionsState()
             return
         }
 
         viewModelScope.launch {
             val conditions = fetchConditionsForMonth(month, currentMaxCalories)
             conditionsCache[month] = conditions
-            monthConditions = conditions.toMap()
+            updateMonthConditionsState()
         }
+    }
+
+    private fun updateMonthConditionsState() {
+        // Combine all cached months into a single flat map for the UI to consume easily
+        monthConditions = conditionsCache.values.reduceOrNull { acc, map -> acc + map } ?: emptyMap()
     }
 
     fun prefetchAdjacentMonths(currentMonth: YearMonth, maxCalories: Int = currentMaxCalories) {
@@ -383,12 +456,16 @@ class MealPlannerViewModel(
         val nextMonth = currentMonth.plusMonths(1)
 
         viewModelScope.launch {
+            var changed = false
             if (!conditionsCache.containsKey(prevMonth)) {
                 conditionsCache[prevMonth] = fetchConditionsForMonth(prevMonth, currentMaxCalories)
+                changed = true
             }
             if (!conditionsCache.containsKey(nextMonth)) {
                 conditionsCache[nextMonth] = fetchConditionsForMonth(nextMonth, currentMaxCalories)
+                changed = true
             }
+            if (changed) updateMonthConditionsState()
         }
     }
 
@@ -411,34 +488,47 @@ class MealPlannerViewModel(
         val startDate = month.atDay(1)
         val endDate = month.atEndOfMonth()
 
-        var currentDate = startDate
-        while (!currentDate.isAfter(endDate)) {
-            val date = currentDate
+        // 🌟 DECIDE WHO TO FETCH: ME or SHARER
+        // If the month contains any shared days, we prioritize the sharer's context for preview
+        val targetUserId = if (deepLinkSourceDays?.any { YearMonth.from(it) == month } == true && sharerId != null) {
+            sharerId
+        } else {
+            SupabaseClient.client.auth.currentUserOrNull()?.id
+        }
 
-            val dailyPlan = mealPlansCache[date] ?: repository.getDailyPlan(date).getOrNull()
+        // 1. Batch fetch all plans AND recipes for the whole month in TWO network requests total
+        val plansResult = repository.getDailyPlansInRange(startDate, endDate, targetUserId)
+        val plans = plansResult.getOrDefault(emptyList())
 
-            if (dailyPlan != null) {
-                withContext(Dispatchers.Main) {
-                    mealPlansCache[date] = dailyPlan
-                }
-
-                val totalCalories = dailyPlan.meals.sumOf { slot ->
-                    slot.recipes.sumOf { recipe -> recipe.calories ?: 0 }
-                }
-
-                if (totalCalories > 0) {
-                    val ratio = totalCalories.toDouble() / maxCalories.toDouble()
-                    val condition = when {
-                        ratio < 0.80 -> DayCondition.UNDER_INTAKE
-                        ratio in 0.80..0.94 -> DayCondition.SLIGHTLY_LOW
-                        ratio in 0.95..1.05 -> DayCondition.IDEAL
-                        ratio in 1.06..1.20 -> DayCondition.SLIGHTLY_HIGH
-                        else -> DayCondition.EXCESS_INTAKE
-                    }
-                    resultMap[date] = condition
+        // 2. Update memory cache so swiping is instant
+        withContext(Dispatchers.Main) {
+            plans.forEach { plan ->
+                val date = LocalDate.parse(plan.date)
+                // Only update cache if it's our own data or we are actively in sharing mode
+                if (plan.user_id == targetUserId) {
+                    mealPlansCache[date] = plan
                 }
             }
-            currentDate = currentDate.plusDays(1)
+        }
+
+        // 3. Compute local condition logic
+        plans.forEach { dailyPlan ->
+            val totalCalories = dailyPlan.meals.sumOf { slot ->
+                slot.recipes.sumOf { recipe -> recipe.calories ?: 0 }
+            }
+
+            if (totalCalories > 0) {
+                val ratio = totalCalories.toDouble() / maxCalories.toDouble()
+                val condition = when {
+                    ratio < 0.80 -> DayCondition.UNDER_INTAKE
+                    ratio in 0.80..0.94 -> DayCondition.SLIGHTLY_LOW
+                    ratio in 0.95..1.05 -> DayCondition.IDEAL
+                    ratio in 1.06..1.20 -> DayCondition.SLIGHTLY_HIGH
+                    else -> DayCondition.EXCESS_INTAKE
+                }
+                val date = LocalDate.parse(dailyPlan.date)
+                resultMap[date] = condition
+            }
         }
 
         resultMap

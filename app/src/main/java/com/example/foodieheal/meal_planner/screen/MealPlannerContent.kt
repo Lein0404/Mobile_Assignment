@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
+import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
 import com.example.foodieheal.model.Recipe
 import java.time.LocalDate
@@ -59,6 +60,7 @@ fun MealPlannerContent(
     totalCalories: Int,
     maxCalories: Int,
     mealPlansCache: Map<LocalDate, DailyPlan?>,
+    monthConditions: Map<LocalDate, DayCondition> = emptyMap(), // 🌟 Added month conditions
     pagerState: PagerState,
     anchorDate: LocalDate,
     onCalendarClick: () -> Unit,
@@ -88,7 +90,8 @@ fun MealPlannerContent(
             onDateBackward = onDateShiftBackward,
             onDateForward = onDateShiftForward,
             onCalendarClick = onCalendarClick,
-            onDateSelected = onDateSelected
+            onDateSelected = onDateSelected,
+            monthConditions = monthConditions // 🌟 Pass conditions down
         )
 
         Spacer(Modifier.height(12.dp))
@@ -202,12 +205,12 @@ fun MealPlannerHeader(
                 Tab(
                     selected = selectedTabIndex == 0,
                     onClick = { onTabSelected(0) },
-                    text = { Text("Planner", fontWeight = FontWeight.SemiBold) }
+                    text = { Text(stringResource(R.string.tab_planner), fontWeight = FontWeight.SemiBold) }
                 )
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { onTabSelected(1) },
-                    text = { Text("Template", fontWeight = FontWeight.SemiBold) }
+                    text = { Text(stringResource(R.string.tab_template), fontWeight = FontWeight.SemiBold) }
                 )
             }
         }

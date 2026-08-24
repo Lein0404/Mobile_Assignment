@@ -147,6 +147,7 @@ fun AddRecipeToPlanScreen(
     if (showDatePicker) {
         CustomizedDatePickerDialog(
             initialDate = selectedDate,
+            title = stringResource(R.string.daily_date_picker_dialog),
             onDateSelected = { newDate ->
                 selectedDate = newDate
             },
@@ -202,6 +203,7 @@ fun AddRecipeToPlanScreen(
                 },
                 onCalendarClick = { showDatePicker = true },
                 onDateSelected = { newDate -> selectedDate = newDate },
+                monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Added nutrition dots
                 topContent = {
                     Text(
                         text = stringResource(R.string.adding_recipe, recipe.recipeName),

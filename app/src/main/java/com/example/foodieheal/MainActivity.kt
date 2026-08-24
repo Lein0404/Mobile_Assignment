@@ -102,10 +102,8 @@ import com.example.foodieheal.view.RecipesScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
-import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
 
@@ -158,7 +156,6 @@ class MainActivity : ComponentActivity() {
                             navController.navigate(route)
 
                             pendingDeepLinkRoute = null
-                            mealPlannerViewModel.consumeDeepLinkProcessed()
                         } else {
                             // Handle Initial Login Landing (Standard Redirect)
                             val currentRoute = navController.currentDestination?.route
@@ -482,7 +479,7 @@ class MainActivity : ComponentActivity() {
                                             defaultValue = null
                                         }
                                     )
-                                ) { backStackEntry ->
+                                ) {
                                     val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
                                     val addEditTemplateViewModel: AddEditTemplateViewModel = viewModel(
                                         factory = object : ViewModelProvider.Factory {
@@ -606,7 +603,7 @@ class MainActivity : ComponentActivity() {
                                                 templateViewModel.duplicateTemplate(
                                                     sourcePlanId = plan.planId,
                                                     currentUserId = sharedAuthViewModel.currentUser?.id ?: "",
-                                                    onSuccess = { newPlanId ->
+                                                    onSuccess = {
                                                         Toast.makeText(appContext, "Template saved to your collection!", Toast.LENGTH_SHORT).show()
                                                     },
                                                     onError = { error ->
@@ -643,7 +640,7 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onAppointmentClick = { appointment ->
                                                 val id = appointment.AppointmentID.orEmpty()
-                                                android.util.Log.d("HiringNav", "Click detected! ID: $id")
+                                               Log.d("HiringNav", "Click detected! ID: $id")
                                                 navController.navigate(Screen.UserAppointmentDetail.createRoute(id))
                                             }
                                         )
@@ -989,11 +986,14 @@ class MainActivity : ComponentActivity() {
             when {
                 // 1. Weekly Plan Share (Original)
                 uri.path?.startsWith("/share") == true || uri.host == "share" -> {
-                    uri.getQueryParameter("sourceStart")?.let { dateStr ->
-                        runCatching { LocalDate.parse(dateStr) }.onSuccess { startDate ->
-                            Log.d("DeepLink", "Successfully parsed start date: $startDate")
+                    val dateStr = uri.getQueryParameter("sourceStart")
+                    val sharerId = uri.getQueryParameter("sharerId")
+
+                    dateStr?.let {
+                        runCatching { LocalDate.parse(it) }.onSuccess { startDate ->
+                            Log.d("DeepLink", "Successfully parsed start date: $startDate | Sharer: $sharerId")
                             pendingDeepLinkRoute = Screen.Planner.route
-                            mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
+                            mealPlannerViewModel.prepareSharedWeeklyPlan(startDate, sharerId)
                         }
                     }
                 }

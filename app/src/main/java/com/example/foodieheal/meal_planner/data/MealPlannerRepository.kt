@@ -47,21 +47,24 @@ class MealPlannerRepository(
                 }
             )
 
-            postgrest.from("daily_plans").upsert(dto)
+            // 🌟 Use upsert with a list to be explicit, and catch network errors
+            postgrest.from("daily_plans").upsert(listOf(dto))
             Unit
+        }.onFailure { error ->
+            Log.e("MealPlannerRepo", "CRITICAL: Failed to save daily plan for ${plan.date}", error)
         }
     }
 
-    suspend fun getDailyPlan(date: LocalDate): Result<DailyPlan?> = withContext(Dispatchers.IO) {
+    suspend fun getDailyPlan(date: LocalDate, userId: String? = null): Result<DailyPlan?> = withContext(Dispatchers.IO) {
         runCatching {
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+            val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
                 ?: throw Exception("No authenticated user session found.")
 
             val rawPlan = postgrest.from("daily_plans")
                 .select {
                     filter {
                         eq("date", date.toString())
-                        eq("user_id", currentUserId)
+                        eq("user_id", targetUserId)
                     }
                 }
                 .decodeList<DailyPlanDTO>()
@@ -102,6 +105,67 @@ class MealPlannerRepository(
             )
         }.onFailure { error ->
             Log.e("MealPlannerDebug", "Critical Exception in getDailyPlan!", error)
+        }
+    }
+
+    /**
+     * Fetches all daily plans within a date range for a specific user.
+     * Efficiently fetches recipes in bulk as well.
+     */
+    suspend fun getDailyPlansInRange(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        userId: String? = null
+    ): Result<List<DailyPlan>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
+                ?: throw Exception("No authenticated user session found.")
+
+            // 1. Fetch all Plan DTOs in range
+            val rawPlans = postgrest.from("daily_plans")
+                .select {
+                    filter {
+                        eq("user_id", targetUserId)
+                        gte("date", startDate.toString())
+                        lte("date", endDate.toString())
+                    }
+                }
+                .decodeList<DailyPlanDTO>()
+
+            if (rawPlans.isEmpty()) return@runCatching emptyList()
+
+            // 2. Extract all unique recipe IDs for the entire month/range
+            val allRecipeIds = rawPlans.flatMap { plan ->
+                plan.meals?.flatMap { slot -> slot.recipes.map { it.recipeId } } ?: emptyList()
+            }.distinct()
+
+            // 3. Fetch all recipe details in ONE request
+            val fetchedRecipes = if (allRecipeIds.isNotEmpty()) {
+                postgrest.from("recipes")
+                    .select { filter { isIn("recipe_id", allRecipeIds) } }
+                    .decodeList<Recipe>()
+            } else emptyList()
+
+            val recipeMap = fetchedRecipes.associateBy { it.recipe_id }
+
+            // 4. Map back to Domain objects
+            rawPlans.map { dto ->
+                DailyPlan(
+                    user_id = dto.userId,
+                    date = dto.date,
+                    meals = MealType.entries.map { type ->
+                        val matchingSlot = dto.meals?.find { it.mealType == type }
+                        RealMealSlot(
+                            mealType = type,
+                            recipes = matchingSlot?.recipes?.mapNotNull { ref ->
+                                recipeMap[ref.recipeId]
+                            } ?: emptyList()
+                        )
+                    }
+                )
+            }
+        }.onFailure { error ->
+            Log.e("MealPlannerRepo", "Failed to fetch range plans from $startDate to $endDate", error)
         }
     }
 

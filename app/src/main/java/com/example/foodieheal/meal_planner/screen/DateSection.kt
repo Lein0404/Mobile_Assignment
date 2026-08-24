@@ -69,6 +69,7 @@ fun DateCard(
     day: String,
     date: String = "",
     selected: Boolean,
+    condition: DayCondition? = null,
     onClick: () -> Unit
 ) {
     val cardContainerColor: Color = when (selected) {
@@ -80,9 +81,18 @@ fun DateCard(
         else -> MaterialTheme.colorScheme.onBackground
     }
 
+    val dotColor = when (condition) {
+        DayCondition.UNDER_INTAKE -> Red
+        DayCondition.SLIGHTLY_LOW -> Yellow
+        DayCondition.IDEAL -> Green
+        DayCondition.SLIGHTLY_HIGH -> Orange
+        DayCondition.EXCESS_INTAKE -> Red
+        null -> Color.Transparent
+    }
+
     Card(
         onClick = onClick,
-        modifier = modifier.size(height = 70.dp, width = 51.dp),
+        modifier = modifier.size(height = 76.dp, width = 51.dp),
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardContainerColor
@@ -111,6 +121,17 @@ fun DateCard(
                     color = textColor
                 )
             }
+
+            // Condition Dot
+            if (condition != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(dotColor)
+                )
+            }
         }
     }
 }
@@ -120,6 +141,7 @@ fun WeeklyDateCardRow(
     modifier: Modifier = Modifier,
     weekDays: List<LocalDate>,
     selectedDate: LocalDate,
+    monthConditions: Map<LocalDate, DayCondition> = emptyMap(),
     onDateSelected: (LocalDate) -> Unit
 ) {
     Row(
@@ -133,6 +155,7 @@ fun WeeklyDateCardRow(
                 date = date.dayOfMonth.toString(),
                 modifier = Modifier,
                 selected = date == selectedDate,
+                condition = monthConditions[date],
                 onClick = { onDateSelected(date) }
             )
         }
@@ -240,6 +263,7 @@ fun CalendarControls(
     onCalendarClick: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    monthConditions: Map<LocalDate, DayCondition> = emptyMap(),
     topContent: @Composable (() -> Unit)? = null
 ) {
     Column(modifier = modifier) {
@@ -292,6 +316,7 @@ fun CalendarControls(
         WeeklyDateCardRow(
             weekDays = weekDays,
             selectedDate = selectedDate,
+            monthConditions = monthConditions,
             onDateSelected = onDateSelected
         )
     }
@@ -303,11 +328,18 @@ fun CustomizedDatePickerDialog(
     mealPlannerViewModel: MealPlannerViewModel,
     maxCalories: Int,
     isRangeMode: Boolean = false,
+    title: String? = null,
     onDateSelected: (date: LocalDate) -> Unit, // Returns selected date (or start date if range mode)
     onDismiss: () -> Unit
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(initialDate) }
+
+    val displayTitle = title ?: if (isRangeMode) {
+        stringResource(R.string.select_7_day_range)
+    } else {
+        stringResource(R.string.select_date)
+    }
 
     // Computes 7-day range only when in range mode
     val selectedRange = remember(selectedDate, isRangeMode) {
@@ -337,17 +369,17 @@ fun CustomizedDatePickerDialog(
                 enabled = selectedDate != null,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Confirm", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.confirm), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.dialog_cancel))
             }
         },
         title = {
             Text(
-                text = if (isRangeMode) "Select 7-Day Range" else "Select Date",
+                text = displayTitle,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.primary
@@ -378,7 +410,7 @@ fun CustomizedDatePickerDialog(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_arrow_back),
-                                contentDescription = "Previous Month"
+                                contentDescription = stringResource(R.string.desc_calendar_back)
                             )
                         }
                         IconButton(
@@ -387,7 +419,7 @@ fun CustomizedDatePickerDialog(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_arrow_forward),
-                                contentDescription = "Next Month",
+                                contentDescription = stringResource(R.string.desc_calendar_forward),
                                 modifier = Modifier.padding(start = 2.dp)
                             )
                         }

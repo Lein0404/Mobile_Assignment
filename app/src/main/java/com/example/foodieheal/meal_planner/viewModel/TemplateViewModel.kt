@@ -9,6 +9,7 @@ import com.example.foodieheal.meal_planner.model.MealSlotDTO
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.model.toEntity
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.repository.RecipeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,13 +70,25 @@ class TemplateViewModel(
             planRepository.observeAllPlans()
         }
         .mapLatest { entityList ->
+            // 🌟 1. Extract ALL unique recipe IDs from ALL plans in the list
+            val allRecipeIds = entityList.flatMap { entity ->
+                entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.recipeId } }
+            }.distinct()
+
+            Log.d(TAG, "allWeeklyPlans: Batch fetching ${allRecipeIds.size} recipes for ${entityList.size} plans")
+
+            // 🌟 2. Fetch all required recipes in ONE batch request
+            val recipes = recipeRepository.getRecipesByIds(allRecipeIds).getOrDefault(emptyList())
+            val recipeMap = recipes.filter { it.recipe_id != null }.associateBy { it.recipe_id!! }
+
+            // 🌟 3. Efficiently map entities to domain models using the pre-fetched map
             entityList.map { entity ->
                 WeeklyPlan(
                     planName = entity.planName,
                     planId = entity.planId,
                     userId = entity.userId,
                     category = entity.category,
-                    dailyPlans = hydrateDailyPlans(entity.dailyPlans),
+                    dailyPlans = hydrateDailyPlansSync(entity.dailyPlans, recipeMap),
                     public = entity.public
                 )
             }
@@ -187,30 +200,24 @@ class TemplateViewModel(
     }
 
     /**
-     * Converts raw day strings and nested MealSlotDTOs into populated RealMealSlot domain objects.
+     * Efficiently converts raw day strings and nested MealSlotDTOs into populated RealMealSlot domain objects
+     * using a pre-fetched recipe map.
      */
-    private suspend fun hydrateDailyPlans(
-        rawDailyPlans: Map<String, List<MealSlotDTO>>
-    ): Map<DayOfWeek, List<RealMealSlot>> = withContext(Dispatchers.IO) {
-
-        rawDailyPlans.entries.associate { (dayStr, slotDTOs) ->
+    private fun hydrateDailyPlansSync(
+        rawDailyPlans: Map<String, List<MealSlotDTO>>,
+        recipeMap: Map<String, Recipe>
+    ): Map<DayOfWeek, List<RealMealSlot>> {
+        return rawDailyPlans.entries.associate { (dayStr, slotDTOs) ->
             val dayOfWeek = try {
-                DayOfWeek.valueOf(dayStr.uppercase()).also {
-                }
+                DayOfWeek.valueOf(dayStr.uppercase())
             } catch (e: Exception) {
                 DayOfWeek.MONDAY
             }
 
             val realMealSlots = slotDTOs.map { slotDTO ->
-
-                val recipeDeferreds = slotDTO.recipes.map { recipeRef ->
-                    async {
-                        val result = recipeRepository.getRecipeById(recipeRef.recipeId)
-                        result.getOrNull()
-                    }
+                val populatedRecipes = slotDTO.recipes.mapNotNull { recipeRef ->
+                    recipeMap[recipeRef.recipeId]
                 }
-
-                val populatedRecipes = recipeDeferreds.awaitAll().filterNotNull()
 
                 RealMealSlot(
                     mealType = slotDTO.mealType,

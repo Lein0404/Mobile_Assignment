@@ -82,7 +82,7 @@ fun TemplatesContent(
     onPlanDetails: (recipeId: String, isMyTemplate: Boolean) -> Unit,
     onEdit: (String) -> Unit
 ) {
-    val tabs = listOf( "All", "My Templates")
+    val tabs = listOf(stringResource(R.string.tab_all), stringResource(R.string.tab_my_templates))
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { tabs.size }
@@ -117,12 +117,11 @@ fun TemplatesContent(
     )
 
     Column(modifier = modifier
-        .fillMaxSize()
-        .navigationBarsPadding()) {
+        .fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 16.dp),
+                .padding(top = 12.dp, bottom = 0.dp, start = 16.dp, end = 16.dp), // 🌟 Reduced bottom padding
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             tabs.forEachIndexed { index, title ->
@@ -184,6 +183,7 @@ fun AllTemplatesScreen(
     onPlanDetails:(String,Boolean)-> Unit
 ) {
     val context = LocalContext.current
+    val templateAddedMsg = stringResource(R.string.msg_template_added)
     val allPlans by templateViewModel.publicCommunityPlans.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     val filteredContacts = remember(query, allPlans) {
@@ -208,10 +208,10 @@ fun AllTemplatesScreen(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("Search Template") },
+            label = { Text(stringResource(R.string.search_template)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp) // 🌟 Reduced vertical padding
         )
         CategorizedTemplatesScreen(
             weeklyPlans = filteredContacts,
@@ -222,7 +222,7 @@ fun AllTemplatesScreen(
                     sourcePlanId = id,
                     currentUserId = templateViewModel.currentUserId ?: "",
                     onSuccess = {
-                        Toast.makeText(context, "Template added to your collection!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, templateAddedMsg, Toast.LENGTH_SHORT).show()
                     },
                     onError = { error ->
                         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
@@ -254,12 +254,14 @@ fun MyTemplatesScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 120.dp),
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0,0,0,0), // 🌟 Reset window insets to prevent automatic top padding
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTemplateClick,
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.padding(bottom = 80.dp) //  Lift the FAB up so it's not blocked
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
@@ -317,7 +319,7 @@ fun CategorizedTemplatesScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 16.dp),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp), // 🌟 Adjusted content padding
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         items(
@@ -439,7 +441,7 @@ fun PlanCard(
             }
 
             Text(
-                text = "$totalMeals meals scheduled this week",
+                text = stringResource(R.string.meals_scheduled_count, totalMeals),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -473,14 +475,14 @@ fun OtherIconButton(
         ) {
             if (isMyTemplate) {
                 DropdownMenuItem(
-                    text = { Text("Edit") },
+                    text = { Text(stringResource(R.string.menu_edit)) },
                     onClick = {
                         onShowMenuChange(false)
                         onEdit()
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Delete") },
+                    text = { Text(stringResource(R.string.menu_delete)) },
                     onClick = {
                         onShowMenuChange(false)
                         onDelete()
@@ -488,7 +490,7 @@ fun OtherIconButton(
                 )
             }else{
                 DropdownMenuItem(
-                    text = { Text("Add to my template") },
+                    text = { Text(stringResource(R.string.menu_add_to_my_template)) },
                     onClick = {
                         onShowMenuChange(false)
                         onAdd()
@@ -496,7 +498,7 @@ fun OtherIconButton(
                 )
             }
             DropdownMenuItem(
-                text = { Text("Share") },
+                text = { Text(stringResource(R.string.menu_share)) },
                 onClick = {
                     onShowMenuChange(false)
                     onShare()

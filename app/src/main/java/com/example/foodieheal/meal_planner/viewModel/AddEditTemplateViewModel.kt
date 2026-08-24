@@ -95,7 +95,7 @@
                     _uiState.update { currentState ->
                         currentState.copy(
                             isLoading = false,
-                            errorMessage = e.localizedMessage ?: "Failed to load template"
+                            errorMessage = "err_failed_load_template"
                         )
                     }
                 }
@@ -192,14 +192,14 @@
             Log.d(TAG, "saveTemplate() called | isEditMode: $isEditMode, planName: '${currentState.planName}', category: ${currentState.category}")
 
             if (currentState.category == null) {
-                val errMsg = "Please select a category"
+                val errMsg = "err_select_category"
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
             }
 
             if (currentState.planName.isBlank()) {
-                val errMsg = "Template name cannot be empty"
+                val errMsg = "err_empty_template_name"
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
@@ -244,7 +244,7 @@
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = e.localizedMessage ?: "Failed to save template"
+                            errorMessage = "err_failed_save_template"
                         )
                     }
                 }

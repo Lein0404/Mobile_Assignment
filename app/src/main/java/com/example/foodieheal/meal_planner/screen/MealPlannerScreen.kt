@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -63,16 +62,13 @@ fun MealPlannerScreen(
             restore = { LocalDate.parse(it) }
         )
     ) {
-        mutableStateOf(LocalDate.now())
+        // 🌟 Initial state: Prefer deep link date if available, otherwise today
+        mutableStateOf(mealPlannerViewModel.deepLinkSourceDays?.firstOrNull() ?: LocalDate.now())
     }
 
-    var currentWeekStart by rememberSaveable(
-        stateSaver = Saver(
-            save = { it.toString() },
-            restore = { LocalDate.parse(it) }
-        )
-    ) {
-        mutableStateOf(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
+    // 🌟 Derive week start from selected date automatically
+    val currentWeekStart = remember(selectedDate) {
+        selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
 
     val isNetworkAvailable = mealPlannerViewModel.isNetworkAvailable
@@ -87,6 +83,8 @@ fun MealPlannerScreen(
     val coroutineScope = rememberCoroutineScope()
     val dailyCopySuccessMessage = stringResource(R.string.daily_success_notify)
     val weeklyCopySuccessMessage = stringResource(R.string.weekly_success_notify)
+    val recipeRemovedMsg = stringResource(R.string.msg_recipe_removed)
+    val shareWeeklyPlanTitle = stringResource(R.string.share_weekly_plan)
 
     val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
@@ -105,12 +103,20 @@ fun MealPlannerScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showPasteDatePicker by remember { mutableStateOf(false) }
     var showWeeklyPasteDatePicker by remember { mutableStateOf(false) }
+    var showConfirmWeeklyPaste by remember { mutableStateOf(false) }
+    var targetWeeklyPasteDate by remember { mutableStateOf<LocalDate?>(null) }
 
     val deepLinkDays = mealPlannerViewModel.deepLinkSourceDays
 
     LaunchedEffect(deepLinkDays) {
         if (deepLinkDays != null) {
             showWeeklyPasteDatePicker = true
+            // 🌟 Shift the calendar to the shared week so the user sees what they are copying
+            deepLinkDays.firstOrNull()?.let { firstDay ->
+                selectedDate = firstDay
+            }
+            // 🌟 Signal that we have consumed the deep link UI logic
+            mealPlannerViewModel.consumeDeepLinkProcessed()
         }
     }
 
@@ -132,9 +138,10 @@ fun MealPlannerScreen(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
             val targetDate = anchorDate.plusDays(page.toLong())
-            if (targetDate != selectedDate) {
+            // 🌟 Only sync pager -> state if it's NOT a deep link animation or if it's a real change
+            // This prevents the "reset to today" bounce during initial deep link loading
+            if (targetDate != selectedDate && !mealPlannerViewModel.isProcessingDeepLink) {
                 selectedDate = targetDate
-                currentWeekStart = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
             }
         }
     }
@@ -159,9 +166,9 @@ fun MealPlannerScreen(
     if (showDatePicker) {
         CustomizedDatePickerDialog(
             initialDate = selectedDate,
+            title = stringResource(R.string.dialog_title_select_date_view),
             onDateSelected = { newDate ->
                 selectedDate = newDate
-                currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
             },
             onDismiss = { showDatePicker = false },
             mealPlannerViewModel = mealPlannerViewModel,
@@ -169,28 +176,80 @@ fun MealPlannerScreen(
         )
     }
 
+    if (showPasteDatePicker) {
+        CustomizedDatePickerDialog(
+            initialDate = selectedDate,
+            title = stringResource(R.string.dialog_title_choose_paste_date),
+            onDateSelected = { targetDate ->
+                val sourcePlan = activeDailyPlan
+                if (sourcePlan != null) {
+                    mealPlannerViewModel.copyDailyPlanToDate(sourcePlan, targetDate)
+                    Toast.makeText(context, dailyCopySuccessMessage, Toast.LENGTH_SHORT).show()
+                }
+                showPasteDatePicker = false
+            },
+            onDismiss = { showPasteDatePicker = false },
+            mealPlannerViewModel = mealPlannerViewModel,
+            maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
+        )
+    }
+
     if (showWeeklyPasteDatePicker) {
+        val title = if (mealPlannerViewModel.deepLinkSourceDays != null) {
+            stringResource(R.string.dialog_title_choose_date_range_paste)
+        } else {
+            stringResource(R.string.dialog_title_choose_weekly_repeat_date)
+        }
+
         CustomizedDatePickerDialog(
             initialDate = currentWeekStart,
+            title = title,
             onDateSelected = { targetDate ->
-                // Capture deepLinkDays or fallback to current week
-                val daysToCopy = mealPlannerViewModel.deepLinkSourceDays ?: weekDays
-                mealPlannerViewModel.copyWeeklyPlanToDate(daysToCopy, targetDate)
-
-                Toast.makeText(context, weeklyCopySuccessMessage, Toast.LENGTH_SHORT).show()
-
-                // 2. Clear state ONLY AFTER copy operation completes
+                targetWeeklyPasteDate = targetDate
+                showConfirmWeeklyPaste = true
                 showWeeklyPasteDatePicker = false
-                mealPlannerViewModel.clearDeepLinkState()
             },
             onDismiss = {
-                // 3. Clear state if user cancels dialog
                 showWeeklyPasteDatePicker = false
                 mealPlannerViewModel.clearDeepLinkState()
             },
             mealPlannerViewModel = mealPlannerViewModel,
             maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser),
             isRangeMode = true
+        )
+    }
+
+    if (showConfirmWeeklyPaste && targetWeeklyPasteDate != null) {
+        val targetWeekStart = targetWeeklyPasteDate!!.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekLabel = "${targetWeekStart.dayOfMonth} ${targetWeekStart.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())}"
+
+        AlertDialog(
+            onDismissRequest = { showConfirmWeeklyPaste = false },
+            title = { Text(stringResource(R.string.dialog_title_confirm_paste_week)) },
+            text = { Text(stringResource(R.string.dialog_msg_confirm_paste_week, weekLabel)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val daysToCopy = mealPlannerViewModel.deepLinkSourceDays ?: weekDays
+                        mealPlannerViewModel.copyWeeklyPlanToDate(daysToCopy, targetWeeklyPasteDate!!)
+                        Toast.makeText(context, weeklyCopySuccessMessage, Toast.LENGTH_SHORT).show()
+                        
+                        showConfirmWeeklyPaste = false
+                        targetWeeklyPasteDate = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(stringResource(R.string.btn_paste), color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showConfirmWeeklyPaste = false
+                    showWeeklyPasteDatePicker = true // Go back to calendar
+                }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
         )
     }
 
@@ -211,7 +270,7 @@ fun MealPlannerScreen(
                         putExtra(Intent.EXTRA_TEXT, shareUrl)
                         type = "text/plain"
                     }
-                    context.startActivity(Intent.createChooser(sendIntent, "Share Weekly Meal Plan"))
+                    context.startActivity(Intent.createChooser(sendIntent, shareWeeklyPlanTitle))
                 }
             )
         },
@@ -231,22 +290,18 @@ fun MealPlannerScreen(
                     totalCalories = totalCaloriesForSelectedDate,
                     maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser),
                     mealPlansCache = mealPlannerViewModel.mealPlansCache,
+                    monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Pass conditions
                     pagerState = pagerState,
                     anchorDate = anchorDate,
                     onCalendarClick = { showDatePicker = true },
                     onDateSelected = { newDate ->
                         selectedDate = newDate
-                        currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                     },
                     onDateShiftBackward = {
-                        val newDate = selectedDate.minusWeeks(1)
-                        selectedDate = newDate
-                        currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                        selectedDate = selectedDate.minusWeeks(1)
                     },
                     onDateShiftForward = {
-                        val newDate = selectedDate.plusWeeks(1)
-                        selectedDate = newDate
-                        currentWeekStart = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                        selectedDate = selectedDate.plusWeeks(1)
                     },
                     onLoadPlanForDate = { date ->
                         if (isNetworkAvailable) mealPlannerViewModel.loadPlanForDate(date)
@@ -254,7 +309,7 @@ fun MealPlannerScreen(
                     onAddMealRecipe = { date, type -> onAddMeal(date, type) },
                     onDeleteMealRecipe = { date, type, recipe ->
                         mealPlannerViewModel.deleteRecipeFromMeal(date, type, recipe)
-                        Toast.makeText(context, "Recipe removed from meal", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, recipeRemovedMsg, Toast.LENGTH_SHORT).show()
                     },
                     onRecipeDetails = onRecipeDetails,
                     onCopyPlanClick = { showPasteDatePicker = true },
@@ -263,7 +318,7 @@ fun MealPlannerScreen(
             }
             1 -> {
                 TemplatesContent(
-                    modifier = Modifier.padding(innerPadding).navigationBarsPadding(),
+                    modifier = Modifier.padding(innerPadding),
                     onAddTemplateClick = { onAddTemplateClick() },
                     authViewModel = authViewModel,
                     onPlanDetails = onPlanDetails,

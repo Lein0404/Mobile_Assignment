@@ -18,10 +18,17 @@ import org.json.JSONObject
 class RecipeRepository(
     private val supabaseClient: SupabaseClient
 ) {
+    // 🌟 Simple memory cache to speed up repeated fetches
+    private companion object {
+        private val recipeCache = mutableMapOf<String, Recipe>()
+    }
+
     suspend fun getAllRecipes(): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             val response = supabaseClient.postgrest.from("recipes").select()
-            response.decodeList<Recipe>()
+            val recipes = response.decodeList<Recipe>()
+            recipes.forEach { r -> r.recipe_id?.let { recipeCache[it] = r } }
+            recipes
         }
     }
 
@@ -142,25 +149,42 @@ class RecipeRepository(
     }
 
     suspend fun getRecipeById(recipeId: String): Result<Recipe> = withContext(Dispatchers.IO) {
+        // 🌟 Check cache first
+        recipeCache[recipeId]?.let { return@withContext Result.success(it) }
+
         runCatching {
             val response = supabaseClient.postgrest.from("recipes")
                 .select {
                     filter { eq("recipe_id", recipeId) }
                 }
-            response.decodeSingle<Recipe>()
+            val recipe = response.decodeSingle<Recipe>()
+            recipe.recipe_id?.let { recipeCache[it] = recipe }
+            recipe
         }
     }
 
     suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        if (recipeIds.isEmpty()) return@withContext Result.success(emptyList())
+
+        // 🌟 Check cache and filter out what we already have
+        val (cached, missing) = recipeIds.partition { recipeCache.containsKey(it) }
+        val cachedRecipes = cached.mapNotNull { recipeCache[it] }
+
+        if (missing.isEmpty()) return@withContext Result.success(cachedRecipes)
+
         runCatching {
-            if (recipeIds.isEmpty()) return@runCatching emptyList()
             val response = supabaseClient.postgrest.from("recipes")
                 .select {
                     filter {
-                        isIn("recipe_id", recipeIds)
+                        isIn("recipe_id", missing)
                     }
                 }
-            response.decodeList<Recipe>()
+            val fetchedRecipes = response.decodeList<Recipe>()
+            
+            // Update cache
+            fetchedRecipes.forEach { r -> r.recipe_id?.let { recipeCache[it] = r } }
+            
+            cachedRecipes + fetchedRecipes
         }
     }
 
