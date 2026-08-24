@@ -93,8 +93,7 @@ class PaymentViewModel(
                 val generatedPaymentId = UUID.randomUUID().toString()
                 createdPaymentId = generatedPaymentId
 
-                val basePrice = currentAppointment.Total_Price ?: 0.0
-                val totalAmount = basePrice * 1.05
+                val totalAmount = currentAppointment.Total_Price ?: 0.0
 
                 val methodString = when (selectedMethod) {
                     is PaymentMethod.CreditCard -> "${selectedMethod.cardBrand} (•••• ${selectedMethod.last4Digits})"

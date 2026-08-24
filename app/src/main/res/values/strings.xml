@@ -271,6 +271,12 @@
     <string name="error_invalid_serving_size">Please enter a valid serving size.</string>
     <string name="error_empty_description">Description cannot be empty.</string>
 
+    <!-- Pricing Estimate -->
+    <string name="label_estimated_price">Estimated Total Price</string>
+    <string name="label_estimated_duration">Duration</string>
+    <string name="estimated_price_summary">Price Summary</string>
+    <string name="hourly_rate_format">RM %.2f / hr</string>
+
     <!-- Appointment Review -->
     <string name="review_booking">Review Booking</string>
 
@@ -584,4 +590,5 @@
     <string name="section_address">Address</string>
     <string name="section_professional_bg">Professional Background</string>
     <string name="years_format">%1$s Years</string>
+
 </resources>

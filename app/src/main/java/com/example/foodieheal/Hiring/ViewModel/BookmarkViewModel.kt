@@ -51,7 +51,7 @@ class BookmarkViewModel(
                 monitor.isConnected.collect { connected ->
                     _isNetworkAvailable.value = connected
                     if (connected && !lastUserId.isNullOrBlank()) {
-                        fetchBookmarkedChefs(lastUserId!!)
+                        fetchBookmarkedChefs(lastUserId!!, forceRefresh = false)
                     }
                 }
             }
@@ -85,7 +85,7 @@ class BookmarkViewModel(
                     Toast.makeText(context, "Chef $chefName added to bookmarks", Toast.LENGTH_SHORT).show()
                 }
 
-                fetchBookmarkedChefs(userId)
+                fetchBookmarkedChefs(userId, forceRefresh = false)
             } catch (e: Exception) {
                 // Revert local state on network/DB failure
                 bookmarkedChefIds = if (wasBookmarked) {
@@ -100,12 +100,14 @@ class BookmarkViewModel(
         }
     }
 
-    fun fetchBookmarkedChefs(userId: String) {
+    fun fetchBookmarkedChefs(userId: String, forceRefresh: Boolean = false) {
         if (userId.isBlank()) return
         lastUserId = userId
 
         viewModelScope.launch {
-            isLoadingBookmarks = true
+            if (bookmarkedChefsList.isEmpty() || forceRefresh) {
+                isLoadingBookmarks = true
+            }
             try {
                 val chefs = chefBookmarkRepo.getBookmarkedChefs(userId)
                 bookmarkedChefsList = chefs

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class AppointmentBookingViewModel(
@@ -239,11 +240,23 @@ class AppointmentBookingViewModel(
         }
     }
 
+    private fun parseTime(timeStr: String): Date? {
+        val trimmed = timeStr.trim()
+        val patterns = listOf("hh:mm a", "h:mm a", "HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
+        for (pattern in patterns) {
+            try {
+                val format = SimpleDateFormat(pattern, Locale.US)
+                val date = format.parse(trimmed)
+                if (date != null) return date
+            } catch (_: Exception) {}
+        }
+        return null
+    }
+
     private fun parseTimeSlot(startTimeStr: String, endTimeStr: String): Pair<Calendar, Calendar>? {
-        val format = SimpleDateFormat("hh:mm a", Locale.US)
         return try {
-            val startDate = format.parse(startTimeStr) ?: return null
-            val endDate = format.parse(endTimeStr) ?: return null
+            val startDate = parseTime(startTimeStr) ?: return null
+            val endDate = parseTime(endTimeStr) ?: return null
 
             val startCal = Calendar.getInstance().apply { time = startDate }
             val endCal = Calendar.getInstance().apply { time = endDate }
@@ -267,12 +280,10 @@ class AppointmentBookingViewModel(
                     (currentAppointmentId == null || it.AppointmentID != currentAppointmentId)
         }
 
-        val format = SimpleDateFormat("hh:mm a", Locale.US)
-
         for (appt in appointments) {
             try {
-                val apptStart = format.parse(appt.Start_Time) ?: continue
-                val apptEnd = format.parse(appt.End_Time) ?: continue
+                val apptStart = parseTime(appt.Start_Time) ?: continue
+                val apptEnd = parseTime(appt.End_Time) ?: continue
 
                 val apptStartCal = Calendar.getInstance().apply { time = apptStart }
                 val apptEndCal = Calendar.getInstance().apply { time = apptEnd }
@@ -292,10 +303,9 @@ class AppointmentBookingViewModel(
         val parts = appointmentTime.split("-").map { it.trim() }
         if (parts.size != 2) return hourlyRate
 
-        val format = SimpleDateFormat("hh:mm a", Locale.US)
         return try {
-            val start = format.parse(parts[0])
-            val end = format.parse(parts[1])
+            val start = parseTime(parts[0])
+            val end = parseTime(parts[1])
             if (start != null && end != null) {
                 val diffMillis = end.time - start.time
                 val diffHours = diffMillis.toDouble() / (1000 * 60 * 60)

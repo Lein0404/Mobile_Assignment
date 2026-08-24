@@ -45,7 +45,9 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefCli
     val errorMessage by chefViewModel.errorMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        chefViewModel.fetchAllChefs()
+        if (chefs.isEmpty()) {
+            chefViewModel.fetchAllChefs()
+        }
     }
 
     // Set Status Bar color to match the orange header
@@ -157,8 +159,8 @@ fun ChefListSection(
     bookmarkViewModel: BookmarkViewModel = viewModel()
 ) {
     when {
-        // 1. Loading State (Replaced Skeleton with Progress Indicator)
-        isLoading -> {
+        // 1. Loading State on initial load
+        isLoading && chefs.isEmpty() -> {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,8 +171,8 @@ fun ChefListSection(
             }
         }
 
-        // 2. Error State
-        errorMessage != null -> {
+        // 2. Error State when no cached data
+        errorMessage != null && chefs.isEmpty() -> {
             Text(
                 text = errorMessage,
                 color = Color.Red,

@@ -26,6 +26,8 @@ class UserAppointmentViewModel(
     private val _deletedAppointmentIds = MutableStateFlow<Set<String>>(emptySet())
     val deletedAppointmentIds: StateFlow<Set<String>> = _deletedAppointmentIds.asStateFlow()
 
+    private var hasLoadedSuccessfully = false
+
     init {
         fetchAppointmentsForCurrentUser()
         observeNetworkStatus()
@@ -37,16 +39,20 @@ class UserAppointmentViewModel(
                 monitor.isConnected.collect { connected ->
                     _isNetworkAvailable.value = connected
                     if (connected) {
-                        fetchAppointmentsForCurrentUser()
+                        fetchAppointmentsForCurrentUser(forceRefresh = false)
                     }
                 }
             }
         }
     }
 
-    fun fetchAppointmentsForCurrentUser() {
+    fun fetchAppointmentsForCurrentUser(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            _userAppointmentsState.value = UserAppointmentsUiState.Loading
+            // Only show full-screen loading if we don't have cached success data or user explicitly forces refresh
+            if (!hasLoadedSuccessfully || forceRefresh) {
+                _userAppointmentsState.value = UserAppointmentsUiState.Loading
+            }
+
             try {
                 val currentUserId = repository.getCurrentUserId()
                 if (currentUserId.isNullOrEmpty()) {
@@ -57,15 +63,19 @@ class UserAppointmentViewModel(
                 val appointments = repository.fetchAppointmentsForUser(currentUserId)
                 val chefsMap = repository.fetchChefsMapForAppointments(appointments)
 
+                hasLoadedSuccessfully = true
                 _userAppointmentsState.value = UserAppointmentsUiState.Success(
                     appointments = appointments,
                     usersMap = chefsMap
                 )
             } catch (e: Exception) {
                 Log.e("UserAppointmentVM", "Error fetching user appointments", e)
-                _userAppointmentsState.value = UserAppointmentsUiState.Error(
-                    e.localizedMessage ?: "Failed to load appointments"
-                )
+                // If we already have data, don't wipe it out on background fetch failure
+                if (!hasLoadedSuccessfully) {
+                    _userAppointmentsState.value = UserAppointmentsUiState.Error(
+                        e.localizedMessage ?: "Failed to load appointments"
+                    )
+                }
             }
         }
     }
@@ -79,7 +89,7 @@ class UserAppointmentViewModel(
         viewModelScope.launch {
             try {
                 repository.updateAppointmentStatus(appointmentId, newStatus)
-                fetchAppointmentsForCurrentUser()
+                fetchAppointmentsForCurrentUser(forceRefresh = false)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.localizedMessage ?: "Failed to update appointment status")
@@ -113,6 +123,7 @@ class UserAppointmentViewModel(
         newState: String,
         newServingSize: Int,
         newDescription: String,
+        newTotalPrice: Double = 0.0,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -120,9 +131,9 @@ class UserAppointmentViewModel(
             try {
                 repository.rescheduleAppointment(
                     appointmentId, newDate, newStartTime, newEndTime,
-                    newAddress, newPostcode, newState, newServingSize, newDescription
+                    newAddress, newPostcode, newState, newServingSize, newDescription, newTotalPrice
                 )
-                fetchAppointmentsForCurrentUser()
+                fetchAppointmentsForCurrentUser(forceRefresh = true)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.localizedMessage ?: "Failed to reschedule appointment")

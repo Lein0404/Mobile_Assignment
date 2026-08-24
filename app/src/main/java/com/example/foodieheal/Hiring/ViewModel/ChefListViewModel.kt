@@ -42,8 +42,8 @@ class ChefListViewModel(
                 monitor.isConnected.collect { connected ->
                     _isNetworkAvailable.value = connected
                     if (connected) {
-                        // Reconnected: sync fresh chefs from Supabase
-                        fetchAllChefs()
+                        // Reconnected: sync fresh chefs in background
+                        fetchAllChefs(forceRefresh = false)
                     }
                 }
             }
@@ -58,9 +58,12 @@ class ChefListViewModel(
         _selectedChef.value = null
     }
 
-    fun fetchAllChefs() {
+    fun fetchAllChefs(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            _isProcessing.value = true
+            // Only trigger visible loading spinner if we don't have cached data or if forceRefresh is true
+            if (_chefList.value.isEmpty() || forceRefresh) {
+                _isProcessing.value = true
+            }
             _errorMessage.value = null
 
             try {
@@ -69,7 +72,9 @@ class ChefListViewModel(
                 throw e
             } catch (e: Exception) {
                 Log.e("ChefListViewModel", "Error fetching chefs list", e)
-                _errorMessage.value = e.message ?: "Failed to fetch chef profiles"
+                if (_chefList.value.isEmpty()) {
+                    _errorMessage.value = e.message ?: "Failed to fetch chef profiles"
+                }
             } finally {
                 _isProcessing.value = false
             }

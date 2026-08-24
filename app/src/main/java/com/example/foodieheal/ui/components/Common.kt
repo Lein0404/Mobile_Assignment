@@ -729,3 +729,23 @@ fun BottomNavBar(
         }
     }
 }*/
+
+fun formatToAmPm(timeStr: String?): String {
+    if (timeStr.isNullOrBlank()) return ""
+    val trimmed = timeStr.trim()
+    if (trimmed.contains("AM", ignoreCase = true) || trimmed.contains("PM", ignoreCase = true)) {
+        return trimmed
+    }
+    val patterns = listOf("HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
+    for (pattern in patterns) {
+        try {
+            val parser = java.text.SimpleDateFormat(pattern, Locale.US)
+            val date = parser.parse(trimmed)
+            if (date != null) {
+                val outputFormat = java.text.SimpleDateFormat("hh:mm a", Locale.US)
+                return outputFormat.format(date)
+            }
+        } catch (_: Exception) {}
+    }
+    return trimmed
+}

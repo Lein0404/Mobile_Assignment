@@ -128,10 +128,8 @@ fun PaymentScreen(
 
     var showAddCardSheet by remember { mutableStateOf(false) }
 
-    // Pricing Breakdown
-    val basePrice = appointment.Total_Price ?: 0.0
-    val serviceFee = basePrice * 0.05
-    val finalTotal = basePrice + serviceFee
+    // Pricing
+    val totalPrice = appointment.Total_Price ?: 0.0
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -175,7 +173,7 @@ fun PaymentScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = String.format(Locale.US, "RM %.2f", finalTotal),
+                            text = String.format(Locale.US, "RM %.2f", totalPrice),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -210,7 +208,7 @@ fun PaymentScreen(
                             )
                         } else {
                             Text(
-                                text = "Pay RM ${String.format(Locale.US, "%.2f", finalTotal)}",
+                                text = "Pay RM ${String.format(Locale.US, "%.2f", totalPrice)}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -248,8 +246,14 @@ fun PaymentScreen(
                     )
                     HorizontalDivider()
 
-                    DetailRow(label = "Chef Service Fee", value = String.format(Locale.US, "RM %.2f", basePrice))
-                    DetailRow(label = "Platform Service Fee", value = String.format(Locale.US, "RM %.2f", serviceFee))
+                    DetailRow(
+                        label = stringResource(R.string.label_date),
+                        value = appointment.Date.orEmpty()
+                    )
+                    DetailRow(
+                        label = stringResource(R.string.label_appointment_time),
+                        value = "${appointment.Start_Time.orEmpty()} - ${appointment.End_Time.orEmpty()}"
+                    )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
@@ -257,9 +261,9 @@ fun PaymentScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total Payable", fontWeight = FontWeight.Bold)
+                        Text("Total Price", fontWeight = FontWeight.Bold)
                         Text(
-                            String.format(Locale.US, "RM %.2f", finalTotal),
+                            String.format(Locale.US, "RM %.2f", totalPrice),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )

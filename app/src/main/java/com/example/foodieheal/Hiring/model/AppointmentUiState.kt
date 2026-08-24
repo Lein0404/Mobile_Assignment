@@ -1,5 +1,7 @@
 package com.example.foodieheal.hiring.model
 
+import com.example.foodieheal.R
+
 sealed interface AppointmentValidationError {
     data object InvalidTime : AppointmentValidationError
     data object TimeSlotOccupied : AppointmentValidationError
@@ -23,8 +25,8 @@ data class AppointmentUiState(
     val hasAttemptedSubmit: Boolean = false,
     val isSubmitting: Boolean = false
 ) {
-    val isTimeValid: Boolean get() = appointmentTime.isNotBlank()
-    val isAddressValid: Boolean get() = address.isNotBlank()
+    val isTimeValid: Boolean get() = appointmentTime.isNotBlank() && !isTimeSlotOccupied
+    val isAddressValid: Boolean get() = address.trim().isNotBlank()
     val isPostcodeValid: Boolean get() = postcode.matches(Regex("^[0-9]{5}$"))
     val isStateValid: Boolean get() = state.isNotBlank()
     val isServingSizeValid: Boolean get() = servingSize.toIntOrNull()?.let { it > 0 } == true
@@ -37,4 +39,37 @@ data class AppointmentUiState(
                 isStateValid &&
                 isServingSizeValid &&
                 isDescriptionValid
+
+    val timeErrorRes: Int?
+        get() = when {
+            !hasAttemptedSubmit -> null
+            errors.contains(AppointmentValidationError.TimeSlotOccupied) -> R.string.error_time_slot_occupied
+            errors.contains(AppointmentValidationError.InvalidTime) -> R.string.error_invalid_time_range
+            else -> null
+        }
+
+    val addressErrorRes: Int?
+        get() = if (hasAttemptedSubmit && errors.contains(AppointmentValidationError.InvalidAddress)) {
+            R.string.error_empty_address
+        } else null
+
+    val postcodeErrorRes: Int?
+        get() = if (hasAttemptedSubmit && errors.contains(AppointmentValidationError.InvalidPostcode)) {
+            R.string.error_invalid_postcode
+        } else null
+
+    val stateErrorRes: Int?
+        get() = if (hasAttemptedSubmit && errors.contains(AppointmentValidationError.InvalidState)) {
+            R.string.error_select_state
+        } else null
+
+    val servingSizeErrorRes: Int?
+        get() = if (hasAttemptedSubmit && errors.contains(AppointmentValidationError.InvalidServingSize)) {
+            R.string.error_invalid_serving_size
+        } else null
+
+    val descriptionErrorRes: Int?
+        get() = if (hasAttemptedSubmit && errors.contains(AppointmentValidationError.InvalidDescription)) {
+            R.string.error_empty_description
+        } else null
 }

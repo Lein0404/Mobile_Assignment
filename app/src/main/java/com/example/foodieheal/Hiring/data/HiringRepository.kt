@@ -158,7 +158,8 @@ class HiringRepository(
         newPostcode: String,
         newState: String,
         newServingSize: Int,
-        newDescription: String
+        newDescription: String,
+        newTotalPrice: Double = 0.0
     ) = withContext(Dispatchers.IO) {
         val updateData = buildJsonObject {
             put("Date", newDate)
@@ -170,6 +171,9 @@ class HiringRepository(
             put("Serving_Size", newServingSize)
             put("Note", newDescription)
             put("Status", "Pending")
+            if (newTotalPrice > 0.0) {
+                put("Total_Price", newTotalPrice)
+            }
         }
         client.from("Appointment").update(updateData) {
             filter { eq("AppointmentID", appointmentId) }

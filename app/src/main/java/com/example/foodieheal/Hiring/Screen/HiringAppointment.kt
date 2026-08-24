@@ -46,6 +46,7 @@ import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.mobileassignmentloginpart.Model.Chef
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -285,10 +286,12 @@ private fun DayScheduleSection(
                 }
             } else {
                 items(appointments) { appointment ->
-                    val timeSlotText = if (!appointment.Start_Time.isNullOrBlank() && !appointment.End_Time.isNullOrBlank()) {
-                        stringResource(R.string.time_range_format, appointment.Start_Time, appointment.End_Time)
-                    } else if (!appointment.Start_Time.isNullOrBlank()) {
-                        appointment.Start_Time
+                    val startAmPm = formatToAmPm(appointment.Start_Time)
+                    val endAmPm = formatToAmPm(appointment.End_Time)
+                    val timeSlotText = if (startAmPm.isNotBlank() && endAmPm.isNotBlank()) {
+                        stringResource(R.string.time_range_format, startAmPm, endAmPm)
+                    } else if (startAmPm.isNotBlank()) {
+                        startAmPm
                     } else {
                         stringResource(R.string.label_appointment)
                     }

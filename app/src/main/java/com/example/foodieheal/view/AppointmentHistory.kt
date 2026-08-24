@@ -31,12 +31,14 @@ import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
+import com.example.foodieheal.ui.components.formatToAmPm
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 enum class AppointmentFilterOption(val displayName: String) {
     ALL("All Statuses"),
     PENDING("Pending"),
+    UNPAID("Unpaid"),
     CONFIRMED("Confirmed"),
     COMPLETED("Completed"),
     CANCELLED("Cancelled"),
@@ -81,6 +83,7 @@ fun AppointmentHistoryScreen(
         val filtered = when (selectedFilter) {
             AppointmentFilterOption.ALL -> visibleAppointments
             AppointmentFilterOption.PENDING -> visibleAppointments.filter { it.Status.equals("pending", ignoreCase = true) }
+            AppointmentFilterOption.UNPAID -> visibleAppointments.filter { it.Status.equals("unpaid", ignoreCase = true) }
             AppointmentFilterOption.CONFIRMED -> visibleAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
             AppointmentFilterOption.COMPLETED -> visibleAppointments.filter { it.Status.equals("completed", ignoreCase = true) }
             AppointmentFilterOption.CANCELLED -> visibleAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
@@ -448,7 +451,7 @@ fun AppointmentHistoryCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.CalendarMonth,
+                        painter =  painterResource(R.drawable.ic_calendar),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -465,14 +468,20 @@ fun AppointmentHistoryCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Schedule,
+                        painter =  painterResource(R.drawable.ic_clock),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
+                    val startTimeAmPm = formatToAmPm(appointment.Start_Time)
+                    val endTimeAmPm = formatToAmPm(appointment.End_Time)
                     Text(
-                        text = "${appointment.Start_Time ?: ""} - ${appointment.End_Time ?: ""}",
-                        fontSize = 13.sp,
+                        text = if (startTimeAmPm.isNotBlank() && endTimeAmPm.isNotBlank()) {
+                            stringResource(R.string.time_range_format, startTimeAmPm, endTimeAmPm)
+                        } else {
+                            stringResource(R.string.time_not_set)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

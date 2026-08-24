@@ -58,6 +58,7 @@ import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.DetailRow
+import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,12 +239,16 @@ fun UserAppointmentDetailScreen(
                         label = stringResource(R.string.label_date),
                         value = appointment.Date
                     )
+
+                    val startTimeAmPm = formatToAmPm(appointment.Start_Time)
+                    val endTimeAmPm = formatToAmPm(appointment.End_Time)
+
                     DetailRow(
                         label = stringResource(R.string.label_time_slot),
                         value = stringResource(
                             R.string.time_slot_format,
-                            appointment.Start_Time,
-                            appointment.End_Time
+                            startTimeAmPm,
+                            endTimeAmPm
                         )
                     )
                     DetailRow(
@@ -253,6 +258,7 @@ fun UserAppointmentDetailScreen(
                             appointment.Serving_Size ?: stringResource(R.string.not_available)
                         )
                     )
+
                     DetailRow(
                         label = stringResource(R.string.label_total_price),
                         value = String.format(Locale.US, "RM %.2f", appointment.Total_Price)
