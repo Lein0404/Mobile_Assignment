@@ -63,6 +63,7 @@ fun AppointmentsScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val uiState by viewModel.appointmentsUiState.collectAsState()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
 
     var selectedStatusFilter by remember { mutableStateOf("All") }
 
@@ -152,6 +153,34 @@ fun AppointmentsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                        if (!isNetworkAvailable) {
+                            item {
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.wifi_off),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = "Offline: Showing cached appointments",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
                         // Filter Chips Row
                         item {

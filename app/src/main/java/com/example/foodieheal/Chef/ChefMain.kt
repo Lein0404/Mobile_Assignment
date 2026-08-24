@@ -166,9 +166,12 @@ fun ChefMainScreen(
 
                     val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
 
+                    val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+
                     AppointmentDetailScreen(
                         appointment = appointment,
                         userName = userName,
+                        isNetworkAvailable = isNetworkAvailable,
                         onBackClick = { chefNavController.popBackStack() },
                         onStatusChange = { newStatus, rejectionReason ->
                             val id = appointment.AppointmentID.orEmpty()

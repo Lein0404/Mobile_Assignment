@@ -5,20 +5,39 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class UserAppointmentViewModel(
-    private val repository: HiringRepository = HiringRepository()
+    private val repository: HiringRepository = HiringRepository(),
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
     val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
 
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
     init {
         fetchAppointmentsForCurrentUser()
+        observeNetworkStatus()
+    }
+
+    private fun observeNetworkStatus() {
+        networkMonitor?.let { monitor ->
+            viewModelScope.launch {
+                monitor.isConnected.collect { connected ->
+                    _isNetworkAvailable.value = connected
+                    if (connected) {
+                        fetchAppointmentsForCurrentUser()
+                    }
+                }
+            }
+        }
     }
 
     fun fetchAppointmentsForCurrentUser() {

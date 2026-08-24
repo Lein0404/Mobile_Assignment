@@ -411,7 +411,7 @@
     <string name="nav_appointments">Appointments</string>
     <string name="nav_profile">Profile</string>
 
-    <string name="greeting_good_morning">Good Morning 👋</string>
+    <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>
 
     <string name="banner_title_schedule">Your Schedule</string>

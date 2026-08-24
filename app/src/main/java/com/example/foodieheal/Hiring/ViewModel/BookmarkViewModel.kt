@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.BookmarkRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BookmarkViewModel(
-    val chefBookmarkRepo: BookmarkRepository = BookmarkRepository()
+    val chefBookmarkRepo: BookmarkRepository = BookmarkRepository(),
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     var isBookmarked by mutableStateOf(false)
@@ -33,6 +35,28 @@ class BookmarkViewModel(
 
     var isLoadingBookmarks by mutableStateOf(false)
         private set
+
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    private var lastUserId: String? = null
+
+    init {
+        observeNetworkStatus()
+    }
+
+    private fun observeNetworkStatus() {
+        networkMonitor?.let { monitor ->
+            viewModelScope.launch {
+                monitor.isConnected.collect { connected ->
+                    _isNetworkAvailable.value = connected
+                    if (connected && !lastUserId.isNullOrBlank()) {
+                        fetchBookmarkedChefs(lastUserId!!)
+                    }
+                }
+            }
+        }
+    }
 
     fun isChefBookmarked(chefId: String): Boolean {
         return bookmarkedChefIds.contains(chefId)
@@ -78,6 +102,7 @@ class BookmarkViewModel(
 
     fun fetchBookmarkedChefs(userId: String) {
         if (userId.isBlank()) return
+        lastUserId = userId
 
         viewModelScope.launch {
             isLoadingBookmarks = true

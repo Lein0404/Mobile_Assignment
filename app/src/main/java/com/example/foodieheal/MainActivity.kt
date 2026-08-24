@@ -61,6 +61,7 @@ import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import com.example.foodieheal.hiring.local.HiringDatabase
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.data.BookmarkRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.Admin.AdminIngredientDetailScreen
 import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
 import com.example.foodieheal.Admin.AdminIngredientsScreen
@@ -158,6 +159,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
                 val context = LocalContext.current
+                val networkMonitor = remember { NetworkMonitor(context) }
                 val hiringDb = remember { HiringDatabase.getInstance(context) }
                 val hiringRepo = remember {
                     HiringRepository(
@@ -176,25 +178,29 @@ class MainActivity : ComponentActivity() {
                 val chefListViewModel: ChefListViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = ChefListViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            ChefListViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val bookingViewModel: AppointmentBookingViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = AppointmentBookingViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AppointmentBookingViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val userAppointmentViewModel: UserAppointmentViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = UserAppointmentViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            UserAppointmentViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val bookmarkViewModel: BookmarkViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = BookmarkViewModel(bookmarkRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            BookmarkViewModel(bookmarkRepo, networkMonitor) as T
                     }
                 )
                 val chefViewModel: ChefRegisterViewModel = viewModel()

@@ -79,6 +79,7 @@ fun RescheduleAppointmentScreen(
 ) {
     val context = LocalContext.current
     val appointmentsState by userViewModel.userAppointmentsState.collectAsState()
+    val isNetworkAvailable by userViewModel.isNetworkAvailable.collectAsState()
 
     // Find target appointment
     val appointment = (appointmentsState as? UserAppointmentsUiState.Success)
@@ -167,10 +168,40 @@ fun RescheduleAppointmentScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (!isNetworkAvailable) {
+                androidx.compose.material3.Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Offline Mode: Internet required to reschedule",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             // Current Schedule Banner
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -412,7 +443,7 @@ fun RescheduleAppointmentScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = !isSubmitting && address.isNotBlank() && postcode.length == 5,
+                enabled = isNetworkAvailable && !isSubmitting && address.isNotBlank() && postcode.length == 5,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isSubmitting) {
@@ -431,6 +462,7 @@ fun RescheduleAppointmentScreen(
             }
         }
     }
+}
 
     // Date Picker Dialog
     if (showDatePickerDialog) {
@@ -503,4 +535,14 @@ fun RescheduleAppointmentScreen(
             TimePicker(state = timePickerState)
         }
     }
+}
+
+@Composable
+private fun FormLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }

@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -71,6 +72,7 @@ fun UserAppointmentDetailScreen(
 ) {
     val context = LocalContext.current
     val appointmentsState by viewModel.userAppointmentsState.collectAsStateWithLifecycle()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
     // Extract appointment and users map from State
     val successState = appointmentsState as? UserAppointmentsUiState.Success
@@ -128,10 +130,41 @@ fun UserAppointmentDetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Offline Banner
+            if (!isNetworkAvailable) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Offline Mode: Actions require internet",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
             // Chef Information Card
             Card(
@@ -340,6 +373,7 @@ fun UserAppointmentDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
+                        enabled = isNetworkAvailable,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -365,6 +399,7 @@ fun UserAppointmentDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
+                        enabled = isNetworkAvailable,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -394,6 +429,7 @@ fun UserAppointmentDetailScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(50.dp),
+                            enabled = isNetworkAvailable,
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
@@ -407,6 +443,7 @@ fun UserAppointmentDetailScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(50.dp),
+                            enabled = isNetworkAvailable,
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondary
@@ -419,6 +456,7 @@ fun UserAppointmentDetailScreen(
             }
         }
     }
+}
 
     if (showCompleteDialog) {
         AlertDialog(

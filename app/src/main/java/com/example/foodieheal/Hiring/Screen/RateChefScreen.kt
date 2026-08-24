@@ -67,6 +67,7 @@ fun RateChefScreen(
 ) {
     val context = LocalContext.current
     val appointmentsState by userViewModel.userAppointmentsState.collectAsState()
+    val isNetworkAvailable by userViewModel.isNetworkAvailable.collectAsState()
 
     // Retrieve appointment and chef details
     val successState = appointmentsState as? UserAppointmentsUiState.Success
@@ -113,11 +114,41 @@ fun RateChefScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            if (!isNetworkAvailable) {
+                androidx.compose.material3.Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Offline Mode: Internet required to submit review",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
 
             // Chef Profile Card
             Card(
@@ -278,7 +309,7 @@ fun RateChefScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = !isSubmitting && rating > 0,
+                enabled = isNetworkAvailable && !isSubmitting && rating > 0,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isSubmitting) {
@@ -297,6 +328,7 @@ fun RateChefScreen(
             }
         }
     }
+}
 }
 
 @Composable

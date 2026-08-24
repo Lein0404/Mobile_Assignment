@@ -59,6 +59,7 @@ fun AppointmentDetailScreen(
     appointment: Appointment,
     userName: String,
     userPhone: String = "",
+    isNetworkAvailable: Boolean = true,
     onBackClick: () -> Unit,
     onStatusChange: (newStatus: String, rejectionReason: String?) -> Unit = { _, _ -> }
 ) {
@@ -240,6 +241,32 @@ fun AppointmentDetailScreen(
 
             // Action Buttons
             if (appointment.Status.equals("pending", ignoreCase = true)) {
+                if (!isNetworkAvailable) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.wifi_off),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.desc_no_network),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -250,6 +277,7 @@ fun AppointmentDetailScreen(
                             rejectionReasonError = false
                             showDeclineDialog = true
                         },
+                        enabled = isNetworkAvailable,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
@@ -260,6 +288,7 @@ fun AppointmentDetailScreen(
 
                     Button(
                         onClick = { showAcceptDialog = true },
+                        enabled = isNetworkAvailable,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary

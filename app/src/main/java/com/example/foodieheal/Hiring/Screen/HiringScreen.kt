@@ -64,6 +64,7 @@ fun HiringScreen(
     val chefs by chefListViewModel.chefList.collectAsStateWithLifecycle()
     val isLoading by chefListViewModel.isProcessing.collectAsStateWithLifecycle()
     val errorMessage by chefListViewModel.errorMessage.collectAsStateWithLifecycle()
+    val isNetworkAvailable by chefListViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
     var selectedSortOrder by rememberSaveable { mutableStateOf(RateSortOrder.NONE) }
     var selectedStateFilter by rememberSaveable { mutableStateOf<String?>(null) }
@@ -183,6 +184,33 @@ fun HiringScreen(
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // Offline Mode Banner
+        if (!isNetworkAvailable) {
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.wifi_off),
+                        contentDescription = stringResource(R.string.desc_no_network),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Offline Mode: Showing cached data",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }

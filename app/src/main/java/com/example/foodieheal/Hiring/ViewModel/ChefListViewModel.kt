@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,8 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
 class ChefListViewModel(
-    private val repository: HiringRepository = HiringRepository()
+    private val repository: HiringRepository = HiringRepository(),
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     private val _chefList = MutableStateFlow<List<Chef>>(emptyList())
@@ -26,6 +28,27 @@ class ChefListViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    init {
+        observeNetworkStatus()
+    }
+
+    private fun observeNetworkStatus() {
+        networkMonitor?.let { monitor ->
+            viewModelScope.launch {
+                monitor.isConnected.collect { connected ->
+                    _isNetworkAvailable.value = connected
+                    if (connected) {
+                        // Reconnected: sync fresh chefs from Supabase
+                        fetchAllChefs()
+                    }
+                }
+            }
+        }
+    }
 
     fun selectChef(chef: Chef) {
         _selectedChef.value = chef
