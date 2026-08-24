@@ -171,7 +171,7 @@ fun CommonInputField(
     minLines: Int = 1,
 ) {
     // Modifier is applied ONLY to the parent container
-    Column(modifier = modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -181,7 +181,7 @@ fun CommonInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(), // Inner field always takes full container width
+            modifier = modifier, // Apply modifier directly
             enabled = enabled,
             placeholder = placeholder?.let { { Text(it) } },
             leadingIcon = leadingIconRes?.let {
