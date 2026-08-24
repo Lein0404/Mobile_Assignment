@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 // 🌟 Bumped version to 2 to handle new tables safely
-@Database(entities = [UserEntity::class, ChefEntity::class, RecipeEntity::class, IngredientEntity::class, BookmarkEntity::class], version = 2)
+@Database(entities = [UserEntity::class, ChefEntity::class, RecipeEntity::class, IngredientEntity::class, RecipeBookmarkEntity::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun recipeDao(): RecipeDao
@@ -22,8 +22,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "foodieheal_database"
                 )
-                .fallbackToDestructiveMigration() // Wipes old data if version changes to prevent crashes
-                .build()
+                    .fallbackToDestructiveMigration() // Wipes old data if version changes to prevent crashes
+                    .build()
                 INSTANCE = instance
                 instance
             }

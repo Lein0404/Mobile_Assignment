@@ -1,22 +1,28 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,49 +30,104 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
+import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
+import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.foodieheal.R
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringScreen(
-    HiringViewModel: HiringViewModel = viewModel(),
+    chefListViewModel: ChefListViewModel = viewModel(),
+    userAppointmentViewModel: UserAppointmentViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
-    bookmarkViewModel: BookmarkViewModel = viewModel(), // Added BookmarkViewModel instance
-    onChefClick: (Chef) -> Unit
+    bookmarkViewModel: BookmarkViewModel = viewModel(),
+    onChefClick: (Chef) -> Unit,
+    onAppointmentClick: (Appointment) -> Unit
 ) {
     val currentUser = authViewModel.currentUser
     val currentUserId = currentUser?.id.orEmpty()
-    val chefs = HiringViewModel.chefList
-    val isLoading = HiringViewModel.isProcessing
-    val errorMessage = HiringViewModel.errorMessage
+    val chefs by chefListViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefListViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefListViewModel.errorMessage.collectAsStateWithLifecycle()
+    val isNetworkAvailable by chefListViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Popular", "Appointment", "Bookmarks")
+    var selectedSortOrder by rememberSaveable { mutableStateOf(RateSortOrder.NONE) }
+    var selectedStateFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedAgeRangeFilter by rememberSaveable { mutableStateOf<AgeRange?>(null) }
+    var showFilterBottomSheet by remember { mutableStateOf(false) }
+
+    val availableStates = remember(chefs) {
+        chefs.mapNotNull { it.state }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+
+    // Filter Chef List
+    val filteredChefs = remember(chefs, selectedSortOrder, selectedStateFilter, selectedAgeRangeFilter) {
+        chefs.filter { chef ->
+            // Filter by State
+            val matchesState = selectedStateFilter == null || chef.state.equals(selectedStateFilter, ignoreCase = true)
+
+            // Filter by Age
+            val chefAge = chef.age ?: 0
+            val matchesAge = selectedAgeRangeFilter == null || when (selectedAgeRangeFilter) {
+                AgeRange.YOUNG -> chefAge in 18..30
+                AgeRange.MID -> chefAge in 31..45
+                AgeRange.SENIOR -> chefAge > 45
+                else -> true
+            }
+
+            matchesState && matchesAge
+        }.let { list ->
+            // Sort by Rate
+            when (selectedSortOrder) {
+                RateSortOrder.ASCENDING -> list.sortedBy { it.averagerating ?: 0.0 }
+                RateSortOrder.DESCENDING -> list.sortedByDescending { it.averagerating ?: 0.0 }
+                RateSortOrder.NONE -> list
+            }
+        }
+    }
+
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+    val tabs = listOf(
+        stringResource(R.string.tab_popular),
+        stringResource(R.string.tab_appointment),
+        stringResource(R.string.tab_bookmarks)
+    )
 
     // Fetch all chefs on initial screen launch
     LaunchedEffect(Unit) {
         if (chefs.isEmpty()) {
-            HiringViewModel.fetchAllChefs()
+            chefListViewModel.fetchAllChefs()
         }
     }
 
-    // Automatically fetch bookmarked chefs whenever switching to Tab 2 (Bookmarks)
+    // Automatically fetch data whenever switching tabs
     LaunchedEffect(selectedTabIndex, currentUserId) {
-        if (selectedTabIndex == 2 && currentUserId.isNotEmpty()) {
-            bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
+        if (currentUserId.isNotEmpty()) {
+            when (selectedTabIndex) {
+                1 -> userAppointmentViewModel.fetchAppointmentsForCurrentUser()
+                2 -> bookmarkViewModel.fetchBookmarkedChefs(currentUserId)
+            }
         }
     }
+
+    val isFilterActive = selectedSortOrder != RateSortOrder.NONE ||
+            selectedStateFilter != null ||
+            selectedAgeRangeFilter != null
 
     Column(
         modifier = Modifier
@@ -83,8 +144,8 @@ fun HiringScreen(
                 modifier = Modifier.statusBarsPadding()
             ) {
                 Text(
-                    text = "Hiring",
-                    color = Color.White,
+                    text = stringResource(R.string.title_hiring),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
@@ -93,13 +154,13 @@ fun HiringScreen(
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     indicator = { tabPositions ->
                         if (selectedTabIndex < tabPositions.size) {
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                                 height = 3.dp,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     },
@@ -114,11 +175,42 @@ fun HiringScreen(
                                     text = title,
                                     fontSize = 12.sp,
                                     fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTabIndex == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                    color = if (selectedTabIndex == index) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else {
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                    }
                                 )
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // Offline Mode Banner
+        if (!isNetworkAvailable) {
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.wifi_off),
+                        contentDescription = stringResource(R.string.desc_no_network),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Offline Mode: Showing cached data",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -129,43 +221,173 @@ fun HiringScreen(
                 .fillMaxSize()
                 .weight(1f)
         ) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                !errorMessage.isNullOrEmpty() -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = { HiringViewModel.fetchAllChefs() },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            when (selectedTabIndex) {
+                0 -> {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else if (!errorMessage.isNullOrEmpty()) {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Retry")
+                            Text(text = errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { chefListViewModel.fetchAllChefs() },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text(stringResource(R.string.btn_retry))
+                            }
                         }
+                    } else if (chefs.isNotEmpty()) {
+                        if (filteredChefs.isEmpty()) {
+                            Column(
+                                modifier = Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "No chefs match the selected filters",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 14.sp
+                                )
+                                TextButton(
+                                    onClick = {
+                                        selectedSortOrder = RateSortOrder.NONE
+                                        selectedStateFilter = null
+                                        selectedAgeRangeFilter = null
+                                    }
+                                ) {
+                                    Text("Reset Filters")
+                                }
+                            }
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Header item with Title and Filter Icon Button
+                                item(span = { GridItemSpan(2) }) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.header_chef),
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+
+                                        IconButton(onClick = { showFilterBottomSheet = true }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.filter),
+                                                contentDescription = "Filter Chefs",
+                                                tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                items(filteredChefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
+                                    ChefHireItem(
+                                        chef = chef,
+                                        onClick = { onChefClick(chef) }
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.empty_no_chefs_found),
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-                else -> {
-                    when (selectedTabIndex) {
-                        // 0 -> Popular Chefs Tab
-                        0 -> {
-                            if (chefs.isNotEmpty()) {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
+
+                // 1 -> Appointment Tab
+                1 -> {
+                    val state by userAppointmentViewModel.userAppointmentsState.collectAsState()
+
+                    when (val currentState = state) {
+                        is UserAppointmentsUiState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+
+                        is UserAppointmentsUiState.Error -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = currentState.message,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontSize = 14.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(onClick = { userAppointmentViewModel.fetchAppointmentsForCurrentUser() }) {
+                                        Text(stringResource(R.string.btn_retry))
+                                    }
+                                }
+                            }
+                        }
+
+                        is UserAppointmentsUiState.Success -> {
+                            val activeAppointments = remember(currentState.appointments) {
+                                currentState.appointments.filter { appointment ->
+                                    val status = appointment.Status.orEmpty().lowercase(Locale.US)
+                                    status == "pending" || status == "confirmed" || status == "unpaid"
+                                }
+                            }
+
+                            if (activeAppointments.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_clock),
+                                            contentDescription = stringResource(R.string.no_appointments),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.empty_no_appointments_found),
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            } else {
+                                LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
                                     contentPadding = PaddingValues(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    item(span = { GridItemSpan(2) }) {
+                                    item {
                                         Text(
-                                            text = "Chef",
+                                            text = stringResource(R.string.header_my_bookings, activeAppointments.size),
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onBackground,
@@ -173,103 +395,109 @@ fun HiringScreen(
                                         )
                                     }
 
-                                    items(chefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
-
-                                        val chefId = chef.chefId.ifEmpty { chef.id }
-                                        val isBookmarked = bookmarkViewModel.isChefBookmarked(chefId)
-                                        ChefHireItem(
-                                            chef = chef,
-                                            onClick = { onChefClick(chef) }
-                                        )
-                                    }
-                                }
-                            } else {
-                                Text(
-                                    text = "No chef profiles found.",
-                                    modifier = Modifier.align(Alignment.Center),
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-
-                        // 1 -> Appointment Tab (Placeholder)
-                        1 -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No Appointments Yet",
-                                    color = Color.Gray,
-                                    fontSize = 16.sp
-                                )
-                            }
-                        }
-
-                        // 2 -> Bookmarks Tab
-                        2 -> {
-                            val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
-
-                            if (bookmarkedChefs.isNotEmpty()) {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    item(span = { GridItemSpan(2) }) {
-                                        Text(
-                                            text = "Bookmarked Chefs (${bookmarkedChefs.size})",
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.Black,
-                                            modifier = Modifier.padding(bottom = 4.dp)
-                                        )
-                                    }
-
                                     items(
-                                        items = bookmarkedChefs,
-                                        key = { it.chefId.ifEmpty { it.id } }
-                                    ) { chef ->
-                                        val chefId = chef.chefId.ifEmpty { chef.id }
-                                        val isBookmarked = bookmarkViewModel.isChefBookmarked(chefId)
-                                        ChefHireItem(
-                                            chef = chef,
-                                            onClick = { onChefClick(chef) }
+                                        items = activeAppointments,
+                                        key = { it.AppointmentID ?: it.hashCode().toString() }
+                                    ) { appointment ->
+                                        val chefUser = currentState.usersMap[appointment.chefId]
+                                        val chefName = chefUser?.name ?: stringResource(R.string.default_chef_name)
+                                        val chefPicture = chefUser?.profilePicUrl ?: ""
+
+                                        UserAppointmentCard(
+                                            appointment = appointment,
+                                            chefName = chefName,
+                                            chefPicture = chefPicture,
+                                            onClick = { onAppointmentClick(appointment) }
                                         )
                                     }
-                                }
-                            } else {
-                                Column(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.bookmark),
-                                        contentDescription = "No Bookmarks",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "No Bookmarked Chefs",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.Gray
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Chefs you bookmark will appear here.",
-                                        fontSize = 12.sp,
-                                        color = Color.Gray.copy(alpha = 0.7f)
-                                    )
                                 }
                             }
                         }
                     }
                 }
+
+                // 2 -> Bookmarks Tab
+                2 -> {
+                    val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
+
+                    if (bookmarkedChefs.isNotEmpty()) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            item(span = { GridItemSpan(2) }) {
+                                Text(
+                                    text = stringResource(R.string.header_bookmarked_chefs, bookmarkedChefs.size),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
+
+                            items(
+                                items = bookmarkedChefs,
+                                key = { it.chefId.ifEmpty { it.id } }
+                            ) { chef ->
+                                ChefHireItem(
+                                    chef = chef,
+                                    onClick = { onChefClick(chef) }
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.bookmark),
+                                contentDescription = stringResource(R.string.no_bookmarks),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.empty_no_bookmarked_chefs),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.empty_bookmarked_chefs_sub),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
             }
+        }
+    }
+    if (showFilterBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFilterBottomSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            FilterBottomSheetContent(
+                sortOrder = selectedSortOrder,
+                onSortChange = { selectedSortOrder = it },
+                availableStates = availableStates,
+                selectedState = selectedStateFilter,
+                onStateChange = { selectedStateFilter = it },
+                selectedAgeRange = selectedAgeRangeFilter,
+                onAgeRangeChange = { selectedAgeRangeFilter = it },
+                onResetFilters = {
+                    selectedSortOrder = RateSortOrder.NONE
+                    selectedStateFilter = null
+                    selectedAgeRangeFilter = null
+                },
+                onApply = { showFilterBottomSheet = false }
+            )
         }
     }
 }
@@ -277,14 +505,14 @@ fun HiringScreen(
 @Composable
 fun ChefHireItem(
     chef: Chef,
-    onClick : () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
-            .clickable{onClick()}
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -295,20 +523,20 @@ fun ChefHireItem(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray),
+                    .background(MaterialTheme.colorScheme.tertiary),
                 contentAlignment = Alignment.Center
             ) {
                 if (chef.profilePictureUrl.isNullOrEmpty()) {
                     Text(
-                        text = chef.name?.take(1)?.uppercase() ?: "C",
+                        text = chef.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onTertiary,
                         fontWeight = FontWeight.Bold
                     )
                 } else {
                     AsyncImage(
                         model = chef.profilePictureUrl,
-                        contentDescription = "Profile Picture",
+                        contentDescription = stringResource(R.string.profile_picture),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape),
@@ -321,21 +549,22 @@ fun ChefHireItem(
 
             // Chef Name
             Text(
-                text = chef.name.ifEmpty { "Unknown Chef" },
+                text = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
             // Experience & Location
-            val expText = "${chef.experience ?: 0} yrs exp"
-            val locationText = chef.state?.takeIf { it.isNotBlank() }?.let { "$it" } ?: ""
+            val expText = stringResource(R.string.experience_years_short, chef.experience ?: 0)
+            val locationText = chef.state?.takeIf { it.isNotBlank() }.orEmpty()
+
             Text(
                 text = expText,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -343,7 +572,7 @@ fun ChefHireItem(
             Text(
                 text = locationText,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -357,21 +586,31 @@ fun ChefHireItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val rating = chef.averagerating
-                val ratingDisplay = if (rating != null && rating > 0.0) "★ %.1f".format(rating) else "★ N/A"
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_star),
+                        contentDescription = stringResource(R.string.rating_star),
+                        tint = Color(0xFFFFB300), // Gold Star Color
+                        modifier = Modifier.size(14.dp)
+                    )
 
-                Text(
-                    text = ratingDisplay,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                    Text(
+                        text = if (rating != null && rating > 0.0) String.format(Locale.US, "%.1f", rating) else stringResource(R.string.not_available),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 chef.Pricing?.let { price ->
                     Text(
-                        text = "$${price.toInt()}/hr",
+                        text = stringResource(R.string.rate_per_hour, price.toInt()),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -379,33 +618,275 @@ fun ChefHireItem(
     }
 }
 
-private val sampleChef = Chef(
-    chefId = "chef_123",
-    id = "1",
-    name = "Gordon Ramsay",
-    email = "gordon@kitchen.com",
-    phoneNumber = "0234567 8900",
-    description = "Passionate executive chef with over 15 years of culinary experience in high-end fine dining and custom home catering.",
-    Pricing = 120.0,
-    experience = 15,
-    averagerating = 4.9,
-    gender = "Male",
-    state = "California",
-    postcode = "90210",
-    address = "123 Culinary Way",
-    status = "approved",
-    profilePictureUrl = "null",
-    age = 50
-)
+@Composable
+fun UserAppointmentCard(
+    appointment: Appointment,
+    chefName: String,
+    chefPicture: String?,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
-//@Preview(showBackground = true)
-//@Composable
-//fun HiringChefDetailsPreview() {
-//    MaterialTheme {
-//        HiringChefDetails(
-//            chef = sampleChef,
-//            onBackClick = {},
-//            onBookClick = {}
-//        )
-//    }
-//}
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Chef Avatar
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.tertiary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!chefPicture.isNullOrBlank()) {
+                        AsyncImage(
+                            model = chefPicture,
+                            contentDescription = stringResource(R.string.chef_profile_picture_format, chefName),
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_outline_account_circle),
+                            contentDescription = stringResource(R.string.chef_placeholder),
+                            tint = MaterialTheme.colorScheme.onTertiary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = chefName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.role_private_chef),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Appointment Status Badge
+                AppointmentStatusBadge(status = appointment.Status)
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Schedule Info
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_planner),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = appointment.Date,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_clock),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (appointment.Start_Time.isNotBlank() && appointment.End_Time.isNotBlank()) {
+                                stringResource(R.string.time_range_format, appointment.Start_Time, appointment.End_Time)
+                            } else {
+                                stringResource(R.string.time_not_set)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Total Price
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = stringResource(R.string.label_total_price),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = String.format(Locale.US, stringResource(R.string.price_currency_format), appointment.Total_Price),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
+
+enum class RateSortOrder { NONE, ASCENDING, DESCENDING }
+enum class AgeRange(val label: String) {
+    YOUNG("18 - 30"),
+    MID("31 - 45"),
+    SENIOR("45+")
+}
+
+@Composable
+fun FilterBottomSheetContent(
+    sortOrder: RateSortOrder,
+    onSortChange: (RateSortOrder) -> Unit,
+    availableStates: List<String>,
+    selectedState: String?,
+    onStateChange: (String?) -> Unit,
+    selectedAgeRange: AgeRange?,
+    onAgeRangeChange: (AgeRange?) -> Unit,
+    onResetFilters: () -> Unit,
+    onApply: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Filter Chefs",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = onResetFilters) {
+                Text("Reset All")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Sort by Rate Section
+        Text(
+            text = "Rating",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = sortOrder == RateSortOrder.ASCENDING,
+                onClick = {
+                    onSortChange(if (sortOrder == RateSortOrder.ASCENDING) RateSortOrder.NONE else RateSortOrder.ASCENDING)
+                },
+                label = { Text("Low to High") }
+            )
+            FilterChip(
+                selected = sortOrder == RateSortOrder.DESCENDING,
+                onClick = {
+                    onSortChange(if (sortOrder == RateSortOrder.DESCENDING) RateSortOrder.NONE else RateSortOrder.DESCENDING)
+                },
+                label = { Text("High to Low") }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Age Filter Section
+        Text(
+            text = "Chef Age",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            AgeRange.entries.forEach { range ->
+                FilterChip(
+                    selected = selectedAgeRange == range,
+                    onClick = {
+                        onAgeRangeChange(if (selectedAgeRange == range) null else range)
+                    },
+                    label = { Text(range.label) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // State Filter Section
+        if (availableStates.isNotEmpty()) {
+            Text(
+                text = "State",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                availableStates.forEach { state ->
+                    FilterChip(
+                        selected = selectedState.equals(state, ignoreCase = true),
+                        onClick = {
+                            onStateChange(if (selectedState.equals(state, ignoreCase = true)) null else state)
+                        },
+                        label = { Text(state) }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // Apply Button
+        Button(
+            onClick = onApply,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Apply Filters")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}

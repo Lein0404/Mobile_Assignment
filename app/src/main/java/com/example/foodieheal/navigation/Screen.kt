@@ -1,5 +1,10 @@
 package com.example.foodieheal.navigation
 
+import com.example.foodieheal.meal_planner.model.MealType
+import kotlinx.datetime.DayOfWeek
+import java.time.LocalDate
+
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -12,10 +17,30 @@ sealed class Screen(val route: String) {
     object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
         fun createRoute(id: String) = "add_recipe_to_planner/$id"
     }
+    object RecipeSelection : Screen("recipe_selection/{date}/{type}") {
+        fun createRoute(date: LocalDate, type: MealType) = "recipe_selection/$date/$type"
+        fun createRoute(date: DayOfWeek, type: MealType) = "recipe_selection/${date.name}/$type"
+    }
+    object TemplateDetails:Screen("template_details/{planId}/{isMyTemplate}"){
+        fun createRoute(planId: String,isMyTemplate: Boolean) = "template_details/$planId/$isMyTemplate"
+
+    }
+    object AddEditTemplate: Screen("add_edit_template?planId={planId}") {
+        fun createRoute(planId: String? = null): String {
+            return if (planId != null) {
+                "add_edit_template?planId=$planId"
+            } else {
+                "add_edit_template"
+            }
+        }
+    }
 
     object Hiring : Screen("hiring")
     object Profile : Screen("profile")
     object AddRecipe : Screen("add_recipe")
+    object EditRecipe : Screen("edit_recipe/{recipeId}") {
+        fun createRoute(recipeId: String): String = "edit_recipe/$recipeId"
+    }
     object Welcome : Screen("welcome")
     object BasicInfo : Screen("basicInfo")
     object Contact : Screen("contactInfo")
@@ -23,20 +48,28 @@ sealed class Screen(val route: String) {
     object Description : Screen("descriptionInfo")
     object ChefPicture : Screen("chefPicture")
     object Review : Screen("reviewInfo")
-    object AdminChefScreen : Screen("adminChefApproval?tab={tab}") {
-        fun createRoute(tab: Int = 0) = "adminChefApproval?tab=$tab"
-    }
-    object ChefHomeScreen : Screen("chefHome")
-    object ChefDetailScreen : Screen("chefDetail/{chefId}")
-    object ChefProfileScreen : Screen("chefProfile")
-    object HiringChefDetails : Screen("hiringChefDetails")
+    object AdminChefScreen : Screen("adminChefApproval")
     object ChefMain : Screen("chefMain")
+    object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
+    }
+    object UserAppointmentDetail : Screen("appointmentDetail/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "appointmentDetail/$appointmentId"
+    }
+    object RescheduleAppointment : Screen("rescheduleAppointment/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "rescheduleAppointment/$appointmentId"
+    }
     object ChefEditProfile : Screen("chefEditProfile")
     object HiringAppointment : Screen("HiringAppointment")
+    object HiringChefDetails : Screen("hiringChefDetails")
+    object RateChef : Screen("rateChef/{appointmentId}") {
+        fun createRoute(appointmentId: String) = "rateChef/$appointmentId"
+    }
     object EditProfile : Screen("editProfile")
+    object AppoinmtmentHistory : Screen("appointmentHistory")
     object ChangePassword : Screen("changePassword")
     object EditBodyStatus : Screen("editBodyStatus")
-    
+
     // 🌟 Added routes from your design
     object AddHiringAppointment : Screen("addHiringAppointment")
     object AppointmentReview : Screen("appointmentReview")
@@ -63,4 +96,6 @@ sealed class Screen(val route: String) {
     object AdminIngredientReview : Screen("admin_ingredient_review/{id}") {
         fun createRoute(id: String) = "admin_ingredient_review/$id"
     }
+
+    object PaymentMethod : Screen("payment_method")
 }

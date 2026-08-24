@@ -13,22 +13,31 @@ import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
+import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
-import kotlinx.coroutines.channels.Channel
+import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
+import kotlin.time.Duration.Companion.milliseconds
 
 class MealPlannerViewModel(
     application: Application,
     private val repository: MealPlannerRepository
 ) : AndroidViewModel(application) {
+
+    private companion object {
+        private const val TAG = "ColdStartDebug"
+    }
 
     var mealPlansCache = mutableStateMapOf<LocalDate, DailyPlan?>()
         private set
@@ -45,50 +54,67 @@ class MealPlannerViewModel(
         private set
 
     private var lastActiveDate: LocalDate = LocalDate.now()
+    private var currentMaxCalories: Int = 2000
 
-    init {
-        observeNetworkStatus()
-    }
     var deepLinkSourceDays by mutableStateOf<List<LocalDate>?>(null)
         private set
-
-    // Channels ensure one-time UI event delivery (like navigation) without missing signals
-    // 1. Change SharedFlow to a Channel to prevent dropping cold-start events
-    private val _navigationChannel = Channel<String>(Channel.BUFFERED)
-    val navigationEvent = _navigationChannel.receiveAsFlow()
 
     var selectedTabRoute by mutableStateOf(Screen.Home.route)
         private set
 
-    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate) {
-        deepLinkSourceDays = getCurrentWeekDays(sourceWeekStart)
+    // Explicit flag to protect deep-link navigation transactions
+    var isProcessingDeepLink by mutableStateOf(false)
+        private set
 
-        // Set the active tab to Planner when deep link is processed
-        selectedTabRoute = Screen.Home.route
+    init {
+        Log.d(TAG, "MealPlannerViewModel Initialized")
+        observeNetworkStatus()
+        observeAuthState()
+    }
 
+    /**
+     * MUST be called ONLY AFTER NavController has finished executing navigate(route).
+     * We add a delay to ensure the target screen has completed its first composition
+     * and collected the deep link state before we clear it.
+     */
+    fun consumeDeepLinkProcessed() {
         viewModelScope.launch {
-            _navigationChannel.send(Screen.Planner.route)
+            delay(500.milliseconds)
+            isProcessingDeepLink = false
+            deepLinkSourceDays = null
         }
     }
 
-    // Function to update current tab manually when user taps bottom bar items
+    fun prepareSharedWeeklyPlan(sourceWeekStart: LocalDate) {
+        isProcessingDeepLink = true
+        val days = getCurrentWeekDays(sourceWeekStart)
+        deepLinkSourceDays = days
+        selectedTabRoute = Screen.Home.route
+
+        Log.d(TAG, "prepareSharedWeeklyPlan called with start date: $sourceWeekStart | DeepLinkDays set: ${days.size} days")
+    }
+
     fun onTabSelected(route: String) {
+        Log.d(TAG, "onTabSelected: $route")
         selectedTabRoute = route
     }
 
     fun clearDeepLinkState() {
+        Log.d(TAG, "clearDeepLinkState called")
+        isProcessingDeepLink = false
         deepLinkSourceDays = null
     }
 
     fun generateShareLink(currentWeekStart: LocalDate): String {
         return "https://tzh652.github.io/share?sourceStart=$currentWeekStart"
     }
+
     private fun observeNetworkStatus() {
         viewModelScope.launch {
             networkMonitor.isConnected.collect { connected ->
                 isNetworkAvailable = connected
+                Log.d(TAG, "Network connection state updated: connected=$connected")
                 if (connected) {
-                    // 🌟 FIX: Force a fresh database check upon reconnection to recover offline deviations
                     loadPlanForDate(lastActiveDate, forceRefresh = true)
                     loadPlanForDate(lastActiveDate.minusDays(1), forceRefresh = true)
                     loadPlanForDate(lastActiveDate.plusDays(1), forceRefresh = true)
@@ -97,55 +123,47 @@ class MealPlannerViewModel(
         }
     }
 
-    fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
-        // 1. Get current logged-in user ID
-        val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
-
-        if (currentUserId.isNullOrEmpty()) {
-            Log.w("MealPlannerVM", "Cannot load plan: No authenticated user found.")
-            mealPlansCache[date] = null
-            return
-        }
-
-        lastActiveDate = date
-
-        // 2. Validate cache ownership before using it
-        val cachedPlan = mealPlansCache[date]
-        if (!forceRefresh && mealPlansCache.containsKey(date)) {
-            if (cachedPlan == null) {
-                // Already fetched previously and confirmed no plan exists for this date
-                return
-            }
-            if (cachedPlan.user_id == currentUserId) {
-                // Cache belongs to current user, safe to reuse
-                return
-            } else {
-                // Cache belongs to another user (e.g., previous login), clear it
-                Log.w("MealPlannerVM", "Evicting stale cache from another user for date: $date")
-                mealPlansCache.remove(date)
-            }
-        }
-
+    private fun observeAuthState() {
         viewModelScope.launch {
-            isLoading = true
-            val result = repository.getDailyPlan(date)
+            SupabaseClient.client.auth.sessionStatus.collect { status ->
+                Log.d(TAG, "observeAuthState collected status: $status | deepLinkSourceDays: $deepLinkSourceDays")
+                if (status is SessionStatus.Authenticated) {
+                    Log.d(TAG, "Auth session restored. Reloading plan for: $lastActiveDate")
+                    loadPlanForDate(lastActiveDate, forceRefresh = true)
+                }
+            }
+        }
+    }
 
-            result.onSuccess { plan ->
-                // 3. Validate that the loaded plan belongs to the logged-in user
-                if (plan != null && plan.user_id == currentUserId) {
-                    mealPlansCache[date] = plan
-                } else if (plan == null) {
-                    // No existing plan for this date yet
-                    mealPlansCache[date] = null
-                } else {
-                    // Security check failed: Plan belongs to another user
-                    Log.e("MealPlannerVM", "Security Mismatch: Loaded plan user_id (${plan.user_id}) does not match authenticated user ($currentUserId).")
+    fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
+
+            if (currentUserId.isNullOrEmpty()) {
+                withContext(Dispatchers.Main) {
                     mealPlansCache[date] = null
                 }
-            }.onFailure {
-                mealPlansCache[date] = null
+                return@launch
             }
-            isLoading = false
+
+            lastActiveDate = date
+
+            withContext(Dispatchers.Main) { isLoading = true }
+
+            val result = repository.getDailyPlan(date)
+
+            withContext(Dispatchers.Main) {
+                result.onSuccess { plan ->
+                    if (plan != null && plan.user_id == currentUserId) {
+                        mealPlansCache[date] = plan
+                    } else {
+                        mealPlansCache[date] = null
+                    }
+                }.onFailure {
+                    mealPlansCache[date] = null
+                }
+                isLoading = false
+            }
         }
     }
 
@@ -179,9 +197,11 @@ class MealPlannerViewModel(
             val updatedPlan = currentPlan.copy(meals = updatedMeals)
             mealPlansCache[date] = updatedPlan
 
-            val result = repository.saveDailyPlan(updatedPlan)
+            invalidateConditionsCacheAndReload(date)
+
+            val result = withContext(Dispatchers.IO) { repository.saveDailyPlan(updatedPlan) }
             result.onFailure { exception ->
-                Log.e("MealPlannerVM", "Failed to save updated meal plan to Supabase", exception)
+                Log.e(TAG, "Failed to save updated meal plan to Supabase", exception)
             }
 
             isLoading = false
@@ -192,12 +212,7 @@ class MealPlannerViewModel(
         viewModelScope.launch {
             if (!isNetworkAvailable) return@launch
 
-            Log.d("MealPlannerDelete", "=== 🛑 START DELETE PROCESS ===")
-            val currentPlan = mealPlansCache[date]
-            if (currentPlan == null) {
-                Log.w("MealPlannerDelete", "❌ Cancelled: Plan cache node for $date is NULL.")
-                return@launch
-            }
+            val currentPlan = mealPlansCache[date] ?: return@launch
 
             val updatedMeals = currentPlan.meals.map { slot ->
                 if (slot.mealType == mealType) {
@@ -218,15 +233,9 @@ class MealPlannerViewModel(
             val updatedPlan = currentPlan.copy(meals = updatedMeals)
             mealPlansCache[date] = updatedPlan
 
-            val result = repository.saveDailyPlan(updatedPlan)
+            invalidateConditionsCacheAndReload(date)
 
-            result.onSuccess {
-                Log.d("MealPlannerDelete", "✅ SUCCESS: Supabase storage updated successfully!")
-            }
-            result.onFailure { error ->
-                Log.e("MealPlannerDelete", "💥 FAILURE: Supabase update transaction failed!", error)
-            }
-            Log.d("MealPlannerDelete", "=== 🛑 END DELETE PROCESS ===")
+            withContext(Dispatchers.IO) { repository.saveDailyPlan(updatedPlan) }
         }
     }
 
@@ -236,15 +245,17 @@ class MealPlannerViewModel(
                 _uiEvent.emit("Cannot copy plans while offline.")
                 return@launch
             }
-            val result = repository.saveDailyPlan(
-                sourcePlan.copy(
-                    date = targetDate.toString(),
-                    meals = sourcePlan.meals.map { it.copy(recipes = it.recipes.toList()) }
+            val result = withContext(Dispatchers.IO) {
+                repository.saveDailyPlan(
+                    sourcePlan.copy(
+                        date = targetDate.toString(),
+                        meals = sourcePlan.meals.map { it.copy(recipes = it.recipes.toList()) }
+                    )
                 )
-            )
+            }
             result.onSuccess {
-                // 🌟 FIXED: Force-update the local cache map container seamlessly
                 mealPlansCache[targetDate] = sourcePlan.copy(date = targetDate.toString())
+                invalidateConditionsCacheAndReload(targetDate)
                 _uiEvent.emit("Successfully copied plan to $targetDate!")
             }.onFailure {
                 _uiEvent.emit("Failed to copy meal plan.")
@@ -258,27 +269,178 @@ class MealPlannerViewModel(
                 _uiEvent.emit("Cannot duplicate calendar schedules while offline.")
                 return@launch
             }
-            sourceWeekDays.forEachIndexed { index, sourceDate ->
-                val targetDate = targetWeekStart.plusDays(index.toLong())
-                val sourcePlan = repository.getDailyPlan(sourceDate).getOrNull()
+            withContext(Dispatchers.IO) {
+                sourceWeekDays.forEachIndexed { index, sourceDate ->
+                    val targetDate = targetWeekStart.plusDays(index.toLong())
+                    val sourcePlan = repository.getDailyPlan(sourceDate).getOrNull()
 
-                if (sourcePlan != null && sourcePlan.meals.any { it.recipes.isNotEmpty() }) {
-                    val clonedPlan = sourcePlan.copy(
-                        date = targetDate.toString(),
-                        meals = sourcePlan.meals.map { slot -> slot.copy(recipes = slot.recipes.toList()) }
-                    )
-                    repository.saveDailyPlan(clonedPlan)
-
-                    // 🌟 FIXED: Force immediate allocation updates inside state variables
-                    mealPlansCache[targetDate] = clonedPlan
+                    if (sourcePlan != null && sourcePlan.meals.any { it.recipes.isNotEmpty() }) {
+                        val clonedPlan = sourcePlan.copy(
+                            date = targetDate.toString(),
+                            meals = sourcePlan.meals.map { slot -> slot.copy(recipes = slot.recipes.toList()) }
+                        )
+                        repository.saveDailyPlan(clonedPlan)
+                        withContext(Dispatchers.Main) {
+                            mealPlansCache[targetDate] = clonedPlan
+                            invalidateConditionsCacheAndReload(targetDate)
+                        }
+                    }
                 }
             }
             _uiEvent.emit("Successfully duplicated the entire week schedule!")
         }
     }
 
-    fun getCurrentWeekDays(baseDate: LocalDate = LocalDate.now()): List<LocalDate> {
-        val sunday = baseDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-        return (0..6).map { sunday.plusDays(it.toLong()) }
+    fun applyTemplateToDate(template: WeeklyPlan, startDate: LocalDate) {
+        viewModelScope.launch {
+            if (!isNetworkAvailable) {
+                _uiEvent.emit("Cannot apply template while offline.")
+                return@launch
+            }
+
+            isLoading = true
+            val currentUserId = withContext(Dispatchers.IO) { SupabaseClient.client.auth.currentUserOrNull()?.id.orEmpty() }
+
+            if (currentUserId.isBlank()) {
+                _uiEvent.emit("User is not authenticated.")
+                isLoading = false
+                return@launch
+            }
+
+            withContext(Dispatchers.IO) {
+                template.dailyPlans.forEach { (dayOfWeek, mealSlots) ->
+                    val validSlots = mealSlots.filter { it.recipes.isNotEmpty() }
+                    if (validSlots.isEmpty()) return@forEach
+
+                    val daysOffset = (dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()
+                    val targetDate = startDate.plusDays(daysOffset)
+
+                    val dailyPlan = DailyPlan(
+                        user_id = currentUserId,
+                        date = targetDate.toString(),
+                        meals = validSlots
+                    )
+
+                    withContext(Dispatchers.Main) {
+                        mealPlansCache[targetDate] = dailyPlan
+                        invalidateConditionsCacheAndReload(targetDate)
+                    }
+
+                    val result = repository.saveDailyPlan(dailyPlan)
+                    result.onFailure { error ->
+                        Log.e(TAG, "Failed to save template day for $targetDate", error)
+                    }
+                }
+            }
+
+            isLoading = false
+            _uiEvent.emit("Successfully applied '${template.planName}' template!")
+        }
+    }
+
+    fun getCurrentWeekDays(referenceDate: LocalDate): List<LocalDate> {
+        val monday = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        return (0..6).map { dayOffset ->
+            monday.plusDays(dayOffset.toLong())
+        }
+    }
+
+    enum class DayCondition {
+        UNDER_INTAKE,
+        SLIGHTLY_LOW,
+        IDEAL,
+        SLIGHTLY_HIGH,
+        EXCESS_INTAKE
+    }
+
+    private val conditionsCache = mutableMapOf<YearMonth, Map<LocalDate, DayCondition>>()
+
+    var monthConditions by mutableStateOf<Map<LocalDate, DayCondition>>(emptyMap())
+        private set
+
+    fun loadMonthConditions(month: YearMonth, maxCalories: Int = currentMaxCalories) {
+        if (maxCalories > 0) {
+            currentMaxCalories = maxCalories
+        }
+
+        if (conditionsCache.containsKey(month)) {
+            monthConditions = conditionsCache[month].orEmpty()
+            return
+        }
+
+        viewModelScope.launch {
+            val conditions = fetchConditionsForMonth(month, currentMaxCalories)
+            conditionsCache[month] = conditions
+            monthConditions = conditions.toMap()
+        }
+    }
+
+    fun prefetchAdjacentMonths(currentMonth: YearMonth, maxCalories: Int = currentMaxCalories) {
+        if (maxCalories > 0) {
+            currentMaxCalories = maxCalories
+        }
+        val prevMonth = currentMonth.minusMonths(1)
+        val nextMonth = currentMonth.plusMonths(1)
+
+        viewModelScope.launch {
+            if (!conditionsCache.containsKey(prevMonth)) {
+                conditionsCache[prevMonth] = fetchConditionsForMonth(prevMonth, currentMaxCalories)
+            }
+            if (!conditionsCache.containsKey(nextMonth)) {
+                conditionsCache[nextMonth] = fetchConditionsForMonth(nextMonth, currentMaxCalories)
+            }
+        }
+    }
+
+    fun invalidateConditionsCacheAndReload(currentDate: LocalDate, maxCalories: Int = currentMaxCalories) {
+        if (maxCalories > 0) {
+            currentMaxCalories = maxCalories
+        }
+        val month = YearMonth.from(currentDate)
+        conditionsCache.remove(month)
+        loadMonthConditions(month, currentMaxCalories)
+    }
+
+    private suspend fun fetchConditionsForMonth(
+        month: YearMonth,
+        maxCalories: Int
+    ): Map<LocalDate, DayCondition> = withContext(Dispatchers.IO) {
+        if (maxCalories <= 0) return@withContext emptyMap()
+
+        val resultMap = mutableMapOf<LocalDate, DayCondition>()
+        val startDate = month.atDay(1)
+        val endDate = month.atEndOfMonth()
+
+        var currentDate = startDate
+        while (!currentDate.isAfter(endDate)) {
+            val date = currentDate
+
+            val dailyPlan = mealPlansCache[date] ?: repository.getDailyPlan(date).getOrNull()
+
+            if (dailyPlan != null) {
+                withContext(Dispatchers.Main) {
+                    mealPlansCache[date] = dailyPlan
+                }
+
+                val totalCalories = dailyPlan.meals.sumOf { slot ->
+                    slot.recipes.sumOf { recipe -> recipe.calories ?: 0 }
+                }
+
+                if (totalCalories > 0) {
+                    val ratio = totalCalories.toDouble() / maxCalories.toDouble()
+                    val condition = when {
+                        ratio < 0.80 -> DayCondition.UNDER_INTAKE
+                        ratio in 0.80..0.94 -> DayCondition.SLIGHTLY_LOW
+                        ratio in 0.95..1.05 -> DayCondition.IDEAL
+                        ratio in 1.06..1.20 -> DayCondition.SLIGHTLY_HIGH
+                        else -> DayCondition.EXCESS_INTAKE
+                    }
+                    resultMap[date] = condition
+                }
+            }
+            currentDate = currentDate.plusDays(1)
+        }
+
+        resultMap
     }
 }

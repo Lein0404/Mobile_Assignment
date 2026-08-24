@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,13 +20,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
 
@@ -33,8 +35,17 @@ import com.example.foodieheal.ui.components.CommonInputField
 @Composable
 fun descriptionInfo(
     navController: NavController,
-    chefviewModel: chefRegisterViewModel
-){
+    chefViewModel: ChefRegisterViewModel
+) {
+
+    val isExperienceError =
+        chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidExperience()
+    val isDescriptionError =
+        chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidDescription()
+    val wordCount = chefViewModel.description.trim()
+        .split("\\s+".toRegex())
+        .filter { it.isNotEmpty() }
+        .size
 
     Scaffold(
         topBar = {
@@ -69,90 +80,85 @@ fun descriptionInfo(
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ){
+        ) {
             Text(
-                text ="Step 4 of 5",
+                text = "Step 4 of 5",
                 style = MaterialTheme.typography.titleMedium
             )
 
             CommonInputField(
-                value = chefviewModel.experience,
-                onValueChange = {
-                    chefviewModel.experience = it
+                value = chefViewModel.experience,
+                onValueChange = { input ->
+                    chefViewModel.experience = input.filter { it.isDigit() }.take(2)
                 },
                 textId = R.string.experience,
-                placeholder = "Enter your experience",
-                modifier = Modifier.fillMaxWidth(),
+                placeholder = "Enter your years of experience",
+                isError = isExperienceError,
+                supportingText = if (isExperienceError) {
+                    { Text("Please enter a valid years of experience.") }
+                } else null,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number)
+                    keyboardType = KeyboardType.Number
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showDescriptionErrorMessage &&
-                !chefviewModel.isValidExperience()
-            ) {
-                Text(
-                    text = "Please enter your working experience.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
-                CommonInputField(
-                    value = chefviewModel.description,
-                    onValueChange = { input ->
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    CommonInputField(
+                        value = chefViewModel.description,
+                        onValueChange = { input ->
+                            val currentWords = input.trim()
+                                .split("\\s+".toRegex())
+                                .filter { it.isNotEmpty() }
+                                .size
 
-                        val wordCount = input.trim()
-                            .split("\\s+".toRegex())
-                            .filter { it.isNotEmpty() }
-                            .size
+                            if (currentWords <= 300) {
+                                chefViewModel.description = input
+                            }
+                        },
+                        textId = R.string.description,
+                        placeholder = stringResource(R.string.description),
+                        isError = isDescriptionError,
+                        supportingText = if (isDescriptionError) {
+                            { Text("Description cannot be empty.") }
+                        } else null,
+                        singleLine = false,
+                        minLines = 5,
+                        maxLines = 8,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                        if (wordCount <= 300) {
-                            chefviewModel.description = input
+                    Text(
+                        text = "$wordCount/300 words",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(top = 4.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    // update data to view model
+                    // do validation
+                    onClick = {
+                        if (chefViewModel.validateDescriptionInfo()) {
+                            navController.navigate("chefPicture")
                         }
-
                     },
-                    textId = R.string.description,
-                    placeholder = stringResource(R.string.description),
-                    singleLine = false,
-                    minLines = 5,
-                    maxLines = 8,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "${chefviewModel.description.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size}/300 words",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            if (
-                chefviewModel.showDescriptionErrorMessage &&
-                !chefviewModel.isValidDescription()
-            ) {
-                Text(
-                    text = "Description cannot be empty.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Button(
-                // update data to view model
-                // do validation
-                onClick = {
-                    if (chefviewModel.validateDescriptionInfo()) {
-                        navController.navigate("chefPicture")
-                    }
-                },
-                enabled = chefviewModel.canProceedDescriptionInfo(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Next")
+                    enabled = chefViewModel.canProceedDescriptionInfo(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text("Next")
+                }
             }
         }
     }

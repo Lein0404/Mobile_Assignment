@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,7 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.ui.components.CommonInputField
@@ -37,9 +38,14 @@ import com.example.foodieheal.ui.components.PasswordInputField
 @OptIn(ExperimentalMaterial3Api::class)
 fun basicInfo(
     navController: NavController,
-    chefviewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
-
+    val isNameError = chefViewModel.showBasicInfoErrorMessage && !chefViewModel.isValidName()
+    val isGenderError = chefViewModel.showBasicInfoErrorMessage && !chefViewModel.isValidGender()
+    val isAgeError = chefViewModel.showBasicInfoErrorMessage && !chefViewModel.isValidAge()
+    val isPasswordError = chefViewModel.showBasicInfoErrorMessage && !chefViewModel.isValidPassword()
+    val isConfirmPasswordError = chefViewModel.showBasicInfoErrorMessage &&
+            (chefViewModel.confirmPassword.isBlank() || !chefViewModel.isPasswordMatched())
     val viewModel: AuthViewModel = viewModel()
 
     Scaffold(
@@ -83,39 +89,25 @@ fun basicInfo(
             )
 
             CommonInputField(
-                value = chefviewModel.name,
-                onValueChange = {
-                    chefviewModel.name = it
-                },
+                value = chefViewModel.name,
+                onValueChange = { chefViewModel.name = it },
                 textId = R.string.full_name,
                 placeholder = stringResource(R.string.enter_name),
+                isError = isNameError,
+                supportingText = if (isNameError) {
+                    { Text("Name cannot be empty.") }
+                } else null,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (
-                chefviewModel.showBasicInfoErrorMessage &&
-                !chefviewModel.isValidName()
-            ) {
-                Text(
-                    text = "Name is required.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             DropDownList(
                 labelId = R.string.gender,
                 placeholderId = R.string.select_gender,
-                selectedValue = chefviewModel.gender,
-                options = listOf(
-                    "Male",
-                    "Female"
-                ),
-                onOptionSelected = {
-                    chefviewModel.gender = it ?: ""
-                }
+                selectedValue = chefViewModel.gender,
+                options = listOf("Male", "Female"),
+                onOptionSelected = { chefViewModel.gender = it ?: "" }
             )
-            if (chefviewModel.showBasicInfoErrorMessage &&
-                !chefviewModel.isValidGender()) {
+            if (isGenderError) {
                 Text(
                     text = "Please select your gender.",
                     color = MaterialTheme.colorScheme.error,
@@ -124,81 +116,62 @@ fun basicInfo(
             }
 
             CommonInputField(
-                value = chefviewModel.age,
-                onValueChange = {
-                    chefviewModel.age = it
+                value = chefViewModel.age,
+                onValueChange = { input ->
+                    chefViewModel.age = input.filter { it.isDigit() }
                 },
                 textId = R.string.age,
                 placeholder = stringResource(R.string.enter_age),
+                isError = isAgeError,
+                supportingText = if (isAgeError) {
+                    { Text("Chef must be between 18 and 100 years old.") }
+                } else null,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                        )
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-            if (chefviewModel.showBasicInfoErrorMessage &&
-                chefviewModel.age.isNotEmpty() &&
-                !chefviewModel.isValidAge()) {
-                Text(
-                    text = "Chef must be at least 18 years old.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             PasswordInputField(
-                value = chefviewModel.password,
-                onValueChange = { chefviewModel.password = it },
+                value = chefViewModel.password,
+                onValueChange = { chefViewModel.password = it },
                 textId = R.string.password,
                 placeholder = stringResource(R.string.password),
+                isError = isPasswordError,
+                supportingText = if (isPasswordError) {
+                    { Text("Password needs 8 chars, 1 uppercase, 1 lowercase, and 1 number.") }
+                } else null,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (chefviewModel.showBasicInfoErrorMessage &&
-                chefviewModel.password.isNotEmpty()
-                && !chefviewModel.isValidPassword()) {
-                Text(
-                    text = "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             PasswordInputField(
-                value = chefviewModel.confirmPassword,
-                onValueChange = { chefviewModel.confirmPassword = it },
+                value = chefViewModel.confirmPassword,
+                onValueChange = { chefViewModel.confirmPassword = it },
                 textId = R.string.confirm_password,
                 placeholder = stringResource(R.string.confirm_password),
+                isError = isConfirmPasswordError,
+                supportingText = if (isConfirmPasswordError) {
+                    {
+                        val errorText = if (chefViewModel.confirmPassword.isBlank()) {
+                            "Please confirm your password."
+                        } else {
+                            "Passwords do not match."
+                        }
+                        Text(errorText)
+                    }
+                } else null,
                 modifier = Modifier.fillMaxWidth()
             )
-            if (chefviewModel.showBasicInfoErrorMessage &&
-                chefviewModel.confirmPassword.isBlank()
-            ) {
-                Text(
-                    text = "Please confirm your password.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
-            if (chefviewModel.showBasicInfoErrorMessage &&
-                chefviewModel.confirmPassword.isNotBlank() &&
-                !chefviewModel.isPasswordMatched()
-            ) {
-                Text(
-                    text = "Passwords do not match.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     // Validate input
                     // Save data to ViewModel
-                    if (chefviewModel.validateBasicInfo()) {
+                    if (chefViewModel.validateBasicInfo()) {
                         navController.navigate("contactInfo")
                     }
                 },
-                enabled = chefviewModel.canProceedBasicInfo(),
+                enabled = chefViewModel.canProceedBasicInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

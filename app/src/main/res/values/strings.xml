@@ -120,6 +120,8 @@
     <string name="dialog_title_select_date_view">Select Date to View</string>
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
     <string name="dialog_title_choose_weekly_repeat_date">Choose any day within target week to repeat your weekly plan!</string>
+    <string name="daily_success_notify">Daily plan copied successfully!</string>
+    <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
     <!-- Content Descriptions -->
     <string name="desc_calendar_back">Calendar Back</string>
@@ -212,9 +214,11 @@
     <!--Hiring Appointment -->
     <string name="title_appointment">Appointment</string>
     <string name="title_select_appointment_date">Select Appointment Date</string>
+    <string name = "review">Review</string>
     <string name="label_appointment">Appointment</string>
 
     <string name="empty_no_appointments_for_date">No appointments booked for this date.</string>
+    <string name = "no_comment_provided">No comment provided</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
@@ -225,6 +229,8 @@
     <string name="pick_date">Pick Date</string>
     <string name="add_booking">Add Booking</string>
     <string name="add_appointment">Add Appointment</string>
+    <string name = "user">User</string>
+    <string name = "no_review">No Review</string>
 
     <!-- Add Hiring Appointment -->
     <string name="next">Next</string>
@@ -334,6 +340,7 @@
 
     <string name="label_status">Status</string>
     <string name="label_service_location">Service Location</string>
+    <string name="label_rejection_reason">Rejected Reason</string>
 
     <string name="address_not_provided">Address not provided</string>
     <string name="serving_size_format">%1$s pax</string>
@@ -347,6 +354,8 @@
     <string name="not_yet">Not Yet</string>
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
+    <string name="pay_now">Pay Now</string>
+    <string name ="no_rejection_reason">No Rejected Reason</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>
@@ -390,7 +399,7 @@
     <string name="nav_appointments">Appointments</string>
     <string name="nav_profile">Profile</string>
 
-    <string name="greeting_good_morning">Good Morning 👋</string>
+    <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>
 
     <string name="banner_title_schedule">Your Schedule</string>
@@ -419,6 +428,7 @@
 
     <string name="time">Time Icon</string>
     <string name="location">Location Icon</string>
+    <string name="more_options">More Options </string>
 
     <!-- Appointment Details <Chef> -->
     <string name="date_time">Date &amp; Time</string>
@@ -449,18 +459,6 @@
     <string name="booking_accepted">Booking accepted successfully!</string>
     <string name="booking_declined">Booking declined.</string>
 
-    <!-- Chef Profile Screen -->
-    <string name="account_settings">Account Settings</string>
-    <string name="chef_profile">Chef Profile</string>
-
-    <string name="label_price">Price</string>
-    <string name="label_chef_id">Chef ID</string>
-    <string name="label_bio_description">Bio / Description</string>
-    <string name="label_location">Location</string>
-    <string name="status_pending">Pending</string>
-
-    <string name="edit_profile">Edit Profile</string>
-
     <!-- Chef Edit Profile -->
     <string name="selected_picture">Selected Picture</string>
     <string name="current_picture">Current Picture</string>
@@ -477,7 +475,18 @@
     <string name="currency_prefix">RM </string>
 
     <string name="profile_updated_success">Profile updated successfully!</string>
+    <string name="null_string"> </string>
 
+    <!-- Meal Planner Categories -->
+    <string name="category_high_protein">High Protein</string>
+    <string name="category_quick_easy">Quick &amp; Easy</string>
+    <string name="category_balanced">Balanced</string>
+    <string name="category_ketogenic">Ketogenic</string>
+    <string name="category_low_carb">Low-carbohydrate</string>
+    <string name="category_cost_friendly">Cost Friendly</string>
+    <string name="category_others">Others</string>
+
+    <!-- INGREDIENTS MODULE -->
     <!-- Shopping List -->
     <string name="shopping_list_title">Shopping List</string>
     <string name="shopping_list_back">Back</string>
@@ -641,6 +650,4 @@
     <string name="admin_approve_request_dialog_warning">Warning:\nYou are unable to edit the request after approving it!</string>
     <string name="admin_approve_request_dialog_note">You may write an optional note to the user, informing them the reason of your changes to their request.</string>
     <string name="admin_approve_request_dialog_placeholder">Note (Optional)</string>
-
-
 </resources>

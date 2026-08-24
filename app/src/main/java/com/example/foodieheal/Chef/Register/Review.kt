@@ -30,7 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,7 +48,7 @@ import com.example.foodieheal.navigation.Screen
 @Composable
 fun reviewInfo(
     navController: NavController,
-    chefRegisterViewModel: chefRegisterViewModel
+    chefRegisterViewModel: ChefRegisterViewModel
 ) {
     val context = LocalContext.current
 
@@ -143,7 +143,7 @@ fun reviewInfo(
                 onClick = {
                     chefRegisterViewModel.registerChef(context = context) {
                         navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                            popUpTo("chefRegisterRoute") { inclusive = true }
                         }
                     }
                 },

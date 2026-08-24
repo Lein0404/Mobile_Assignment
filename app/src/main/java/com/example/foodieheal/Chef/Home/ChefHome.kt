@@ -11,12 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -26,13 +31,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,35 +51,37 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
+import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
+import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.viewmodel.AuthViewModel
 
 
 @Composable
 fun ChefHomeScreen(
     navController: NavController,
-    onNavigateToAppointments: () -> Unit = {}
+    homeViewModel: ChefPortalViewModel,
+    onNavigateToAppointments: () -> Unit = {},
+    onCardClick: (Appointment) -> Unit = {}
 ) {
-    val currentEntry = remember(navController) {
-        runCatching { navController.currentBackStackEntry }.getOrNull()
-    }
-    val viewModel: AuthViewModel = if (currentEntry != null) {
-        viewModel(currentEntry)
-    } else {
-        viewModel()
-    }
+    val authViewModel: AuthViewModel = viewModel()
+    val homeUiState by homeViewModel.homeUiState.collectAsState()
 
+    // Refresh chef info and appointment data on initial launch
     LaunchedEffect(Unit) {
-        if (viewModel.currentChef == null) {
-            viewModel.fetchChefData()
+        if (authViewModel.currentChef == null) {
+            authViewModel.fetchChefData()
         }
+        homeViewModel.loadDashboardData()
     }
 
-    val chef = viewModel.currentChef
+    val chef = authViewModel.currentChef
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    // Sync status bar color with the primary top header
+    val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+
     SideEffect {
         val window = (view.context as Activity).window
         window.statusBarColor = primaryColor.toArgb()
@@ -81,11 +93,12 @@ fun ChefHomeScreen(
             .fillMaxSize()
             .background(primaryColor)
     ) {
-        // 1. Top Header Section
+        // Header Section
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 48.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
+                .statusBarsPadding()
+                .padding(top = 16.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -94,13 +107,13 @@ fun ChefHomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "Good Morning 👋",
-                        color = Color.White.copy(alpha = 0.9f),
+                        text = stringResource(R.string.greeting),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                         fontSize = 14.sp
                     )
                     Text(
-                        text = chef?.name ?: "Chef",
-                        color = Color.White,
+                        text = chef?.name ?: stringResource(R.string.default_chef_name),
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -108,11 +121,11 @@ fun ChefHomeScreen(
             }
         }
 
-        // 2. White Surface Body
+        // Main Surface Content
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(0.dp),
-            color = Color(0xFFF8F8F8)
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -120,31 +133,42 @@ fun ChefHomeScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Search Input Field
-                item {
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        placeholder = { Text("Search dishes, events, clients...") },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_vertical_more),
-                                contentDescription = "Search"
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White
-                        )
-                    )
+                if (!isNetworkAvailable) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.wifi_off),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Offline: Showing cached appointments",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
                 }
 
-                // Summary Schedule Banner
+                // Responsive & Flexible Summary Schedule Banner
                 item {
+                    val appointmentCountText = when (val state = homeUiState) {
+                        is HomeUiState.Success -> stringResource(R.string.banner_appointment_count_format, state.totalCount)
+                        is HomeUiState.Loading -> stringResource(R.string.msg_loading)
+                        is HomeUiState.Error -> stringResource(R.string.banner_zero_appointments)
+                    }
+
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(16.dp),
@@ -153,55 +177,108 @@ fun ChefHomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 12.dp)
+                            ) {
                                 Text(
-                                    text = "Today's Schedule",
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    text = stringResource(R.string.banner_title_schedule),
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                                     style = MaterialTheme.typography.labelLarge
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "3 Appointments",
-                                    color = Color.White,
+                                    text = appointmentCountText,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
+
                             Button(
                                 onClick = onNavigateToAppointments,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.widthIn(min = 90.dp)
                             ) {
                                 Text(
-                                    text = "View All",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    text = stringResource(R.string.view_all),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
                     }
                 }
 
-                // Upcoming Appointment Title
+                // Next Appointment Title
                 item {
                     Text(
-                        text = "Next Appointment",
+                        text = stringResource(R.string.next_appointment),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
-                // Next Appointment Card Display
+                // Dynamic Next Appointment Display
                 item {
-                    AppointmentCard(
-                        clientName = "Sarah Jenkins",
-                        event = "Private Dinner Party (6 Guests)",
-                        time = "7:00 PM - 10:00 PM",
-                        location = "Downtown Penthouse"
-                    )
+                    when (val state = homeUiState) {
+                        is HomeUiState.Loading -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = primaryColor)
+                            }
+                        }
+
+                        is HomeUiState.Error -> {
+                            Text(
+                                text = stringResource(R.string.error_loading_appointments),
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        is HomeUiState.Success -> {
+                            val nextAppointment = state.nextAppointment
+
+                            if (nextAppointment != null) {
+                                val chefUser = state.usersMap[nextAppointment.userId]
+                                val userName = chefUser?.name ?: stringResource(R.string.unknown_client)
+
+                                AppointmentCard(
+                                    appointment = nextAppointment,
+                                    userName = userName,
+                                    onCardClick = { onCardClick(nextAppointment) }
+                                )
+                            } else {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.no_upcoming_appointments),
+                                        modifier = Modifier.padding(20.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -210,8 +287,8 @@ fun ChefHomeScreen(
     }
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun ChefHomeScreenPreview(){
     ChefHomeScreen(navController = rememberNavController())
-}
+}*/

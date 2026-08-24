@@ -21,14 +21,32 @@ import com.example.foodieheal.R
 import androidx.compose.ui.platform.LocalView
 import android.app.Activity
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
+import coil.compose.AsyncImage
 import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.mobileassignmentloginpart.Model.Chef
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
+fun HomeScreen(navController: NavController, viewModel: AuthViewModel, onChefClick : (Chef) -> Unit) {
+
+    val bookmarkViewModel: BookmarkViewModel = viewModel()
+    val chefViewModel : ChefListViewModel = viewModel()
     val user = viewModel.currentUser
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val chefs by chefViewModel.chefList.collectAsStateWithLifecycle()
+    val isLoading by chefViewModel.isProcessing.collectAsStateWithLifecycle()
+    val errorMessage by chefViewModel.errorMessage.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        chefViewModel.fetchAllChefs()
+    }
 
     // Set Status Bar color to match the orange header
     SideEffect {
@@ -40,7 +58,7 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary) 
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         // 1. Top Header (Orange Background)
         Box(
@@ -59,10 +77,10 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
             }
         }
 
-        // 2. White Sheet
+        // 2. White Sheet (Flat top, no radius)
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(0.dp), 
+            shape = RoundedCornerShape(0.dp), // Removed radius
             color = Color(0xFFF8F8F8)
         ) {
             Column(
@@ -79,9 +97,15 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
                     modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                ChefListSection()
+
+                ChefListSection(
+                    chefs = chefs,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    onChefClick = onChefClick
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -117,7 +141,7 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
 
                 CategoryChips()
                 RecipeGrid()
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -125,41 +149,171 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
 }
 
 @Composable
-fun ChefListSection() {
-    val chefs = listOf(
-        ChefData("Gordon Ramsay", "4.5", "20 yrs"),
-        ChefData("Uncle Roger", "4.3", "19 yrs"),
-        ChefData("Mr. Cyan", "4.5", "20 yrs")
-    )
-    
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(chefs) { chef ->
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.width(160.dp)
+fun ChefListSection(
+    chefs: List<Chef>,
+    isLoading: Boolean,
+    errorMessage: String?,
+    onChefClick: (Chef) -> Unit,
+    bookmarkViewModel: BookmarkViewModel = viewModel()
+) {
+    when {
+        // 1. Loading State (Replaced Skeleton with Progress Indicator)
+        isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Column {
-                    Box(modifier = Modifier.fillMaxWidth().height(130.dp).background(Color(0xFFE0E0E0)))
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(text = chef.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(painterResource(id = R.drawable.ic_home), null, modifier = Modifier.size(10.dp), tint = Color(0xFFFFB300))
-                            Text(text = " ${chef.rating}", fontSize = 11.sp, color = Color.Gray)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = "⏱ ${chef.exp}", fontSize = 11.sp, color = Color.Gray)
-                        }
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        // 2. Error State
+        errorMessage != null -> {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+
+        // 3. Empty State
+        chefs.isEmpty() -> {
+            Text(
+                text = "No chefs available",
+                color = Color.Gray,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+
+        // 4. Data State
+        else -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(
+                    items = chefs,
+                    key = { chef -> chef.chefId.ifEmpty { chef.id } }
+                ) { chef ->
+                    ChefCard(
+                        chef = chef,
+                        onClick = { onChefClick(chef) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ChefCard(
+    chef: Chef,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = Modifier
+            .width(165.dp)
+            .padding(vertical = 4.dp)
+    ) {
+        Column {
+            // Profile Image Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp)
+                    .background(Color(0xFFEEEEEE))
+            ) {
+                if (!chef.profilePictureUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = chef.profilePictureUrl,
+                        contentDescription = chef.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // Price Tag Badge
+                Surface(
+                    shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(
+                        text = "$${chef.Pricing?.toInt() ?: 0}/hr",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            // Info Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = chef.name?.ifEmpty { "Chef" } ?: "Chef",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E1E1E),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Rating Display
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_star),
+                            contentDescription = "Rating",
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFFFFB300)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${chef.averagerating ?: "N/A"}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF424242)
+                        )
+                    }
+
+                    // Experience Tag
+                    Surface(
+                        color = Color(0xFFF0F0F0),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = "${chef.experience ?: "0"} yrs exp",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun PromoBanner() {
@@ -223,9 +377,9 @@ fun RecipeGrid() {
 }
 
 @Composable
-fun RecipeCard(title: String, modifier: Modifier = Modifier) {
+fun RecipeCard(title: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Card(
-        modifier = modifier.height(220.dp),
+        modifier = modifier.height(220.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

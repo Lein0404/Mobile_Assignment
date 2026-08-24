@@ -48,14 +48,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
@@ -66,7 +68,7 @@ fun EditChefProfileScreen(
     onBack: () -> Unit,
     chef: Chef?,
     authViewModel: AuthViewModel = viewModel(),
-    registerViewModel: chefRegisterViewModel = viewModel()
+    registerViewModel: ChefRegisterViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
@@ -93,17 +95,24 @@ fun EditChefProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.edit_profile),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
             )
         }
@@ -112,16 +121,17 @@ fun EditChefProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
+            // Profile Picture Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -142,23 +152,28 @@ fun EditChefProfileScreen(
                             selectedImageUri != null -> {
                                 AsyncImage(
                                     model = selectedImageUri,
-                                    contentDescription = "Selected Picture",
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                    contentDescription = stringResource(R.string.selected_picture),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                             !chef?.profilePictureUrl.isNullOrEmpty() -> {
                                 AsyncImage(
                                     model = chef?.profilePictureUrl,
-                                    contentDescription = "Current Picture",
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                    contentDescription = stringResource(R.string.current_picture),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                             else -> {
                                 Text(
-                                    text = chef?.name?.take(1)?.uppercase() ?: "C",
+                                    text = chef?.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
                                     style = MaterialTheme.typography.headlineLarge,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -167,128 +182,96 @@ fun EditChefProfileScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
-                        Text("Change Profile Photo", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.change_profile_photo),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Personal Details Section
+            DetailSectionCard(title = stringResource(R.string.personal_details)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.label_full_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = experience,
+                    onValueChange = { experience = it },
+                    label = { Text(stringResource(R.string.label_years_of_experience)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text(stringResource(R.string.label_price_currency)) },
+                    prefix = { Text(stringResource(R.string.currency_prefix)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text(stringResource(R.string.label_bio_description)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5
+                )
+            }
+
+            // Contact & Location Section
+            DetailSectionCard(title = stringResource(R.string.contact_location)) {
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text(stringResource(R.string.label_phone_number)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    label = { Text(stringResource(R.string.label_address)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Personal Details",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Full Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = experience,
-                        onValueChange = { experience = it },
-                        label = { Text("Years of Experience") },
+                        value = postcode,
+                        onValueChange = { postcode = it },
+                        label = { Text(stringResource(R.string.label_postcode)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                         singleLine = true
                     )
 
                     OutlinedTextField(
-                        value = price,
-                        onValueChange = { price = it },
-                        label = { Text("Price (RM)") },
-                        prefix = { Text("RM ") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
+                        value = state,
+                        onValueChange = { state = it },
+                        label = { Text(stringResource(R.string.label_state)) },
+                        modifier = Modifier.weight(1f),
                         singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Bio / Description") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        maxLines = 5
                     )
                 }
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Contact & Location",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    OutlinedTextField(
-                        value = phoneNumber,
-                        onValueChange = { phoneNumber = it },
-                        label = { Text("Phone Number") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = address,
-                        onValueChange = { address = it },
-                        label = { Text("Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = postcode,
-                            onValueChange = { postcode = it },
-                            label = { Text("Postcode") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-
-                        OutlinedTextField(
-                            value = state,
-                            onValueChange = { state = it },
-                            label = { Text("State") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-                    }
-                }
-            }
-
+            // Action Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -303,8 +286,13 @@ fun EditChefProfileScreen(
                     shape = RoundedCornerShape(12.dp),
                     enabled = !isLoading
                 ) {
-                    Text("Cancel", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+
+                val successMsg = stringResource(R.string.profile_updated_success)
 
                 Button(
                     onClick = {
@@ -329,7 +317,7 @@ fun EditChefProfileScreen(
                             authViewModel = authViewModel,
                             onSuccess = {
                                 isLoading = false
-                                Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
                             },
                             onError = { error ->
@@ -346,12 +334,15 @@ fun EditChefProfileScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(20.dp)
                         )
                     } else {
-                        Text("Save", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.save),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -360,4 +351,3 @@ fun EditChefProfileScreen(
         }
     }
 }
-

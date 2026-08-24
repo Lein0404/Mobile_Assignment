@@ -39,11 +39,12 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.repository.RecipeRepository
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +63,18 @@ fun ProfileScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // 🌟 Show success messages for password, profile, and body status updates
+    LaunchedEffect(Unit) {
+        authViewModel.profileEvents.collect { event ->
+            val message = when(event) {
+                is AuthViewModel.ProfileEvent.PasswordSuccess -> "Password updated successfully!"
+                is AuthViewModel.ProfileEvent.ProfileSuccess -> "Profile updated successfully!"
+                is AuthViewModel.ProfileEvent.BodyStatusSuccess -> "Body status updated successfully!"
+            }
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
@@ -69,6 +82,9 @@ fun ProfileScreen(
     }
 
     var showBigImage by remember { mutableStateOf(false) }
+    
+    // 🌟 State for the Delete Confirmation Dialog
+    var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
     var selectedBookmarkType by remember { mutableIntStateOf(0) } 
@@ -88,14 +104,16 @@ fun ProfileScreen(
     }
 
     LaunchedEffect(selectedMainTab, selectedBookmarkType, user) {
-        val uid = user?.id ?: return@LaunchedEffect
+        // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent with Recipes screen
+        val cid = user?.customId ?: return@LaunchedEffect
         if (selectedMainTab == 0) {
-            viewModel.fetchMyRecipes(uid)
+            viewModel.fetchMyRecipes(cid)
         } else {
             if (selectedBookmarkType == 0) {
-                viewModel.fetchBookmarkedRecipes(uid)
+                viewModel.fetchBookmarkedRecipes(cid)
             } else {
-                bookmarkViewModel.fetchBookmarkedChefs(uid)
+                // For chefs, we still use the regular ID as per the Hiring module logic
+                user.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
             }
         }
     }
@@ -140,9 +158,16 @@ fun ProfileScreen(
                     DrawerItem("Register as Chef", R.drawable.ic_hiring) {
                         navController.navigate(Screen.Welcome.route)
                     }
-                    DrawerItem("Appointment History", R.drawable.ic_calendar) { }
-                    
-                    DrawerItem("Change Password", R.drawable.ic_check) {
+                    DrawerItem("Appointment History", R.drawable.ic_calendar) {
+                        navController.navigate(Screen.AppoinmtmentHistory.route)
+                    }
+                    DrawerItem("Payment Methods", R.drawable.dollar_symbol) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.PaymentMethod.route)
+                        }
+                    }
+                    DrawerItem("Change Password", R.drawable.changepassword4) {                 
                         scope.launch {
                             drawerState.close()
                             navController.navigate(Screen.ChangePassword.route)
@@ -394,7 +419,29 @@ fun ProfileScreen(
                         if (selectedMainTab == 0) {
                             val filtered = myRecipes.filter { it.recipeName.contains(searchQuery, true) && it.recipeCourse == selectedCourse }
                             gridItems(filtered) { recipe ->
-                                RecipeCardItem(recipe = recipe, showMenu = true)
+                                RecipeCardItem(
+                                    recipe = recipe, 
+                                    showMenu = true,
+                                    isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
+                                    onBookmarkClick = {
+                                        user?.customId?.let { cid ->
+                                            recipe.recipe_id?.let { rid -> 
+                                                viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                            }
+                                        }
+                                    },
+                                    onDeleteClick = { recipeToDelete = recipe }, // 🌟 FIX: Pass the delete trigger
+                                    onEditClick = {
+                                        recipe.recipe_id?.let { id ->
+                                            navController.navigate(Screen.EditRecipe.createRoute(id))
+                                        }
+                                    },
+                                    onClick = {
+                                        recipe.recipe_id?.let { id ->
+                                            navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                        }
+                                    }
+                                )
                             }
                         } else if (selectedMainTab == 1) {
                             if (selectedBookmarkType == 0) {
@@ -411,6 +458,11 @@ fun ProfileScreen(
                                                     viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
                                                 }
                                             }
+                                        },
+                                        onClick = {
+                                            recipe.recipe_id?.let { id ->
+                                                navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                            }
                                         }
                                     )
                                 }
@@ -426,6 +478,34 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+
+    // 🌟 Delete Confirmation Dialog for Profile Screen
+    if (recipeToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { recipeToDelete = null },
+            title = { Text("Delete Recipe") },
+            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val rid = recipeToDelete?.recipe_id
+                        val cid = user?.customId
+                        if (rid != null && cid != null) {
+                            viewModel.deleteRecipe(rid, cid)
+                        }
+                        recipeToDelete = null
+                    }
+                ) {
+                    Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { recipeToDelete = null }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
     }
 
     // Big Image View
@@ -492,7 +572,7 @@ fun DrawerItem(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(22.dp),
             tint = Color.Black.copy(alpha = 0.7f)
         )
         Spacer(modifier = Modifier.width(20.dp))

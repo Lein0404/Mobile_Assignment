@@ -13,7 +13,7 @@ import com.example.foodieheal.MainActivity
 import com.example.foodieheal.database.AppDatabase
 import com.example.foodieheal.database.RecipeEntity
 import com.example.foodieheal.database.IngredientEntity
-import com.example.foodieheal.database.BookmarkEntity
+import com.example.foodieheal.database.RecipeBookmarkEntity
 import com.example.foodieheal.database.RecipeDao
 import com.example.foodieheal.repository.RecipeRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,10 +37,10 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     var recipeList by mutableStateOf<List<Recipe>>(emptyList())
         private set
-    
+
     var myRecipes by mutableStateOf<List<Recipe>>(emptyList())
         private set
-        
+
     var bookmarkedRecipes by mutableStateOf<List<Recipe>>(emptyList())
         private set
 
@@ -58,6 +58,9 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
     private val _addRecipeSuccess = MutableSharedFlow<Boolean>()
     val addRecipeSuccess = _addRecipeSuccess.asSharedFlow()
+
+    private val _updateRecipeSuccess = MutableSharedFlow<Boolean>()
+    val updateRecipeSuccess = _updateRecipeSuccess.asSharedFlow()
 
     // 🌟 Shared Flow for bookmark feedback messages
     private val _bookmarkMessage = MutableSharedFlow<String>()
@@ -91,7 +94,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                     Ingredient(id = it.id, name = it.name, kcal = it.kcal, defaultUnit = it.defaultUnit)
                 }
             }
-            
+
             val user = repository.getCurrentUserId()
             if (user != null) {
                 val localIds = dao.getBookmarkIds(user)
@@ -175,7 +178,8 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                                 estimatedBudget = r.estimatedBudget,
                                 recipeStep = r.recipeStep,
                                 recipeImageUrl = r.recipeImageUrl,
-                                ingredientsJson = json.encodeToString(r.ingredients)
+                                ingredientsJson = json.encodeToString(r.ingredients),
+                                lastUpdated = r.lastUpdated
                             )
                         }
                         dao.clearRecipes()
@@ -197,7 +201,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                 repository.getAvailableIngredients()
                     .onSuccess { ingredients ->
                         availableIngredients = ingredients
-                        val entities = ingredients.map { 
+                        val entities = ingredients.map {
                             IngredientEntity(id = it.id ?: "", name = it.name, kcal = it.kcal, defaultUnit = it.defaultUnit)
                         }
                         dao.clearIngredients()
@@ -213,7 +217,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         // 🌟 Ensure we use the short ID (U001) for both Room and Supabase
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
-            
+
             // 🌟 1. If memory already has IDs and we aren't forcing, don't fetch from server
             // This prevents "Reverting Icon" when switching tabs quickly
             if (!force && bookmarkedRecipeIds.isNotEmpty()) {
@@ -228,10 +232,10 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
             // 3. Sync with Supabase in background
             repository.getUserBookmarkIds(userId)
-                .onSuccess { ids -> 
+                .onSuccess { ids ->
                     bookmarkedRecipeIds = ids.toSet()
                     dao.clearBookmarks(userId)
-                    dao.insertBookmarks(ids.map { BookmarkEntity(userId, it) })
+                    dao.insertBookmarks(ids.map { RecipeBookmarkEntity(userId, it) })
                 }
         }
     }
@@ -240,7 +244,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
         viewModelScope.launch {
             val dao = getDao()
-            
+
             // 🌟 1. Update Memory IDs IMMEDIATELY
             bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
             
@@ -259,7 +263,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                 if (isBookmarked) {
                     dao?.deleteBookmark(userId, recipeId)
                 } else {
-                    dao?.insertBookmarks(listOf(BookmarkEntity(userId, recipeId)))
+                    dao?.insertBookmarks(listOf(RecipeBookmarkEntity(userId, recipeId)))
                 }
             } catch (e: Exception) { }
 
@@ -283,17 +287,10 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
             
-            // 🌟 1. If we already have data in memory and aren't forcing, STOP.
-            // This prevents old server data from overwriting your latest clicks.
-            if (!force && bookmarkedRecipes.isNotEmpty()) {
-                return@launch
-            }
-
-            // 2. Load from Room fallback
+            // 🌟 Restore simple loading: Always sync with Supabase
             val local = dao.getBookmarkedRecipes(userId)
             if (local.isNotEmpty()) bookmarkedRecipes = local.map { mapEntityToRecipe(it) }
 
-            // 3. Sync with Supabase in background
             isLoading = true
             repository.getBookmarkedRecipes(userId)
                 .onSuccess { recipes -> 
@@ -303,9 +300,11 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         }
     }
 
-    fun fetchMyRecipes(authorId: String) {
+    fun fetchMyRecipes(authorId: String, force: Boolean = false) {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
+
+            // 🌟 Restore simple loading: Always sync with Supabase
             val local = dao.getMyRecipes(authorId)
             if (local.isNotEmpty()) myRecipes = local.map { mapEntityToRecipe(it) }
 
@@ -320,31 +319,156 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+
+            // 🌟 1. Optimistic Update: Add to memory lists immediately for zero-lag
+            recipeList = (recipeList + recipe).sortedBy { it.recipe_id }
+            myRecipes = (myRecipes + recipe).sortedBy { it.recipe_id }
+
             try {
                 var finalRecipe = recipe
+                
+                // 🌟 Image Upload Logic
                 if (imageBytes != null && recipe.recipe_id != null) {
-                    repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
-                        .onSuccess { url -> finalRecipe = recipe.copy(recipeImageUrl = url) }
+                    val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
+                    
+                    if (uploadResult.isSuccess) {
+                        val url = uploadResult.getOrNull()
+                        finalRecipe = recipe.copy(recipeImageUrl = url)
+                    } else {
+                        // 🌟 FIX: If image upload fails, don't just proceed silently
+                        val error = uploadResult.exceptionOrNull()?.message ?: "Image upload failed"
+                        errorMessage = "Cloudinary Error: $error"
+                        isLoading = false
+                        
+                        // Revert optimistic update
+                        recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
+                        myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
+                        return@launch 
+                    }
                 }
+
                 repository.insertRecipe(finalRecipe)
                     .onSuccess {
+                        // 🌟 Show success message
+                        _bookmarkMessage.emit("Successfully added: ${finalRecipe.recipeName}")
+
                         _addRecipeSuccess.emit(true)
-                        fetchAllRecipes(force = true)
+                        // 🌟 2. Update memory with the version that has the real Image URL
+                        recipeList = recipeList.map { if (it.recipe_id == finalRecipe.recipe_id) finalRecipe else it }
+                        myRecipes = myRecipes.map { if (it.recipe_id == finalRecipe.recipe_id) finalRecipe else it }
+
+                        // 3. Save to Room for persistence
+                        saveRecipeToRoom(finalRecipe)
+                    }
+                    .onFailure { e ->
+                        // Revert optimistic update on failure
+                        recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
+                        myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
+
+                        val msg = e.message ?: "Unknown Error"
+                        errorMessage = if (msg.contains("recipe_author", ignoreCase = true)) {
+                            "Database Error: Please check Supabase columns."
+                        } else {
+                            msg.split("\n").firstOrNull() ?: "Save Failed"
+                        }
                     }
             } catch (e: Exception) {
                 errorMessage = e.message
+                // Revert optimistic update
+                recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
+                myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
             } finally {
                 isLoading = false
             }
         }
     }
 
+    private suspend fun saveRecipeToRoom(r: Recipe) {
+        val dao = getDao() ?: return
+        try {
+            val entity = RecipeEntity(
+                recipe_id = r.recipe_id ?: "",
+                author_id = r.author_id,
+                recipeName = r.recipeName,
+                recipeDescription = r.recipeDescription,
+                recipeCourse = r.recipeCourse,
+                time = r.time,
+                calories = r.calories,
+                cookingSkill = r.cookingSkill,
+                estimatedBudget = r.estimatedBudget,
+                recipeStep = r.recipeStep,
+                recipeImageUrl = r.recipeImageUrl,
+                ingredientsJson = json.encodeToString(r.ingredients),
+                lastUpdated = r.lastUpdated
+            )
+            dao.insertRecipes(listOf(entity))
+        } catch (e: Exception) { }
+    }
+
     fun deleteRecipe(recipeId: String, userId: String) {
         viewModelScope.launch {
             isLoading = true
+            // 🌟 Get recipe name before deleting for the success message
+            val recipeName = recipeList.find { it.recipe_id == recipeId }?.recipeName ?: "Recipe"
+
             repository.deleteRecipe(recipeId)
-                .onSuccess { fetchMyRecipes(userId); fetchAllRecipes(force = true) }
+                .onSuccess { 
+                    // 🌟 1. Update memory lists IMMEDIATELY for zero-lag
+                    recipeList = recipeList.filter { it.recipe_id != recipeId }
+                    myRecipes = myRecipes.filter { it.recipe_id != recipeId }
+                    bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+
+                    // 🌟 2. Show success message
+                    _bookmarkMessage.emit("Successfully deleted: $recipeName")
+
+                    // 3. Force refresh from server to stay 100% accurate
+                    fetchMyRecipes(userId, force = true)
+                    fetchAllRecipes(force = true)
+                }
             isLoading = false
+        }
+    }
+
+    fun updateRecipe(recipe: Recipe, imageBytes: ByteArray? = null) {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                var finalRecipe = recipe
+                
+                // 🌟 Image Upload Logic for Update
+                if (imageBytes != null && recipe.recipe_id != null) {
+                    val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
+                    
+                    if (uploadResult.isSuccess) {
+                        val url = uploadResult.getOrNull()
+                        finalRecipe = recipe.copy(recipeImageUrl = url)
+                    } else {
+                        errorMessage = "Cloudinary Update Error: ${uploadResult.exceptionOrNull()?.message ?: "Unknown"}"
+                        isLoading = false
+                        return@launch
+                    }
+                }
+
+                repository.updateRecipe(finalRecipe)
+                    .onSuccess {
+                        _updateRecipeSuccess.emit(true)
+                        // 🌟 Show success message
+                        _bookmarkMessage.emit("Successfully updated: ${finalRecipe.recipeName}")
+                        
+                        fetchAllRecipes(force = true)
+                        recipe.author_id?.let { fetchMyRecipes(it) }
+                        // Update Room
+                        saveRecipeToRoom(finalRecipe)
+                    }
+                    .onFailure { e ->
+                        errorMessage = "Update Failed: ${e.message}"
+                    }
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
         }
     }
 
