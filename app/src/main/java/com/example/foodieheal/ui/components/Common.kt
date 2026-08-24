@@ -273,6 +273,7 @@ fun PasswordInputField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
+    modifier: Modifier = Modifier,
     @StringRes labelId: Int,
     @StringRes placeholderId: Int,
     selectedValue: String,
@@ -284,7 +285,7 @@ fun DropDownList(
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp) // gap between items in a Column
     ) {
         Text(

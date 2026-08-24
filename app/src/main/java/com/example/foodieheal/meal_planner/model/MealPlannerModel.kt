@@ -3,6 +3,7 @@ package com.example.foodieheal.meal_planner.model
 import com.example.foodieheal.model.Recipe
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.DayOfWeek
 
 // --- DB Data Transfer Objects ---
 @Serializable
@@ -20,7 +21,6 @@ data class MealSlotDTO(
 
 @Serializable
 data class RecipeReference(
-    // 2. Ensuring camelCase matches your JSON property key: "recipeId"
     @SerialName("recipeId") val recipeId: String
 )
 
@@ -42,4 +42,54 @@ enum class MealType {
     LUNCH,
     DINNER,
     SNACK
+}
+
+/**
+ * Converts DB/DTO Map<String, List<MealSlotDTO>> into UI Domain Map<DayOfWeek, List<RealMealSlot>>
+ */
+fun Map<String, List<MealSlotDTO>>.toDomain(
+    allRecipesMap: Map<String, Recipe> = emptyMap()
+): Map<DayOfWeek, List<RealMealSlot>> {
+    return this.mapEntriesNotNull { (dayString, slotDTOs) ->
+        val dayOfWeek = runCatching { DayOfWeek.valueOf(dayString.uppercase()) }.getOrNull()
+        if (dayOfWeek == null) null
+        else dayOfWeek to slotDTOs.map { slotDto -> slotDto.toDomain(allRecipesMap) }
+    }.toMap()
+}
+
+/**
+ * Converts MealSlotDTO to RealMealSlot domain model
+ */
+fun MealSlotDTO.toDomain(allRecipesMap: Map<String, Recipe> = emptyMap()): RealMealSlot {
+    return RealMealSlot(
+        mealType = this.mealType,
+        recipes = this.recipes.mapNotNull { ref -> allRecipesMap[ref.recipeId] }
+    )
+}
+
+/**
+ * Converts Domain Map<DayOfWeek, List<RealMealSlot>> back to DTO Map<String, List<MealSlotDTO>>
+ */
+fun Map<DayOfWeek, List<RealMealSlot>>.toDTO(): Map<String, List<MealSlotDTO>> {
+    return this.mapKeys { (day, _) -> day.name }
+        .mapValues { (_, slots) ->
+            slots.map { slot ->
+                MealSlotDTO(
+                    mealType = slot.mealType,
+                    recipes = slot.recipes.map { recipe -> RecipeReference(recipeId = recipe.recipe_id?:"") }
+                )
+            }
+        }
+}
+
+// Inline helper function for safely filtering null keys during mapping
+private inline fun <K, V, R, B> Map<K, V>.mapEntriesNotNull(transform: (Map.Entry<K, V>) -> Pair<R, B>?): Map<R, B> {
+    val result = mutableMapOf<R, B>()
+    for (entry in this) {
+        val pair = transform(entry)
+        if (pair != null) {
+            result[pair.first] = pair.second
+        }
+    }
+    return result
 }

@@ -1,5 +1,10 @@
 package com.example.foodieheal.navigation
 
+import com.example.foodieheal.meal_planner.model.MealType
+import kotlinx.datetime.DayOfWeek
+import java.time.LocalDate
+
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -11,6 +16,23 @@ sealed class Screen(val route: String) {
     object Planner : Screen("planner")
     object AddRecipeToPlanner: Screen("add_recipe_to_planner/{recipeId}"){
         fun createRoute(id: String) = "add_recipe_to_planner/$id"
+    }
+    object RecipeSelection : Screen("recipe_selection/{date}/{type}") {
+        fun createRoute(date: LocalDate, type: MealType) = "recipe_selection/$date/$type"
+        fun createRoute(date: DayOfWeek, type: MealType) = "recipe_selection/${date.name}/$type"
+    }
+    object TemplateDetails:Screen("template_details/{planId}/{isMyTemplate}"){
+        fun createRoute(planId: String,isMyTemplate: Boolean) = "template_details/$planId/$isMyTemplate"
+
+    }
+    object AddEditTemplate: Screen("add_edit_template?planId={planId}") {
+        fun createRoute(planId: String? = null): String {
+            return if (planId != null) {
+                "add_edit_template?planId=$planId"
+            } else {
+                "add_edit_template"
+            }
+        }
     }
 
     object Hiring : Screen("hiring")

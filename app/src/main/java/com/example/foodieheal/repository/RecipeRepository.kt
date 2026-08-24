@@ -151,6 +151,19 @@ class RecipeRepository(
         }
     }
 
+    suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (recipeIds.isEmpty()) return@runCatching emptyList()
+            val response = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter {
+                        isIn("recipe_id", recipeIds)
+                    }
+                }
+            response.decodeList<Recipe>()
+        }
+    }
+
     fun getCurrentUserId(): String? {
         return supabaseClient.auth.currentUserOrNull()?.id
     }
