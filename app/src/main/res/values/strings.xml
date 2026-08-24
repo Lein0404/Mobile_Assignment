@@ -524,4 +524,64 @@
     <string name="btn_update_password">UPDATE PASSWORD</string>
     <string name="toast_password_updated_success">Password updated successfully!</string>
     <string name="account_security">Account Security</string>
+
+    <!-- Chef Welcome Screen -->
+    <string name="back_to_login">Back to Login</string>
+    <string name="chef_illustration">Chef Illustration</string>
+
+    <string name="chef_welcome_title">Become a Chef Partner</string>
+    <string name="chef_welcome_subtitle">Share your culinary talent, create tailored menus, and connect with health-conscious clients.</string>
+
+    <string name="chef_feature_customize_profile">Create &amp; customize your personal chef profile</string>
+    <string name="chef_feature_home_cooking">Offer flexible home cooking services</string>
+    <string name="chef_feature_connect_customers">Connect directly with hungry customers</string>
+
+    <string name="get_started">Get Started</string>
+    <string name="already_have_account_login">Already have a chef account? Login</string>
+
+    <!-- Chef Registration Flow -->
+    <string name="title_basic_info">Basic Information</string>
+    <string name="title_address_info">Address Information</string>
+    <string name="title_professional_bg">Professional Background</string>
+    <string name="title_profile_picture">Profile Picture</string>
+    <string name="title_review_info">Review Information</string>
+    <string name="step_1_of_5">Step 1 of 5</string>
+    <string name="step_2_of_5">Step 2 of 5</string>
+    <string name="step_3_of_5">Step 3 of 5</string>
+    <string name="step_4_of_5">Step 4 of 5</string>
+    <string name="step_5_of_5">Step 5 of 5</string>
+    <string name="submit_registration">Submit Registration</string>
+    <string name="error_name_required">Name is required.</string>
+    <string name="error_name_invalid">Name must be 3-50 characters containing only letters.</string>
+    <string name="error_gender_required">Please select your gender.</string>
+    <string name="error_age_required">Age is required.</string>
+    <string name="error_age_range">Chef must be between 18 and 100 years old.</string>
+    <string name="error_password_required">Password is required.</string>
+    <string name="error_confirm_password_required">Please confirm your password.</string>
+    <string name="error_email_required">Email address is required.</string>
+    <string name="error_email_invalid">Please enter a valid email address.</string>
+    <string name="error_phone_required">Phone number is required.</string>
+    <string name="error_phone_invalid">Please enter a valid phone number (e.g. 0123456789).</string>
+    <string name="error_address_required">Address is required.</string>
+    <string name="error_address_invalid">Address must be at least 10 characters.</string>
+    <string name="error_postcode_required">Postcode is required.</string>
+    <string name="error_postcode_invalid">Postcode must contain exactly 5 digits.</string>
+    <string name="error_state_required">Please select a state.</string>
+    <string name="error_experience_required">Years of experience is required.</string>
+    <string name="error_experience_invalid">Experience must be between 0 and 70 years.</string>
+    <string name="error_description_required">Description is required.</string>
+    <string name="error_description_limit">Description cannot exceed 300 words.</string>
+    <string name="error_profile_picture_required">A profile picture is required to complete registration.</string>
+    <string name="words_count_format">%1$d/300 words</string>
+    <string name="placeholder_enter_address">Enter your address</string>
+    <string name="placeholder_enter_postcode">Enter your postcode</string>
+    <string name="placeholder_experience">Enter your years of experience</string>
+    <string name="prompt_upload_picture">Please upload a clear profile picture so clients can recognize you.</string>
+    <string name="btn_choose_photo">Choose Photo</string>
+    <string name="btn_change_photo">Change Photo</string>
+    <string name="no_photo">No Photo</string>
+    <string name="section_personal_details">Personal Details</string>
+    <string name="section_address">Address</string>
+    <string name="section_professional_bg">Professional Background</string>
+    <string name="years_format">%1$s Years</string>
 </resources>

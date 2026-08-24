@@ -8,8 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobileassignmentloginpart.Model.Chef
 import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.coroutines.launch
 
 class ChefRegisterViewModel(
@@ -62,8 +62,51 @@ class ChefRegisterViewModel(
     var showProfilePictureErrorMessage by mutableStateOf(false)
         private set
 
+    // Error Resource Resolvers for UI consumption
+    val nameErrorRes: Int?
+        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getNameErrorRes(name) else null
+
+    val genderErrorRes: Int?
+        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getGenderErrorRes(gender) else null
+
+    val ageErrorRes: Int?
+        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getAgeErrorRes(age) else null
+
+    val passwordErrorRes: Int?
+        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getPasswordErrorRes(password) else null
+
+    val confirmPasswordErrorRes: Int?
+        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getConfirmPasswordErrorRes(password, confirmPassword) else null
+
+    val emailErrorRes: Int?
+        get() = if (showContactErrorMessage) ChefRegisterValidate.getEmailErrorRes(email) else null
+
+    val phoneErrorRes: Int?
+        get() = if (showContactErrorMessage) ChefRegisterValidate.getPhoneNumberErrorRes(phoneNumber) else null
+
+    val addressErrorRes: Int?
+        get() = if (showAddressErrorMessage) ChefRegisterValidate.getAddressErrorRes(address) else null
+
+    val postcodeErrorRes: Int?
+        get() = if (showAddressErrorMessage) ChefRegisterValidate.getPostcodeErrorRes(postcode) else null
+
+    val stateErrorRes: Int?
+        get() = if (showAddressErrorMessage) ChefRegisterValidate.getStateErrorRes(state) else null
+
+    val experienceErrorRes: Int?
+        get() = if (showDescriptionErrorMessage) ChefRegisterValidate.getExperienceErrorRes(experience) else null
+
+    val descriptionErrorRes: Int?
+        get() = if (showDescriptionErrorMessage) ChefRegisterValidate.getDescriptionErrorRes(description) else null
+
+    val profilePictureErrorRes: Int?
+        get() = if (showProfilePictureErrorMessage) ChefRegisterValidate.getProfilePictureErrorRes(selectedImageUri) else null
+
     fun updateImage(uri: Uri?) {
         selectedImageUri = uri
+        if (showProfilePictureErrorMessage && uri != null) {
+            showProfilePictureErrorMessage = false
+        }
     }
 
     fun canProceedReviewPage(): Boolean {
@@ -159,6 +202,7 @@ class ChefRegisterViewModel(
         postcode = ""
         experience = ""
         description = ""
+        selectedImageUri = null
     }
 
     fun isValidName(): Boolean = ChefRegisterValidate.isValidName(name)
