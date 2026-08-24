@@ -1,5 +1,6 @@
 package com.example.foodieheal.hiring.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,9 @@ class UserAppointmentViewModel(
 
     private val _isNetworkAvailable = MutableStateFlow(true)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    private val _deletedAppointmentIds = MutableStateFlow<Set<String>>(emptySet())
+    val deletedAppointmentIds: StateFlow<Set<String>> = _deletedAppointmentIds.asStateFlow()
 
     init {
         fetchAppointmentsForCurrentUser()
@@ -124,5 +128,30 @@ class UserAppointmentViewModel(
                 onError(e.localizedMessage ?: "Failed to reschedule appointment")
             }
         }
+    }
+
+    fun loadDeletedAppointments(context: Context) {
+        val currentUserId = repository.getCurrentUserId() ?: "default"
+        val prefs = context.getSharedPreferences("user_appointment_history_${currentUserId}", Context.MODE_PRIVATE)
+        val currentDeleted = prefs.getStringSet("deleted_appointment_ids", emptySet()) ?: emptySet()
+        _deletedAppointmentIds.value = currentDeleted
+    }
+
+    fun softDeleteAppointment(context: Context, appointmentId: String) {
+        val currentUserId = repository.getCurrentUserId() ?: "default"
+        val prefs = context.getSharedPreferences("user_appointment_history_${currentUserId}", Context.MODE_PRIVATE)
+        val currentDeleted = prefs.getStringSet("deleted_appointment_ids", emptySet()) ?: emptySet()
+        val updatedDeleted = currentDeleted + appointmentId
+        prefs.edit().putStringSet("deleted_appointment_ids", updatedDeleted).apply()
+        _deletedAppointmentIds.value = updatedDeleted
+    }
+
+    fun restoreAppointment(context: Context, appointmentId: String) {
+        val currentUserId = repository.getCurrentUserId() ?: "default"
+        val prefs = context.getSharedPreferences("user_appointment_history_${currentUserId}", Context.MODE_PRIVATE)
+        val currentDeleted = prefs.getStringSet("deleted_appointment_ids", emptySet()) ?: emptySet()
+        val updatedDeleted = currentDeleted - appointmentId
+        prefs.edit().putStringSet("deleted_appointment_ids", updatedDeleted).apply()
+        _deletedAppointmentIds.value = updatedDeleted
     }
 }

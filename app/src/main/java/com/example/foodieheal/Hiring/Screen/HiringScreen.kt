@@ -598,7 +598,7 @@ fun ChefHireItem(
                     )
 
                     Text(
-                        text = if (rating != null && rating > 0.0) "%.1f".format(rating) else stringResource(R.string.not_available),
+                        text = if (rating != null && rating > 0.0) String.format(Locale.US, "%.1f", rating) else stringResource(R.string.not_available),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -801,7 +801,7 @@ fun FilterBottomSheetContent(
 
         // Sort by Rate Section
         Text(
-            text = "Hourly Rate",
+            text = "Rating",
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold
         )

@@ -34,20 +34,30 @@ class HiringRepository(
                 .select { filter { ilike("Status", "approved") } }
                 .decodeList<Chef>()
 
-            val ratedAppointments = client.postgrest["Appointment"]
-                .select { filter { gt("rating", 0) } }
-                .decodeList<Appointment>()
+            val ratedAppointments = try {
+                client.postgrest["Appointment"]
+                    .select { filter { gt("rating", 0) } }
+                    .decodeList<Appointment>()
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Could not fetch rated appointments", e)
+                emptyList()
+            }
 
             val processedChefs = chefs.filter { (it.Pricing ?: -1.0) >= 0.0 }
                 .map { chef ->
                     val idToMatch = chef.chefId.ifEmpty { chef.id }
                     val chefRatings = ratedAppointments
-                        .filter { it.chefId == idToMatch }
+                        .filter { appt ->
+                            (appt.chefId.isNotBlank() && (appt.chefId == chef.chefId || appt.chefId == chef.id)) ||
+                            (idToMatch.isNotBlank() && appt.chefId == idToMatch)
+                        }
                         .mapNotNull { it.rating }
 
                     val avgRating = if (chefRatings.isNotEmpty()) {
                         (chefRatings.average() * 10).toInt() / 10.0
-                    } else null
+                    } else {
+                        chef.averagerating
+                    }
 
                     chef.copy(averagerating = avgRating)
                 }

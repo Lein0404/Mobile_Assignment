@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +31,7 @@ import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 enum class AppointmentFilterOption(val displayName: String) {
@@ -38,7 +40,6 @@ enum class AppointmentFilterOption(val displayName: String) {
     CONFIRMED("Confirmed"),
     COMPLETED("Completed"),
     CANCELLED("Cancelled"),
-
     REJECTED("Rejected")
 }
 
@@ -49,12 +50,19 @@ fun AppointmentHistoryScreen(
     onBackClick: () -> Unit,
     onAppointmentClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var appointmentToDelete by remember { mutableStateOf<Appointment?>(null) }
 
     LaunchedEffect(Unit) {
+        viewModel.loadDeletedAppointments(context)
         viewModel.fetchAppointmentsForCurrentUser()
     }
 
     val appointmentsState by viewModel.userAppointmentsState.collectAsState()
+    val deletedAppointmentIds by viewModel.deletedAppointmentIds.collectAsState()
 
     // Active filter state
     var selectedFilter by remember { mutableStateOf(AppointmentFilterOption.ALL) }
@@ -64,15 +72,19 @@ fun AppointmentHistoryScreen(
     val allAppointments = successState?.appointments.orEmpty()
     val usersMap = successState?.usersMap.orEmpty()
 
-    // Filter appointments based on selection
-    val filteredAppointments = remember(allAppointments, selectedFilter) {
+    // Filter appointments based on selection and soft deletion
+    val visibleAppointments = remember(allAppointments, deletedAppointmentIds) {
+        allAppointments.filter { it.AppointmentID !in deletedAppointmentIds }
+    }
+
+    val filteredAppointments = remember(visibleAppointments, selectedFilter) {
         val filtered = when (selectedFilter) {
-            AppointmentFilterOption.ALL -> allAppointments
-            AppointmentFilterOption.PENDING -> allAppointments.filter { it.Status.equals("pending", ignoreCase = true) }
-            AppointmentFilterOption.CONFIRMED -> allAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
-            AppointmentFilterOption.COMPLETED -> allAppointments.filter { it.Status.equals("completed", ignoreCase = true) }
-            AppointmentFilterOption.CANCELLED -> allAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
-            AppointmentFilterOption.REJECTED -> allAppointments.filter { it.Status.equals("rejected", ignoreCase = true) }
+            AppointmentFilterOption.ALL -> visibleAppointments
+            AppointmentFilterOption.PENDING -> visibleAppointments.filter { it.Status.equals("pending", ignoreCase = true) }
+            AppointmentFilterOption.CONFIRMED -> visibleAppointments.filter { it.Status.equals("confirmed", ignoreCase = true) }
+            AppointmentFilterOption.COMPLETED -> visibleAppointments.filter { it.Status.equals("completed", ignoreCase = true) }
+            AppointmentFilterOption.CANCELLED -> visibleAppointments.filter { it.Status.equals("cancelled", ignoreCase = true) }
+            AppointmentFilterOption.REJECTED -> visibleAppointments.filter { it.Status.equals("rejected", ignoreCase = true) }
         }
         filtered.sortedByDescending { it.created_at }
     }
@@ -80,6 +92,7 @@ fun AppointmentHistoryScreen(
     val isRefreshing = appointmentsState is UserAppointmentsUiState.Loading
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -200,6 +213,9 @@ fun AppointmentHistoryScreen(
                                         if (id.isNotEmpty()) {
                                             onAppointmentClick(id)
                                         }
+                                    },
+                                    onDeleteClick = {
+                                        appointmentToDelete = appointment
                                     }
                                 )
                             }
@@ -267,6 +283,62 @@ fun AppointmentHistoryScreen(
             }
         }
     }
+
+    // Delete Confirmation Dialog
+    if (appointmentToDelete != null) {
+        val target = appointmentToDelete!!
+        AlertDialog(
+            onDismissRequest = { appointmentToDelete = null },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_delete),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Remove from History",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to remove this ${target.Status.lowercase()} appointment from your history? This will only remove it from your history view.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val id = target.AppointmentID.orEmpty()
+                        if (id.isNotEmpty()) {
+                            viewModel.softDeleteAppointment(context, id)
+                            coroutineScope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "Appointment removed from history",
+                                    actionLabel = "Undo",
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreAppointment(context, id)
+                                }
+                            }
+                        }
+                        appointmentToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { appointmentToDelete = null }) {
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 }
 
 @Composable
@@ -274,8 +346,12 @@ fun AppointmentHistoryCard(
     appointment: Appointment,
     chefName: String,
     chefPicture: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
+    val statusLower = appointment.Status.lowercase().trim()
+    val isDeletable = statusLower == "completed" || statusLower == "rejected" || statusLower == "cancelled" || statusLower == "cancel"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -290,7 +366,7 @@ fun AppointmentHistoryCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header Row: Chef Info + Status
+            // Header Row: Chef Info + Status & Delete Action
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -298,7 +374,8 @@ fun AppointmentHistoryCard(
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
                     AsyncImage(
                         model = chefPicture,
@@ -337,7 +414,26 @@ fun AppointmentHistoryCard(
                     }
                 }
 
-                AppointmentStatusBadge(status = appointment.Status.orEmpty())
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    AppointmentStatusBadge(status = appointment.Status)
+
+                    if (isDeletable && onDeleteClick != null) {
+                        IconButton(
+                            onClick = onDeleteClick,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_delete),
+                                contentDescription = "Delete appointment history",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))

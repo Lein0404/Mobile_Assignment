@@ -52,25 +52,35 @@ class BookmarkRepository(
                 }
                 .decodeList<Chef>()
 
-            val ratedAppointments = client
-                .from("Appointment")
-                .select {
-                    filter {
-                        gt("rating", 0)
+            val ratedAppointments = try {
+                client
+                    .from("Appointment")
+                    .select {
+                        filter {
+                            gt("rating", 0)
+                        }
                     }
-                }
-                .decodeList<Appointment>()
+                    .decodeList<Appointment>()
+            } catch (e: Exception) {
+                Log.e("BookmarkRepository", "Could not fetch rated appointments", e)
+                emptyList()
+            }
 
             chefs.map { chef ->
                 val idToMatch = chef.chefId.ifEmpty { chef.id }
 
                 val chefRatings = ratedAppointments
-                    .filter { it.chefId == idToMatch }
+                    .filter { appt ->
+                        (appt.chefId.isNotBlank() && (appt.chefId == chef.chefId || appt.chefId == chef.id)) ||
+                        (idToMatch.isNotBlank() && appt.chefId == idToMatch)
+                    }
                     .mapNotNull { it.rating }
 
                 val avgRating = if (chefRatings.isNotEmpty()) {
                     (chefRatings.average() * 10).toInt() / 10.0
-                } else null
+                } else {
+                    chef.averagerating
+                }
 
                 chef.copy(averagerating = avgRating)
             }
