@@ -10,14 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -106,7 +98,7 @@ fun WalletScreen(
                         enabled = !uiState.isLoading && !uiState.isRefreshing
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            painter = painterResource(R.drawable.refresh),
                             contentDescription = "Refresh Wallet"
                         )
                     }
@@ -331,7 +323,7 @@ fun WalletBalanceCard(
                             .size(40.dp)
                     ) {
                         Icon(
-                            imageVector = if (isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            painter = painterResource(if (isHidden) R.drawable.ic_hide else R.drawable.ic_view),
                             contentDescription = if (isHidden) "Show balance" else "Hide balance",
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
@@ -357,7 +349,7 @@ fun WalletBalanceCard(
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            painter = painterResource(R.drawable.ic_outline_add),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -432,7 +424,7 @@ fun WalletTransactionItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (isCredit) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                    painter = painterResource(if (isCredit) R.drawable.ic_arrow_downward else R.drawable.ic_arrow_upward),
                     contentDescription = null,
                     tint = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828),
                     modifier = Modifier.size(22.dp)
@@ -557,7 +549,7 @@ fun EmptyTransactionsView(
                     onClick = onTopUpClick,
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Top Up Now")
                 }
@@ -723,7 +715,7 @@ fun TopUpBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
+                            painter = painterResource(R.drawable.check_circle),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
