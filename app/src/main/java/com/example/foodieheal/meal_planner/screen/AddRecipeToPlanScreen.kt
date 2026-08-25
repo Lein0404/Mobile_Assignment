@@ -48,12 +48,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.DailyPlan
-import com.example.foodieheal.model.User
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate

@@ -8,7 +8,7 @@ import com.example.foodieheal.Chef.local.toDomain
 import com.example.foodieheal.Chef.local.toEntity
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import com.example.mobileassignmentloginpart.Model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from

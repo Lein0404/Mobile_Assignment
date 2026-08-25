@@ -42,6 +42,7 @@ import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import kotlin.collections.find
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -379,8 +380,14 @@ fun AddRecipeScreen(
                         cookingSkill = cookingSkill,
                         estimatedBudget = budget,
                         recipeStep = steps,
-                        recipeImageUrl = null, 
-                        ingredients = ingredients.map { IngredientItem(it.name, it.quantity, it.unit) }
+                        recipeImageUrl = null,
+                        ingredients = ingredients.map {
+                            IngredientItem(
+                                it.name,
+                                it.quantity,
+                                it.unit
+                            )
+                        }
                     )
                     viewModel.addRecipe(recipe, imageBytes)
                 },

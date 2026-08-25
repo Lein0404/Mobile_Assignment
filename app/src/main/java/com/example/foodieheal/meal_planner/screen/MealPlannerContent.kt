@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import java.time.LocalDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

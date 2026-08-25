@@ -16,6 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
+import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,12 +39,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Chef.Home.AppointmentDetailScreen
 import com.example.foodieheal.Chef.Home.ChefChangePasswordScreen
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
-import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
-import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.User.viewModel.AuthViewModel
 
 sealed class ChefNavigationItem(val route: String, val titleRes: Int, val iconRes: Int) {
     object Home : ChefNavigationItem("chef_home", R.string.nav_home, R.drawable.ic_home)

@@ -58,12 +58,11 @@ import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
-import com.example.foodieheal.repository.RecipeRepository
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
-
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
