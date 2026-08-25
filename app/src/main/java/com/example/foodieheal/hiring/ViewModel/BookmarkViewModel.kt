@@ -100,6 +100,10 @@ class BookmarkViewModel(
         }
     }
 
+    fun refreshBookmarkedChefs() {
+        lastUserId?.let { fetchBookmarkedChefs(it, forceRefresh = true) }
+    }
+
     fun fetchBookmarkedChefs(userId: String, forceRefresh: Boolean = false) {
         if (userId.isBlank()) return
         lastUserId = userId

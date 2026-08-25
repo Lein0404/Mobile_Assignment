@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,27 +33,39 @@ import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAppointmentsTabContent(
     viewModel: UserAppointmentViewModel,
     onAppointmentClick: (Appointment) -> Unit,
+    onRefresh: () -> Unit = { viewModel.fetchAppointmentsForCurrentUser(forceRefresh = true) },
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.userAppointmentsState.collectAsState()
+    val isRefreshing = state is UserAppointmentsUiState.Loading
 
-    Box(modifier = modifier.fillMaxSize()) {
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
+    ) {
         when (val currentState = state) {
             is UserAppointmentsUiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             is UserAppointmentsUiState.Error -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -61,7 +76,7 @@ fun UserAppointmentsTabContent(
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.fetchAppointmentsForCurrentUser(forceRefresh = true) }) {
+                        Button(onClick = onRefresh) {
                             Text(stringResource(R.string.btn_retry))
                         }
                     }
@@ -78,7 +93,9 @@ fun UserAppointmentsTabContent(
 
                 if (activeAppointments.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {

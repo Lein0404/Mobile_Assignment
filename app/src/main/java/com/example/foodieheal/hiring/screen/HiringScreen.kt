@@ -165,16 +165,23 @@ fun HiringScreen(
                     chefs = chefs,
                     isLoading = isLoading,
                     errorMessage = errorMessage,
-                    onRetry = { chefListViewModel.fetchAllChefs() },
+                    onRetry = { chefListViewModel.fetchAllChefs(forceRefresh = true) },
+                    onRefresh = { chefListViewModel.fetchAllChefs(forceRefresh = true) },
                     onChefClick = onChefClick
                 )
                 1 -> UserAppointmentsTabContent(
                     viewModel = userAppointmentViewModel,
-                    onAppointmentClick = onAppointmentClick
+                    onAppointmentClick = onAppointmentClick,
+                    onRefresh = { userAppointmentViewModel.fetchAppointmentsForCurrentUser(forceRefresh = true) }
                 )
                 2 -> BookmarkedChefsTabContent(
                     viewModel = bookmarkViewModel,
-                    onChefClick = onChefClick
+                    onChefClick = onChefClick,
+                    onRefresh = {
+                        if (currentUserId.isNotEmpty()) {
+                            bookmarkViewModel.fetchBookmarkedChefs(currentUserId, forceRefresh = true)
+                        }
+                    }
                 )
             }
         }
