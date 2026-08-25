@@ -48,6 +48,7 @@ fun RecipeCard(
     onClick: () -> Unit,
     color: Color,
     isSelectionMode: Boolean = false,
+    viewMode: Boolean = false,
 ) {
     Card(
         modifier = Modifier
@@ -63,7 +64,7 @@ fun RecipeCard(
                 .fillMaxWidth()
                 .height(90.dp)
                 .padding(start = 5.5.dp)
-                .clickable(enabled = !isSelectionMode, onClick = {onClick()}),
+                .clickable(enabled = !isSelectionMode, onClick = { onClick() }),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp),
             colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
@@ -149,11 +150,13 @@ fun RecipeCard(
                 }
 
                 if (!isSelectionMode) {
-                    IconButton(onClick = onDeleteClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_delete),
-                            contentDescription = stringResource(R.string.desc_remove_recipe)
-                        )
+                    if(!viewMode) {
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_delete),
+                                contentDescription = stringResource(R.string.desc_remove_recipe)
+                            )
+                        }
                     }
                 }
             }
@@ -166,6 +169,7 @@ fun MealSection(
     modifier: Modifier = Modifier,
     title: String,
     recipes: List<Recipe>,
+    viewMode: Boolean = false,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
     onSelectionChange: (Boolean) -> Unit = {},//empty lambda bcz in normal meal planner screen no need use, only in addRecipeToMealPlannerScreen
@@ -173,6 +177,10 @@ fun MealSection(
     onDeleteClick: (Recipe) -> Unit = {},//only in normal meal planner
     onRecipeDetails:(String)-> Unit = {}//only in normal meal planner
 ) {
+    if (viewMode && recipes.isEmpty()) {
+        return//skip the whole function
+    }
+
     val color: Color = when (title) {
         stringResource(R.string.meal_title_breakfast) -> BreakfastColor
         stringResource(R.string.meal_title_lunch) -> LunchColor
@@ -223,13 +231,15 @@ fun MealSection(
             )
 
             if (!isSelectionMode) {
-                IconButton(onClick = onAddClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add_circle_outline),
-                        contentDescription = stringResource(R.string.desc_add_recipe),
-                        modifier = Modifier.size(34.dp),
-                        tint = MaterialTheme.colorScheme.onTertiary
-                    )
+                if(!viewMode) {
+                    IconButton(onClick = onAddClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_add_circle_outline),
+                            contentDescription = stringResource(R.string.desc_add_recipe),
+                            modifier = Modifier.size(34.dp),
+                            tint = MaterialTheme.colorScheme.onTertiary
+                        )
+                    }
                 }
             } else {
                 RoundCheckbox(
@@ -255,6 +265,7 @@ fun MealSection(
             ) {
                 recipes.forEach { recipeItem ->
                     RecipeCard(
+                        viewMode = viewMode,
                         recipe = recipeItem,
                         onDeleteClick = {
                             if (!isSelectionMode) {

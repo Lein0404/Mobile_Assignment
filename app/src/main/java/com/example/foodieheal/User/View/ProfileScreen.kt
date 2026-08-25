@@ -39,9 +39,9 @@ import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
-import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +152,13 @@ fun ProfileScreen(
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
                     }
-                    DrawerItem("Change Password", R.drawable.changepassword4) {                 
+                    DrawerItem("Payment Methods", R.drawable.dollar_symbol) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.PaymentMethod.route)
+                        }
+                    }
+                    DrawerItem("Change Password", R.drawable.changepassword4) {
                         scope.launch {
                             drawerState.close()
                             navController.navigate(Screen.ChangePassword.route)

@@ -1,8 +1,6 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -45,40 +41,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
-import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
 import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.mobileassignmentloginpart.Model.Chef
-import kotlinx.datetime.DayOfWeek
-import java.text.SimpleDateFormat
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
-import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HiringAppointment(
     chef: Chef,
+    bookingViewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
-    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit,
-    viewModel: ChefPortalViewModel = viewModel()
+    onAddAppointmentClick: (selectedDate: LocalDate) -> Unit
 ) {
-    val hiringViewModel: HiringViewModel = viewModel()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val chefAppointmentsUiState by hiringViewModel.chefAppointmentsState.collectAsState()
+    val chefAppointmentsUiState by bookingViewModel.chefAppointmentsState.collectAsState()
 
     LaunchedEffect(chef.chefId) {
-        chef.chefId?.let { id ->
-            hiringViewModel.fetchAppointmentsForChef(id)
+        val chefId = chef.chefId.ifEmpty { chef.id }
+        if (chefId.isNotBlank()) {
+            bookingViewModel.fetchAppointmentsForChef(chefId)
         }
     }
 
@@ -92,7 +84,7 @@ fun HiringAppointment(
 
         chefAppointments.filter { appointment ->
             val apptDate = appointment.Date.trim()
-            val status = appointment.Status.lowercase(Locale.US)
+            val status = appointment.Status?.lowercase(Locale.US).orEmpty()
             val isActive = status !in listOf("cancelled", "rejected")
 
             isActive && (
@@ -203,7 +195,9 @@ fun HiringAppointment(
                 selectedDate = selectedDate,
                 appointments = chefAppointmentsForSelectedDate,
                 onAddAppointmentClick = {
-                    onAddAppointmentClick(selectedDate)
+                    if (!selectedDate.isBefore(LocalDate.now())) {
+                        onAddAppointmentClick(selectedDate)
+                    }
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -233,6 +227,9 @@ private fun DayScheduleSection(
     val formattedTitle = remember(selectedDate) {
         selectedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMM"))
     }
+    val isPastDate = remember(selectedDate) {
+        selectedDate.isBefore(LocalDate.now())
+    }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -259,13 +256,15 @@ private fun DayScheduleSection(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    IconButton(onClick = onAddAppointmentClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_add_circle_outline),
-                            contentDescription = stringResource(R.string.cd_add_booking),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(32.dp)
-                        )
+                    if (!isPastDate) {
+                        IconButton(onClick = onAddAppointmentClick) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_add_circle_outline),
+                                contentDescription = stringResource(R.string.cd_add_booking),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -287,17 +286,19 @@ private fun DayScheduleSection(
                 }
             } else {
                 items(appointments) { appointment ->
-                    val timeSlotText = if (!appointment.Start_Time.isNullOrBlank() && !appointment.End_Time.isNullOrBlank()) {
-                        stringResource(R.string.time_range_format, appointment.Start_Time, appointment.End_Time)
-                    } else if (!appointment.Start_Time.isNullOrBlank()) {
-                        appointment.Start_Time
+                    val startAmPm = formatToAmPm(appointment.Start_Time)
+                    val endAmPm = formatToAmPm(appointment.End_Time)
+                    val timeSlotText = if (startAmPm.isNotBlank() && endAmPm.isNotBlank()) {
+                        stringResource(R.string.time_range_format, startAmPm, endAmPm)
+                    } else if (startAmPm.isNotBlank()) {
+                        startAmPm
                     } else {
                         stringResource(R.string.label_appointment)
                     }
 
                     AppointmentCard(
                         title = timeSlotText,
-                        statusText = appointment.Status,
+                        statusText = appointment.Status.orEmpty(),
                         showAddIcon = false
                     )
                 }

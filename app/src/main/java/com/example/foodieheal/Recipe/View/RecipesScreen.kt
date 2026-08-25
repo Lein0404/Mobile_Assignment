@@ -49,7 +49,7 @@ fun RecipesScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("Breakfast") }
     val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
-
+    
     // Filter State
     var showFilterDialog by remember { mutableStateOf(false) }
     var filterMaxTime by remember { mutableFloatStateOf(120f) }
@@ -70,9 +70,9 @@ fun RecipesScreen(
         2 -> viewModel.bookmarkedRecipes
         else -> emptyList()
     }
-
+    
     val isLoading = viewModel.isLoading
-
+    
     val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
         derivedStateOf {
             currentDataList.filter { recipe ->
@@ -91,7 +91,7 @@ fun RecipesScreen(
                 val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
                 val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
                 val matchesBudget = filterBudget == null || recipe.estimatedBudget == filterBudget
-
+                
                 matchesSearch && matchesCourse && matchesTime && matchesCalories && matchesSkill && matchesBudget
             }
         }
@@ -123,7 +123,7 @@ fun RecipesScreen(
             if (viewModel.bookmarkedRecipeIds.isEmpty()) {
                 viewModel.fetchBookmarkIds(cid)
             }
-
+            
             when (selectedTab) {
                 0 -> if (viewModel.recipeList.isEmpty()) viewModel.fetchAllRecipes()
                 1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(cid)
@@ -348,11 +348,12 @@ fun RecipesScreen(
             } else {
                 gridItems(filteredRecipes) { recipe: Recipe ->
                     RecipeCardItem(
-                        recipe = recipe,
-                        // 🌟 Only show menu (hide bookmark) for the "My Recipes" tab
+                        recipe = recipe, 
+                        // 🌟 ONLY show menu for Tab 1 (My Recipes)
                         showMenu = selectedTab == 1,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                         onBookmarkClick = {
+                            // 🌟 FIX: Send the short customId instead of the long UUID
                             authViewModel.currentUser?.customId?.let { cid ->
                                 recipe.recipe_id?.let { rid ->
                                     viewModel.toggleBookmark(cid, rid, recipe.recipeName)

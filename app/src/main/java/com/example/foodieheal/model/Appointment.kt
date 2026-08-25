@@ -8,6 +8,9 @@ data class Appointment(
     @SerialName("AppointmentID")
     val AppointmentID : String? = null,
 
+    @SerialName("created_at")
+    val created_at: String? = null,
+
     @SerialName("Date")
     val Date : String,
 
@@ -54,6 +57,14 @@ data class Appointment(
     val chefId : String ="",
 
     @SerialName("userId")
-    val userId : String = ""
+    val userId : String = "",
+
+    @SerialName("PaymentId")
+    val PaymentId : String? = null
+)
+
+data class ReviewWithUser(
+    val appointment: Appointment,
+    val userName: String
 )
 

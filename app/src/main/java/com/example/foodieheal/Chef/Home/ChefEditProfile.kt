@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -67,7 +67,7 @@ fun EditChefProfileScreen(
     onBack: () -> Unit,
     chef: Chef?,
     authViewModel: AuthViewModel = viewModel(),
-    registerViewModel: chefRegisterViewModel = viewModel()
+    registerViewModel: ChefRegisterViewModel = viewModel()
 ) {
     val context = LocalContext.current
 

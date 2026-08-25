@@ -1,46 +1,15 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -54,47 +23,87 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.Chef.healthPreferencesList
-import com.example.foodieheal.Hiring.ViewModel.AppointmentValidationError
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.ui.components.TimePickerDialog
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAppointmentFormScreen(
-    viewModel: HiringViewModel = viewModel(),
+    viewModel: AppointmentBookingViewModel = viewModel(),
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
-    val chefId = viewModel.currentChefId
+    val selectedChef by viewModel.selectedChef.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
-    LaunchedEffect(chefId, viewModel.selectedDate) {
+    val chefId = viewModel.currentChefId
+    val focusManager = LocalFocusManager.current
+
+    // Fetch appointments for this specific chef whenever chef ID or date updates
+    LaunchedEffect(chefId, selectedDate) {
         if (chefId.isNotBlank()) {
             viewModel.fetchAppointmentsForChef(chefId)
         }
     }
 
-    val selectedChef = viewModel.selectedChef
-    val hourlyPrice = selectedChef?.Pricing ?: 0.0
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
-
-    // Local states for Start & End Time
     var startTimeFormatted by remember { mutableStateOf("09:00 AM") }
     var endTimeFormatted by remember { mutableStateOf("11:00 AM") }
 
-    // Dialog Visibility States
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
-    // Helper to update ViewModel time slot
+    LaunchedEffect(Unit) {
+        if (uiState.appointmentTime.isBlank()) {
+            viewModel.onAppointmentTimeChanged("$startTimeFormatted - $endTimeFormatted")
+        }
+    }
+
     fun updateAppointmentTimeSlot(start: String, end: String) {
         startTimeFormatted = start
         endTimeFormatted = end
         viewModel.onAppointmentTimeChanged("$start - $end")
     }
+
+    val hourlyRate = selectedChef?.Pricing ?: 0.0
+    val totalPrice = remember(hourlyRate, uiState.appointmentTime) {
+        viewModel.calculateTotalPrice(hourlyRate, uiState.appointmentTime)
+    }
+
+    val durationText = remember(uiState.appointmentTime) {
+        if (uiState.appointmentTime.contains("-")) {
+            val parts = uiState.appointmentTime.split("-").map { it.trim() }
+            if (parts.size == 2) {
+                val format = SimpleDateFormat("hh:mm a", Locale.US)
+                try {
+                    val start = format.parse(parts[0])
+                    val end = format.parse(parts[1])
+                    if (start != null && end != null) {
+                        val diffMillis = end.time - start.time
+                        val diffHours = diffMillis.toDouble() / (1000 * 60 * 60)
+                        if (diffHours > 0) {
+                            if (diffHours % 1.0 == 0.0) "${diffHours.toInt()} hr" else String.format(Locale.US, "%.1f hrs", diffHours)
+                        } else null
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+            } else null
+        } else null
+    }
+
+    val timeError = uiState.timeErrorRes?.let { stringResource(it) }
+    val addressError = uiState.addressErrorRes?.let { stringResource(it) }
+    val postcodeError = uiState.postcodeErrorRes?.let { stringResource(it) }
+    val stateError = uiState.stateErrorRes?.let { stringResource(it) }
+    val servingSizeError = uiState.servingSizeErrorRes?.let { stringResource(it) }
+    val descriptionError = uiState.descriptionErrorRes?.let { stringResource(it) }
 
     Scaffold(
         topBar = {
@@ -126,178 +135,326 @@ fun AddAppointmentFormScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-
-            // Appointment Time Range Section
-            FormLabel(stringResource(R.string.label_appointment_time))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Start Time Card
-                OutlinedCard(
-                    modifier = Modifier.weight(1f),
-                    onClick = { showStartTimePicker = true },
-                    shape = RoundedCornerShape(12.dp)
+            // Offline Warning
+            if (!isNetworkAvailable) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
                         Text(
-                            text = stringResource(R.string.label_start_time),
+                            text = "Offline Mode: Internet required to submit booking",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = startTimeFormatted,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-
-                // End Time Card
-                OutlinedCard(
-                    modifier = Modifier.weight(1f),
-                    onClick = { showEndTimePicker = true },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = stringResource(R.string.label_end_time),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = endTimeFormatted,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
 
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasInvalidTimeError,
-                message = stringResource(R.string.error_invalid_time_range)
-            )
-
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.hasTimeSlotOccupiedError,
-                message = stringResource(R.string.error_time_slot_occupied)
-            )
-
-            // Address Section
-            FormLabel(stringResource(R.string.label_address))
-            FormInputField(
-                value = uiState.address,
-                onValueChange = { viewModel.onAddressChanged(it) },
-                placeholder = stringResource(R.string.placeholder_address),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(AppointmentValidationError.InvalidAddress),
-                message = stringResource(R.string.error_empty_address)
-            )
-
-            // Postcode Section
-            FormLabel(stringResource(R.string.label_postcode))
-            FormInputField(
-                value = uiState.postcode,
-                onValueChange = { viewModel.onPostcodeChanged(it) },
-                placeholder = stringResource(R.string.placeholder_postcode),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                )
-            )
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(AppointmentValidationError.InvalidPostcode),
-                message = stringResource(R.string.error_invalid_postcode)
-            )
-
-            // State Dropdown
-            DropDownList(
-                labelId = R.string.state,
-                placeholderId = R.string.select_state,
-                selectedValue = uiState.state,
-                options = States,
-                onOptionSelected = { viewModel.onStateChanged(it) }
-            )
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(AppointmentValidationError.InvalidState),
-                message = stringResource(R.string.error_select_state)
-            )
-
-            // Serving Size Section
-            FormLabel(stringResource(R.string.label_serving_size))
-            FormInputField(
-                value = uiState.servingSize,
-                onValueChange = { newValue ->
-                    if (newValue.all { it.isDigit() }) {
-                        viewModel.onServingSizeChanged(newValue)
-                    }
-                },
-                placeholder = stringResource(R.string.placeholder_serving_size),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(AppointmentValidationError.InvalidServingSize),
-                message = stringResource(R.string.error_invalid_serving_size)
-            )
-
-            // Health Preferences Dropdown
-            DropDownList(
-                labelId = R.string.health_pref_label,
-                placeholderId = R.string.select_health_pref,
-                selectedValue = uiState.healthPreference,
-                options = healthPreferencesList,
-                onOptionSelected = { viewModel.onHealthPreferenceChanged(it) }
-            )
-
-            // Description Section
-            FormLabel(stringResource(R.string.label_description))
-            FormInputField(
-                value = uiState.description,
-                onValueChange = { viewModel.onDescriptionChanged(it) },
-                placeholder = stringResource(R.string.placeholder_description),
-                singleLine = false,
-                modifier = Modifier.height(110.dp)
-            )
-            AnimatedErrorMessage(
-                visible = uiState.hasAttemptedSubmit && uiState.errors.contains(AppointmentValidationError.InvalidDescription),
-                message = stringResource(R.string.error_empty_description)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Submit Button
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    viewModel.validateAndSubmit { onSuccessConfirm() }
-                },
-                enabled = uiState.canSubmit,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.next),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_appointment_time),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Start Time Card
+                    OutlinedCard(
+                        modifier = Modifier.weight(1f),
+                        onClick = { showStartTimePicker = true },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(
+                                if (timeError != null) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.outlineVariant
+                            )
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(R.string.label_start_time),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = startTimeFormatted,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    // End Time Card
+                    OutlinedCard(
+                        modifier = Modifier.weight(1f),
+                        onClick = { showEndTimePicker = true },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(
+                                if (timeError != null) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.outlineVariant
+                            )
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(R.string.label_end_time),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = endTimeFormatted,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                if (timeError != null) {
+                    Text(
+                        text = timeError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+
+                CommonInputField(
+                    value = uiState.address,
+                    onValueChange = { viewModel.onAddressChanged(it) },
+                    textId = R.string.label_address,
+                    placeholder = stringResource(R.string.placeholder_address),
+                    isError = addressError != null,
+                    supportingText = addressError?.let { msg -> { Text(msg) } },
+                    singleLine = false,
+                    maxLines = 3,
+                    minLines = 2,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                CommonInputField(
+                    value = uiState.postcode,
+                    onValueChange = { input ->
+                        val digits = input.filter { it.isDigit() }.take(5)
+                        viewModel.onPostcodeChanged(digits)
+                    },
+                    textId = R.string.label_postcode,
+                    placeholder = stringResource(R.string.placeholder_postcode),
+                    isError = postcodeError != null,
+                    supportingText = postcodeError?.let { msg -> { Text(msg) } },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Column {
+                    DropDownList(
+                        labelId = R.string.state,
+                        placeholderId = R.string.select_state,
+                        selectedValue = uiState.state,
+                        options = States,
+                        onOptionSelected = { viewModel.onStateChanged(it ?: "") }
+                    )
+                    if (stateError != null) {
+                        Text(
+                            text = stateError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                        )
+                    }
+                }
+
+                CommonInputField(
+                    value = uiState.servingSize,
+                    onValueChange = { input ->
+                        val digits = input.filter { it.isDigit() }.take(3)
+                        viewModel.onServingSizeChanged(digits)
+                    },
+                    textId = R.string.label_serving_size,
+                    placeholder = stringResource(R.string.placeholder_serving_size),
+                    isError = servingSizeError != null,
+                    supportingText = servingSizeError?.let { msg -> { Text(msg) } },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                DropDownList(
+                    labelId = R.string.health_pref_label,
+                    placeholderId = R.string.select_health_pref,
+                    selectedValue = uiState.healthPreference,
+                    options = healthPreferencesList,
+                    onOptionSelected = { viewModel.onHealthPreferenceChanged(it ?: "") }
+                )
+
+                CommonInputField(
+                    value = uiState.description,
+                    onValueChange = { viewModel.onDescriptionChanged(it) },
+                    textId = R.string.label_description,
+                    placeholder = stringResource(R.string.placeholder_description),
+                    isError = descriptionError != null,
+                    supportingText = descriptionError?.let { msg -> { Text(msg) } },
+                    singleLine = false,
+                    maxLines = 4,
+                    minLines = 3,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.estimated_price_summary),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.label_hourly_rate),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = stringResource(R.string.hourly_rate_format, hourlyRate),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.label_estimated_duration),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = durationText ?: "--",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.label_estimated_price),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.currency_rm_format, totalPrice),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Submit Button
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        viewModel.validateAndSubmit { onSuccessConfirm() }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.next),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -354,87 +511,5 @@ fun AddAppointmentFormScreen(
         ) {
             TimePicker(state = timePickerState)
         }
-    }
-}
-
-@Composable
-fun FormLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground
-    )
-}
-
-@Composable
-private fun FormInputField(
-    value: String,
-    onValueChange: (String) -> Unit = {},
-    placeholder: String,
-    readOnly: Boolean = false,
-    singleLine: Boolean = true,
-    onClick: (() -> Unit)? = null,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    modifier: Modifier = Modifier
-) {
-    Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            readOnly = readOnly || (onClick != null),
-            singleLine = singleLine,
-            keyboardOptions = keyboardOptions,
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    fontSize = 14.sp
-                )
-            },
-            trailingIcon = trailingIcon,
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
-                disabledBorderColor = androidx.compose.ui.graphics.Color.Transparent,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (onClick != null) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onClick
-                    )
-            )
-        }
-    }
-}
-
-// Animated Error Message Helper
-@Composable
-fun AnimatedErrorMessage(visible: Boolean, message: String) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-        )
     }
 }

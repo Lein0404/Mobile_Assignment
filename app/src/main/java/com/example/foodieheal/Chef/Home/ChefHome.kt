@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,6 +70,8 @@ fun ChefHomeScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+
     SideEffect {
         val window = (view.context as Activity).window
         window.statusBarColor = primaryColor.toArgb()
@@ -93,7 +97,7 @@ fun ChefHomeScreen(
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.greeting_good_morning),
+                        text = stringResource(R.string.greeting),
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                         fontSize = 14.sp
                     )
@@ -119,6 +123,33 @@ fun ChefHomeScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                if (!isNetworkAvailable) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.wifi_off),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Offline: Showing cached appointments",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // Responsive & Flexible Summary Schedule Banner
                 item {

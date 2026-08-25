@@ -119,6 +119,8 @@
     <string name="dialog_title_select_date_view">Select Date to View</string>
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
     <string name="dialog_title_choose_weekly_repeat_date">Choose any day within target week to repeat your weekly plan!</string>
+    <string name="daily_success_notify">Daily plan copied successfully!</string>
+    <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
     <!-- Content Descriptions -->
     <string name="desc_calendar_back">Calendar Back</string>
@@ -229,9 +231,11 @@
     <!--Hiring Appointment -->
     <string name="title_appointment">Appointment</string>
     <string name="title_select_appointment_date">Select Appointment Date</string>
+    <string name = "review">Review</string>
     <string name="label_appointment">Appointment</string>
 
     <string name="empty_no_appointments_for_date">No appointments booked for this date.</string>
+    <string name = "no_comment_provided">No comment provided</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
@@ -242,6 +246,8 @@
     <string name="pick_date">Pick Date</string>
     <string name="add_booking">Add Booking</string>
     <string name="add_appointment">Add Appointment</string>
+    <string name = "user">User</string>
+    <string name = "no_review">No Review</string>
 
     <!-- Add Hiring Appointment -->
     <string name="next">Next</string>
@@ -267,6 +273,12 @@
     <string name="error_select_state">Please select a state.</string>
     <string name="error_invalid_serving_size">Please enter a valid serving size.</string>
     <string name="error_empty_description">Description cannot be empty.</string>
+
+    <!-- Pricing Estimate -->
+    <string name="label_estimated_price">Estimated Total Price</string>
+    <string name="label_estimated_duration">Duration</string>
+    <string name="estimated_price_summary">Price Summary</string>
+    <string name="hourly_rate_format">RM %.2f / hr</string>
 
     <!-- Appointment Review -->
     <string name="review_booking">Review Booking</string>
@@ -351,6 +363,7 @@
 
     <string name="label_status">Status</string>
     <string name="label_service_location">Service Location</string>
+    <string name="label_rejection_reason">Rejected Reason</string>
 
     <string name="address_not_provided">Address not provided</string>
     <string name="serving_size_format">%1$s pax</string>
@@ -364,6 +377,8 @@
     <string name="not_yet">Not Yet</string>
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
+    <string name="pay_now">Pay Now</string>
+    <string name ="no_rejection_reason">No Rejected Reason</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>
@@ -407,7 +422,7 @@
     <string name="nav_appointments">Appointments</string>
     <string name="nav_profile">Profile</string>
 
-    <string name="greeting_good_morning">Good Morning 👋</string>
+    <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>
 
     <string name="banner_title_schedule">Your Schedule</string>
@@ -436,6 +451,7 @@
 
     <string name="time">Time Icon</string>
     <string name="location">Location Icon</string>
+    <string name="more_options">More Options </string>
 
     <!-- Appointment Details <Chef> -->
     <string name="date_time">Date &amp; Time</string>
@@ -486,7 +502,7 @@
 
     <string name="personal_details">Personal Details</string>
     <string name="contact_location">Contact &amp; Location</string>
-    <string name="label_full_name">Full Name</string>
+    <string name="label_full_name">Name</string>
     <string name="label_years_of_experience">Years of Experience</string>
     <string name="label_price_currency">Price (RM)</string>
     <string name="label_phone_number">Phone Number</string>
@@ -494,5 +510,88 @@
     <string name="currency_prefix">RM </string>
 
     <string name="profile_updated_success">Profile updated successfully!</string>
+    <string name="null_string"> </string>
+
+    <!-- Meal Planner Categories -->
+    <string name="category_high_protein">High Protein</string>
+    <string name="category_quick_easy">Quick &amp; Easy</string>
+    <string name="category_balanced">Balanced</string>
+    <string name="category_ketogenic">Ketogenic</string>
+    <string name="category_low_carb">Low-carbohydrate</string>
+    <string name="category_cost_friendly">Cost Friendly</string>
+    <string name="category_others">Others</string>
+
+    <!-- Chef Change Password -->
+    <string name="change_password">Change Password</string>
+    <string name="secure_account_chef">Secure Your Chef Account</string>
+    <string name="change_password_subtitle">Enter your current and new password below to update your security credentials.</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="error_chef_password_rule">Password must be 8-30 characters with uppercase, lowercase, and numbers</string>
+    <string name="error_passwords_not_matching">Passwords do not match</string>
+    <string name="btn_update_password">UPDATE PASSWORD</string>
+    <string name="toast_password_updated_success">Password updated successfully!</string>
+    <string name="account_security">Account Security</string>
+
+    <!-- Chef Welcome Screen -->
+    <string name="back_to_login">Back to Login</string>
+    <string name="chef_illustration">Chef Illustration</string>
+
+    <string name="chef_welcome_title">Become a Chef Partner</string>
+    <string name="chef_welcome_subtitle">Share your culinary talent, create tailored menus, and connect with health-conscious clients.</string>
+
+    <string name="chef_feature_customize_profile">Create &amp; customize your personal chef profile</string>
+    <string name="chef_feature_home_cooking">Offer flexible home cooking services</string>
+    <string name="chef_feature_connect_customers">Connect directly with hungry customers</string>
+
+    <string name="get_started">Get Started</string>
+    <string name="already_have_account_login">Already have a chef account? Login</string>
+
+    <!-- Chef Registration Flow -->
+    <string name="title_basic_info">Basic Information</string>
+    <string name="title_address_info">Address Information</string>
+    <string name="title_professional_bg">Professional Background</string>
+    <string name="title_profile_picture">Profile Picture</string>
+    <string name="title_review_info">Review Information</string>
+    <string name="step_1_of_5">Step 1 of 5</string>
+    <string name="step_2_of_5">Step 2 of 5</string>
+    <string name="step_3_of_5">Step 3 of 5</string>
+    <string name="step_4_of_5">Step 4 of 5</string>
+    <string name="step_5_of_5">Step 5 of 5</string>
+    <string name="submit_registration">Submit Registration</string>
+    <string name="error_name_required">Name is required.</string>
+    <string name="error_name_invalid">Name must be 3-50 characters containing only letters.</string>
+    <string name="error_gender_required">Please select your gender.</string>
+    <string name="error_age_required">Age is required.</string>
+    <string name="error_age_range">Chef must be between 18 and 100 years old.</string>
+    <string name="error_password_required">Password is required.</string>
+    <string name="error_confirm_password_required">Please confirm your password.</string>
+    <string name="error_email_required">Email address is required.</string>
+    <string name="error_email_invalid">Please enter a valid email address.</string>
+    <string name="error_phone_required">Phone number is required.</string>
+    <string name="error_phone_invalid">Please enter a valid phone number (e.g. 0123456789).</string>
+    <string name="error_address_required">Address is required.</string>
+    <string name="error_address_invalid">Address must be at least 10 characters.</string>
+    <string name="error_postcode_required">Postcode is required.</string>
+    <string name="error_postcode_invalid">Postcode must contain exactly 5 digits.</string>
+    <string name="error_state_required">Please select a state.</string>
+    <string name="error_experience_required">Years of experience is required.</string>
+    <string name="error_experience_invalid">Experience must be between 0 and 70 years.</string>
+    <string name="error_description_required">Description is required.</string>
+    <string name="error_description_limit">Description cannot exceed 300 words.</string>
+    <string name="error_profile_picture_required">A profile picture is required to complete registration.</string>
+    <string name="words_count_format">%1$d/300 words</string>
+    <string name="placeholder_enter_address">Enter your address</string>
+    <string name="placeholder_enter_postcode">Enter your postcode</string>
+    <string name="placeholder_experience">Enter your years of experience</string>
+    <string name="prompt_upload_picture">Please upload a clear profile picture so clients can recognize you.</string>
+    <string name="btn_choose_photo">Choose Photo</string>
+    <string name="btn_change_photo">Change Photo</string>
+    <string name="no_photo">No Photo</string>
+    <string name="section_personal_details">Personal Details</string>
+    <string name="section_address">Address</string>
+    <string name="section_professional_bg">Professional Background</string>
+    <string name="years_format">%1$s Years</string>
 
 </resources>

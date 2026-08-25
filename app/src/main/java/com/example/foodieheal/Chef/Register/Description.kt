@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
 
@@ -35,13 +35,10 @@ import com.example.foodieheal.ui.components.CommonInputField
 @Composable
 fun descriptionInfo(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
-
-    val isExperienceError =
-        chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidExperience()
-    val isDescriptionError =
-        chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidDescription()
+    val experienceError = chefViewModel.experienceErrorRes?.let { stringResource(it) }
+    val descriptionError = chefViewModel.descriptionErrorRes?.let { stringResource(it) }
     val wordCount = chefViewModel.description.trim()
         .split("\\s+".toRegex())
         .filter { it.isNotEmpty() }
@@ -51,15 +48,12 @@ fun descriptionInfo(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Basic Information") },
-
+                    title = { Text(stringResource(R.string.title_professional_bg)) },
                     navigationIcon = {
-                        IconButton(
-                            onClick = { navController.popBackStack() }
-                        ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     }
@@ -82,8 +76,9 @@ fun descriptionInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Step 4 of 5",
-                style = MaterialTheme.typography.titleMedium
+                text = stringResource(R.string.step_4_of_5),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
             CommonInputField(
@@ -92,73 +87,61 @@ fun descriptionInfo(
                     chefViewModel.experience = input.filter { it.isDigit() }.take(2)
                 },
                 textId = R.string.experience,
-                placeholder = "Enter your years of experience",
-                isError = isExperienceError,
-                supportingText = if (isExperienceError) {
-                    { Text("Please enter a valid years of experience.") }
-                } else null,
+                placeholder = stringResource(R.string.placeholder_experience),
+                isError = experienceError != null,
+                supportingText = experienceError?.let { msg -> { Text(msg) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CommonInputField(
+                    value = chefViewModel.description,
+                    onValueChange = { input ->
+                        val currentWords = input.trim()
+                            .split("\\s+".toRegex())
+                            .filter { it.isNotEmpty() }
+                            .size
 
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    CommonInputField(
-                        value = chefViewModel.description,
-                        onValueChange = { input ->
-                            val currentWords = input.trim()
-                                .split("\\s+".toRegex())
-                                .filter { it.isNotEmpty() }
-                                .size
-
-                            if (currentWords <= 300) {
-                                chefViewModel.description = input
-                            }
-                        },
-                        textId = R.string.description,
-                        placeholder = stringResource(R.string.description),
-                        isError = isDescriptionError,
-                        supportingText = if (isDescriptionError) {
-                            { Text("Description cannot be empty.") }
-                        } else null,
-                        singleLine = false,
-                        minLines = 5,
-                        maxLines = 8,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Text(
-                        text = "$wordCount/300 words",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(top = 4.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Button(
-                    // update data to view model
-                    // do validation
-                    onClick = {
-                        if (chefViewModel.validateDescriptionInfo()) {
-                            navController.navigate("chefPicture")
+                        if (currentWords <= 300) {
+                            chefViewModel.description = input
                         }
                     },
-                    enabled = chefViewModel.canProceedDescriptionInfo(),
+                    textId = R.string.description,
+                    placeholder = stringResource(R.string.description),
+                    isError = descriptionError != null,
+                    supportingText = descriptionError?.let { msg -> { Text(msg) } },
+                    singleLine = false,
+                    minLines = 5,
+                    maxLines = 8,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = stringResource(R.string.words_count_format, wordCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text("Next")
-                }
+                        .align(Alignment.End)
+                        .padding(top = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = {
+                    if (chefViewModel.validateDescriptionInfo()) {
+                        navController.navigate("chefPicture")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text(stringResource(R.string.next))
             }
         }
     }

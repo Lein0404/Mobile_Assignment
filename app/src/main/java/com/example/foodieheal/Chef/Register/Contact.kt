@@ -25,43 +25,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.ui.components.CommonInputField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun contactInfo(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
-    val viewModel: AuthViewModel = viewModel()
-    val isEmailError = chefViewModel.showContactErrorMessage && !chefViewModel.isValidEmail()
-    val isPhoneError = chefViewModel.showContactErrorMessage && !chefViewModel.isValidPhoneNumber()
+    val emailError = chefViewModel.emailErrorRes?.let { stringResource(it) }
+    val phoneError = chefViewModel.phoneErrorRes?.let { stringResource(it) }
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Contact Information") },
-
+                    title = { Text(stringResource(R.string.title_contact_info)) },
                     navigationIcon = {
-                        IconButton(
-                            onClick = { navController.popBackStack() }
-                        ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     }
                 )
 
                 LinearProgressIndicator(
-                    progress = { 0.2f },
+                    progress = { 0.4f },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -77,8 +71,9 @@ fun contactInfo(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Step 2 of 4",
-                style = MaterialTheme.typography.titleMedium
+                text = stringResource(R.string.step_2_of_5),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
             CommonInputField(
@@ -86,10 +81,8 @@ fun contactInfo(
                 onValueChange = { chefViewModel.email = it.trim() },
                 textId = R.string.email,
                 placeholder = stringResource(R.string.email),
-                isError = isEmailError,
-                supportingText = if (isEmailError) {
-                    { Text("Please enter a valid email address.") }
-                } else null,
+                isError = emailError != null,
+                supportingText = emailError?.let { msg -> { Text(msg) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
                 ),
@@ -99,14 +92,12 @@ fun contactInfo(
             CommonInputField(
                 value = chefViewModel.phoneNumber,
                 onValueChange = { input ->
-                    chefViewModel.phoneNumber = input.filter { it.isDigit() }
+                    chefViewModel.phoneNumber = input.filter { it.isDigit() }.take(11)
                 },
                 textId = R.string.phone_number,
                 placeholder = stringResource(R.string.phone_number),
-                isError = isPhoneError,
-                supportingText = if (isPhoneError) {
-                    { Text("Please enter a valid phone number (e.g., 0123456789).") }
-                } else null,
+                isError = phoneError != null,
+                supportingText = phoneError?.let { msg -> { Text(msg) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone
                 ),
@@ -117,18 +108,15 @@ fun contactInfo(
 
             Button(
                 onClick = {
-                    // Validate input
-                    // Save data to ViewModel
                     if (chefViewModel.validateContactInfo()) {
                         navController.navigate("addressInfo")
                     }
                 },
-                enabled = chefViewModel.canProceedContactInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Next")
+                Text(stringResource(R.string.next))
             }
         }
     }

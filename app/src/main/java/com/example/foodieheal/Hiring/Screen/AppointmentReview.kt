@@ -1,4 +1,4 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,23 +52,27 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
+import com.example.foodieheal.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentReviewScreen(
-    viewModel: HiringViewModel = viewModel(),
+    viewModel: AppointmentBookingViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     onBackClick: () -> Unit,
     onFinalConfirm: () -> Unit
 ) {
     val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedChef by viewModel.selectedChef.collectAsStateWithLifecycle()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
 
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    val selectedChef = viewModel.selectedChef
+
     val chefId = selectedChef?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
     val chefPicture = selectedChef?.profilePictureUrl.orEmpty()
     val chefName = selectedChef?.name ?: stringResource(R.string.default_selected_chef_name)
@@ -86,13 +91,12 @@ fun AppointmentReviewScreen(
 
     val currentUserId = authViewModel.currentUser?.id.orEmpty()
 
-    // Extract time details
-    val selectedDateString = viewModel.selectedDate.toString()
+    val selectedDateString = selectedDate.toString()
     val timeRange = uiState.appointmentTime.split(" - ")
     val startTime = timeRange.getOrNull(0).orEmpty()
     val endTime = timeRange.getOrNull(1).orEmpty()
 
-    val totalPrice = viewModel.calculateTotalPrice()
+    val totalPrice = viewModel.calculateTotalPrice(hourlyRate, uiState.appointmentTime)
 
     val processingToastMsg = stringResource(R.string.toast_processing_booking)
     val successToastMsg = stringResource(R.string.toast_booking_success)
@@ -127,10 +131,40 @@ fun AppointmentReviewScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (!isNetworkAvailable) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Offline Mode: Internet required to confirm booking",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -283,6 +317,7 @@ fun AppointmentReviewScreen(
             // Confirm & Book Button
             Button(
                 onClick = { showConfirmationDialog = true },
+                enabled = isNetworkAvailable && !uiState.isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -300,6 +335,7 @@ fun AppointmentReviewScreen(
             }
         }
     }
+}
 
     // Confirmation Dialog
     if (showConfirmationDialog) {

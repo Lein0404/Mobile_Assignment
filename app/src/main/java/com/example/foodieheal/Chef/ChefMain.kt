@@ -31,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.Chef.Home.AppointmentDetailScreen
+import com.example.foodieheal.Chef.Home.ChefChangePasswordScreen
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
 import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
@@ -163,9 +164,12 @@ fun ChefMainScreen(
 
                     val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
 
+                    val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+
                     AppointmentDetailScreen(
                         appointment = appointment,
                         userName = userName,
+                        isNetworkAvailable = isNetworkAvailable,
                         onBackClick = { chefNavController.popBackStack() },
                         onStatusChange = { newStatus, rejectionReason ->
                             val id = appointment.AppointmentID.orEmpty()
@@ -195,6 +199,7 @@ fun ChefMainScreen(
                     chef = currentChef,
                     viewModel = authViewModel,
                     onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) },
+                    onChangePasswordClick = { chefNavController.navigate(Screen.ChefChangePassword.route) },
                     onLogoutSuccess = {
                         // Navigate using parent controller at the top level
                         parentNavController.navigate(Screen.Login.route) {
@@ -204,12 +209,19 @@ fun ChefMainScreen(
                 )
             }
 
-            composable("chefEditProfile") {
+            composable(Screen.ChefEditProfile.route) {
                 EditChefProfileScreen(
                     chef = authViewModel.currentChef,
                     onBack = { chefNavController.popBackStack() },
                     authViewModel = authViewModel,
                     navController = chefNavController
+                )
+            }
+
+            composable(Screen.ChefChangePassword.route) {
+                ChefChangePasswordScreen(
+                    navController = chefNavController,
+                    authViewModel = authViewModel
                 )
             }
         }

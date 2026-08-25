@@ -273,6 +273,7 @@ fun PasswordInputField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
+    modifier: Modifier = Modifier,
     @StringRes labelId: Int,
     @StringRes placeholderId: Int,
     selectedValue: String,
@@ -284,7 +285,7 @@ fun DropDownList(
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp) // gap between items in a Column
     ) {
         Text(
@@ -571,6 +572,8 @@ fun AppointmentStatusBadge(
         "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
         "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
         "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
+        "rejected"  -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
+        "unpaid"    -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
         "pending"   -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
         else        -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -726,3 +729,23 @@ fun BottomNavBar(
         }
     }
 }*/
+
+fun formatToAmPm(timeStr: String?): String {
+    if (timeStr.isNullOrBlank()) return ""
+    val trimmed = timeStr.trim()
+    if (trimmed.contains("AM", ignoreCase = true) || trimmed.contains("PM", ignoreCase = true)) {
+        return trimmed
+    }
+    val patterns = listOf("HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
+    for (pattern in patterns) {
+        try {
+            val parser = java.text.SimpleDateFormat(pattern, Locale.US)
+            val date = parser.parse(trimmed)
+            if (date != null) {
+                val outputFormat = java.text.SimpleDateFormat("hh:mm a", Locale.US)
+                return outputFormat.format(date)
+            }
+        } catch (_: Exception) {}
+    }
+    return trimmed
+}

@@ -63,6 +63,7 @@ fun AppointmentsScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val uiState by viewModel.appointmentsUiState.collectAsState()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
 
     var selectedStatusFilter by remember { mutableStateOf("All") }
 
@@ -143,7 +144,7 @@ fun AppointmentsScreen(
                     val filteredAppointments = state.appointments.filter { appointment ->
                         selectedStatusFilter == "All" ||
                                 appointment.Status.equals(selectedStatusFilter, ignoreCase = true)
-                    }
+                    }.sortedByDescending { it.created_at }
 
                     LazyColumn(
                         modifier = Modifier
@@ -152,6 +153,34 @@ fun AppointmentsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                        if (!isNetworkAvailable) {
+                            item {
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.wifi_off),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = "Offline: Showing cached appointments",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
                         // Filter Chips Row
                         item {
@@ -246,10 +275,12 @@ fun AppointmentCard(
 
                 // Status Badge
                 val (badgeContainerColor, badgeContentColor) = when (appointment.Status.lowercase()) {
-                    "pending" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-                    "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-                    "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
-                    "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+                    "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
+                    "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
+                    "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
+                    "rejected"  -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
+                    "unpaid"    -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
+                    "pending"   -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
                     else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
                 }
 

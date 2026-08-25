@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import com.example.foodieheal.R
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -24,43 +29,39 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
+import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun reviewInfo(
     navController: NavController,
-    chefRegisterViewModel: chefRegisterViewModel
+    chefRegisterViewModel: ChefRegisterViewModel
 ) {
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Review Information", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_review_info), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -84,10 +85,10 @@ fun reviewInfo(
             ) {
                 AsyncImage(
                     model = chefRegisterViewModel.selectedImageUri,
-                    contentDescription = "Selected Profile Image",
+                    contentDescription = stringResource(R.string.chef_picture),
                     contentScale = ContentScale.Crop,
-                    error = painterResource(R.drawable.ic_outline_account_circle), // Optional fallback
-                    placeholder = painterResource(R.drawable.ic_outline_account_circle), // Optional placeholder
+                    error = painterResource(R.drawable.ic_outline_account_circle),
+                    placeholder = painterResource(R.drawable.ic_outline_account_circle),
                     modifier = Modifier
                         .size(110.dp)
                         .clip(CircleShape)
@@ -99,26 +100,26 @@ fun reviewInfo(
                 )
             }
 
-            SectionCard(title = "Personal Details") {
-                ReviewItem("Full Name", chefRegisterViewModel.name)
-                ReviewItem("Gender", chefRegisterViewModel.gender)
-                ReviewItem("Age", chefRegisterViewModel.age)
+            SectionCard(title = stringResource(R.string.section_personal_details)) {
+                ReviewItem(stringResource(R.string.full_name), chefRegisterViewModel.name)
+                ReviewItem(stringResource(R.string.gender), chefRegisterViewModel.gender)
+                ReviewItem(stringResource(R.string.age), chefRegisterViewModel.age)
             }
 
-            SectionCard(title = "Contact Information") {
-                ReviewItem("Email", chefRegisterViewModel.email)
-                ReviewItem("Phone Number", chefRegisterViewModel.phoneNumber)
+            SectionCard(title = stringResource(R.string.title_contact_info)) {
+                ReviewItem(stringResource(R.string.email), chefRegisterViewModel.email)
+                ReviewItem(stringResource(R.string.phone_number), chefRegisterViewModel.phoneNumber)
             }
 
-            SectionCard(title = "Address") {
-                ReviewItem("Address", chefRegisterViewModel.address, isLongText = true)
-                ReviewItem("Postcode", chefRegisterViewModel.postcode)
-                ReviewItem("State", chefRegisterViewModel.state)
+            SectionCard(title = stringResource(R.string.section_address)) {
+                ReviewItem(stringResource(R.string.address), chefRegisterViewModel.address, isLongText = true)
+                ReviewItem(stringResource(R.string.postcode), chefRegisterViewModel.postcode)
+                ReviewItem(stringResource(R.string.state), chefRegisterViewModel.state)
             }
 
-            SectionCard(title = "Professional Background") {
-                ReviewItem("Experience", "${chefRegisterViewModel.experience} Years")
-                ReviewItem("Description", chefRegisterViewModel.description, isLongText = true)
+            SectionCard(title = stringResource(R.string.section_professional_bg)) {
+                ReviewItem(stringResource(R.string.experience), stringResource(R.string.years_format, chefRegisterViewModel.experience))
+                ReviewItem(stringResource(R.string.description), chefRegisterViewModel.description, isLongText = true)
             }
 
             chefRegisterViewModel.errorMessage?.let { error ->
@@ -161,7 +162,7 @@ fun reviewInfo(
                     )
                 } else {
                     Text(
-                        text = "Submit Registration",
+                        text = stringResource(R.string.submit_registration),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

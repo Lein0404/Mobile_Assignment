@@ -1,9 +1,9 @@
 package com.example.foodieheal.Recipe.Repo
 
 import com.example.foodieheal.Cloudinary.CloudinaryConfig
-import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.User.Model.User
-import com.example.foodieheal.Recipe.Model.Ingredient
+import com.example.foodieheal.model.Ingredient
+import com.example.foodieheal.model.Recipe
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.SupabaseClient

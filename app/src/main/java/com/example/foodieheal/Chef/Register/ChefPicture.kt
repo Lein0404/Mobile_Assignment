@@ -31,29 +31,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChefPictureScreen(
     navController: NavController,
-    chefViewModel: chefRegisterViewModel
+    chefViewModel: ChefRegisterViewModel
 ) {
+    val imageError = chefViewModel.profilePictureErrorRes?.let { stringResource(it) }
 
-    val isImageError = chefViewModel.showDescriptionErrorMessage && !chefViewModel.isValidProfilePicture()
-
-    //Photo picker launching
+    // Photo picker launching
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        // Update the selected image URI in the ViewModel
         if (uri != null) {
             chefViewModel.updateImage(uri)
         }
@@ -64,17 +60,13 @@ fun ChefPictureScreen(
             Column {
                 CenterAlignedTopAppBar(
                     title = {
-                        Text("Profile Picture")
+                        Text(stringResource(R.string.title_profile_picture))
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                navController.popBackStack()
-                            }
-                        ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     }
@@ -96,12 +88,13 @@ fun ChefPictureScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
-                text = "Step 5 of 5",
-                style = MaterialTheme.typography.titleMedium
+                text = stringResource(R.string.step_5_of_5),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Text(
-                text = "Please upload a clear profile picture so clients can recognize you.",
+                text = stringResource(R.string.prompt_upload_picture),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -111,8 +104,8 @@ fun ChefPictureScreen(
             if (chefViewModel.selectedImageUri != null) {
                 AsyncImage(
                     model = chefViewModel.selectedImageUri,
-                    contentDescription = "Chef Profile Picture",
-                    contentScale = ContentScale.Crop, // Fits avatar bounds cleanly
+                    contentDescription = stringResource(R.string.chef_picture),
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(180.dp)
                         .clip(CircleShape)
@@ -131,7 +124,7 @@ fun ChefPictureScreen(
                         .size(180.dp)
                         .border(
                             width = 2.dp,
-                            color = if (isImageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                            color = if (imageError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
                             shape = CircleShape
                         )
                 ) {
@@ -142,13 +135,13 @@ fun ChefPictureScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 painter = painterResource(R.drawable.camera_placeholder),
-                                contentDescription = "No photo selected",
+                                contentDescription = stringResource(R.string.no_photo),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No Photo",
+                                text = stringResource(R.string.no_photo),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -157,14 +150,14 @@ fun ChefPictureScreen(
                 }
             }
 
-            if (isImageError) {
+            if (imageError != null) {
                 Text(
-                    text = "A profile picture is required to complete registration.",
+                    text = imageError,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            // Trigger photo picker after click
+
             OutlinedButton(
                 onClick = {
                     launcher.launch(
@@ -177,24 +170,28 @@ fun ChefPictureScreen(
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(if (chefViewModel.selectedImageUri == null) "Choose Photo" else "Change Photo")
+                Text(
+                    text = if (chefViewModel.selectedImageUri == null) {
+                        stringResource(R.string.btn_choose_photo)
+                    } else {
+                        stringResource(R.string.btn_change_photo)
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    chefViewModel.validateProfilePicture()
-                    if (chefViewModel.canProceedReviewPage()) {
+                    if (chefViewModel.validateProfilePicture()) {
                         navController.navigate("reviewInfo")
                     }
                 },
-                enabled = chefViewModel.canProceedReviewPage(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Next")
+                Text(stringResource(R.string.next))
             }
         }
     }

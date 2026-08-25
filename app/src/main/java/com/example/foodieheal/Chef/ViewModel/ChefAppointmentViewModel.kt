@@ -1,22 +1,24 @@
 package com.example.foodieheal.Chef.ViewModel
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.Chef.data.ChefPortalRepository
+import com.example.foodieheal.Chef.local.ChefDatabase
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.User.Model.User
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.from
-import kotlinx.coroutines.Dispatchers
+import com.example.foodieheal.model.User
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 sealed interface HomeUiState {
     object Loading : HomeUiState
@@ -39,9 +41,27 @@ sealed interface AppointmentsUiState {
     ) : AppointmentsUiState
 }
 
-class ChefPortalViewModel : ViewModel() {
+/**
+ * ViewModel for the Chef Portal (Home & Appointments).
+ * Integrates NetworkMonitor to observe network status, trigger auto-refresh on reconnection,
+ * and provide offline awareness.
+ */
+class ChefPortalViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val client = SupabaseClient.client
+    private val database = ChefDatabase.getInstance(application)
+    private val repository = ChefPortalRepository(
+        database.chefPortalAppointmentDao(),
+        database.chefPortalUserDao(),
+        database.chefProfileDao()
+    )
+
+    private val networkMonitor = NetworkMonitor(application)
+
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<String>()
+    val uiEvent: SharedFlow<String> = _uiEvent.asSharedFlow()
 
     // Appointments screen state flow
     private val _appointmentsUiState = MutableStateFlow<AppointmentsUiState>(AppointmentsUiState.Loading)
@@ -55,8 +75,22 @@ class ChefPortalViewModel : ViewModel() {
         private set
 
     init {
+        observeNetworkStatus()
         fetchAppointmentsForCurrentChef()
         loadDashboardData()
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor.isConnected.collect { connected ->
+                _isNetworkAvailable.value = connected
+                if (connected) {
+                    // Reconnected: sync fresh appointments and dashboard stats
+                    fetchAppointmentsForCurrentChef()
+                    loadDashboardData()
+                }
+            }
+        }
     }
 
     // Call this for AppointmentsScreen
@@ -64,25 +98,17 @@ class ChefPortalViewModel : ViewModel() {
         viewModelScope.launch {
             _appointmentsUiState.value = AppointmentsUiState.Loading
             try {
-                val currentUserId = client.auth.currentUserOrNull()?.id
+                val currentUserId = repository.getCurrentUserId()
 
                 if (currentUserId.isNullOrEmpty()) {
                     _appointmentsUiState.value = AppointmentsUiState.Error("User not logged in.")
                     return@launch
                 }
 
-                val appointments = withContext(Dispatchers.IO) {
-                    client.from("Appointment")
-                        .select {
-                            filter {
-                                eq("chefId", currentUserId)
-                            }
-                        }
-                        .decodeList<Appointment>()
-                }
+                val appointments = repository.fetchAppointmentsForChef(currentUserId)
 
                 // Batch fetch associated users
-                val usersMap = fetchUsersForAppointments(appointments)
+                val usersMap = repository.fetchUsersForAppointments(appointments)
 
                 _appointmentsUiState.value = AppointmentsUiState.Success(
                     appointments = appointments,
@@ -103,31 +129,25 @@ class ChefPortalViewModel : ViewModel() {
         viewModelScope.launch {
             _homeUiState.value = HomeUiState.Loading
             try {
-                val currentUserId = client.auth.currentUserOrNull()?.id
+                val currentUserId = repository.getCurrentUserId()
 
                 if (currentUserId.isNullOrEmpty()) {
                     _homeUiState.value = HomeUiState.Error("User not logged in")
                     return@launch
                 }
 
-                val appointments = withContext(Dispatchers.IO) {
-                    client.from("Appointment")
-                        .select {
-                            filter {
-                                eq("chefId", currentUserId)
-                            }
-                        }
-                        .decodeList<Appointment>()
-                }
+                val appointments = repository.fetchAppointmentsForChef(currentUserId)
 
                 val activeAppointments = appointments.filter {
-                    it.Status.lowercase() != "cancelled" && it.Status.lowercase() != "completed"
+                    it.Status.lowercase() != "cancelled" &&
+                            it.Status.lowercase() != "completed" &&
+                            it.Status.lowercase() != "rejected"
                 }
 
                 val nextApp = activeAppointments.firstOrNull()
 
                 // Batch fetch user details (for the next appointment card)
-                val usersMap = fetchUsersForAppointments(listOfNotNull(nextApp))
+                val usersMap = repository.fetchUsersForAppointments(listOfNotNull(nextApp))
 
                 _homeUiState.value = HomeUiState.Success(
                     totalCount = activeAppointments.size,
@@ -144,27 +164,6 @@ class ChefPortalViewModel : ViewModel() {
         }
     }
 
-    private suspend fun fetchUsersForAppointments(appointments: List<Appointment>): Map<String, User> {
-        val userIds = appointments.map { it.userId }.distinct().filter { it.isNotBlank() }
-        if (userIds.isEmpty()) return emptyMap()
-
-        return try {
-            withContext(Dispatchers.IO) {
-                client.from("users")
-                    .select {
-                        filter {
-                            isIn("id", userIds)
-                        }
-                    }
-                    .decodeList<User>()
-                    .associateBy { it.id ?: "" }
-            }
-        } catch (e: Exception) {
-            Log.e("ChefPortalVM", "Error batch-fetching users", e)
-            emptyMap()
-        }
-    }
-
     fun selectAppointment(appointment: Appointment?) {
         selectedAppointment = appointment
     }
@@ -175,23 +174,17 @@ class ChefPortalViewModel : ViewModel() {
         rejectionReason: String? = null
     ) {
         viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    // Map<String, String>
-                    val updateData = buildMap<String, String> {
-                        put("Status", newStatus)
-                        if (!rejectionReason.isNullOrBlank()) {
-                            put("Reject_Reason", rejectionReason)
-                        }
-                    }
+            if (!_isNetworkAvailable.value) {
+                _uiEvent.emit("Cannot update appointment status while offline.")
+                return@launch
+            }
 
-                    client.from("Appointment")
-                        .update(updateData) {
-                            filter {
-                                eq("AppointmentID", appointmentId)
-                            }
-                        }
-                }
+            try {
+                repository.updateAppointmentStatus(
+                    appointmentId = appointmentId,
+                    newStatus = newStatus,
+                    rejectionReason = rejectionReason
+                )
 
                 // Refresh UI state
                 fetchAppointmentsForCurrentChef()
@@ -199,6 +192,7 @@ class ChefPortalViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("ChefPortalVM", "Error updating appointment: ${e.message}", e)
+                _uiEvent.emit("Failed to update appointment: ${e.localizedMessage}")
             }
         }
     }

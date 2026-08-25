@@ -363,9 +363,25 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
             try {
                 var finalRecipe = recipe
+                
+                // 🌟 Image Upload Logic
                 if (imageBytes != null && recipe.recipe_id != null) {
-                    repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
-                        .onSuccess { url -> finalRecipe = recipe.copy(recipeImageUrl = url) }
+                    val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
+                    
+                    if (uploadResult.isSuccess) {
+                        val url = uploadResult.getOrNull()
+                        finalRecipe = recipe.copy(recipeImageUrl = url)
+                    } else {
+                        // 🌟 FIX: If image upload fails, don't just proceed silently
+                        val error = uploadResult.exceptionOrNull()?.message ?: "Image upload failed"
+                        errorMessage = "Cloudinary Error: $error"
+                        isLoading = false
+                        
+                        // Revert optimistic update
+                        recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
+                        myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
+                        return@launch 
+                    }
                 }
 
                 repository.insertRecipe(finalRecipe)
@@ -395,6 +411,9 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                     }
             } catch (e: Exception) {
                 errorMessage = e.message
+                // Revert optimistic update
+                recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
+                myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
             } finally {
                 isLoading = false
             }
@@ -453,10 +472,21 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             errorMessage = null
             try {
                 var finalRecipe = recipe
+                
+                // 🌟 Image Upload Logic for Update
                 if (imageBytes != null && recipe.recipe_id != null) {
-                    repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
-                        .onSuccess { url -> finalRecipe = recipe.copy(recipeImageUrl = url) }
+                    val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
+                    
+                    if (uploadResult.isSuccess) {
+                        val url = uploadResult.getOrNull()
+                        finalRecipe = recipe.copy(recipeImageUrl = url)
+                    } else {
+                        errorMessage = "Cloudinary Update Error: ${uploadResult.exceptionOrNull()?.message ?: "Unknown"}"
+                        isLoading = false
+                        return@launch
+                    }
                 }
+
                 repository.updateRecipe(finalRecipe)
                     .onSuccess {
                         _updateRecipeSuccess.emit(true)

@@ -1,4 +1,4 @@
-package com.example.foodieheal.Hiring.Screen
+package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,20 +52,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter.State.Empty.painter
-import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
-import com.example.foodieheal.Hiring.ViewModel.UserAppointmentsUiState
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.ReviewViewModel
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RateChefScreen(
     appointmentId: String,
-    viewModel: HiringViewModel = viewModel(),
+    userViewModel: UserAppointmentViewModel = viewModel(),
+    reviewViewModel: ReviewViewModel = viewModel(),
     onSubmitSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val appointmentsState by viewModel.userAppointmentsState.collectAsState()
+    val appointmentsState by userViewModel.userAppointmentsState.collectAsState()
+    val isNetworkAvailable by userViewModel.isNetworkAvailable.collectAsState()
 
     // Retrieve appointment and chef details
     val successState = appointmentsState as? UserAppointmentsUiState.Success
@@ -92,9 +93,18 @@ fun RateChefScreen(
                         fontWeight = FontWeight.Bold
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onSubmitSuccess) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back_button)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -104,11 +114,41 @@ fun RateChefScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            if (!isNetworkAvailable) {
+                androidx.compose.material3.Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = stringResource(R.string.desc_no_network),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Offline Mode: Internet required to submit review",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
 
             // Chef Profile Card
             Card(
@@ -251,7 +291,7 @@ fun RateChefScreen(
                     if (appointment == null || rating == 0) return@Button
                     isSubmitting = true
 
-                    viewModel.submitReview(
+                    reviewViewModel.submitReview(
                         appointmentId = appointment.AppointmentID.orEmpty(),
                         rating = rating,
                         comment = comment.trim(),
@@ -269,7 +309,7 @@ fun RateChefScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = !isSubmitting && rating > 0,
+                enabled = isNetworkAvailable && !isSubmitting && rating > 0,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isSubmitting) {
@@ -288,6 +328,7 @@ fun RateChefScreen(
             }
         }
     }
+}
 }
 
 @Composable
@@ -317,7 +358,6 @@ fun StarRatingBar(
                     .size(starSize)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        // 👇 Use the new Material 3 ripple() API here
                         indication = ripple(bounded = false, radius = starSize / 1.5f),
                         onClick = { onRatingChanged(i) }
                     )

@@ -7,11 +7,15 @@ import com.example.foodieheal.meal_planner.model.MealSlotDTO
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.RecipeReference
-import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.meal_planner.model.WeeklyPlan
+import com.example.foodieheal.meal_planner.model.WeeklyPlanEntity
+import com.example.foodieheal.meal_planner.model.toDomain
+import com.example.foodieheal.meal_planner.model.toEntity
+import com.example.foodieheal.model.Recipe
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -20,6 +24,11 @@ class MealPlannerRepository(
     private val postgrest: Postgrest,
     private val supabaseClient: SupabaseClient
 ) {
+
+    // ==========================================================
+    // DAILY PLAN METHODS
+    // ==========================================================
+
     suspend fun saveDailyPlan(plan: DailyPlan): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
@@ -32,7 +41,7 @@ class MealPlannerRepository(
                     MealSlotDTO(
                         mealType = domainSlot.mealType,
                         recipes = domainSlot.recipes.map { recipe ->
-                            RecipeReference(recipeId = recipe.recipe_id?:"")
+                            RecipeReference(recipeId = recipe.recipe_id ?: "")
                         }
                     )
                 }
@@ -45,14 +54,10 @@ class MealPlannerRepository(
 
     suspend fun getDailyPlan(date: LocalDate): Result<DailyPlan?> = withContext(Dispatchers.IO) {
         runCatching {
-            // 1. AUTH CHECK
             val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
                 ?: throw Exception("No authenticated user session found.")
 
-            Log.d("MealPlannerDebug", "Starting fetch for date: $date for user: $currentUserId")
-
-            // 2. FETCH DAILY PLAN DTO
-            val rawPlan = supabaseClient.postgrest.from("daily_plans")
+            val rawPlan = postgrest.from("daily_plans")
                 .select {
                     filter {
                         eq("date", date.toString())
@@ -60,20 +65,12 @@ class MealPlannerRepository(
                     }
                 }
                 .decodeList<DailyPlanDTO>()
-                .firstOrNull()
+                .firstOrNull() ?: return@runCatching null
 
-            // Safely exit if no plan row exists in the DB yet
-            if (rawPlan == null) {
-                Log.d("MealPlannerDebug", "No daily plan found in database for date: $date")
-                return@runCatching null
-            }
-
-            // Extract recipe IDs safely
             val recipeIds = rawPlan.meals?.flatMap { slot ->
                 slot.recipes.map { it.recipeId }
             }?.distinct().orEmpty()
 
-            // If no recipes are selected for this day, return an empty initialized plan structure
             if (recipeIds.isEmpty()) {
                 return@runCatching DailyPlan(
                     user_id = rawPlan.userId,
@@ -82,10 +79,7 @@ class MealPlannerRepository(
                 )
             }
 
-            Log.d("MealPlannerDebug", "Found recipe IDs in plan: $recipeIds. Fetching full details...")
-
-            // 3. FETCH DETAILS FOR THOSE RECIPES
-            val fetchedRecipes = supabaseClient.postgrest.from("recipes")
+            val fetchedRecipes = postgrest.from("recipes")
                 .select {
                     filter {
                         isIn("recipe_id", recipeIds)
@@ -93,11 +87,7 @@ class MealPlannerRepository(
                 }
                 .decodeList<Recipe>()
 
-            Log.d("MealPlannerDebug", "Successfully fetched ${fetchedRecipes.size} recipes from DB.")
-
-            // 4. MAP TO UI DOMAIN MODEL
-            // This ensures all 4 slots exist on the screen even if the database row only had 1 slot populated
-            val finalPlan = DailyPlan(
+            DailyPlan(
                 user_id = rawPlan.userId,
                 date = rawPlan.date,
                 meals = MealType.entries.map { type ->
@@ -110,11 +100,91 @@ class MealPlannerRepository(
                     )
                 }
             )
-
-            finalPlan
         }.onFailure { error ->
-            // 🌟 This will catch and print the EXACT serialization or network mismatch error to Logcat!
-            Log.e("MealPlannerDebug", "💥 Critical Exception in repository layer!", error)
+            Log.e("MealPlannerDebug", "Critical Exception in getDailyPlan!", error)
+        }
+    }
+
+    // ==========================================================
+    // 🌟 WEEKLY PLAN METHODS (NEW & UPDATED FOR PUBLIC FIELD)
+    // ==========================================================
+
+    /**
+     * Saves or updates a WeeklyPlan (including its `public` field status) in Supabase.
+     */
+    suspend fun saveWeeklyPlan(weeklyPlan: WeeklyPlan): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+                ?: throw Exception("User is not logged in!")
+
+            // Convert UI Domain model to Entity DTO (carries the `public` flag)
+            val entity = weeklyPlan.copy(userId = currentUserId).toEntity()
+
+            postgrest.from("weekly_plans").upsert(entity)
+            Unit
+        }.onFailure { error ->
+            Log.e("MealPlannerDebug", "Failed to save weekly plan", error)
+        }
+    }
+
+    /**
+     * Toggles/updates only the `public` status of a specific plan in Supabase.
+     */
+    suspend fun updatePlanVisibility(planId: String, isPublic: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            postgrest.from("weekly_plans").update(
+                mapOf("is_public" to isPublic) // Make sure column name matches your DB!
+            ) {
+                filter {
+                    eq("plan_id", planId)
+                }
+            }
+            Unit
+        }.onFailure { error ->
+            Log.e("MealPlannerDebug", "Failed to update plan visibility", error)
+        }
+    }
+
+    /**
+     * Fetches public weekly plans shared by community members.
+     */
+    suspend fun getPublicWeeklyPlans(): Result<List<WeeklyPlan>> = withContext(Dispatchers.IO) {
+        runCatching {
+            // 1. Query Supabase for plans where is_public == true
+            val publicEntities = postgrest.from("weekly_plans")
+                .select {
+                    filter {
+                        eq("is_public", true) // Match column name in Supabase
+                    }
+                }
+                .decodeList<WeeklyPlanEntity>()
+
+            if (publicEntities.isEmpty()) return@runCatching emptyList()
+
+            // 2. Collect all recipe IDs across all public plans
+            val recipeIds = publicEntities.flatMap { entity ->
+                entity.dailyPlans.values.flatten().flatMap { slot ->
+                    slot.recipes.map { it.recipeId }
+                }
+            }.distinct()
+
+            // 3. Fetch recipe details if needed
+            val fetchedRecipes = if (recipeIds.isNotEmpty()) {
+                postgrest.from("recipes")
+                    .select {
+                        filter {
+                            isIn("recipe_id", recipeIds)
+                        }
+                    }
+                    .decodeList<Recipe>()
+            } else emptyList()
+
+            // 4. Map DTO entities back to Domain UI models
+            publicEntities.map { entity ->
+                entity.toDomain(fetchedRecipes)
+            }
+        }.onFailure { error ->
+            Log.e("MealPlannerDebug", "Failed to fetch public weekly plans", error)
         }
     }
 }
