@@ -1,7 +1,8 @@
 package com.example.foodieheal.hiring.model
 
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+
 
 sealed interface UserAppointmentsUiState {
     data object Loading : UserAppointmentsUiState

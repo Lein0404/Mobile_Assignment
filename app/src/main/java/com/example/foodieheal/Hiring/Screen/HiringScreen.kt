@@ -25,7 +25,7 @@ import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import com.example.foodieheal.hiring.viewmodel.ChefListViewModel
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)

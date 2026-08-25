@@ -33,9 +33,11 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import kotlin.collections.filter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

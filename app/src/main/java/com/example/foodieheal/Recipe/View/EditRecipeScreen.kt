@@ -34,12 +34,15 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.IngredientItem
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import kotlin.collections.find
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -11,9 +11,9 @@
     import com.example.foodieheal.meal_planner.model.WeeklyPlan
     import com.example.foodieheal.meal_planner.model.toDomain
     import com.example.foodieheal.meal_planner.model.toEntity
-    import com.example.foodieheal.model.Recipe
-    import com.example.foodieheal.repository.RecipeRepository
-    import com.example.foodieheal.viewmodel.AuthViewModel
+    import com.example.foodieheal.Recipe.Model.Recipe
+    import com.example.foodieheal.Recipe.Repo.RecipeRepository
+    import com.example.foodieheal.User.viewModel.AuthViewModel
     import kotlinx.coroutines.flow.MutableStateFlow
     import kotlinx.coroutines.flow.StateFlow
     import kotlinx.coroutines.flow.asStateFlow

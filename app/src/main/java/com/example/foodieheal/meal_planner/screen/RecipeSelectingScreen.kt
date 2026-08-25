@@ -35,9 +35,10 @@ import androidx.core.view.WindowCompat
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

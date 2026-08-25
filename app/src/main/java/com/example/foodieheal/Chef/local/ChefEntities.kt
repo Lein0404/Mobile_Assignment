@@ -3,7 +3,7 @@ package com.example.foodieheal.Chef.local
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @Entity(tableName = "chef_portal_appointments")

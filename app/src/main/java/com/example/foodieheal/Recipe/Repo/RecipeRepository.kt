@@ -2,8 +2,8 @@ package com.example.foodieheal.Recipe.Repo
 
 import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.User.Model.User
-import com.example.foodieheal.model.Ingredient
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Ingredient
+import com.example.foodieheal.Recipe.Model.Recipe
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.SupabaseClient
@@ -156,6 +156,19 @@ class RecipeRepository(
                     filter { eq("recipe_id", recipeId) }
                 }
             response.decodeSingle<Recipe>()
+        }
+    }
+
+    suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (recipeIds.isEmpty()) return@runCatching emptyList<Recipe>()
+            val response = supabaseClient.postgrest.from("recipes")
+                .select {
+                    filter {
+                        isIn("recipe_id", recipeIds)
+                    }
+                }
+            response.decodeList<Recipe>()
         }
     }
 
