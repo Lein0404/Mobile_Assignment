@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale

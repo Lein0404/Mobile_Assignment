@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 
 enum class RateSortOrder(val label: String) {
     NONE("None"),

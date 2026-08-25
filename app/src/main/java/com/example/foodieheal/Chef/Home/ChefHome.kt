@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
-import com.example.foodieheal.User.Model.User
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,7 +46,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
 import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.viewModel.AuthViewModel
 
 

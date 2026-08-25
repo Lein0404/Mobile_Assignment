@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -23,7 +22,7 @@ import com.example.foodieheal.ui.components.ChefFilterBottomSheet
 import com.example.foodieheal.ui.components.ChefFilterState
 import com.example.foodieheal.ui.components.ChefSearchBar
 import com.example.foodieheal.ui.components.filterAndSortChefs
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

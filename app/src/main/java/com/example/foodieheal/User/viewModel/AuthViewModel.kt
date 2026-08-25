@@ -14,7 +14,7 @@ import com.example.foodieheal.User.local.ChefEntity
 import com.example.foodieheal.User.local.UserDao
 import com.example.foodieheal.User.local.UserEntity
 import com.example.foodieheal.User.Model.User
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest

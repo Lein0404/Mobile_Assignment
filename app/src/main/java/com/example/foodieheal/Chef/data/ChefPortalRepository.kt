@@ -7,9 +7,9 @@ import com.example.foodieheal.Chef.local.ChefProfileDao
 import com.example.foodieheal.Chef.local.toDomain
 import com.example.foodieheal.Chef.local.toEntity
 import com.example.foodieheal.SupabaseClient.client
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.Model.User
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers

@@ -45,9 +45,9 @@ import com.example.foodieheal.R
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.ui.components.formatToAmPm
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

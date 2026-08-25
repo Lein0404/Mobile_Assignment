@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.Chef.data.ChefPortalRepository
 import com.example.foodieheal.Chef.local.ChefDatabase
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.Model.User
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

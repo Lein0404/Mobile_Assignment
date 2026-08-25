@@ -1,6 +1,6 @@
 package com.example.foodieheal.Payment.ViewModel
 
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 
 sealed class PaymentMethod(
     open val id: String,

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.net.http.SslCertificate.restoreState
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -90,7 +89,7 @@ import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.ui.theme.FoodieHealTheme
-import com.example.foodieheal.view.AppointmentHistoryScreen
+import com.example.foodieheal.hiring.screen.AppointmentHistoryScreen
 import com.example.foodieheal.User.View.ChangePasswordScreen
 import com.example.foodieheal.User.View.EditBodyStatusScreen
 import com.example.foodieheal.User.View.EditProfileScreen
@@ -103,12 +102,10 @@ import com.example.foodieheal.Recipe.View.RecipesScreen
 import com.example.foodieheal.User.View.RegisterScreen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
-import com.example.foodieheal.view.PaymentMethodScreen
-import kotlinx.coroutines.delay
+import com.example.foodieheal.Payment.Screen.PaymentMethodScreen
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
 import kotlin.collections.find
-import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
 

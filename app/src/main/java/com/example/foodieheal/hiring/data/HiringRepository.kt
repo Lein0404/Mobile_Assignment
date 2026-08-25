@@ -7,13 +7,12 @@ import com.example.foodieheal.hiring.local.AppointmentDao
 import com.example.foodieheal.hiring.local.ChefDao
 import com.example.foodieheal.hiring.local.ChefReviewDao
 import com.example.foodieheal.hiring.local.toEntity
-import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.ReviewWithUser
+import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.ReviewWithUser
 import com.example.foodieheal.User.Model.User
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject

@@ -58,7 +58,7 @@ import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.User.viewModel.AuthViewModel
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

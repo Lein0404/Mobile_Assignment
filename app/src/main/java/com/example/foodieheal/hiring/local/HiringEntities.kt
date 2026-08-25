@@ -2,10 +2,10 @@ package com.example.foodieheal.hiring.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.ChefBookmark
-import com.example.foodieheal.model.ReviewWithUser
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.ChefBookmark
+import com.example.foodieheal.hiring.model.ReviewWithUser
+import com.example.foodieheal.Chef.model.Chef
 
 @Entity(tableName = "hiring_chefs")
 data class ChefEntity(

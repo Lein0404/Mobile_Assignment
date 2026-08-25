@@ -5,7 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.foodieheal.Cloudinary.uploadImageToCloudinary
 import com.example.foodieheal.SupabaseClient
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest

@@ -62,9 +62,9 @@ import com.example.foodieheal.hiring.model.ReviewsUiState
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import com.example.foodieheal.hiring.viewmodel.ReviewViewModel
-import com.example.foodieheal.model.ReviewWithUser
+import com.example.foodieheal.hiring.model.ReviewWithUser
 import com.example.foodieheal.ui.components.DetailSectionCard
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

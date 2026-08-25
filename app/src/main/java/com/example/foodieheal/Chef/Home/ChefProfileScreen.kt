@@ -43,7 +43,7 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.Home.DetailRow
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.ui.components.DetailSectionCard

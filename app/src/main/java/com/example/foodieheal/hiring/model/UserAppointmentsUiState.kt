@@ -1,7 +1,6 @@
 package com.example.foodieheal.hiring.model
 
 import com.example.foodieheal.User.Model.User
-import com.example.foodieheal.model.Appointment
 
 
 sealed interface UserAppointmentsUiState {

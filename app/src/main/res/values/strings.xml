@@ -378,7 +378,9 @@
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
     <string name="pay_now">Pay Now</string>
-    <string name ="no_rejection_reason">No Rejected Reason</string>
+    <string name="no_rejection_reason">No Rejected Reason</string>
+    <string name="declined_by_chef">Declined by chef</string>
+    <string name="rejection_hint_text">You can choose another time slot or explore other chefs.</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>

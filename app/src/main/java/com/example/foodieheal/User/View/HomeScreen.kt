@@ -28,7 +28,7 @@ import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import com.example.foodieheal.hiring.viewmodel.HiringViewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.User.viewModel.AuthViewModel
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.foodieheal.Recipe.Model.Recipe
