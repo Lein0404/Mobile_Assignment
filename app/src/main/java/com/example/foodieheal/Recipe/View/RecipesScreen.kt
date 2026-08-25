@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.Recipe.View
 
 import android.app.Activity
 import androidx.compose.foundation.*
@@ -17,22 +17,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,12 +132,10 @@ fun RecipesScreen(
         }
     }
 
-    // 🌟 Wrap in Box to manually control Snackbar height
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = Color(0xFFF8F8F8),
+            containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            // snackbarHost is removed from Scaffold to stop the FAB from pushing it up
             topBar = {
             Box(
                 modifier = Modifier
@@ -151,13 +152,13 @@ fun RecipesScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_hamburger_menu),
                             contentDescription = "Menu",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Icon
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Recipe",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -166,13 +167,13 @@ fun RecipesScreen(
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Transparent,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Content
                         indicator = { tabPositions ->
                             if (selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
                                     Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                                     height = 3.dp,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
                                 )
                             }
                         },
@@ -187,7 +188,7 @@ fun RecipesScreen(
                                         text = title,
                                         fontSize = 15.sp,
                                         fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                        color = if (selectedTab == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) // 🌟 Themed Tab
                                     )
                                 }
                             )
@@ -229,27 +230,29 @@ fun RecipesScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search recipes here", fontSize = 14.sp, color = Color.Gray) },
+                    placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = Color.LightGray,
-                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     ),
                     trailingIcon = {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
                             Image(
                                 painter = painterResource(id = R.drawable.filter),
                                 contentDescription = "Filter",
-                                modifier = Modifier.size(20.dp).clickable { showFilterDialog = true }
+                                modifier = Modifier.size(20.dp).clickable { showFilterDialog = true },
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) // 🌟 Themed Icon
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Image(
                                 painter = painterResource(id = R.drawable.search),
                                 contentDescription = "Search",
-                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
+                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) // 🌟 Themed Icon
                             )
                         }
                     }
@@ -257,7 +260,7 @@ fun RecipesScreen(
             }
 
             item(span = { GridItemSpan(2) }) {
-                Text(text = "Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(top = 8.dp))
+                Text(text = "Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 8.dp))
             }
 
             item(span = { GridItemSpan(2) }) {
@@ -289,7 +292,7 @@ fun RecipesScreen(
                     text = selectedCourse,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -298,6 +301,37 @@ fun RecipesScreen(
                 item(span = { GridItemSpan(2) }) {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
+                    }
+                }
+            } else if (selectedTab == 2 && currentDataList.isEmpty()) {
+                // 🌟 Bookmarks Empty State (Matches Hiring Screen Style)
+                item(span = { GridItemSpan(2) }) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 100.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.bookmark),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = stringResource(id = R.string.empty_no_bookmarked_recipes),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(id = R.string.empty_bookmarked_recipes_sub),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
                     }
                 }
             } else if (filteredRecipes.isEmpty()) {
@@ -403,7 +437,7 @@ fun RecipesScreen(
                             },
                             modifier = Modifier.width(70.dp).padding(start = 8.dp),
                             singleLine = true,
-                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                            textStyle = TextStyle(fontSize = 12.sp)
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -425,7 +459,7 @@ fun RecipesScreen(
                             },
                             modifier = Modifier.width(80.dp).padding(start = 8.dp),
                             singleLine = true,
-                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                            textStyle = TextStyle(fontSize = 12.sp)
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -486,6 +520,7 @@ fun RecipesScreen(
 @Composable
 fun RecipeCardItem(
     recipe: Recipe,
+    modifier: Modifier = Modifier,
     showMenu: Boolean = false,
     isBookmarked: Boolean = false,
     onBookmarkClick: () -> Unit = {},
@@ -498,12 +533,12 @@ fun RecipeCardItem(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth().height(260.dp).clickable { onClick() }
+        modifier = modifier.height(280.dp).clickable { onClick() } // 🌟 Increased height to prevent clipping
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(160.dp).background(Color(0xFFEEEEEE))) {
+            Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(MaterialTheme.colorScheme.surfaceVariant)) { // 🌟 Optimized image height
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
                     AsyncImage(
                         model = recipe.recipeImageUrl,
@@ -514,7 +549,7 @@ fun RecipeCardItem(
                 } else {
                     // 🌟 Artistic Placeholder
                     Box(
-                        modifier = Modifier.fillMaxSize().background(Color(0xFFFFF9E1)),
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)), // 🌟 Themed Background
                         contentAlignment = Alignment.Center
                     ) {
                         val iconRes = when (recipe.recipeCourse.lowercase()) {
@@ -527,7 +562,8 @@ fun RecipeCardItem(
                             painter = painterResource(id = iconRes),
                             contentDescription = null,
                             modifier = Modifier.size(60.dp),
-                            alpha = 0.3f
+                            alpha = 0.3f,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiaryContainer) // 🌟 Themed Icon
                         )
                     }
                 }
@@ -535,7 +571,7 @@ fun RecipeCardItem(
                 // 🌟 Always show bookmark icon, even if showMenu is true
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
                     modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
                 ) {
                     IconButton(onClick = onBookmarkClick) {
@@ -544,21 +580,25 @@ fun RecipeCardItem(
                                 id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
                             ),
                             contentDescription = "Bookmark",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
+                            colorFilter = ColorFilter.tint(
+                                if (isBookmarked) MaterialTheme.colorScheme.primary 
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            ) // 🌟 Themed Icon matching Chef Bookmark logic
                         )
                     }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
                     modifier = Modifier.align(Alignment.TopStart).padding(10.dp).size(28.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_recipe),
                         contentDescription = "Add to Planner",
                         modifier = Modifier.padding(6.dp).clickable { onAddClick() },
-                        tint = Color.Black
+                        tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
                     )
                 }
             }
@@ -572,8 +612,9 @@ fun RecipeCardItem(
                         text = recipe.recipeName,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
                         maxLines = 2,
+                        overflow = TextOverflow.Ellipsis, // 🌟 Limit to 2 lines with ...
                         modifier = Modifier.weight(1f)
                     )
                     if (showMenu) {
@@ -582,7 +623,7 @@ fun RecipeCardItem(
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_vertical_more),
                                     contentDescription = "Menu",
-                                    tint = Color.Black
+                                    tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
                                 )
                             }
                             DropdownMenu(
@@ -598,25 +639,62 @@ fun RecipeCardItem(
                                     leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = Color(0xFFD32F2F)) },
+                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) }, // 🌟 Themed Error
                                     onClick = {
                                         expanded = false
                                         onDeleteClick()
                                     },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = Color(0xFFD32F2F), modifier = Modifier.size(18.dp)) }
+                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                                 )
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(painterResource(id = R.drawable.ic_fire), null, modifier = Modifier.size(12.dp), tint = Color.Black)
-                    Text(text = " ${recipe.calories} kcal", fontSize = 11.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(12.dp), tint = Color.Gray)
-                    Text(text = " ${recipe.time} mins", fontSize = 11.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(6.dp)) // 🌟 Tighter spacing
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_fire), 
+                            contentDescription = null, 
+                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${recipe.calories} kcal", 
+                            fontSize = 11.sp, 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 4.dp)
+                        ) 
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_clock), 
+                            contentDescription = null, 
+                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${recipe.time} mins", 
+                            fontSize = 11.sp, 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
                 }
+
             }
         }
     }

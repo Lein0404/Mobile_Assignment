@@ -1,4 +1,4 @@
-package com.example.foodieheal.database
+package com.example.foodieheal.User.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

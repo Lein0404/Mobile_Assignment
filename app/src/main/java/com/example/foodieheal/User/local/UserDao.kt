@@ -1,4 +1,4 @@
-package com.example.foodieheal.database
+package com.example.foodieheal.User.local
 
 import androidx.room.Dao
 import androidx.room.Insert

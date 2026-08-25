@@ -1,13 +1,16 @@
-package com.example.foodieheal.repository
+package com.example.foodieheal.Recipe.Repo
 
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.model.Ingredient
+import com.example.foodieheal.Cloudinary.CloudinaryConfig
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.Recipe.Model.Ingredient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -49,18 +52,19 @@ class RecipeRepository(
         }
     }
 
-    suspend fun uploadRecipeImage(recipeId: String, imageBytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun uploadRecipeImage(recipeId: String, imageBytes: ByteArray): Result<String> = uploadImage("recipe_$recipeId", imageBytes)
+
+    suspend fun uploadImage(fileName: String, imageBytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            // 🌟 Updated to use Cloudinary with modern OkHttp standards
             val client = OkHttpClient()
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("upload_preset", com.example.foodieheal.Cloudinary.CloudinaryConfig.UPLOAD_PRESET)
-                .addFormDataPart("file", "recipe_$recipeId.jpg", imageBytes.toRequestBody("image/*".toMediaType()))
+                .addFormDataPart("upload_preset", CloudinaryConfig.UPLOAD_PRESET)
+                .addFormDataPart("file", "$fileName.jpg", imageBytes.toRequestBody("image/*".toMediaType()))
                 .build()
 
             val request = Request.Builder()
-                .url("https://api.cloudinary.com/v1_1/${com.example.foodieheal.Cloudinary.CloudinaryConfig.CLOUD_NAME}/image/upload")
+                .url("https://api.cloudinary.com/v1_1/${CloudinaryConfig.CLOUD_NAME}/image/upload")
                 .post(requestBody)
                 .build()
 
@@ -75,7 +79,11 @@ class RecipeRepository(
 
     suspend fun getAvailableIngredients(): Result<List<Ingredient>> = withContext(Dispatchers.IO) {
         runCatching {
-            supabaseClient.postgrest.from("ingredient_units").select().decodeList<Ingredient>()
+            // 🌟 Perform join to get default_quantity from units table
+            supabaseClient.postgrest
+                .from("ingredient_units")
+                .select(Columns.raw("*, units(default_quantity)"))
+                .decodeList<Ingredient>()
         }
     }
 
@@ -105,7 +113,7 @@ class RecipeRepository(
     suspend fun getBookmarkedRecipes(userId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             val idResponse = supabaseClient.postgrest.from("recipe_bookmarks")
-                .select(io.github.jan.supabase.postgrest.query.Columns.list("recipe_id")) {
+                .select(Columns.list("recipe_id")) {
                     filter { eq("user_id", userId) }
                 }
             val bookmarkedIds = idResponse.decodeList<BookmarkId>().map { it.recipe_id }
@@ -125,7 +133,7 @@ class RecipeRepository(
     suspend fun getUserBookmarkIds(userId: String): Result<List<String>> = withContext(Dispatchers.IO) {
         runCatching {
             val response = supabaseClient.postgrest.from("recipe_bookmarks")
-                .select(io.github.jan.supabase.postgrest.query.Columns.list("recipe_id")) {
+                .select(Columns.list("recipe_id")) {
                     filter { eq("user_id", userId) }
                 }
             response.decodeList<BookmarkId>().map { it.recipe_id }
@@ -151,19 +159,29 @@ class RecipeRepository(
         }
     }
 
+    suspend fun getUserByCustomId(customId: String): Result<User?> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = supabaseClient.postgrest.from("users")
+                .select {
+                    filter { eq("custom_id", customId) }
+                }
+            response.decodeSingleOrNull<User>()
+        }
+    }
+
     fun getCurrentUserId(): String? {
         return supabaseClient.auth.currentUserOrNull()?.id
     }
 }
 
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class BookmarkJoin(val recipes: Recipe)
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class BookmarkId(val recipe_id: String)
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class RecipeBookmark(
     val user_id: String,
     val recipe_id: String

@@ -1,4 +1,4 @@
-package com.example.foodieheal.database
+package com.example.foodieheal.Recipe.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -25,5 +25,6 @@ data class IngredientEntity(
     @PrimaryKey val id: String,
     val name: String?,
     val kcal: Double?,
-    val defaultUnit: String?
+    val defaultUnit: String?,
+    val defaultQuantity: Double? = 1.0 // 🌟 New field
 )

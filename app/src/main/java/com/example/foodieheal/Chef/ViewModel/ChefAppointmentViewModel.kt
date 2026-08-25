@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers

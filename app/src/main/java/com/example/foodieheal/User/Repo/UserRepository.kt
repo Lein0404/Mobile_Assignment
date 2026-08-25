@@ -1,7 +1,7 @@
-package com.example.foodieheal.repo
+package com.example.foodieheal.User.Repo
 
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

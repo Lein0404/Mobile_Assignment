@@ -1,4 +1,4 @@
-package com.example.foodieheal.model
+package com.example.foodieheal.User.Model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

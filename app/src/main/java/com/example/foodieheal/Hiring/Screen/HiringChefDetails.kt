@@ -52,7 +52,7 @@ import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
 import com.example.foodieheal.Hiring.ViewModel.HiringViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailSectionCard
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)

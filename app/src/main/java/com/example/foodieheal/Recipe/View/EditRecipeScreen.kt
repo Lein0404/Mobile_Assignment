@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.Recipe.View
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -34,11 +34,11 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.model.IngredientItem
-import com.example.foodieheal.model.Ingredient
-import com.example.foodieheal.viewmodel.RecipeViewModel
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.Recipe.Model.IngredientItem
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import kotlinx.coroutines.delay
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +94,7 @@ fun EditRecipeScreen(
 
     val isFormValid by remember {
         derivedStateOf {
-            recipeName.isNotBlank() &&
+            recipeName.isNotBlank() && recipeName.length <= 30 &&
             totalTime.isNotBlank() &&
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() &&
@@ -111,7 +111,13 @@ fun EditRecipeScreen(
                     it.name?.equals(input.name, ignoreCase = true) == true &&
                     it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
                 }
-                qty * (ingredientData?.kcal ?: 0.0)
+                
+                // 🌟 NEW CALCULATION: qty * caloriePerUnitValue / unitValue
+                // Defaulting unitValue to 1.0 to avoid division by zero
+                val caloriePerUnitValue = ingredientData?.kcal ?: 0.0
+                val unitValue = ingredientData?.defaultQuantity ?: 1.0
+                
+                qty * caloriePerUnitValue / unitValue
             }.toInt()
         }
     }.value
@@ -129,7 +135,7 @@ fun EditRecipeScreen(
     LaunchedEffect(Unit) {
         viewModel.updateRecipeSuccess.collect { success ->
             if (success) {
-                kotlinx.coroutines.delay(800)
+                delay(800)
                 navController.popBackStack()
             }
         }
@@ -155,10 +161,10 @@ fun EditRecipeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Edit Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Edit Recipe", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -174,7 +180,7 @@ fun EditRecipeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(Color(0xFFF8F8F8))
+                    .background(MaterialTheme.colorScheme.background)
                     .navigationBarsPadding() 
                     .imePadding() 
                     .verticalScroll(scrollState)
@@ -185,7 +191,7 @@ fun EditRecipeScreen(
                         .fillMaxWidth()
                         .height(220.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFE8E8E8))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { imageLauncher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
@@ -209,10 +215,10 @@ fun EditRecipeScreen(
                                 painter = painterResource(id = R.drawable.upload),
                                 contentDescription = null,
                                 modifier = Modifier.size(56.dp),
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Change Recipe Image", color = Color.Gray, fontSize = 14.sp)
+                            Text("Change Recipe Image", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         }
                     }
                 }
@@ -220,7 +226,21 @@ fun EditRecipeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 LabelText("Recipe Name")
-                AddRecipeTextField(value = recipeName, onValueChange = { recipeName = it }, placeholder = "Recipe Name")
+                AddRecipeTextField(
+                    value = recipeName,
+                    onValueChange = { if (it.length <= 30) recipeName = it },
+                    placeholder = "Recipe Name"
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "${recipeName.length}/30",
+                        fontSize = 11.sp,
+                        color = if (recipeName.length >= 30) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 LabelText("Description")
                 AddRecipeTextField(
@@ -243,14 +263,20 @@ fun EditRecipeScreen(
                         LabelText("Total Time (min)")
                         AddRecipeTextField(
                             value = totalTime,
-                            onValueChange = { input -> 
+                            onValueChange = { input ->
                                 if (input.all { it.isDigit() }) {
                                     totalTime = input
                                 }
                             },
                             placeholder = "e.g. 30",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
+                            trailingIcon = {
+                                Icon(
+                                    painterResource(id = R.drawable.ic_clock),
+                                    null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
@@ -291,7 +317,7 @@ fun EditRecipeScreen(
                 ) {
                     LabelText("Ingredients")
                     TextButton(onClick = { ingredients.clear(); ingredients.add(IngredientInputState()) }) {
-                        Text("Reset Ingredients", color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text("Reset Ingredients", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 }
                 
@@ -354,7 +380,7 @@ fun EditRecipeScreen(
                 if (!isFormValid) {
                     Text(
                         text = "Please fill in all fields with valid information.",
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
                     )
@@ -364,7 +390,7 @@ fun EditRecipeScreen(
                     onClick = {
                         var imageBytes: ByteArray? = null
                         if (imageBitmap != null) {
-                            val stream = java.io.ByteArrayOutputStream()
+                            val stream = ByteArrayOutputStream()
                             imageBitmap!!.compress(Bitmap.CompressFormat.JPEG, 80, stream)
                             imageBytes = stream.toByteArray()
                         }
@@ -388,8 +414,8 @@ fun EditRecipeScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = Color(0xFFD1D1D1),
-                        disabledContentColor = Color(0xFF666666)
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     enabled = isFormValid && !viewModel.isLoading
                 ) {

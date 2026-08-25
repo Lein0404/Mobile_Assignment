@@ -1,4 +1,4 @@
-package com.example.foodieheal.model
+package com.example.foodieheal.Recipe.Model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -32,5 +32,14 @@ data class Ingredient(
     @SerialName("ingredient_unit_id") val id: String? = null,
     @SerialName("ing_name") val name: String? = "",
     @SerialName("calories_per_default_quantity") val kcal: Double? = 0.0,
-    @SerialName("unit_name") val defaultUnit: String? = null
+    @SerialName("unit_name") val defaultUnit: String? = null,
+    @SerialName("units") val unitDetails: UnitDetails? = null // 🌟 Joined data from units table
+) {
+    // 🌟 Helper to get default quantity easily
+    val defaultQuantity: Double get() = unitDetails?.defaultQuantity ?: 1.0
+}
+
+@Serializable
+data class UnitDetails(
+    @SerialName("default_quantity") val defaultQuantity: Double = 1.0
 )

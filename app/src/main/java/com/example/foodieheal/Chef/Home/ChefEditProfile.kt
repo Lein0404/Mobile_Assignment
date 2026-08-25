@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,7 +57,7 @@ import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.ViewModel.chefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailSectionCard
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)

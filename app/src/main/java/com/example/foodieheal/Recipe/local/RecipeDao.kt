@@ -1,4 +1,4 @@
-package com.example.foodieheal.database
+package com.example.foodieheal.Recipe.local
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -31,7 +31,7 @@ interface RecipeDao {
     @Query("SELECT recipeId FROM local_bookmarks WHERE userId = :userId")
     suspend fun getBookmarkIds(userId: String): List<String>
 
-    @Query("SELECT * FROM local_recipes INNER JOIN local_bookmarks ON local_recipes.recipe_id = local_bookmarks.recipeId WHERE local_bookmarks.userId = :userId")
+    @Query("SELECT local_recipes.* FROM local_recipes INNER JOIN local_bookmarks ON local_recipes.recipe_id = local_bookmarks.recipeId WHERE local_bookmarks.userId = :userId")
     suspend fun getBookmarkedRecipes(userId: String): List<RecipeEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

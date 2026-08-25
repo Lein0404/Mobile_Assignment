@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.User.View
 
 import android.app.Activity
 import android.graphics.BitmapFactory
@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,19 +31,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.repository.RecipeRepository
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Hiring.ViewModel.BookmarkViewModel
+import com.example.foodieheal.Recipe.View.RecipeCardItem
+import com.example.mobileassignmentloginpart.Model.Chef
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,10 +120,10 @@ fun ProfileScreen(
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(300.dp),
-                drawerContainerColor = Color(0xFFF7F2F9)
+                drawerContainerColor = MaterialTheme.colorScheme.surface // 🌟 Themed Drawer
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text(text = "Menu", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = "Menu", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(24.dp))
@@ -171,14 +168,14 @@ fun ProfileScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Logout", color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text("Logout", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
     ) {
         Scaffold(
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
             // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -199,7 +196,7 @@ fun ProfileScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_hamburger_menu),
                             contentDescription = "Menu",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Icon
                             modifier = Modifier.size(24.dp).clickable {
                                 scope.launch {
                                     drawerState.open()
@@ -209,7 +206,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Profile",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -227,7 +224,7 @@ fun ProfileScreen(
                                 .size(80.dp)
                                 .clickable { showBigImage = true },
                             shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.2f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) // 🌟 Themed Color
                         ) {
                             val profilePicUrl = user?.profilePicUrl ?: ""
                             val bitmap = remember(profilePicUrl) {
@@ -257,7 +254,7 @@ fun ProfileScreen(
                                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                     Text(
                                         text = user?.name?.take(1)?.uppercase() ?: "?",
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -270,14 +267,14 @@ fun ProfileScreen(
                         Column {
                             Text(
                                 text = user?.name ?: "",
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             if (!user?.description.isNullOrEmpty()) {
                                 Text(
                                     text = user?.description!!,
-                                    color = Color.White.copy(alpha = 0.9f),
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f), // 🌟 Themed Text
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     modifier = Modifier.padding(top = 4.dp)
@@ -298,11 +295,11 @@ fun ProfileScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.background) // 🌟 Themed Background
                 ) {
                     TabRow(
                         selectedTabIndex = selectedMainTab,
-                        containerColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surface, // 🌟 Themed Background
                         contentColor = MaterialTheme.colorScheme.primary,
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
@@ -310,7 +307,7 @@ fun ProfileScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         },
-                        divider = { HorizontalDivider(color = Color(0xFFEEEEEE)) }
+                        divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) } // 🌟 Themed Divider
                     ) {
                         Tab(
                             selected = selectedMainTab == 0,
@@ -337,13 +334,13 @@ fun ProfileScreen(
                                     OutlinedTextField(
                                         value = searchQuery,
                                         onValueChange = { searchQuery = it },
-                                        placeholder = { Text("Search recipes here", fontSize = 14.sp, color = Color.Gray) },
+                                        placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }, // 🌟 Themed Text
                                         modifier = Modifier.fillMaxWidth().height(52.dp),
                                         singleLine = true,
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = Color(0xFFF2F2F2),
-                                            unfocusedContainerColor = Color(0xFFF2F2F2),
+                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
                                             focusedBorderColor = Color.Transparent,
                                             unfocusedBorderColor = Color.Transparent
                                         ),
@@ -351,14 +348,15 @@ fun ProfileScreen(
                                             Icon(
                                                 painter = painterResource(id = R.drawable.search),
                                                 contentDescription = "Search",
-                                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ }
+                                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Icon
                                             )
                                         }
                                     )
                                     
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground) // 🌟 Themed Text
                                     Spacer(modifier = Modifier.height(8.dp))
                                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         lazyItems(courses) { course ->
@@ -366,21 +364,21 @@ fun ProfileScreen(
                                             Surface(
                                                 onClick = { selectedCourse = course },
                                                 shape = RoundedCornerShape(20.dp),
-                                                color = if (isSelected) primaryColor else Color(0xFFEEEEEE)
+                                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant // 🌟 Themed Background
                                             ) {
                                                 Text(
                                                     text = course,
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                    color = if (isSelected) Color.White else Color.Black,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                                                     fontSize = 12.sp,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Bold
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
                                     }
                                     
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground) // 🌟 Themed Text
                                 }
                             }
                         } else if (selectedMainTab == 1) {
@@ -392,13 +390,21 @@ fun ProfileScreen(
                                     FilterChip(
                                         selected = selectedBookmarkType == 0,
                                         onClick = { selectedBookmarkType = 0 },
-                                        label = { Text("Recipes") }
+                                        label = { Text("Recipes") },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = primaryColor,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     FilterChip(
                                         selected = selectedBookmarkType == 1,
                                         onClick = { selectedBookmarkType = 1 },
-                                        label = { Text("Chefs") }
+                                        label = { Text("Chefs") },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = primaryColor,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     )
                                 }
                             }
@@ -408,17 +414,23 @@ fun ProfileScreen(
                             val filtered = myRecipes.filter { it.recipeName.contains(searchQuery, true) && it.recipeCourse == selectedCourse }
                             gridItems(filtered) { recipe ->
                                 RecipeCardItem(
-                                    recipe = recipe, 
+                                    recipe = recipe,
                                     showMenu = true,
                                     isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                     onBookmarkClick = {
                                         user?.customId?.let { cid ->
-                                            recipe.recipe_id?.let { rid -> 
-                                                viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                            recipe.recipe_id?.let { rid ->
+                                                viewModel.toggleBookmark(
+                                                    cid,
+                                                    rid,
+                                                    recipe.recipeName
+                                                )
                                             }
                                         }
                                     },
-                                    onDeleteClick = { recipeToDelete = recipe }, // 🌟 FIX: Pass the delete trigger
+                                    onDeleteClick = {
+                                        recipeToDelete = recipe
+                                    }, // 🌟 FIX: Pass the delete trigger
                                     onEditClick = {
                                         recipe.recipe_id?.let { id ->
                                             navController.navigate(Screen.EditRecipe.createRoute(id))
@@ -426,7 +438,11 @@ fun ProfileScreen(
                                     },
                                     onClick = {
                                         recipe.recipe_id?.let { id ->
-                                            navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                            navController.navigate(
+                                                Screen.RecipeDetails.createRoute(
+                                                    id
+                                                )
+                                            )
                                         }
                                     }
                                 )
@@ -437,19 +453,27 @@ fun ProfileScreen(
                                 gridItems(filtered) { recipe ->
                                     // 🌟 Enable bookmark click to allow removing from bookmarks
                                     RecipeCardItem(
-                                        recipe = recipe, 
+                                        recipe = recipe,
                                         isBookmarked = true,
                                         onBookmarkClick = {
                                             // 🌟 FIX: Send short customId instead of long UUID
                                             user?.customId?.let { cid ->
-                                                recipe.recipe_id?.let { rid -> 
-                                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName) 
+                                                recipe.recipe_id?.let { rid ->
+                                                    viewModel.toggleBookmark(
+                                                        cid,
+                                                        rid,
+                                                        recipe.recipeName
+                                                    )
                                                 }
                                             }
                                         },
                                         onClick = {
                                             recipe.recipe_id?.let { id ->
-                                                navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                                navController.navigate(
+                                                    Screen.RecipeDetails.createRoute(
+                                                        id
+                                                    )
+                                                )
                                             }
                                         }
                                     )
@@ -485,12 +509,12 @@ fun ProfileScreen(
                         recipeToDelete = null
                     }
                 ) {
-                    Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recipeToDelete = null }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -536,7 +560,7 @@ fun ProfileScreen(
                     ) {
                         Text(
                             text = user.name?.take(1)?.uppercase() ?: "?",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 120.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -561,19 +585,19 @@ fun DrawerItem(
             painter = painterResource(id = iconRes),
             contentDescription = null,
             modifier = Modifier.size(22.dp),
-            tint = Color.Black.copy(alpha = 0.7f)
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // 🌟 Themed Icon
         )
         Spacer(modifier = Modifier.width(20.dp))
-        Text(text = label, fontSize = 16.sp, color = Color.Black)
+        Text(text = label, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
     }
 }
 
 @Composable
-fun ChefCardItem(chef: com.example.mobileassignmentloginpart.Model.Chef) {
+fun ChefCardItem(chef: Chef) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().height(200.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(12.dp)) {
@@ -585,13 +609,13 @@ fun ChefCardItem(chef: com.example.mobileassignmentloginpart.Model.Chef) {
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFFEEEEEE)), contentAlignment = Alignment.Center) {
-                    Icon(painterResource(id = R.drawable.foodieheallogo), null, modifier = Modifier.size(40.dp))
+                Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) { // 🌟 Themed Background
+                    Icon(painterResource(id = R.drawable.foodieheallogo), null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary) // 🌟 Themed Icon
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(chef.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1)
-            Text(chef.status, fontSize = 12.sp, color = Color.Gray)
+            Text(chef.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
+            Text(chef.status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) // 🌟 Themed Text
         }
     }
 }

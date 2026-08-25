@@ -9,12 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.model.Appointment
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import com.example.mobileassignmentloginpart.Model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +24,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface AppointmentValidationError {

@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.Recipe.View
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -27,17 +27,20 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.model.IngredientItem
-import com.example.foodieheal.model.Ingredient
-import com.example.foodieheal.viewmodel.RecipeViewModel
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Model.IngredientItem
+import com.example.foodieheal.Recipe.Model.Ingredient
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import kotlinx.coroutines.delay
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +70,7 @@ fun AddRecipeScreen(
     // 🌟 Validation logic: All fields must be filled and valid
     val isFormValid by remember {
         derivedStateOf {
-            recipeName.isNotBlank() &&
+            recipeName.isNotBlank() && recipeName.length <= 30 &&
             // 🌟 Description and Image are now optional, so they are removed from validation
             totalTime.isNotBlank() &&
             totalTime.toIntOrNull() != null &&
@@ -86,7 +89,13 @@ fun AddRecipeScreen(
                     it.name?.equals(input.name, ignoreCase = true) == true &&
                     it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
                 }
-                qty * (ingredientData?.kcal ?: 0.0)
+                
+                // 🌟 NEW CALCULATION: qty * caloriePerUnitValue / unitValue
+                // Defaulting unitValue to 1.0 to avoid division by zero
+                val caloriePerUnitValue = ingredientData?.kcal ?: 0.0
+                val unitValue = ingredientData?.defaultQuantity ?: 1.0
+                
+                qty * caloriePerUnitValue / unitValue
             }.toInt()
         }
     }.value
@@ -105,7 +114,7 @@ fun AddRecipeScreen(
         viewModel.addRecipeSuccess.collect { success ->
             if (success) {
                 // 🌟 SUCCESS: Small delay so they can see the message
-                kotlinx.coroutines.delay(800)
+                delay(800)
                 viewModel.activeTab = 1
                 navController.popBackStack()
             }
@@ -132,14 +141,14 @@ fun AddRecipeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Add Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Add Recipe", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { 
                         // 🌟 BACK: ensure we go back to "My Recipes" tab
                         viewModel.activeTab = 1
                         navController.popBackStack() 
                     }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -150,7 +159,7 @@ fun AddRecipeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
                 .navigationBarsPadding() 
                 .imePadding() 
                 .verticalScroll(scrollState)
@@ -161,7 +170,7 @@ fun AddRecipeScreen(
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFE8E8E8))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { imageLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
@@ -178,10 +187,10 @@ fun AddRecipeScreen(
                             painter = painterResource(id = R.drawable.upload),
                             contentDescription = null,
                             modifier = Modifier.size(56.dp),
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Upload Recipe Image", color = Color.Gray, fontSize = 14.sp)
+                        Text("Upload Recipe Image", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                     }
                 }
             }
@@ -189,7 +198,21 @@ fun AddRecipeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             LabelText("Recipe Name")
-            AddRecipeTextField(value = recipeName, onValueChange = { recipeName = it }, placeholder = "Recipe Name")
+            AddRecipeTextField(
+                value = recipeName, 
+                onValueChange = { if (it.length <= 30) recipeName = it }, 
+                placeholder = "Recipe Name"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "${recipeName.length}/30",
+                    fontSize = 11.sp,
+                    color = if (recipeName.length >= 30) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             LabelText("Description")
             AddRecipeTextField(
@@ -339,7 +362,7 @@ fun AddRecipeScreen(
                     
                     var imageBytes: ByteArray? = null
                     if (imageBitmap != null) {
-                        val stream = java.io.ByteArrayOutputStream()
+                        val stream = ByteArrayOutputStream()
                         imageBitmap!!.compress(Bitmap.CompressFormat.JPEG, 80, stream)
                         imageBytes = stream.toByteArray()
                     }
@@ -367,8 +390,8 @@ fun AddRecipeScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color(0xFFD1D1D1), // 🌟 Slightly lighter gray for better balance
-                    disabledContentColor = Color(0xFF666666)     // 🌟 Darker text color so the words "ADD RECIPE" are easy to read
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), // 🌟 Themed Gray
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)   // 🌟 Themed Text
                 ),
                 enabled = isFormValid && !viewModel.isLoading
             ) {
@@ -414,7 +437,7 @@ fun LabelText(text: String) {
         text = text,
         fontWeight = FontWeight.Bold,
         fontSize = 14.sp,
-        color = Color.Black,
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
     )
 }
@@ -440,14 +463,14 @@ fun AddRecipeTextField(
         keyboardOptions = keyboardOptions, // 🌟 Pass it through
         shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
-        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+        textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
         colors = TextFieldDefaults.colors(
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            unfocusedContainerColor = Color(0xFFE8E8E8),
-            focusedContainerColor = Color(0xFFE8E8E8),
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }
@@ -466,7 +489,7 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
             value = value,
             onValueChange = {},
             readOnly = true,
-            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+            textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
@@ -476,19 +499,20 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                unfocusedContainerColor = Color(0xFFE8E8E8),
-                focusedContainerColor = Color(0xFFE8E8E8),
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option, fontSize = 14.sp) },
+                    text = { Text(option, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface) },
                     onClick = {
                         onSelected(option)
                         expanded = false
@@ -512,7 +536,7 @@ fun IngredientRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+            Text("Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 4.dp))
             var nameExpanded by remember { mutableStateOf(false) }
             
             val filteredIngredients = remember(item.name, availableIngredients) {
@@ -531,37 +555,37 @@ fun IngredientRow(
                         onUpdate(item.copy(name = it))
                         nameExpanded = true 
                     },
-                    placeholder = { Text("e.g. Flour", fontSize = 14.sp, color = Color.Gray) },
+                    placeholder = { Text("e.g. Flour", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+                    textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nameExpanded) },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        unfocusedContainerColor = Color(0xFFE8E8E8),
-                        focusedContainerColor = Color(0xFFE8E8E8),
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 
                 ExposedDropdownMenu(
                     expanded = nameExpanded,
                     onDismissRequest = { nameExpanded = false },
-                    modifier = Modifier.heightIn(max = 300.dp) 
+                    modifier = Modifier.heightIn(max = 300.dp).background(MaterialTheme.colorScheme.surface)
                 ) {
                     filteredIngredients.forEach { ingredient ->
                         DropdownMenuItem(
                             text = { 
                                 Column {
-                                    Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium)
+                                    Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                                     if (ingredient.defaultUnit != null) {
-                                        Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = Color.Gray)
+                                        Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             },
@@ -584,7 +608,7 @@ fun IngredientRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Quantity", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+                    Text("Quantity", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 4.dp))
                     var qtyExpanded by remember { mutableStateOf(false) }
                     
                     TextField(
@@ -595,21 +619,21 @@ fun IngredientRow(
                                 onUpdate(item.copy(quantity = input))
                             }
                         },
-                        placeholder = { Text("0", fontSize = 14.sp, color = Color.Gray) },
+                        placeholder = { Text("0", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         singleLine = true,
                         // 🌟 Declared directly inside here
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
-                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+                        textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
                         trailingIcon = {
                             IconButton(onClick = { qtyExpanded = true }) {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = qtyExpanded)
                             }
-                            DropdownMenu(expanded = qtyExpanded, onDismissRequest = { qtyExpanded = false }) {
+                            DropdownMenu(expanded = qtyExpanded, onDismissRequest = { qtyExpanded = false }, modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                                 listOf("1/2", "1/4", "3/4").forEach { fraction ->
                                     DropdownMenuItem(
-                                        text = { Text(fraction) },
+                                        text = { Text(fraction, color = MaterialTheme.colorScheme.onSurface) },
                                         onClick = {
                                             val current = item.quantity.toDoubleOrNull() ?: 0.0
                                             val add = when(fraction) {
@@ -628,16 +652,16 @@ fun IngredientRow(
                         colors = TextFieldDefaults.colors(
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            unfocusedContainerColor = Color(0xFFE8E8E8),
-                            focusedContainerColor = Color(0xFFE8E8E8),
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Unit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 4.dp))
+                    Text("Unit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 4.dp))
                     AddRecipeTextField(
                         value = item.unit,
                         onValueChange = { },
@@ -652,7 +676,7 @@ fun IngredientRow(
             onClick = onRemove, 
             modifier = Modifier.padding(start = 8.dp, top = 20.dp).size(32.dp)
         ) {
-            Icon(painterResource(id = R.drawable.ic_remove), "Remove", tint = Color.Black)
+            Icon(painterResource(id = R.drawable.ic_remove), "Remove", tint = MaterialTheme.colorScheme.onBackground)
         }
     }
 }

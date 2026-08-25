@@ -1,35 +1,37 @@
-package com.example.foodieheal.viewmodel
+package com.example.foodieheal.Recipe.viewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.model.Ingredient
-import com.example.foodieheal.model.IngredientItem
 import com.example.foodieheal.MainActivity
-import com.example.foodieheal.database.AppDatabase
-import com.example.foodieheal.database.RecipeEntity
-import com.example.foodieheal.database.IngredientEntity
-import com.example.foodieheal.database.RecipeBookmarkEntity
-import com.example.foodieheal.database.RecipeDao
-import com.example.foodieheal.repository.RecipeRepository
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.Recipe.local.IngredientEntity
+import com.example.foodieheal.Recipe.local.RecipeBookmarkEntity
+import com.example.foodieheal.Recipe.local.RecipeDao
+import com.example.foodieheal.Recipe.local.RecipeDatabase
+import com.example.foodieheal.Recipe.local.RecipeEntity
+import com.example.foodieheal.Recipe.Model.Ingredient
+import com.example.foodieheal.Recipe.Model.IngredientItem
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Model.UnitDetails
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import androidx.compose.runtime.mutableIntStateOf
-import kotlin.onFailure
+import kotlin.collections.plus
 
 class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
-    
+
     private fun getDao(): RecipeDao? {
-        return MainActivity.appContext?.let { AppDatabase.getDatabase(it).recipeDao() }
+        return MainActivity.appContext?.let { RecipeDatabase.getDatabase(it).recipeDao() }
     }
-    
+
     private val json = Json { ignoreUnknownKeys = true }
 
     // 🌟 Shared Tab State (0: Popular, 1: My Recipes, 2: Bookmarks)
@@ -72,6 +74,9 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
     var selectedRecipe by mutableStateOf<Recipe?>(null)
         private set
 
+    var recipeAuthor by mutableStateOf<User?>(null)
+        private set
+
     init {
         viewModelScope.launch {
             loadDataFromRoom()
@@ -91,7 +96,13 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             val ingredientEntities = dao.getAllIngredients()
             if (ingredientEntities.isNotEmpty()) {
                 availableIngredients = ingredientEntities.map {
-                    Ingredient(id = it.id, name = it.name, kcal = it.kcal, defaultUnit = it.defaultUnit)
+                    Ingredient(
+                        id = it.id,
+                        name = it.name,
+                        kcal = it.kcal,
+                        defaultUnit = it.defaultUnit,
+                        unitDetails = UnitDetails(defaultQuantity = it.defaultQuantity ?: 1.0)
+                    )
                 }
             }
 
@@ -120,7 +131,9 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             recipeImageUrl = entity.recipeImageUrl,
             ingredients = try {
                 json.decodeFromString<List<IngredientItem>>(entity.ingredientsJson)
-            } catch (e: Exception) { emptyList() }
+            } catch (e: Exception) {
+                emptyList()
+            }
         )
     }
 
@@ -128,6 +141,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
         val cachedRecipe = recipeList.find { it.recipe_id == recipeId }
         if (cachedRecipe != null) {
             selectedRecipe = cachedRecipe
+            cachedRecipe.author_id?.let { fetchAuthorData(it) }
             return
         }
 
@@ -137,16 +151,33 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             try {
                 val localEntity = dao?.getRecipeById(recipeId)
                 if (localEntity != null) {
-                    selectedRecipe = mapEntityToRecipe(localEntity)
+                    val recipe = mapEntityToRecipe(localEntity)
+                    selectedRecipe = recipe
+                    recipe.author_id?.let { fetchAuthorData(it) }
                 } else {
                     repository.getRecipeById(recipeId)
-                        .onSuccess { recipe -> selectedRecipe = recipe }
+                        .onSuccess { recipe ->
+                            selectedRecipe = recipe
+                            recipe.author_id?.let { fetchAuthorData(it) }
+                        }
                         .onFailure { e -> errorMessage = "Recipe not found: ${e.message}" }
                 }
             } catch (e: Exception) {
                 errorMessage = e.message
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    fun fetchAuthorData(authorId: String) {
+        viewModelScope.launch {
+            try {
+                val author = repository.getUserByCustomId(authorId)
+                    .getOrNull()
+                recipeAuthor = author
+            } catch (e: Exception) {
+                Log.e("RecipeViewModel", "Failed to fetch author", e)
             }
         }
     }
@@ -202,7 +233,13 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                     .onSuccess { ingredients ->
                         availableIngredients = ingredients
                         val entities = ingredients.map {
-                            IngredientEntity(id = it.id ?: "", name = it.name, kcal = it.kcal, defaultUnit = it.defaultUnit)
+                            IngredientEntity(
+                                id = it.id ?: "",
+                                name = it.name,
+                                kcal = it.kcal,
+                                defaultUnit = it.defaultUnit,
+                                defaultQuantity = it.defaultQuantity // 🌟 Map new field
+                            )
                         }
                         dao.clearIngredients()
                         dao.insertIngredients(entities)
@@ -247,7 +284,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
 
             // 🌟 1. Update Memory IDs IMMEDIATELY
             bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
-            
+
             // 🌟 2. Update Memory List IMMEDIATELY (so Tab 2 updates without flickering)
             if (isBookmarked) {
                 bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
@@ -271,7 +308,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             if (!isBookmarked) {
                 _bookmarkMessage.emit("Added to favorite: $recipeName")
             } else {
-                _bookmarkMessage.emit("Removed from favorites")
+                _bookmarkMessage.emit("Removed from favorites: $recipeName")
             }
 
             // 5. Persist to Supabase in background
@@ -286,15 +323,15 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
     fun fetchBookmarkedRecipes(userId: String, force: Boolean = false) {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
-            
+
             // 🌟 Restore simple loading: Always sync with Supabase
             val local = dao.getBookmarkedRecipes(userId)
             if (local.isNotEmpty()) bookmarkedRecipes = local.map { mapEntityToRecipe(it) }
 
             isLoading = true
             repository.getBookmarkedRecipes(userId)
-                .onSuccess { recipes -> 
-                    bookmarkedRecipes = recipes.sortedBy { it.recipe_id } 
+                .onSuccess { recipes ->
+                    bookmarkedRecipes = recipes.sortedBy { it.recipe_id }
                 }
             isLoading = false
         }
@@ -393,7 +430,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
             val recipeName = recipeList.find { it.recipe_id == recipeId }?.recipeName ?: "Recipe"
 
             repository.deleteRecipe(recipeId)
-                .onSuccess { 
+                .onSuccess {
                     // 🌟 1. Update memory lists IMMEDIATELY for zero-lag
                     recipeList = recipeList.filter { it.recipe_id != recipeId }
                     myRecipes = myRecipes.filter { it.recipe_id != recipeId }
@@ -425,7 +462,7 @@ class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
                         _updateRecipeSuccess.emit(true)
                         // 🌟 Show success message
                         _bookmarkMessage.emit("Successfully updated: ${finalRecipe.recipeName}")
-                        
+
                         fetchAllRecipes(force = true)
                         recipe.author_id?.let { fetchMyRecipes(it) }
                         // Update Room
