@@ -112,6 +112,47 @@ class WalletRepository(
         }
     }
 
+    suspend fun getTransactionById(transactionId: String): WalletTransaction? = withContext(Dispatchers.IO) {
+        if (transactionId.isBlank()) return@withContext null
+
+        try {
+            // Check Room cache first
+            val local = dao?.getTransactionById(transactionId)?.toDomainModel()
+
+            // Fetch from Supabase
+            val remote = try {
+                supabaseClient.from("wallet_transaction")
+                    .select { filter { eq("id", transactionId) } }
+                    .decodeSingleOrNull<WalletTransaction>()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to fetch transaction $transactionId from remote: ${e.localizedMessage}")
+                null
+            }
+
+            if (remote != null) {
+                val enriched = if (!remote.paymentMethodId.isNullOrBlank()) {
+                    val pm = try {
+                        supabaseClient.from("payment_method")
+                            .select { filter { eq("payment_method_id", remote.paymentMethodId) } }
+                            .decodeSingleOrNull<com.example.foodieheal.wallet.model.PaymentMethodRecord>()
+                            ?.toSummary()
+                    } catch (_: Exception) { null }
+                    remote.copy(paymentMethod = pm)
+                } else {
+                    remote
+                }
+
+                dao?.insertTransaction(enriched.toRoomEntity())
+                return@withContext enriched
+            }
+
+            local
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching transaction $transactionId: ${e.localizedMessage}", e)
+            dao?.getTransactionById(transactionId)?.toDomainModel()
+        }
+    }
+
     suspend fun topUpWallet(
         userId: String,
         amount: Double,

@@ -25,6 +25,9 @@ interface WalletDao {
     @Query("SELECT * FROM wallet_transactions WHERE walletId = :walletId ORDER BY createdAt DESC")
     suspend fun getTransactionsDirect(walletId: String): List<WalletTransactionRoomEntity>
 
+    @Query("SELECT * FROM wallet_transactions WHERE id = :transactionId LIMIT 1")
+    suspend fun getTransactionById(transactionId: String): WalletTransactionRoomEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransactions(transactions: List<WalletTransactionRoomEntity>)
 

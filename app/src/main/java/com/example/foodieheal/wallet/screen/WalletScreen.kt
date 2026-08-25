@@ -1,6 +1,7 @@
 package com.example.foodieheal.wallet.screen
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -46,7 +47,8 @@ fun WalletScreen(
     userId: String,
     viewModel: WalletViewModel,
     paymentMethodViewModel: PaymentMethodViewModel? = null,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onTransactionClick: (transactionId: String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -209,7 +211,8 @@ fun WalletScreen(
                         ) { txn ->
                             WalletTransactionItem(
                                 transaction = txn,
-                                isBalanceHidden = uiState.isBalanceHidden
+                                isBalanceHidden = uiState.isBalanceHidden,
+                                onClick = { onTransactionClick(txn.id) }
                             )
                         }
                     }
@@ -431,7 +434,8 @@ fun FilterChipsRow(
 @Composable
 fun WalletTransactionItem(
     transaction: WalletTransaction,
-    isBalanceHidden: Boolean
+    isBalanceHidden: Boolean,
+    onClick: () -> Unit = {}
 ) {
     val isCredit = transaction.isCredit
     val recentFallback = stringResource(R.string.wallet_date_recent)
@@ -445,7 +449,9 @@ fun WalletTransactionItem(
     val rescheduleAdjustmentLabel = stringResource(R.string.wallet_txn_reschedule_adjustment)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -654,32 +660,49 @@ fun TopUpBottomSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Preset Amount Chips
-            Row(
+            // Preset Amount Grid (Flexible 2x2 layout for all screen sizes)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                presetAmounts.forEach { preset ->
-                    val isSelected = selectedPreset == preset
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            selectedPreset = preset
-                            customAmountText = ""
-                        },
-                        label = {
-                            Text(
-                                text = "RM ${preset.toInt()}",
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp)
-                    )
+                presetAmounts.chunked(2).forEach { rowPresets ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        rowPresets.forEach { preset ->
+                            val isSelected = selectedPreset == preset
+                            Surface(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedPreset = preset
+                                    customAmountText = ""
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurface,
+                                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        text = "RM ${preset.toInt()}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        maxLines = 1,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

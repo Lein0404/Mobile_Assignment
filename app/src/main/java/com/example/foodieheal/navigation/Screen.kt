@@ -102,4 +102,7 @@ sealed class Screen(val route: String) {
 
     object PaymentMethod : Screen("payment_method")
     object Wallet : Screen("wallet")
+    object WalletTransactionDetail : Screen("wallet_transaction_detail/{transactionId}") {
+        fun createRoute(transactionId: String) = "wallet_transaction_detail/$transactionId"
+    }
 }

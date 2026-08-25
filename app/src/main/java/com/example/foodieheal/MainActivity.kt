@@ -104,6 +104,8 @@ import com.example.foodieheal.User.View.RegisterScreen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Payment.Screen.PaymentMethodScreen
+import com.example.foodieheal.wallet.screen.WalletScreen
+import com.example.foodieheal.wallet.screen.WalletTransactionDetailScreen
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
 import kotlin.collections.find
@@ -905,10 +907,34 @@ class MainActivity : ComponentActivity() {
 
                                     val currentUserId = sharedAuthViewModel.currentUser?.id.orEmpty()
 
-                                    com.example.foodieheal.wallet.screen.WalletScreen(
+                                    WalletScreen(
                                         userId = currentUserId,
                                         viewModel = walletViewModel,
                                         paymentMethodViewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onTransactionClick = { transactionId ->
+                                            navController.navigate(Screen.WalletTransactionDetail.createRoute(transactionId))
+                                        }
+                                    )
+                                }
+
+                                composable(
+                                    route = Screen.WalletTransactionDetail.route,
+                                    arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val context = LocalContext.current
+                                    val transactionId = backStackEntry.arguments?.getString("transactionId").orEmpty()
+                                    val walletDatabase = remember { com.example.foodieheal.wallet.local.WalletDatabase.getDatabase(context) }
+                                    val walletRepo = remember {
+                                        com.example.foodieheal.wallet.data.WalletRepository(
+                                            dao = walletDatabase.walletDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+
+                                    WalletTransactionDetailScreen(
+                                        transactionId = transactionId,
+                                        walletRepository = walletRepo,
                                         onBackClick = { navController.popBackStack() }
                                     )
                                 }
