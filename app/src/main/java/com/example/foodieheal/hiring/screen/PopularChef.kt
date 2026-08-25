@@ -59,7 +59,7 @@ fun PopularChefsTabContent(
             onQueryChange = { filterState = filterState.copy(searchQuery = it) },
             onFilterClick = { showFilterSheet = true },
             activeFilterCount = filterState.activeFilterCount,
-            placeholder = "Search by name, state, skills..."
+            placeholder = "Search by name & state"
         )
 
         // Active filter chips row

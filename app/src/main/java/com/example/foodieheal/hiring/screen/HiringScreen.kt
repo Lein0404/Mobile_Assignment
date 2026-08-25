@@ -112,7 +112,7 @@ fun HiringScreen(
                             text = {
                                 Text(
                                     text = title,
-                                    fontSize = 12.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
                                     color = if (selectedTabIndex == index) {
                                         MaterialTheme.colorScheme.onPrimary

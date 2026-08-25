@@ -52,6 +52,7 @@ import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.ui.components.formatToAmPm
 
 @Composable
 fun AppointmentsScreen(
@@ -136,7 +137,7 @@ fun AppointmentsScreen(
                 }
 
                 is AppointmentsUiState.Success -> {
-                    val statusOptions = listOf("All", "Pending", "Confirmed", "Completed", "Cancelled")
+                    val statusOptions = listOf("All", "Pending", "Unpaid", "Confirmed", "Rejected", "Completed", "Cancelled")
 
                     // Apply status filter
                     val filteredAppointments = state.appointments.filter { appointment ->
@@ -333,12 +334,14 @@ fun AppointmentCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+                val startTimeAmPm = formatToAmPm(appointment.Start_Time)
+                val endTimeAmPm = formatToAmPm(appointment.End_Time)
                 Text(
                     text = stringResource(
                         R.string.appointment_datetime_format,
                         appointment.Date,
-                        appointment.Start_Time,
-                        appointment.End_Time
+                        startTimeAmPm,
+                        endTimeAmPm
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

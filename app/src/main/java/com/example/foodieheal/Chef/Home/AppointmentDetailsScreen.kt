@@ -57,6 +57,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.ui.components.DetailSectionCard
+import com.example.foodieheal.ui.components.formatToAmPm
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -173,18 +174,20 @@ fun AppointmentDetailScreen(
             // Schedule & Time Section
             DetailSectionCard(title = stringResource(R.string.date_time)) {
                 DetailRow(
-                    iconRes = R.drawable.ic_clock,
+                    iconRes = R.drawable.ic_calendar,
                     label = stringResource(R.string.label_date),
                     value = appointment.Date
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                val startTimeAmPm = formatToAmPm(appointment.Start_Time)
+                val endTimeAmPm = formatToAmPm(appointment.End_Time)
                 DetailRow(
                     iconRes = R.drawable.ic_clock,
                     label = stringResource(R.string.label_time_slot),
                     value = stringResource(
                         R.string.time_slot_format,
-                        appointment.Start_Time,
-                        appointment.End_Time
+                        startTimeAmPm,
+                        endTimeAmPm
                     )
                 )
             }
@@ -219,13 +222,13 @@ fun AppointmentDetailScreen(
             // Dietary & Booking Details Section
             DetailSectionCard(title = stringResource(R.string.section_booking_details)) {
                 DetailRow(
-                    iconRes = R.drawable.ic_clock,
+                    iconRes = R.drawable.serving_size,
                     label = stringResource(R.string.label_party_size),
                     value = stringResource(R.string.party_size_format, appointment.Serving_Size)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 DetailRow(
-                    iconRes = R.drawable.ic_clock,
+                    iconRes = R.drawable.health_preference,
                     label = stringResource(R.string.label_dietary_preference),
                     value = appointment.Health_Preference.ifBlank { stringResource(R.string.none_specified) }
                 )

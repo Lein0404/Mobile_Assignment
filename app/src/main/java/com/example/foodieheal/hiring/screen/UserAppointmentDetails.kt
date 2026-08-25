@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -119,8 +122,20 @@ fun UserAppointmentDetailScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.booking_details), fontWeight = FontWeight.Bold)
-                        Text("ID: $appointmentId", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                        Text(
+                            text = stringResource(R.string.booking_details),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "ID: $appointmentId",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 },
                 navigationIcon = {
@@ -206,17 +221,24 @@ fun UserAppointmentDetailScreen(
                         placeholder = painterResource(R.drawable.ic_outline_account_circle)
                     )
 
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             text = chefUser?.name ?: stringResource(R.string.private_chef_name),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = stringResource(R.string.professional_chef),
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -241,8 +263,10 @@ fun UserAppointmentDetailScreen(
                         Text(
                             text = stringResource(R.string.label_status),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         AppointmentStatusBadge(status = appointment.Status.orEmpty())
                     }
 
@@ -459,19 +483,24 @@ fun UserAppointmentDetailScreen(
                             text = "Attached Dishes / Meal Plan",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         if (attachedRecipes.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    text = "${attachedRecipes.size} dish(es)",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    text = "${attachedRecipes.size} ${if (attachedRecipes.size == 1) "dish" else "dishes"}",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
@@ -547,7 +576,9 @@ fun UserAppointmentDetailScreen(
                                                 text = recipe?.recipeName ?: "Recipe #${item.recipeId}",
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
                                             )
 
                                             Row(
@@ -587,11 +618,13 @@ fun UserAppointmentDetailScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Action Buttons Section
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // "Pay Now" Button (Only for Unpaid Status)
@@ -661,9 +694,15 @@ fun UserAppointmentDetailScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(stringResource(R.string.cancel_booking), fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.cancel_booking),
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
 
                         Button(
@@ -675,9 +714,15 @@ fun UserAppointmentDetailScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondary
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
-                            Text(stringResource(R.string.reschedule), fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.reschedule),
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
