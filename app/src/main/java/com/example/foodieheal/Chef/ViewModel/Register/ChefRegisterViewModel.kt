@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
 import kotlinx.coroutines.launch
@@ -39,6 +40,12 @@ class ChefRegisterViewModel(
     var description by mutableStateOf("")
 
     var isSubmitting by mutableStateOf(false)
+        private set
+
+    var isCheckingContact by mutableStateOf(false)
+        private set
+
+    var isEmailTaken by mutableStateOf(false)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
@@ -79,7 +86,12 @@ class ChefRegisterViewModel(
         get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getConfirmPasswordErrorRes(password, confirmPassword) else null
 
     val emailErrorRes: Int?
-        get() = if (showContactErrorMessage) ChefRegisterValidate.getEmailErrorRes(email) else null
+        get() = if (showContactErrorMessage) {
+            when {
+                isEmailTaken -> R.string.error_email_already_exists
+                else -> ChefRegisterValidate.getEmailErrorRes(email)
+            }
+        } else null
 
     val phoneErrorRes: Int?
         get() = if (showContactErrorMessage) ChefRegisterValidate.getPhoneNumberErrorRes(phoneNumber) else null
@@ -203,6 +215,14 @@ class ChefRegisterViewModel(
         experience = ""
         description = ""
         selectedImageUri = null
+        isEmailTaken = false
+        isCheckingContact = false
+    }
+
+    fun clearEmailTakenError() {
+        if (isEmailTaken) {
+            isEmailTaken = false
+        }
     }
 
     fun isValidName(): Boolean = ChefRegisterValidate.isValidName(name)
@@ -241,9 +261,27 @@ class ChefRegisterViewModel(
         )
     }
 
-    fun validateContactInfo(): Boolean {
+    fun validateContactInfo(onSuccess: () -> Unit) {
         showContactErrorMessage = true
-        return ChefRegisterValidate.validateContactInfo(email, phoneNumber)
+        isEmailTaken = false
+        if (ChefRegisterValidate.validateContactInfo(email, phoneNumber)) {
+            viewModelScope.launch {
+                isCheckingContact = true
+                try {
+                    val alreadyExists = repository.isEmailRegistered(email)
+                    if (alreadyExists) {
+                        isEmailTaken = true
+                    } else {
+                        onSuccess()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ChefRegister", "Error checking email", e)
+                    onSuccess()
+                } finally {
+                    isCheckingContact = false
+                }
+            }
+        }
     }
 
     fun validateAddressInfo(): Boolean {
@@ -268,6 +306,8 @@ class ChefRegisterViewModel(
         showAddressErrorMessage = false
         showDescriptionErrorMessage = false
         showProfilePictureErrorMessage = false
+        isEmailTaken = false
+        isCheckingContact = false
         errorMessage = null
         selectedImageUri = null
     }

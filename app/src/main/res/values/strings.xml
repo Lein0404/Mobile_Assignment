@@ -571,6 +571,7 @@
     <string name="error_confirm_password_required">Please confirm your password.</string>
     <string name="error_email_required">Email address is required.</string>
     <string name="error_email_invalid">Please enter a valid email address.</string>
+    <string name="error_email_already_exists">This email is already registered.</string>
     <string name="error_phone_required">Phone number is required.</string>
     <string name="error_phone_invalid">Please enter a valid phone number (e.g. 0123456789).</string>
     <string name="error_address_required">Address is required.</string>

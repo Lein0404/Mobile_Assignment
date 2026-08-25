@@ -58,6 +58,7 @@ fun ChefWelcomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.foodieheal.Cloudinary.uploadImageToCloudinary
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.User.Model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
@@ -14,6 +15,19 @@ import java.util.UUID
 class ChefRegisterRepository(
     private val client: io.github.jan.supabase.SupabaseClient = SupabaseClient.client
 ) {
+
+    suspend fun isEmailRegistered(email: String): Boolean {
+        val cleanEmail = email.trim()
+        val chefExists = client.postgrest.from("Chef").select {
+            filter { eq("email", cleanEmail) }
+        }.decodeList<Chef>().isNotEmpty()
+        if (chefExists) return true
+
+        val userExists = client.postgrest.from("users").select {
+            filter { eq("email", cleanEmail) }
+        }.decodeList<User>().isNotEmpty()
+        return userExists
+    }
 
     suspend fun authenticateUser(email: String, password: String): String {
         try {
