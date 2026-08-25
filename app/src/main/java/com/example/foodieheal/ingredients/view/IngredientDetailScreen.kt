@@ -29,6 +29,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.ImagePlaceholder
 import com.example.foodieheal.ui.components.PrimaryButton
 import com.example.foodieheal.ui.components.StatusBadge
 
@@ -371,20 +372,6 @@ fun IngredientDetailScreen(
                 }
             }
         )
-    }
-}
-
-@Composable
-fun ImagePlaceholder() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            painter = painterResource(R.drawable.ic_no_image_available),
-            contentDescription = null,
-            modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-        Text(stringResource(R.string.image_unavailable), color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

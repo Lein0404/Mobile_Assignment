@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -461,6 +462,32 @@ fun StatusBadge(status: Status) {
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             color = textColor
+        )
+    }
+}
+
+@Composable
+fun ImagePlaceholder(
+    modifier: Modifier = Modifier,
+    iconSize: Dp = dimensionResource(R.dimen.icon_xlarge_size),
+    spacerSize: Dp = dimensionResource(id = R.dimen.padding_smd),
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_no_image_available),
+            contentDescription = null,
+            modifier = Modifier.size(iconSize),
+            tint = tint
+        )
+        Spacer(modifier = Modifier.height(spacerSize))
+        Text(
+            text = stringResource(R.string.image_unavailable),
+            color = tint,
         )
     }
 }

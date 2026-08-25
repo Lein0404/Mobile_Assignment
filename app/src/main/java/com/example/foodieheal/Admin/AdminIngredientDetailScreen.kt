@@ -26,9 +26,9 @@ import coil3.compose.SubcomposeAsyncImage
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
 import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
-import com.example.foodieheal.ingredients.view.ImagePlaceholder
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.ImagePlaceholder
 import com.example.foodieheal.ui.components.PrimaryButton
 import com.example.foodieheal.ui.components.StatusBadge
 import java.time.ZoneId
@@ -190,6 +190,7 @@ fun AdminIngredientDetailScreen(
                                 if (request.requestStatus == Status.REJECTED) {
                                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                                     Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                                     Text(
                                         text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
                                         color = MaterialTheme.colorScheme.onBackground,
