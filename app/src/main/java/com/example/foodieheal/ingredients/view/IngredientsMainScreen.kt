@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
@@ -255,88 +256,16 @@ fun IngredientRequestsScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-        // 1. Search Bar
-        OutlinedTextField(
-            value = uiState.searchQuery,
-            onValueChange = { viewModel.onSearchQueryChange(it) },
-            placeholder = { Text(
-                text = stringResource(R.string.ingredients_requests_search_placeholder),
-                style = MaterialTheme.typography.labelLarge
-            ) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-            trailingIcon = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = dimensionResource(id = R.dimen.padding_md))
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_filter_alt),
-                        contentDescription = stringResource(R.string.ingredients_requests_apply_filter),
-                        tint = if (uiState.selectedStatus != null) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                        modifier = Modifier
-                            .clickable {
-                                viewModel.onShowStatusFilterDialog(true)
-                            }
-                    )
-                    Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
-                    Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = stringResource(R.string.search),
-                        modifier = Modifier
-                            .clickable {
-                                viewModel.onShowStatusFilterDialog(true)
-                            }
-                    )
-                }
-            },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            ),
+        IngredientSearchAndFilter(
+            searchQuery = uiState.searchQuery,
+            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+            searchPlaceholder = stringResource(R.string.ingredients_requests_search_placeholder),
+            selectedCategories = uiState.selectedCategories,
+            onToggleCategory = { viewModel.toggleCategory(it) },
+            showFilterIcon = true,
+            isFilterActive = uiState.selectedStatus != null,
+            onFilterClick = { viewModel.onShowStatusFilterDialog(true) }
         )
-
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-        Text(
-            text = stringResource(R.string.shopping_list_categories),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
-
-        // 2. Category Chips
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
-        ) {
-            items(IngredientCategory.entries) { category ->
-                val isSelected = uiState.selectedCategories.contains(category)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.toggleCategory(category) },
-                    label = {
-                        Text(
-                            text = category.categoryName,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        labelColor = MaterialTheme.colorScheme.onSecondary,
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    border = null
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
         if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -507,65 +436,13 @@ fun IngredientsExistingScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-        OutlinedTextField(
-            value = uiState.searchQuery,
-            onValueChange = { viewModel.onSearchQueryChange(it) },
-            placeholder = { Text(
-                text = stringResource(R.string.ingredients_existing_search_placeholder),
-                style = MaterialTheme.typography.labelLarge
-            ) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-            trailingIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = stringResource(R.string.search)
-                ) },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            ),
+        IngredientSearchAndFilter(
+            searchQuery = uiState.searchQuery,
+            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+            searchPlaceholder = stringResource(R.string.ingredients_existing_search_placeholder),
+            selectedCategories = uiState.selectedCategories,
+            onToggleCategory = { viewModel.toggleCategory(it) }
         )
-
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-        Text(
-            text = stringResource(R.string.shopping_list_categories),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
-        ) {
-            items(IngredientCategory.entries) { category ->
-                val isSelected = uiState.selectedCategories.contains(category)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.toggleCategory(category) },
-                    label = {
-                        Text(
-                            text = category.categoryName,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        labelColor = MaterialTheme.colorScheme.onSecondary,
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    border = null
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
         if (uiState.isLoading && !uiState.isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
