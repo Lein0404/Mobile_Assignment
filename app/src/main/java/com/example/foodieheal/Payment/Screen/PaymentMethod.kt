@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.foodieheal.Payment.ViewModel.PaymentMethod
@@ -207,7 +208,7 @@ private fun PaymentMethodManagementItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -221,23 +222,41 @@ private fun PaymentMethodManagementItem(
                     painter = painterResource(R.drawable.dollar_symbol),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     when (method) {
                         is PaymentMethod.CreditCard -> {
+                            val formattedExpiry = method.expiryDate?.let { exp ->
+                                if (exp.length == 4 && !exp.contains("/")) "${exp.take(2)}/${exp.takeLast(2)}" else exp
+                            } ?: "N/A"
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = method.cardBrand,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "•••• ${method.last4Digits}",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    maxLines = 1
+                                )
+                            }
+
                             Text(
-                                text = "${method.cardBrand} •••• ${method.last4Digits}",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyLarge,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "Expires ${method.expiryDate ?: "N/A"}",
+                                text = "Expires $formattedExpiry",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -250,7 +269,9 @@ private fun PaymentMethodManagementItem(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -262,25 +283,25 @@ private fun PaymentMethodManagementItem(
             ) {
                 IconButton(
                     onClick = onToggleDefault,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_star),
                         contentDescription = if (isDefault) "Default Payment Method" else "Set as Default",
                         tint = if (isDefault) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.4f),
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_delete),
                         contentDescription = "Delete Method",
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

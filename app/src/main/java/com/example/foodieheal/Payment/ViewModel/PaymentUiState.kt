@@ -16,7 +16,10 @@ sealed class PaymentMethod(
     ) : PaymentMethod(
         id = id,
         title = "$cardBrand •••• $last4Digits",
-        subtitle = expiryDate?.let { "Expires $it" } ?: "Saved Card"
+        subtitle = expiryDate?.let {
+            val formatted = if (it.length == 4 && !it.contains("/")) "${it.take(2)}/${it.takeLast(2)}" else it
+            "Expires $formatted"
+        } ?: "Saved Card"
     )
 }
 
