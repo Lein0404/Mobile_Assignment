@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,11 +77,25 @@ fun CloudinaryUploadScreen(
             )
         }
 
-        SecondaryButton(
-            onClick = { launcher.launch("image/*") },
-            modifier = Modifier
-                .fillMaxWidth(),
-            textId = if (state.selectedImageUri == null && state.uploadedImageUrl.isEmpty()) R.string.select_image else R.string.change_image
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
+        ){
+            if (state.selectedImageUri != null || state.uploadedImageUrl.isNotEmpty()) {
+                SecondaryButton(
+                    onClick = { viewModel.clearImage() },
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    textId = R.string.remove_image,
+                    borderColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            }
+
+            SecondaryButton(
+                onClick = { launcher.launch("image/*") },
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                textId = if (state.selectedImageUri == null && state.uploadedImageUrl.isEmpty()) R.string.select_image else R.string.change_image
+            )
+        }
     }
 }

@@ -202,7 +202,7 @@ fun AdminIngredientRequestFormScreen(
                     val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
                         cloudinaryViewModel.uploadImage(context)
                     } else {
-                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl }
+                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                     }
 
                     viewModel.approveRequest(

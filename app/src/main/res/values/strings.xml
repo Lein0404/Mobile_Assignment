@@ -45,7 +45,8 @@
     <string name="image">Image</string>
     <string name="select_image">Select Image</string>
     <string name="change_image">Change Image</string>
-    <string name="image_unavailable">No image available</string>"
+    <string name="remove_image">Remove Image</string>
+    <string name="image_unavailable">No image available</string>
     <string name="upload_failed">Failed to upload image.</string>
 
     <!-- Common Dialog Buttons -->

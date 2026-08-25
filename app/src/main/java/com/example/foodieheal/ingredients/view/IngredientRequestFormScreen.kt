@@ -79,7 +79,6 @@ fun IngredientRequestFormScreen(
         }
     }
 
-    // TODO: duplicated LaunchedEffect in AdminIngredientRequestFormScreen
     LaunchedEffect(formState.imageUrl) {
         formState.imageUrl?.let {
             cloudinaryViewModel.setExistingImageUrl(it)

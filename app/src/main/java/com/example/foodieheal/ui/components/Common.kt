@@ -71,7 +71,9 @@ fun PrimaryButton(
     onClick: () -> Unit,
     textID: Int,
     enabled: Boolean = true,
-    padding: PaddingValues? = null
+    padding: PaddingValues? = null,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     val finalModifier = if (padding != null) {
         modifier.padding(padding)
@@ -83,8 +85,8 @@ fun PrimaryButton(
         onClick = onClick,
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = containerColor,
+            contentColor = contentColor,
         ),
         enabled = enabled,
         modifier = finalModifier
@@ -102,7 +104,9 @@ fun SecondaryButton(
     onClick: () -> Unit,
     textId: Int,
     enabled: Boolean = true,
-    padding: PaddingValues? = null
+    padding: PaddingValues? = null,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.primary
 ) {
     val finalModifier = if (padding != null) {
         modifier.padding(padding)
@@ -115,10 +119,10 @@ fun SecondaryButton(
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.primary
+            color = borderColor
         ),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
+            contentColor = contentColor
         ),
         enabled = enabled,
         modifier = finalModifier

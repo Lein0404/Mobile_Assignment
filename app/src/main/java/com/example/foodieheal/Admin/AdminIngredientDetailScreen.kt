@@ -134,7 +134,12 @@ fun AdminIngredientDetailScreen(
                                         contentDescription = request.ingredientName,
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop,
-                                        loading = { CircularProgressIndicator(modifier = Modifier.scale(0.2f)) },
+                                        loading = {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.scale(0.2f),
+                                                strokeWidth = 2.dp
+                                            )
+                                        },
                                         error = { ImagePlaceholder() }
                                     )
                                 } else {
@@ -248,20 +253,15 @@ fun AdminIngredientDetailScreen(
                                         .padding(dimensionResource(id = R.dimen.padding_l)),
                                     horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                                 ) {
-                                    Button(
-                                        onClick = { viewModel.onShowRejectDialog(true) },
+                                    PrimaryButton(
                                         modifier = Modifier.weight(0.45f),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        ),
-                                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.reject),
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = MaterialTheme.colorScheme.onError
-                                        )
-                                    }
+                                        onClick = {
+                                            viewModel.onShowRejectDialog(true)
+                                        },
+                                        textID = R.string.reject,
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    )
                                     PrimaryButton(
                                         modifier = Modifier.weight(0.55f),
                                         onClick = {

@@ -183,7 +183,10 @@ fun IngredientDetailScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                     loading = {
-                                        CircularProgressIndicator(modifier = Modifier.scale(0.2f))
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.scale(0.2f),
+                                            strokeWidth = 2.dp
+                                        )
                                     },
                                     error = { ImagePlaceholder() }
                                 )
@@ -321,20 +324,15 @@ fun IngredientDetailScreen(
                                     .padding(dimensionResource(id = R.dimen.padding_l)),
                                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
                             ) {
-                                Button(
-                                    onClick = { requestViewModel.onShowDeleteDialog(true) },
+                                PrimaryButton(
                                     modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    ),
-                                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.delete_request),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onError
-                                    )
-                                }
+                                    onClick = {
+                                        requestViewModel.onShowDeleteDialog(true)
+                                    },
+                                    textID = R.string.delete_request,
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
                                 PrimaryButton(
                                     modifier = Modifier.weight(1f),
                                     onClick = {
