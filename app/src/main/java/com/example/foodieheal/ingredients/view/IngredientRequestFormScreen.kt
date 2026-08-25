@@ -148,7 +148,7 @@ fun IngredientRequestFormScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .imePadding() // must be placed before verticalScroll so scroll viewport shrinks when IME appears
+                        .imePadding()
                         .verticalScroll(rememberScrollState())
                         .padding(dimensionResource(id = R.dimen.padding_l)),
                 ) {

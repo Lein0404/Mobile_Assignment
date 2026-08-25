@@ -5,8 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -57,6 +58,10 @@ fun AdminIngredientsScreen(
     
     val adminUiState by adminViewModel.uiState.collectAsState()
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
+
+    // Separate scroll states for each tab
+    val communityCategoryScrollState = rememberLazyListState()
+    val requestsCategoryScrollState = rememberLazyListState()
 
     // Sync tab state only if initialTab is explicitly provided (0 or 1)
     LaunchedEffect(initialTab) {
@@ -157,13 +162,15 @@ fun AdminIngredientsScreen(
                             viewModel = ingredientsViewModel,
                             uiState = ingredientsUiState,
                             navController = navController,
+                            categoryScrollState = communityCategoryScrollState,
                             showAddToCart = false // Admins don't have shopping list
                         )
                     } else {
                         AdminIngredientRequestsScreen(
                             viewModel = adminViewModel,
                             uiState = adminUiState,
-                            navController = navController
+                            navController = navController,
+                            categoryScrollState = requestsCategoryScrollState
                         )
                     }
                 }
@@ -232,7 +239,8 @@ fun AdminOfflineMessage() {
 fun AdminIngredientRequestsScreen(
     viewModel: AdminIngredientsViewModel,
     uiState: AdminIngredientsUiState,
-    navController: NavController
+    navController: NavController,
+    categoryScrollState: LazyListState = rememberLazyListState()
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -246,7 +254,8 @@ fun AdminIngredientRequestsScreen(
             categoriesLabel = stringResource(R.string.admin_categories_header),
             showFilterIcon = true,
             isFilterActive = uiState.selectedStatus != null,
-            onFilterClick = { viewModel.onShowStatusFilterDialog(true) }
+            onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
+            lazyRowState = categoryScrollState
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {

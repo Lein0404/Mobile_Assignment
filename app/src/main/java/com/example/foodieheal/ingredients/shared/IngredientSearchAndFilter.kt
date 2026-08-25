@@ -2,14 +2,15 @@ package com.example.foodieheal.ingredients.shared
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,7 +44,8 @@ fun IngredientSearchAndFilter(
     categoriesLabel: String = stringResource(R.string.shopping_list_categories),
     showFilterIcon: Boolean = false,
     isFilterActive: Boolean = false,
-    onFilterClick: () -> Unit = {}
+    onFilterClick: () -> Unit = {},
+    lazyRowState: LazyListState = rememberLazyListState()
 ) {
     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
@@ -103,6 +105,7 @@ fun IngredientSearchAndFilter(
 
     // 2. Category Chips
     LazyRow(
+        state = lazyRowState,
         contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
     ) {

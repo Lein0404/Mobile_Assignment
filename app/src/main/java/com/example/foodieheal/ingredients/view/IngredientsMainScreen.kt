@@ -5,8 +5,9 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,15 +37,12 @@ import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.navigation.Screen
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestItem
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestUiState
 import com.example.foodieheal.ingredients.viewModel.IngredientsUiState
 import com.example.foodieheal.ui.components.StatusBadge
-import com.example.foodieheal.ui.theme.FoodieHealTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +68,10 @@ fun IngredientsMainScreen(
     
     val uiState by viewModel.uiState.collectAsState()
     val requestUiState by requestViewModel.uiState.collectAsState()
+
+    // Separate scroll states for each tab
+    val existingCategoryScrollState = rememberLazyListState()
+    val requestsCategoryScrollState = rememberLazyListState()
 
     // Sync tab state only if initialTab is explicitly provided (0 or 1)
     LaunchedEffect(initialTab) {
@@ -192,6 +194,7 @@ fun IngredientsMainScreen(
                     viewModel = viewModel,
                     uiState = uiState,
                     navController = navController,
+                    categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
                         viewModel.addToShoppingList(ingredient)
                         Toast.makeText(
@@ -205,7 +208,8 @@ fun IngredientsMainScreen(
                 IngredientRequestsScreen(
                     viewModel = requestViewModel,
                     uiState = requestUiState,
-                    navController = navController
+                    navController = navController,
+                    categoryScrollState = requestsCategoryScrollState
                 )
             }
         }
@@ -216,7 +220,8 @@ fun IngredientsMainScreen(
 fun IngredientRequestsScreen(
     viewModel: IngredientRequestViewModel,
     uiState: IngredientRequestUiState,
-    navController: NavController
+    navController: NavController,
+    categoryScrollState: LazyListState = rememberLazyListState()
 ) {
     // Gate: show offline message when not connected
     if (!uiState.isNetworkAvailable) {
@@ -264,7 +269,8 @@ fun IngredientRequestsScreen(
             onToggleCategory = { viewModel.toggleCategory(it) },
             showFilterIcon = true,
             isFilterActive = uiState.selectedStatus != null,
-            onFilterClick = { viewModel.onShowStatusFilterDialog(true) }
+            onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
+            lazyRowState = categoryScrollState
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -430,6 +436,7 @@ fun IngredientsExistingScreen(
     viewModel: IngredientsViewModel,
     uiState: IngredientsUiState,
     navController: NavController,
+    categoryScrollState: LazyListState = rememberLazyListState(),
     onAddToCart: (Ingredients) -> Unit = {},
     showAddToCart: Boolean = true
 ) {
@@ -441,7 +448,8 @@ fun IngredientsExistingScreen(
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
             searchPlaceholder = stringResource(R.string.ingredients_existing_search_placeholder),
             selectedCategories = uiState.selectedCategories,
-            onToggleCategory = { viewModel.toggleCategory(it) }
+            onToggleCategory = { viewModel.toggleCategory(it) },
+            lazyRowState = categoryScrollState
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
