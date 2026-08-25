@@ -1,0 +1,791 @@
+package com.example.foodieheal.wallet.screen
+
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.foodieheal.Payment.ViewModel.PaymentMethod
+import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
+import com.example.foodieheal.R
+import com.example.foodieheal.wallet.model.WalletTransaction
+import com.example.foodieheal.wallet.model.WalletTransactionType
+import com.example.foodieheal.wallet.viewmodel.TransactionFilterOption
+import com.example.foodieheal.wallet.viewmodel.WalletUiState
+import com.example.foodieheal.wallet.viewmodel.WalletViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WalletScreen(
+    userId: String,
+    viewModel: WalletViewModel,
+    paymentMethodViewModel: PaymentMethodViewModel? = null,
+    onBackClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showTopUpSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(userId) {
+        if (userId.isNotBlank()) {
+            viewModel.initialize(userId)
+            paymentMethodViewModel?.observeAndFetchPaymentMethods(userId)
+        }
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "In-App Wallet",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.loadWalletData(userId, isRefresh = true) },
+                        enabled = !uiState.isLoading && !uiState.isRefreshing
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh Wallet"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (uiState.isLoading && uiState.wallet == null) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+
+                    item {
+                        WalletBalanceCard(
+                            uiState = uiState,
+                            onToggleVisibility = { viewModel.toggleBalanceVisibility() },
+                            onTopUpClick = { showTopUpSheet = true }
+                        )
+                    }
+
+                    item {
+                        FilterChipsRow(
+                            selectedFilter = uiState.selectedFilter,
+                            onFilterSelect = { viewModel.setFilter(it) }
+                        )
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Transaction History",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${uiState.filteredTransactions.size} records",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    val transactions = uiState.filteredTransactions
+                    if (transactions.isEmpty()) {
+                        item {
+                            EmptyTransactionsView(
+                                filter = uiState.selectedFilter,
+                                onTopUpClick = { showTopUpSheet = true }
+                            )
+                        }
+                    } else {
+                        items(
+                            items = transactions,
+                            key = { it.id.ifEmpty { it.createdAt ?: "${it.amount}_${System.currentTimeMillis()}" } }
+                        ) { txn ->
+                            WalletTransactionItem(
+                                transaction = txn,
+                                isBalanceHidden = uiState.isBalanceHidden
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Top-Up Bottom Sheet
+    if (showTopUpSheet) {
+        val paymentUiState = paymentMethodViewModel?.uiState?.collectAsStateWithLifecycle()?.value
+        TopUpBottomSheet(
+            isSubmitting = uiState.isSubmittingTopUp,
+            savedCards = paymentUiState?.availableMethods ?: emptyList(),
+            onDismiss = { showTopUpSheet = false },
+            onConfirmTopUp = { amount, paymentMethodId ->
+                val selectedCard = paymentUiState?.availableMethods?.firstOrNull { it.id == paymentMethodId }
+                val methodDesc = if (selectedCard != null) "Top-up via ${selectedCard.title}" else "Wallet Top Up"
+                viewModel.topUp(
+                    amount = amount,
+                    paymentMethodId = paymentMethodId,
+                    description = methodDesc,
+                    onSuccess = {
+                        showTopUpSheet = false
+                    },
+                    onError = { err ->
+                        Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun WalletBalanceCard(
+    uiState: WalletUiState,
+    onToggleVisibility: () -> Unit,
+    onTopUpClick: () -> Unit
+) {
+    val balance = uiState.currentBalance
+    val isHidden = uiState.isBalanceHidden
+    val isActive = uiState.isWalletActive
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                            MaterialTheme.colorScheme.tertiary
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Top row: Wallet Label + Active Status Pill
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.dollar_symbol),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "FoodieHeal Pay Balance",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    // Status chip
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isActive) Color(0xFF2E7D32) else Color(0xFFE65100),
+                        contentColor = Color.White
+                    ) {
+                        Text(
+                            text = if (isActive) "Active" else "Inactive",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                // Middle: Balance Amount + Show/Hide Eye Toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = if (isActive) "Current Balance" else "Inactive Balance",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.75f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isHidden) "RM ••••••" else String.format(Locale.US, "RM %.2f", balance),
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        if (!isActive) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "✨ Make your 1st top-up to activate your wallet!",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onToggleVisibility,
+                        modifier = Modifier
+                            .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (isHidden) "Show balance" else "Hide balance",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = Color.White.copy(alpha = 0.25f))
+
+                // Bottom: Action Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = onTopUpClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isActive) "Top Up" else "Activate & Top Up",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterChipsRow(
+    selectedFilter: TransactionFilterOption,
+    onFilterSelect: (TransactionFilterOption) -> Unit
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        items(TransactionFilterOption.values()) { option ->
+            FilterChip(
+                selected = selectedFilter == option,
+                onClick = { onFilterSelect(option) },
+                label = { Text(option.label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun WalletTransactionItem(
+    transaction: WalletTransaction,
+    isBalanceHidden: Boolean
+) {
+    val isCredit = transaction.isCredit
+    val formattedDate = remember(transaction.createdAt) {
+        formatIsoDate(transaction.createdAt)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Icon Badge (+ in green circle or - in red circle)
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        color = if (isCredit) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isCredit) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                    contentDescription = null,
+                    tint = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            // Middle info: Title, description, date
+            Column(modifier = Modifier.weight(1f)) {
+                val titleText = if (transaction.typeEnum == WalletTransactionType.TOP_UP) {
+                    if (transaction.paymentMethod != null) {
+                        "Top-up via ${transaction.paymentMethod.displayTitle}"
+                    } else if (!transaction.description.isNullOrBlank() && transaction.description.contains("via", ignoreCase = true)) {
+                        transaction.description
+                    } else {
+                        "Top Up"
+                    }
+                } else {
+                    transaction.typeEnum.displayLabel
+                }
+
+                Text(
+                    text = titleText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                val subText = if (transaction.typeEnum == WalletTransactionType.TOP_UP) {
+                    if (transaction.paymentMethod != null && transaction.description != titleText) transaction.description else null
+                } else {
+                    transaction.description
+                }
+
+                if (!subText.isNullOrBlank() && subText != titleText) {
+                    Text(
+                        text = subText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                val sign = if (isCredit) "+" else "-"
+                val amountColor = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828)
+
+                Text(
+                    text = "$sign RM ${String.format(Locale.US, "%.2f", transaction.amount)}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = amountColor
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = if (isBalanceHidden) "Bal: ••••••" else "Bal: RM ${String.format(Locale.US, "%.2f", transaction.balanceAfter)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyTransactionsView(
+    filter: TransactionFilterOption,
+    onTopUpClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_history),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            )
+            Text(
+                text = when (filter) {
+                    TransactionFilterOption.ALL -> "No Transactions Yet"
+                    TransactionFilterOption.TOP_UP -> "No Top-Up Records Found"
+                    TransactionFilterOption.PAYMENT -> "No Appointment Payments Found"
+                    TransactionFilterOption.REFUND -> "No Refund Records Found"
+                },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Your transaction history and receipts will be recorded here automatically.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            if (filter == TransactionFilterOption.ALL || filter == TransactionFilterOption.TOP_UP) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onTopUpClick,
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Top Up Now")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopUpBottomSheet(
+    isSubmitting: Boolean,
+    savedCards: List<PaymentMethod>,
+    onDismiss: () -> Unit,
+    onConfirmTopUp: (amount: Double, paymentId: String?) -> Unit
+) {
+    var customAmountText by remember { mutableStateOf("") }
+    var selectedPreset by remember { mutableStateOf<Double?>(100.0) }
+    var selectedCardId by remember {
+        mutableStateOf(savedCards.firstOrNull { (it as? PaymentMethod.CreditCard)?.isDefault == true }?.id ?: savedCards.firstOrNull()?.id)
+    }
+
+    val presetAmounts = listOf(50.0, 100.0, 200.0, 500.0)
+
+    val finalAmount: Double = if (selectedPreset != null) {
+        selectedPreset ?: 0.0
+    } else {
+        customAmountText.toDoubleOrNull() ?: 0.0
+    }
+
+    val isValid = finalAmount >= 1.0
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Top Up Wallet",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Select a preset amount or enter a custom value:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Preset Amount Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                presetAmounts.forEach { preset ->
+                    val isSelected = selectedPreset == preset
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            selectedPreset = preset
+                            customAmountText = ""
+                        },
+                        label = {
+                            Text(
+                                text = "RM ${preset.toInt()}",
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+            }
+
+            // Custom Amount Input
+            OutlinedTextField(
+                value = customAmountText,
+                onValueChange = { input ->
+                    val filtered = input.filter { it.isDigit() || it == '.' }
+                    if (filtered.count { it == '.' } <= 1) {
+                        customAmountText = filtered
+                        if (filtered.isNotEmpty()) {
+                            selectedPreset = null
+                        }
+                    }
+                },
+                label = { Text("Custom Amount (RM)") },
+                placeholder = { Text("e.g. 150.00") },
+                prefix = { Text("RM ", fontWeight = FontWeight.Bold) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+
+            // Payment Source Selection
+            if (savedCards.isNotEmpty()) {
+                Text(
+                    text = "Payment Method:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    savedCards.forEach { card ->
+                        val isCardSelected = selectedCardId == card.id
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedCardId = card.id },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isCardSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                else MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                RadioButton(
+                                    selected = isCardSelected,
+                                    onClick = { selectedCardId = card.id }
+                                )
+                                Icon(
+                                    painter = painterResource(R.drawable.dollar_symbol),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = card.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isCardSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Instant Top-Up Gateway (Demo Mode)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Action Buttons
+            Button(
+                onClick = { onConfirmTopUp(finalAmount, selectedCardId) },
+                enabled = isValid && !isSubmitting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Top Up RM ${String.format(Locale.US, "%.2f", finalAmount)}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+private fun formatIsoDate(isoString: String?): String {
+    if (isoString.isNullOrBlank()) return "Recent"
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val date = parser.parse(isoString.substringBefore("."))
+        if (date != null) {
+            val formatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+            formatter.format(date)
+        } else {
+            isoString
+        }
+    } catch (_: Exception) {
+        try {
+            isoString.take(19).replace("T", " ")
+        } catch (_: Exception) {
+            isoString
+        }
+    }
+}

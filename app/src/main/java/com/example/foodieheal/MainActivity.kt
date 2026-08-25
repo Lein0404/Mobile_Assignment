@@ -862,6 +862,34 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
+                                composable(route = Screen.Wallet.route) {
+                                    val context = LocalContext.current
+                                    val database = remember { PayMethodDatabase.getDatabase(context) }
+                                    val paymentRepo = remember {
+                                        PaymentRepository(
+                                            dao = database.paymentMethodDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+                                    val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
+                                        factory = PaymentMethodViewModel.Factory(paymentRepo)
+                                    )
+
+                                    val walletRepo = remember { com.example.foodieheal.wallet.data.WalletRepository() }
+                                    val walletViewModel: com.example.foodieheal.wallet.viewmodel.WalletViewModel = viewModel(
+                                        factory = com.example.foodieheal.wallet.viewmodel.WalletViewModel.Factory(walletRepo)
+                                    )
+
+                                    val currentUserId = sharedAuthViewModel.currentUser?.id.orEmpty()
+
+                                    com.example.foodieheal.wallet.screen.WalletScreen(
+                                        userId = currentUserId,
+                                        viewModel = walletViewModel,
+                                        paymentMethodViewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() }
+                                    )
+                                }
+
                                 composable(Screen.ChangePassword.route) { ChangePasswordScreen(navController) }
                                 composable(
                                     route = Screen.EditBodyStatus.route + "?fromRegister={fromRegister}",

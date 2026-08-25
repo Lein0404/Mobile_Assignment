@@ -229,6 +229,22 @@ private fun PaymentMethodManagementItem(
 
                 Column(modifier = Modifier.weight(1f)) {
                     when (method) {
+                        is PaymentMethod.InAppWallet -> {
+                            Text(
+                                text = method.title,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            method.subtitle?.let { subtitleText ->
+                                Text(
+                                    text = subtitleText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                         is PaymentMethod.CreditCard -> {
                             val formattedExpiry = method.expiryDate?.let { exp ->
                                 if (exp.length == 4 && !exp.contains("/")) "${exp.take(2)}/${exp.takeLast(2)}" else exp

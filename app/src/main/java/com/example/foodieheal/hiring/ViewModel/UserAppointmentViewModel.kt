@@ -154,8 +154,7 @@ class UserAppointmentViewModel(
     ) {
         viewModelScope.launch {
             try {
-                // Reschedules appointment: refunds previous payment (if confirmed/paid) and resets status to Pending
-                // TODO: In the future, integrate with digital wallet feature to credit refunded amount back to user's wallet balance
+                // Reschedules appointment: credits previous payment (if confirmed/paid) back to user's wallet and resets status to Pending
                 repository.rescheduleAppointment(
                     appointmentId, newDate, newStartTime, newEndTime,
                     newAddress, newPostcode, newState, newServingSize, newDescription, newTotalPrice

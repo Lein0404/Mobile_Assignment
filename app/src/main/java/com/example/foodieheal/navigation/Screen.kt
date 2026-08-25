@@ -101,4 +101,5 @@ sealed class Screen(val route: String) {
     }
 
     object PaymentMethod : Screen("payment_method")
+    object Wallet : Screen("wallet")
 }

@@ -90,6 +90,28 @@ class PaymentViewModel(
             var createdPaymentId: String? = null
 
             try {
+                if (selectedMethod is PaymentMethod.InAppWallet) {
+                    val walletRepo = com.example.foodieheal.wallet.data.WalletRepository(client)
+                    val result = walletRepo.payAppointmentViaWallet(
+                        appointmentId = appointmentId,
+                        userId = currentAppointment.userId.orEmpty()
+                    )
+
+                    result.onSuccess { txnId ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isPaymentSuccess = true,
+                                paymentTransactionId = txnId
+                            )
+                        }
+                        onSuccess(txnId)
+                    }.onFailure { ex ->
+                        throw ex
+                    }
+                    return@launch
+                }
+
                 val transactionId = "TXN-${System.currentTimeMillis()}"
                 val existingPaymentId = currentAppointment.PaymentId
                 val targetPaymentId = if (!existingPaymentId.isNullOrBlank()) existingPaymentId else UUID.randomUUID().toString()
@@ -99,9 +121,13 @@ class PaymentViewModel(
 
                 val methodString = when (selectedMethod) {
                     is PaymentMethod.CreditCard -> "${selectedMethod.cardBrand} (•••• ${selectedMethod.last4Digits})"
+                    is PaymentMethod.InAppWallet -> "In-App Wallet"
                 }
 
-                val paymentMethodId = selectedMethod.id
+                val paymentMethodId = when (selectedMethod) {
+                    is PaymentMethod.CreditCard -> selectedMethod.id
+                    is PaymentMethod.InAppWallet -> null
+                }
 
                 val paymentRecord = payment(
                     paymentId = targetPaymentId,

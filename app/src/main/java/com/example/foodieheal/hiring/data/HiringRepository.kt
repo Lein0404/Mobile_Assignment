@@ -270,6 +270,8 @@ class HiringRepository(
 
         updateAppointmentStatus(appointmentId, "Cancelled")
 
+        val walletRepo = com.example.foodieheal.wallet.data.WalletRepository(client)
+
         try {
             if (!linkedPaymentId.isNullOrBlank()) {
                 client.from("Payment").update({ set("status", targetPaymentStatus) }) {
@@ -282,6 +284,21 @@ class HiringRepository(
             }
         } catch (e: Exception) {
             Log.e("HiringRepository", "Error updating payment status on cancel: ${e.localizedMessage}", e)
+        }
+
+        // Refund paid amount back to user's wallet if appointment was confirmed
+        if (originalStatus == "confirmed" && currentAppt != null && currentAppt.userId.isNotBlank()) {
+            try {
+                walletRepo.refundForCancellation(
+                    appointmentId = appointmentId,
+                    userId = currentAppt.userId,
+                    refundAmount = currentAppt.Total_Price,
+                    paymentId = linkedPaymentId,
+                    reason = "Appointment Cancellation"
+                )
+            } catch (walletEx: Exception) {
+                Log.e("HiringRepository", "Error processing wallet refund on cancel: ${walletEx.localizedMessage}", walletEx)
+            }
         }
     }
 
@@ -313,7 +330,7 @@ class HiringRepository(
         var newPaymentId: String? = oldPaymentId
 
         if (originalStatus == "confirmed") {
-            // Appointment was already paid, refund previous payment
+            // Appointment was already paid, refund previous payment to user wallet
             try {
                 if (!oldPaymentId.isNullOrBlank()) {
                     client.from("Payment").update({ set("status", "Refunded") }) {
@@ -325,8 +342,17 @@ class HiringRepository(
                     }
                 }
 
-                // TODO: Future Wallet Feature - Credit the refunded amount (currentAppt.Total_Price) back to user's wallet balance
-                // like walletRepository.creditRefund(userId = currentAppt.userId, amount = currentAppt.Total_Price, appointmentId = appointmentId)
+                // Credit the refunded amount back to user's wallet balance
+                if (currentAppt != null && currentAppt.userId.isNotBlank()) {
+                    val walletRepo = com.example.foodieheal.wallet.data.WalletRepository(client)
+                    walletRepo.refundForReschedule(
+                        appointmentId = appointmentId,
+                        userId = currentAppt.userId,
+                        refundAmount = currentAppt.Total_Price,
+                        paymentId = oldPaymentId,
+                        reason = "Appointment Reschedule"
+                    )
+                }
 
                 // Create a new pending payment record for the rescheduled appointment
                 val generatedPaymentId = UUID.randomUUID().toString()

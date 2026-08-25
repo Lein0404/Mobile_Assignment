@@ -244,6 +244,8 @@ fun PaymentMethodItem(
     onSelect: () -> Unit
 ) {
     val isDefault = (method as? PaymentMethod.CreditCard)?.isDefault == true
+    val isWallet = method is PaymentMethod.InAppWallet
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +262,7 @@ fun PaymentMethodItem(
         Icon(
             painter = painterResource(R.drawable.dollar_symbol),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = if (isWallet) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(22.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -292,13 +294,27 @@ fun PaymentMethodItem(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
+                } else if (isWallet) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = "Instant",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
                 }
             }
             method.subtitle?.let { subtitleText ->
                 Text(
                     text = subtitleText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isWallet) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

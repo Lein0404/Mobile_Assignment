@@ -7,6 +7,15 @@ sealed class PaymentMethod(
     open val title: String,
     open val subtitle: String? = null
 ) {
+    data class InAppWallet(
+        val balance: Double = 0.0,
+        val isActive: Boolean = true
+    ) : PaymentMethod(
+        id = "in_app_wallet",
+        title = "In-App Wallet",
+        subtitle = "Balance: RM " + String.format(java.util.Locale.US, "%.2f", balance)
+    )
+
     data class CreditCard(
         override val id: String,
         val last4Digits: String,
