@@ -17,13 +17,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.hiring.model.AppointmentRecipe
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import java.util.Locale
 import java.util.UUID
 
 class HiringRepository(
     private val chefDao: ChefDao? = null,
     private val appointmentDao: AppointmentDao? = null,
-    private val reviewDao: ChefReviewDao? = null
+    private val reviewDao: ChefReviewDao? = null,
+    private val recipeRepository: RecipeRepository = RecipeRepository(client)
 ) {
 
     fun getCurrentUserId(): String? {
@@ -138,7 +144,10 @@ class HiringRepository(
         }
     }
 
-    suspend fun createAppointment(appointment: Appointment) = withContext(Dispatchers.IO) {
+    suspend fun createAppointment(
+        appointment: Appointment,
+        selectedRecipes: List<SelectedAppointmentRecipe> = emptyList()
+    ) = withContext(Dispatchers.IO) {
         val generatedAppointmentId = appointment.AppointmentID?.ifBlank { null } ?: UUID.randomUUID().toString()
         val generatedPaymentId = appointment.PaymentId?.ifBlank { null } ?: UUID.randomUUID().toString()
 
@@ -171,8 +180,71 @@ class HiringRepository(
             }
         }
 
+        // Batch insert attached recipes if any were selected
+        if (selectedRecipes.isNotEmpty()) {
+            try {
+                val appointmentRecipes = selectedRecipes.mapNotNull { item ->
+                    val rId = item.recipe.recipe_id ?: return@mapNotNull null
+                    AppointmentRecipe(
+                        appointmentId = generatedAppointmentId,
+                        recipeId = rId,
+                        service_count = item.serviceCount.toDouble(),
+                        custom_note = item.customNote.trim().ifBlank { null }
+                    )
+                }
+                if (appointmentRecipes.isNotEmpty()) {
+                    client.from("appointment_recipe").insert(appointmentRecipes)
+                }
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Error batch inserting appointment recipes: ${e.localizedMessage}", e)
+            }
+        }
+
         val finalAppointment = initialAppointment.copy(PaymentId = generatedPaymentId)
         appointmentDao?.insertAppointment(finalAppointment.toEntity())
+    }
+
+    suspend fun fetchAppointmentRecipes(appointmentId: String): List<AppointmentRecipeWithDetails> = withContext(Dispatchers.IO) {
+        if (appointmentId.isBlank()) return@withContext emptyList()
+        try {
+            val appointmentRecipes = client.from("appointment_recipe")
+                .select {
+                    filter {
+                        eq("appointmentId", appointmentId)
+                    }
+                }
+                .decodeList<AppointmentRecipe>()
+
+            if (appointmentRecipes.isEmpty()) return@withContext emptyList()
+
+            val recipeIds = appointmentRecipes.map { it.recipeId }.distinct()
+            val fetchedRecipes = recipeRepository.getRecipesByIds(recipeIds).getOrDefault(emptyList())
+            val recipesMap = fetchedRecipes.associateBy { it.recipe_id ?: "" }
+
+            appointmentRecipes.map { apptRecipe ->
+                AppointmentRecipeWithDetails(
+                    id = apptRecipe.id,
+                    appointmentId = apptRecipe.appointmentId,
+                    recipeId = apptRecipe.recipeId,
+                    service_count = apptRecipe.service_count,
+                    custom_note = apptRecipe.custom_note,
+                    recipe = recipesMap[apptRecipe.recipeId]
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error fetching appointment recipes: ${e.localizedMessage}", e)
+            emptyList()
+        }
+    }
+
+    suspend fun fetchUserBookmarkedRecipes(userId: String): List<Recipe> = withContext(Dispatchers.IO) {
+        if (userId.isBlank()) return@withContext emptyList()
+        try {
+            recipeRepository.getBookmarkedRecipes(userId).getOrDefault(emptyList())
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error fetching user bookmarked recipes: ${e.localizedMessage}", e)
+            emptyList()
+        }
     }
 
     suspend fun updateAppointmentStatus(appointmentId: String, status: String) = withContext(Dispatchers.IO) {

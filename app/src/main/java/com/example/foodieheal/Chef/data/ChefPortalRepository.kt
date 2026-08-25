@@ -10,6 +10,9 @@ import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.hiring.model.AppointmentRecipe
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +21,8 @@ import kotlinx.coroutines.withContext
 class ChefPortalRepository(
     private val appointmentDao: ChefPortalAppointmentDao,
     private val userDao: ChefPortalUserDao,
-    private val profileDao: ChefProfileDao
+    private val profileDao: ChefProfileDao,
+    private val recipeRepository: RecipeRepository = RecipeRepository(client)
 ) {
 
     fun getCurrentUserId(): String? {
@@ -95,6 +99,39 @@ class ChefPortalRepository(
             status = newStatus,
             rejectReason = rejectionReason
         )
+    }
+
+    suspend fun fetchAppointmentRecipes(appointmentId: String): List<AppointmentRecipeWithDetails> = withContext(Dispatchers.IO) {
+        if (appointmentId.isBlank()) return@withContext emptyList()
+        try {
+            val appointmentRecipes = client.from("appointment_recipe")
+                .select {
+                    filter {
+                        eq("appointmentId", appointmentId)
+                    }
+                }
+                .decodeList<AppointmentRecipe>()
+
+            if (appointmentRecipes.isEmpty()) return@withContext emptyList()
+
+            val recipeIds = appointmentRecipes.map { it.recipeId }.distinct()
+            val fetchedRecipes = recipeRepository.getRecipesByIds(recipeIds).getOrDefault(emptyList())
+            val recipesMap = fetchedRecipes.associateBy { it.recipe_id ?: "" }
+
+            appointmentRecipes.map { apptRecipe ->
+                AppointmentRecipeWithDetails(
+                    id = apptRecipe.id,
+                    appointmentId = apptRecipe.appointmentId,
+                    recipeId = apptRecipe.recipeId,
+                    service_count = apptRecipe.service_count,
+                    custom_note = apptRecipe.custom_note,
+                    recipe = recipesMap[apptRecipe.recipeId]
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching appointment recipes: ${e.localizedMessage}", e)
+            emptyList()
+        }
     }
 
     suspend fun cacheChefProfile(chef: Chef) = withContext(Dispatchers.IO) {

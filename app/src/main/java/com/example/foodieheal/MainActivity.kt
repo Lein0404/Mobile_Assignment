@@ -702,6 +702,8 @@ class MainActivity : ComponentActivity() {
                                 composable(Screen.AddHiringAppointment.route) {
                                     AddAppointmentFormScreen(
                                         viewModel = bookingViewModel,
+                                        authViewModel = sharedAuthViewModel,
+                                        recipeViewModel = sharedRecipeViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onSuccessConfirm = {
                                             navController.navigate(Screen.AppointmentReview.route)

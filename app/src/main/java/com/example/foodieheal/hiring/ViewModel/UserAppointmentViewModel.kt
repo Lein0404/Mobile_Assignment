@@ -7,9 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UserAppointmentViewModel(
@@ -26,7 +28,29 @@ class UserAppointmentViewModel(
     private val _deletedAppointmentIds = MutableStateFlow<Set<String>>(emptySet())
     val deletedAppointmentIds: StateFlow<Set<String>> = _deletedAppointmentIds.asStateFlow()
 
+    // Attached recipes map keyed by appointmentId
+    private val _attachedRecipes = MutableStateFlow<Map<String, List<AppointmentRecipeWithDetails>>>(emptyMap())
+    val attachedRecipes: StateFlow<Map<String, List<AppointmentRecipeWithDetails>>> = _attachedRecipes.asStateFlow()
+
+    private val _isLoadingRecipes = MutableStateFlow(false)
+    val isLoadingRecipes: StateFlow<Boolean> = _isLoadingRecipes.asStateFlow()
+
     private var hasLoadedSuccessfully = false
+
+    fun loadRecipesForAppointment(appointmentId: String) {
+        if (appointmentId.isBlank()) return
+        viewModelScope.launch {
+            _isLoadingRecipes.value = true
+            try {
+                val recipes = repository.fetchAppointmentRecipes(appointmentId)
+                _attachedRecipes.update { it + (appointmentId to recipes) }
+            } catch (e: Exception) {
+                Log.e("UserAppointmentVM", "Error loading recipes for appointment $appointmentId", e)
+            } finally {
+                _isLoadingRecipes.value = false
+            }
+        }
+    }
 
     init {
         fetchAppointmentsForCurrentUser()

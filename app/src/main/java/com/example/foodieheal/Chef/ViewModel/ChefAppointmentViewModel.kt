@@ -11,6 +11,7 @@ import com.example.foodieheal.Chef.data.ChefPortalRepository
 import com.example.foodieheal.Chef.local.ChefDatabase
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.User.Model.User
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface HomeUiState {
@@ -71,8 +73,39 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
+    // Attached recipes map keyed by appointmentId
+    private val _attachedRecipes = MutableStateFlow<Map<String, List<AppointmentRecipeWithDetails>>>(emptyMap())
+    val attachedRecipes: StateFlow<Map<String, List<AppointmentRecipeWithDetails>>> = _attachedRecipes.asStateFlow()
+
+    private val _isLoadingRecipes = MutableStateFlow(false)
+    val isLoadingRecipes: StateFlow<Boolean> = _isLoadingRecipes.asStateFlow()
+
     var selectedAppointment by mutableStateOf<Appointment?>(null)
         private set
+
+    fun loadRecipesForAppointment(appointmentId: String) {
+        if (appointmentId.isBlank()) return
+        viewModelScope.launch {
+            _isLoadingRecipes.value = true
+            try {
+                val recipes = repository.fetchAppointmentRecipes(appointmentId)
+                _attachedRecipes.update { it + (appointmentId to recipes) }
+            } catch (e: Exception) {
+                Log.e("ChefPortalVM", "Error loading recipes for appointment $appointmentId", e)
+            } finally {
+                _isLoadingRecipes.value = false
+            }
+        }
+    }
+
+    fun selectAppointment(appointment: Appointment?) {
+        selectedAppointment = appointment
+        appointment?.AppointmentID?.let { id ->
+            if (id.isNotBlank()) {
+                loadRecipesForAppointment(id)
+            }
+        }
+    }
 
     init {
         observeNetworkStatus()
@@ -162,10 +195,6 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 )
             }
         }
-    }
-
-    fun selectAppointment(appointment: Appointment?) {
-        selectedAppointment = appointment
     }
 
     fun updateAppointmentStatus(

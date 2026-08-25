@@ -10,6 +10,10 @@ import com.example.foodieheal.hiring.model.ChefAppointmentsUiState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +27,8 @@ import java.util.Locale
 
 class AppointmentBookingViewModel(
     private val repository: HiringRepository = HiringRepository(),
-    private val networkMonitor: NetworkMonitor? = null
+    private val networkMonitor: NetworkMonitor? = null,
+    private val recipeRepository: RecipeRepository = RecipeRepository(SupabaseClient.client)
 ) : ViewModel() {
 
     private val _selectedChef = MutableStateFlow<Chef?>(null)
@@ -40,6 +45,17 @@ class AppointmentBookingViewModel(
 
     private val _isNetworkAvailable = MutableStateFlow(true)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    // Bookmarked recipes for selection
+    private val _bookmarkedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val bookmarkedRecipes: StateFlow<List<Recipe>> = _bookmarkedRecipes.asStateFlow()
+
+    private val _isLoadingBookmarks = MutableStateFlow(false)
+    val isLoadingBookmarks: StateFlow<Boolean> = _isLoadingBookmarks.asStateFlow()
+
+    // Attached recipes to appointment
+    private val _selectedRecipes = MutableStateFlow<List<SelectedAppointmentRecipe>>(emptyList())
+    val selectedRecipes: StateFlow<List<SelectedAppointmentRecipe>> = _selectedRecipes.asStateFlow()
 
     val currentChefId: String
         get() = selectedChef.value?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
@@ -115,6 +131,78 @@ class AppointmentBookingViewModel(
 
     fun clearAppointmentForm() {
         _uiState.value = AppointmentUiState()
+        _selectedRecipes.value = emptyList()
+    }
+
+    fun fetchUserBookmarks(userId: String) {
+        if (userId.isBlank()) return
+        viewModelScope.launch {
+            _isLoadingBookmarks.value = true
+            try {
+                val bookmarks = recipeRepository.getBookmarkedRecipes(userId).getOrDefault(emptyList())
+                _bookmarkedRecipes.value = bookmarks
+            } catch (e: Exception) {
+                Log.e("AppointmentBookingVM", "Error fetching bookmarked recipes", e)
+            } finally {
+                _isLoadingBookmarks.value = false
+            }
+        }
+    }
+
+    fun toggleRecipeSelection(recipe: Recipe) {
+        val recipeId = recipe.recipe_id ?: return
+        val currentList = _selectedRecipes.value.toMutableList()
+        val existingIndex = currentList.indexOfFirst { it.recipe.recipe_id == recipeId }
+
+        if (existingIndex >= 0) {
+            currentList.removeAt(existingIndex)
+        } else {
+            val defaultServings = uiState.value.servingSize.toIntOrNull()?.takeIf { it > 0 } ?: 2
+            currentList.add(
+                SelectedAppointmentRecipe(
+                    recipe = recipe,
+                    serviceCount = defaultServings,
+                    customNote = ""
+                )
+            )
+        }
+        _selectedRecipes.value = currentList
+    }
+
+    fun isRecipeSelected(recipeId: String?): Boolean {
+        if (recipeId == null) return false
+        return _selectedRecipes.value.any { it.recipe.recipe_id == recipeId }
+    }
+
+    fun updateRecipeServings(recipeId: String, servings: Int) {
+        val clampedServings = servings.coerceIn(1, 99)
+        _selectedRecipes.update { list ->
+            list.map { item ->
+                if (item.recipe.recipe_id == recipeId) {
+                    item.copy(serviceCount = clampedServings)
+                } else item
+            }
+        }
+    }
+
+    fun updateRecipeCustomNote(recipeId: String, note: String) {
+        _selectedRecipes.update { list ->
+            list.map { item ->
+                if (item.recipe.recipe_id == recipeId) {
+                    item.copy(customNote = note)
+                } else item
+            }
+        }
+    }
+
+    fun removeSelectedRecipe(recipeId: String) {
+        _selectedRecipes.update { list ->
+            list.filterNot { it.recipe.recipe_id == recipeId }
+        }
+    }
+
+    fun clearSelectedRecipes() {
+        _selectedRecipes.value = emptyList()
     }
 
     private fun revalidateIfSubmitted() {
@@ -360,7 +448,7 @@ class AppointmentBookingViewModel(
 
         viewModelScope.launch {
             try {
-                repository.createAppointment(newAppointment)
+                repository.createAppointment(newAppointment, _selectedRecipes.value)
                 _uiState.update { it.copy(isSubmitting = false) }
                 clearAppointmentForm()
                 onSuccess()

@@ -21,9 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.Chef.healthPreferencesList
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.hiring.components.RecipeBookmarkSelectorSheet
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
@@ -35,6 +44,8 @@ import java.util.Locale
 @Composable
 fun AddAppointmentFormScreen(
     viewModel: AppointmentBookingViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    recipeViewModel: RecipeViewModel? = null,
     onBackClick: () -> Unit,
     onSuccessConfirm: () -> Unit
 ) {
@@ -42,9 +53,22 @@ fun AddAppointmentFormScreen(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
+    val selectedRecipes by viewModel.selectedRecipes.collectAsStateWithLifecycle()
+    val bookmarkedRecipes by viewModel.bookmarkedRecipes.collectAsStateWithLifecycle()
+    val isLoadingBookmarks by viewModel.isLoadingBookmarks.collectAsStateWithLifecycle()
 
+    val currentUserId = authViewModel.currentUser?.id.orEmpty()
     val chefId = viewModel.currentChefId
     val focusManager = LocalFocusManager.current
+
+    var showBookmarkSelectorSheet by remember { mutableStateOf(false) }
+
+    // Fetch user's bookmarks
+    LaunchedEffect(currentUserId) {
+        if (currentUserId.isNotBlank()) {
+            viewModel.fetchUserBookmarks(currentUserId)
+        }
+    }
 
     // Fetch appointments for this specific chef whenever chef ID or date updates
     LaunchedEffect(chefId, selectedDate) {
@@ -347,6 +371,166 @@ fun AddAppointmentFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Attach recipes section (Optional)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Requested Dishes (Optional)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Attach bookmarked recipes for the chef",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (selectedRecipes.isNotEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Text(
+                                        text = "${selectedRecipes.size} selected",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
+
+                        if (selectedRecipes.isEmpty()) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.bookmark),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "No specific recipes attached. You can pick dishes from your bookmarks for your chef to prepare.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else {
+                            // Selected recipes list
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                selectedRecipes.forEach { item ->
+                                    val recipe = item.recipe
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            AsyncImage(
+                                                model = recipe.recipeImageUrl,
+                                                contentDescription = recipe.recipeName,
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                                contentScale = ContentScale.Crop,
+                                                error = painterResource(R.drawable.ic_recipe),
+                                                placeholder = painterResource(R.drawable.ic_recipe)
+                                            )
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = recipe.recipeName,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                    text = "${item.serviceCount} portion(s)" +
+                                                            if (item.customNote.isNotBlank()) " • “${item.customNote}”" else "",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    recipe.recipe_id?.let { viewModel.removeSelectedRecipe(it) }
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.cancel),
+                                                    contentDescription = "Remove",
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { showBookmarkSelectorSheet = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.bookmark),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (selectedRecipes.isEmpty()) "+ Attach from Bookmarks" else "Edit Attached Recipes (${selectedRecipes.size})",
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Surface(
@@ -511,5 +695,20 @@ fun AddAppointmentFormScreen(
         ) {
             TimePicker(state = timePickerState)
         }
+    }
+
+    // Bookmark Recipe Selector Bottom Sheet
+    if (showBookmarkSelectorSheet) {
+        RecipeBookmarkSelectorSheet(
+            bookmarkedRecipes = bookmarkedRecipes,
+            selectedRecipes = selectedRecipes,
+            isLoading = isLoadingBookmarks,
+            recipeViewModel = recipeViewModel,
+            authViewModel = authViewModel,
+            onToggleSelect = { recipe -> viewModel.toggleRecipeSelection(recipe) },
+            onUpdateServings = { recipeId, servings -> viewModel.updateRecipeServings(recipeId, servings) },
+            onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) },
+            onDismiss = { showBookmarkSelectorSheet = false }
+        )
     }
 }

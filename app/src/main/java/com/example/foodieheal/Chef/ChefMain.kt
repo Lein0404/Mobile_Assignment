@@ -168,11 +168,24 @@ fun ChefMainScreen(
                     val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
 
                     val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+                    val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()
+                    val isLoadingRecipes by homeViewModel.isLoadingRecipes.collectAsState()
+
+                    val apptId = appointment.AppointmentID.orEmpty()
+                    val attachedRecipes = attachedRecipesMap[apptId] ?: emptyList()
+
+                    LaunchedEffect(apptId) {
+                        if (apptId.isNotBlank() && !attachedRecipesMap.containsKey(apptId)) {
+                            homeViewModel.loadRecipesForAppointment(apptId)
+                        }
+                    }
 
                     AppointmentDetailScreen(
                         appointment = appointment,
                         userName = userName,
                         isNetworkAvailable = isNetworkAvailable,
+                        attachedRecipes = attachedRecipes,
+                        isLoadingRecipes = isLoadingRecipes,
                         onBackClick = { chefNavController.popBackStack() },
                         onStatusChange = { newStatus, rejectionReason ->
                             val id = appointment.AppointmentID.orEmpty()
