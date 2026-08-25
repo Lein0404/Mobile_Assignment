@@ -40,6 +40,8 @@
     <string name="error_logout_failed">Logout failed. Please try again.</string>
     <string name="error_invalid_credentials">Invalid email and/or password. Please try again.</string>
     <string name="nav_logout">Logout</string>
+    <string name="logout_confirm_title">Logout Confirmation</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
 
     <!-- Image related -->
     <string name="image">Image</string>
