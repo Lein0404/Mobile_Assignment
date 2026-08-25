@@ -549,7 +549,6 @@
     <string name="step_4_of_5">Step 4 of 5</string>
     <string name="step_5_of_5">Step 5 of 5</string>
     <string name="submit_registration">Submit Registration</string>
-    <string name="error_name_required">Name is required.</string>
     <string name="error_name_invalid">Name must be 3-50 characters containing only letters.</string>
     <string name="error_gender_required">Please select your gender.</string>
     <string name="error_age_required">Age is required.</string>
@@ -568,7 +567,6 @@
     <string name="error_state_required">Please select a state.</string>
     <string name="error_experience_required">Years of experience is required.</string>
     <string name="error_experience_invalid">Experience must be between 0 and 70 years.</string>
-    <string name="error_description_required">Description is required.</string>
     <string name="error_description_limit">Description cannot exceed 300 words.</string>
     <string name="error_profile_picture_required">A profile picture is required to complete registration.</string>
     <string name="words_count_format">%1$d/300 words</string>
@@ -681,9 +679,9 @@
     <string name="ingredient_form_error_submission_failed">Submission failed: %1$s</string>
 
     <!-- Ingredients Module Validation Errors -->
-    <string name="error_name_required">Ingredient name is required</string>
+    <string name="ingredients_error_name_required">Ingredient name is required</string>
     <string name="error_category_required">Category is required</string>
-    <string name="error_description_required">Description is required</string>
+    <string name="ingredients_error_description_required">Description is required</string>
     <string name="error_at_least_one_unit_required">At least one calorie information entry is required</string>
     <string name="error_unit_required">Serving unit is required</string>
     <string name="error_calories_required">Calories value is required</string>

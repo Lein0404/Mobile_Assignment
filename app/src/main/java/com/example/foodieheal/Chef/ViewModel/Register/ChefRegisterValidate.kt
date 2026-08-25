@@ -14,7 +14,7 @@ object ChefRegisterValidate {
     fun getNameErrorRes(name: String): Int? {
         val trimmed = name.trim()
         return when {
-            trimmed.isEmpty() -> R.string.error_name_required
+            trimmed.isEmpty() -> R.string.ingredients_error_name_required
             trimmed.length < 3 || trimmed.length > 50 || !trimmed.matches(Regex("^[a-zA-Z ]+$")) -> R.string.error_name_invalid
             else -> null
         }
@@ -154,7 +154,7 @@ object ChefRegisterValidate {
         val trimmed = description.trim()
         val words = if (trimmed.isEmpty()) 0 else trimmed.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
         return when {
-            trimmed.isEmpty() -> R.string.error_description_required
+            trimmed.isEmpty() -> R.string.ingredients_error_description_required
             words > 300 -> R.string.error_description_limit
             else -> null
         }

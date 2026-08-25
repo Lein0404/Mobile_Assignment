@@ -97,7 +97,7 @@ object IngredientFormHelper {
 
         val nameError = if (state.ingredientName.isBlank()) {
             isValid = false
-            R.string.error_name_required
+            R.string.ingredients_error_name_required
         } else null
 
         val categoryError = if (state.category == null) {
@@ -107,7 +107,7 @@ object IngredientFormHelper {
 
         val descriptionError = if (state.description.isBlank()) {
             isValid = false
-            R.string.error_description_required
+            R.string.ingredients_error_description_required
         } else null
 
         // At least one unit row must be fully filled

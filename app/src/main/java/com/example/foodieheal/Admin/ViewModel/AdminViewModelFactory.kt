@@ -3,10 +3,10 @@ package com.example.foodieheal.Admin.ViewModel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.foodieheal.User.Repo.UserRepository
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
-import com.example.foodieheal.repo.UserRepository
 
 class AdminViewModelFactory(
     private val application: Application
