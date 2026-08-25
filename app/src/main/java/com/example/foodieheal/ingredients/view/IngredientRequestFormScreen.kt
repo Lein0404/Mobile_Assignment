@@ -25,14 +25,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import com.example.foodieheal.R
-import com.example.foodieheal.Cloudinary.CloudinaryUploadScreen
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
-import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.Units
+import com.example.foodieheal.ingredients.shared.IngredientFormBody
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.PrimaryButton
 import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 
@@ -159,198 +157,69 @@ fun IngredientRequestFormScreen(
                         .padding(dimensionResource(id = R.dimen.padding_l))
                         .imePadding(), // prevent keyboard from hiding input box
                 ) {
-                    // 1. Cloudinary Upload
-                    CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
-                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                    // 2. Ingredient Name
-                    CommonInputField(
-                        value = formState.ingredientName,
-                        onValueChange = { viewModel.updateFormName(it) },
-                        textId = R.string.ingredient_name,
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = formState.nameError != null
-                    )
-                    formState.nameError?.let { resId ->
-                        Text(
-                            text = stringResource(id = resId),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-                        )
-                    }
-                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                    // 3. Ingredient Category
-                    LargeSearchableDropdownMenu(
-                        modifier = Modifier.fillMaxWidth().padding(top = dimensionResource(id = R.dimen.padding_xxsm)),
-                        title = stringResource(R.string.category),
-                        fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
-                        selectedOption = formState.category,
-                        onItemSelected = { viewModel.updateFormCategory(it) },
-                        selectedItemToString = { it.categoryName },
-                        placeholder = stringResource(R.string.ingredient_form_category_placeholder),
-                        placeholderTextStyle = MaterialTheme.typography.bodyLarge.copy(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
-                        ),
-                        textStyle = MaterialTheme.typography.bodyLarge,
-                        options = IngredientCategory.entries,
-                        drawItem = { item, selected, itemEnabled, onClick ->
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(enabled = itemEnabled, onClick = onClick)
-                                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l), vertical = dimensionResource(id = R.dimen.padding_md))
-                            ) {
-                                Text(
-                                    text = item.categoryName,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            errorContainerColor = MaterialTheme.colorScheme.background,
-                        ),
-                        isError = formState.categoryError != null
-                    )
-                    formState.categoryError?.let { resId ->
-                        Text(
-                            text = stringResource(id = resId),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-                        )
-                    }
-                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                    // 4. Description
-                    CommonInputField(
-                        value = formState.description,
-                        onValueChange = { viewModel.updateFormDescription(it) },
-                        textId = R.string.description,
-                        modifier = Modifier
-                            .height(dimensionResource(R.dimen.large_OutlinedTextField_size))
-                            .fillMaxWidth(),
-                        singleLine = false,
-                        maxLines = 8,
-                        isError = formState.descriptionError != null
-                    )
-                    formState.descriptionError?.let { resId ->
-                        Text(
-                            text = stringResource(id = resId),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-                        )
-                    }
-                    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                    // 5. Calorie Information (Dynamic Rows)
-                    Text(
-                        text = stringResource(R.string.calorie_information),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    formState.unitRowsError?.let { resId ->
-                        Text(
-                            text = stringResource(id = resId),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
-
-                    if (availableUnits.isNotEmpty()) {
-                        formState.unitRows.forEachIndexed { index, row ->
-                            UnitRow(
-                                index = index,
-                                selectedUnit = row.selectedUnit,
-                                calories = row.calories,
-                                availableUnits = availableUnits,
-                                onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                                onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null,
-                                unitError = row.unitError,
-                                caloriesError = row.caloriesError
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = dimensionResource(id = R.dimen.padding_l)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(dimensionResource(R.dimen.icon_large_size))
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
-                    TextButton(
-                        onClick = { viewModel.addUnitRow() },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    IngredientFormBody(
+                        cloudinaryViewModel = cloudinaryViewModel,
+                        ingredientName = formState.ingredientName,
+                        category = formState.category,
+                        description = formState.description,
+                        unitRows = formState.unitRows,
+                        availableUnits = availableUnits,
+                        nameError = formState.nameError,
+                        categoryError = formState.categoryError,
+                        descriptionError = formState.descriptionError,
+                        unitRowsError = formState.unitRowsError,
+                        categoryPlaceholder = stringResource(R.string.ingredient_form_category_placeholder),
+                        onNameChange = { viewModel.updateFormName(it) },
+                        onCategoryChange = { viewModel.updateFormCategory(it) },
+                        onDescriptionChange = { viewModel.updateFormDescription(it) },
+                        onUnitRowUpdate = { index, unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
+                        onUnitRowRemove = { viewModel.removeUnitRow(it) },
+                        onAddUnitRow = { viewModel.addUnitRow() },
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_smd))
-                        ){
-                            Icon(
-                                painter = painterResource(R.drawable.ic_outline_add),
-                                contentDescription = null,
-                                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
+                        // Screen-specific bottom content
+                        formState.errorMessage?.let { resId ->
+                            Text(
+                                text = stringResource(id = resId),
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = dimensionResource(R.dimen.padding_xxsm))
                             )
-                            Text(stringResource(R.string.ingredient_form_add_unit))
                         }
-                    }
 
-                    formState.errorMessage?.let { resId ->
-                        Text(
-                            text = stringResource(id = resId),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = dimensionResource(R.dimen.padding_xxsm))
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
-                    val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
-                    val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
-                    PrimaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            scope.launch {
-                                val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
-                                    cloudinaryViewModel.uploadImage(context)
-                                } else {
-                                    cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
-                                }
-
-                                viewModel.submitRequest(
-                                    imageUrl = imageUrl,
-                                    onComplete = {
-                                        Toast.makeText(
-                                            context,
-                                            if (requestId == null) successToastSubmitted else successToastUpdated,
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                            popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                                        }
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
+                        val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
+                        val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
+                        PrimaryButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                scope.launch {
+                                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                                        cloudinaryViewModel.uploadImage(context)
+                                    } else {
+                                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                                     }
-                                )
-                            }
-                        },
-                        textID = if (requestId == null) R.string.request_new_ingredient else R.string.update_request,
-                        enabled = !formState.isSubmitting
-                    )
 
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
+                                    viewModel.submitRequest(
+                                        imageUrl = imageUrl,
+                                        onComplete = {
+                                            Toast.makeText(
+                                                context,
+                                                if (requestId == null) successToastSubmitted else successToastUpdated,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                                            }
+                                        }
+                                    )
+                                }
+                            },
+                            textID = if (requestId == null) R.string.request_new_ingredient else R.string.update_request,
+                            enabled = !formState.isSubmitting
+                        )
+
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
+                    }
                 }
             }
 

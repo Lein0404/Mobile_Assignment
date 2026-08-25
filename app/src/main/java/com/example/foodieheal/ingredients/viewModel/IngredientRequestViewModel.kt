@@ -7,6 +7,9 @@ import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.ingredients.shared.IngredientFormHelper
+import com.example.foodieheal.ingredients.shared.IngredientFormState
+import com.example.foodieheal.ingredients.shared.UnitRowState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import io.github.jan.supabase.auth.auth
@@ -32,34 +35,9 @@ data class IngredientRequestUiState(
     val showStatusFilterDialog: Boolean = false,
 )
 
-data class IngredientRequestFormUiState(
-    val requestId: String? = null,
-    val ingredientName: String = "",
-    val category: IngredientCategory? = null,
-    val description: String = "",
-    val imageUrl: String? = null,
-    val unitRows: List<UnitRowState> = listOf(UnitRowState()),
-    val isSubmitting: Boolean = false,
-    val isStatusConflict: Boolean = false,
-    val errorMessage: Int? = null,
-
-    // Per-field validation errors
-    val nameError: Int? = null,
-    val categoryError: Int? = null,
-    val descriptionError: Int? = null,
-    val unitRowsError: Int? = null,
-)
-
 data class IngredientRequestItem(
     val request: IngredientRequest,
     val calorieSummary: String = ""
-)
-
-data class UnitRowState(
-    val selectedUnit: Units? = null,
-    val calories: String = "",
-    val unitError: Int? = null,
-    val caloriesError: Int? = null,
 )
 
 class IngredientRequestViewModel(
@@ -70,8 +48,8 @@ class IngredientRequestViewModel(
     private val _uiState = MutableStateFlow(IngredientRequestUiState())
     val uiState: StateFlow<IngredientRequestUiState> = _uiState.asStateFlow()
 
-    private val _formState = MutableStateFlow(IngredientRequestFormUiState())
-    val formState: StateFlow<IngredientRequestFormUiState> = _formState.asStateFlow()
+    private val _formState = MutableStateFlow(IngredientFormState())
+    val formState: StateFlow<IngredientFormState> = _formState.asStateFlow()
 
     private val _availableUnits = MutableStateFlow<List<Units>>(emptyList())
     val availableUnits: StateFlow<List<Units>> = _availableUnits.asStateFlow()
@@ -247,7 +225,7 @@ class IngredientRequestViewModel(
     }
 
     fun clearForm() {
-        _formState.value = IngredientRequestFormUiState()
+        _formState.value = IngredientFormState()
     }
 
     fun clearStatusConflict() {
@@ -288,90 +266,22 @@ class IngredientRequestViewModel(
         }
     }
 
-    fun updateFormName(name: String) = _formState.update { it.copy(ingredientName = name, nameError = null) }
-    fun updateFormCategory(category: IngredientCategory) = _formState.update { it.copy(category = category, categoryError = null) }
-    fun updateFormDescription(desc: String) = _formState.update { it.copy(description = desc, descriptionError = null) }
-    
-    fun addUnitRow() {
-        _formState.update { it.copy(unitRows = it.unitRows + UnitRowState(), unitRowsError = null) }
-    }
+    fun updateFormName(name: String) = _formState.update { IngredientFormHelper.updateName(it, name) }
+    fun updateFormCategory(category: IngredientCategory) = _formState.update { IngredientFormHelper.updateCategory(it, category) }
+    fun updateFormDescription(desc: String) = _formState.update { IngredientFormHelper.updateDescription(it, desc) }
+    fun addUnitRow() = _formState.update { IngredientFormHelper.addUnitRow(it) }
 
     fun updateUnitRow(index: Int, unit: Units?, calories: String) {
-        _formState.update { state ->
-            val newList = state.unitRows.toMutableList()
-            newList[index] = newList[index].copy(selectedUnit = unit, calories = calories, unitError = null, caloriesError = null)
-            state.copy(unitRows = newList, unitRowsError = null)
-        }
+        _formState.update { IngredientFormHelper.updateUnitRow(it, index, unit, calories) }
     }
 
     fun removeUnitRow(index: Int) {
-        _formState.update { state ->
-            if (state.unitRows.size > 1) {
-                val newList = state.unitRows.toMutableList()
-                newList.removeAt(index)
-                state.copy(unitRows = newList)
-            } else state
-        }
+        _formState.update { IngredientFormHelper.removeUnitRow(it, index) }
     }
 
-    /**
-     * Validates all form fields and returns true if the form is valid.
-     * Sets per-field error messages on the form state if invalid.
-     */
     private fun validateForm(): Boolean {
-        val state = _formState.value
-        var isValid = true
-
-        val nameError = if (state.ingredientName.isBlank()) {
-            isValid = false
-            R.string.error_name_required
-        } else null
-
-        val categoryError = if (state.category == null) {
-            isValid = false
-            R.string.error_category_required
-        } else null
-
-        val descriptionError = if (state.description.isBlank()) {
-            isValid = false
-            R.string.error_description_required
-        } else null
-
-        // Validate unit rows: at least one must be fully filled
-        val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
-        val unitRowsError = if (!hasAtLeastOneFilledRow) {
-            isValid = false
-            R.string.error_at_least_one_unit_required
-        } else null
-
-        // Per-row validation for partially filled rows
-        val validatedRows = state.unitRows.map { row ->
-            val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
-                isValid = false
-                R.string.error_unit_required
-            } else null
-
-            val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
-                isValid = false
-                R.string.error_calories_required
-            } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
-                isValid = false
-                R.string.error_invalid_number
-            } else null
-
-            row.copy(unitError = unitError, caloriesError = caloriesError)
-        }
-
-        _formState.update {
-            it.copy(
-                nameError = nameError,
-                categoryError = categoryError,
-                descriptionError = descriptionError,
-                unitRowsError = unitRowsError,
-                unitRows = validatedRows
-            )
-        }
-
+        val (isValid, updatedState) = IngredientFormHelper.validateForm(_formState.value)
+        _formState.value = updatedState
         return isValid
     }
 
@@ -428,7 +338,7 @@ class IngredientRequestViewModel(
                     repository.submitIngredientRequest(request, unitRequests)
                 }
 
-                _formState.value = IngredientRequestFormUiState() // Reset
+                _formState.value = IngredientFormState() // Reset
                 fetchRequests() // Refresh
                 onComplete()
             } catch (e: Exception) {
