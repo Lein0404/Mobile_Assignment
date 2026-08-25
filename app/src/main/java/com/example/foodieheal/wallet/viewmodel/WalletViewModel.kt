@@ -1,23 +1,47 @@
 package com.example.foodieheal.wallet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.wallet.data.WalletRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WalletViewModel(
-    private val repository: WalletRepository = WalletRepository()
+    private val repository: WalletRepository = WalletRepository(),
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WalletUiState())
     val uiState: StateFlow<WalletUiState> = _uiState.asStateFlow()
 
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
     private var activeUserId: String? = null
+
+    init {
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        if (networkMonitor == null) return
+        viewModelScope.launch {
+            networkMonitor.isConnected.collectLatest { connected ->
+                _isNetworkAvailable.value = connected
+                if (connected && !activeUserId.isNullOrBlank()) {
+                    Log.d("WalletViewModel", "Reconnected to internet. Refreshing wallet data.")
+                    loadWalletData(activeUserId, isRefresh = true)
+                }
+            }
+        }
+    }
 
     fun initialize(userId: String?) {
         val targetId = userId?.ifBlank { null } ?: repository.getCurrentUserId()
@@ -80,6 +104,13 @@ class WalletViewModel(
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
+        if (!_isNetworkAvailable.value) {
+            val err = "No internet connection. Please check your network to top up your wallet."
+            _uiState.update { it.copy(errorMessage = err) }
+            onError(err)
+            return
+        }
+
         val targetUserId = activeUserId ?: repository.getCurrentUserId()
         if (targetUserId.isNullOrBlank()) {
             val err = "User session expired. Please log in again."
@@ -133,11 +164,14 @@ class WalletViewModel(
         _uiState.update { it.copy(errorMessage = null, successMessage = null) }
     }
 
-    class Factory(private val repository: WalletRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: WalletRepository,
+        private val networkMonitor: NetworkMonitor? = null
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(WalletViewModel::class.java)) {
-                return WalletViewModel(repository) as T
+                return WalletViewModel(repository, networkMonitor) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

@@ -747,4 +747,44 @@
     <string name="admin_approve_request_dialog_warning">Warning:\nYou are unable to edit the request after approving it!</string>
     <string name="admin_approve_request_dialog_note">You may write an optional note to the user, informing them the reason of your changes to their request.</string>
     <string name="admin_approve_request_dialog_placeholder">Note (Optional)</string>
+
+    <!-- In-App Wallet -->
+    <string name="wallet_title">In-App Wallet</string>
+    <string name="transaction_history">Transaction History</string>
+    <string name="wallet_records_count">%1$d records</string>
+    <string name="wallet_pay_balance_title">FoodieHeal Pay Balance</string>
+    <string name="wallet_status_active">Active</string>
+    <string name="wallet_status_inactive">Inactive</string>
+    <string name="wallet_current_balance">Current Balance</string>
+    <string name="wallet_inactive_balance">Inactive Balance</string>
+    <string name="wallet_activate_prompt">Make your 1st top-up to activate your wallet!</string>
+    <string name="wallet_show_balance">Show balance</string>
+    <string name="wallet_hide_balance">Hide balance</string>
+    <string name="wallet_top_up">Top Up</string>
+    <string name="wallet_activate_and_top_up">Activate &amp; Top Up</string>
+    <string name="wallet_filter_all">All</string>
+    <string name="wallet_filter_top_up">Top Up</string>
+    <string name="wallet_filter_payments">Payments</string>
+    <string name="wallet_filter_refunds">Refunds</string>
+    <string name="wallet_txn_top_up">Top Up</string>
+    <string name="wallet_txn_appointment_payment">Appointment Payment</string>
+    <string name="wallet_txn_refund">Refund</string>
+    <string name="wallet_txn_reschedule_adjustment">Reschedule Adjustment</string>
+    <string name="wallet_txn_top_up_via">Top-up via %1$s</string>
+    <string name="wallet_bal_hidden">Bal: ••••••</string>
+    <string name="wallet_bal_format">Bal: RM %1$s</string>
+    <string name="wallet_empty_all">No Transactions Yet</string>
+    <string name="wallet_empty_topup">No Top-Up Records Found</string>
+    <string name="wallet_empty_payment">No Appointment Payments Found</string>
+    <string name="wallet_empty_refund">No Refund Records Found</string>
+    <string name="wallet_empty_desc">Your transaction history and receipts will be recorded here automatically.</string>
+    <string name="wallet_top_up_now">Top Up Now</string>
+    <string name="wallet_top_up_sheet_title">Top Up Wallet</string>
+    <string name="wallet_top_up_preset_prompt">Select a preset amount or enter a custom value:</string>
+    <string name="wallet_custom_amount_label">Custom Amount (RM)</string>
+    <string name="wallet_custom_amount_placeholder">e.g. 150.00</string>
+    <string name="wallet_payment_method_label">Payment Method:</string>
+    <string name="wallet_demo_gateway_label">Instant Top-Up Gateway (Demo Mode)</string>
+    <string name="wallet_top_up_btn_format">Top Up RM %1$s</string>
+    <string name="wallet_date_recent">Recent</string>
 </resources>

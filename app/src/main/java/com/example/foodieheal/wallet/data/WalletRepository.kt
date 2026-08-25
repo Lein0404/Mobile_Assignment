@@ -4,13 +4,15 @@ import android.util.Log
 import com.example.foodieheal.Payment.data.payment
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.wallet.local.WalletDao
+import com.example.foodieheal.wallet.local.toDomainModel
+import com.example.foodieheal.wallet.local.toRoomEntity
 import com.example.foodieheal.wallet.model.Wallet
 import com.example.foodieheal.wallet.model.WalletTransaction
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,7 +22,8 @@ import java.time.Instant
 import java.util.UUID
 
 class WalletRepository(
-    private val supabaseClient: SupabaseClient = client
+    private val supabaseClient: SupabaseClient = client,
+    private val dao: WalletDao? = null
 ) {
     companion object {
         private const val TAG = "WalletRepository"
@@ -42,10 +45,18 @@ class WalletRepository(
                 }
                 .decodeSingleOrNull<Wallet>()
 
-            existing ?: Wallet(userId = userId, balance = 0.0, isActive = false)
+            if (existing != null) {
+                dao?.insertWallet(existing.toRoomEntity())
+                return@withContext existing
+            }
+
+            // Fallback to local Room if present
+            val local = dao?.getWalletDirect(userId)?.toDomainModel()
+            local ?: Wallet(userId = userId, balance = 0.0, isActive = false)
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching wallet for $userId: ${e.localizedMessage}", e)
-            Wallet(userId = userId, balance = 0.0, isActive = false)
+            val cached = dao?.getWalletDirect(userId)?.toDomainModel()
+            cached ?: Wallet(userId = userId, balance = 0.0, isActive = false)
         }
     }
 
@@ -53,33 +64,51 @@ class WalletRepository(
         if (walletId.isBlank()) return@withContext emptyList()
 
         try {
-            supabaseClient.from("wallet_transaction")
-                .select(
-                    Columns.raw(
-                        "id, wallet_id, payment_id, \"paymentMethod_id\", transaction_type, amount, balance_before, balance_after, description, created_at, payment_method(card_brand, last4_digits, type)"
-                    )
-                ) {
+            // 1. Fetch transactions directly from wallet_transaction table
+            val txns = supabaseClient.from("wallet_transaction")
+                .select {
                     filter {
                         eq("wallet_id", walletId)
                     }
                     order("created_at", Order.DESCENDING)
                 }
                 .decodeList<WalletTransaction>()
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to fetch transactions with payment_method join: ${e.localizedMessage}, falling back to basic query")
-            try {
-                supabaseClient.from("wallet_transaction")
-                    .select {
-                        filter {
-                            eq("wallet_id", walletId)
+
+            // 2. Fetch payment method summaries for transactions that recorded a paymentMethod_id
+            val methodIds = txns.mapNotNull { it.paymentMethodId }.filter { it.isNotBlank() }.distinct()
+            val methodsMap = if (methodIds.isNotEmpty()) {
+                try {
+                    supabaseClient.from("payment_method")
+                        .select {
+                            filter {
+                                isIn("payment_method_id", methodIds)
+                            }
                         }
-                        order("created_at", Order.DESCENDING)
-                    }
-                    .decodeList<WalletTransaction>()
-            } catch (ex: Exception) {
-                Log.e(TAG, "Error fetching wallet transactions for $walletId: ${ex.localizedMessage}", ex)
-                emptyList()
+                        .decodeList<com.example.foodieheal.wallet.model.PaymentMethodRecord>()
+                        .associateBy { it.paymentMethodId }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to load payment methods for transactions: ${e.localizedMessage}")
+                    emptyMap()
+                }
+            } else {
+                emptyMap()
             }
+
+            val enriched = txns.map { txn ->
+                val pm = txn.paymentMethodId?.let { methodsMap[it]?.toSummary() } ?: txn.paymentMethod
+                txn.copy(paymentMethod = pm)
+            }
+
+            // Save to Room cache
+            if (enriched.isNotEmpty()) {
+                dao?.insertTransactions(enriched.map { it.toRoomEntity() })
+            }
+
+            enriched
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching wallet transactions for $walletId: ${e.localizedMessage}", e)
+            val cached = dao?.getTransactionsDirect(walletId)?.map { it.toDomainModel() }
+            cached ?: emptyList()
         }
     }
 
@@ -111,8 +140,9 @@ class WalletRepository(
                 fallbackTopUp(userId, amount, paymentMethodId, description)
             }
 
-            // Retrieve updated wallet
+            // Retrieve updated wallet and cache
             val updated = getWallet(userId)
+            dao?.insertWallet(updated.toRoomEntity())
             Result.success(updated)
         } catch (e: Exception) {
             Log.e(TAG, "Top-up failed: ${e.localizedMessage}", e)
@@ -151,9 +181,10 @@ class WalletRepository(
                 updateAt = Instant.now().toString()
             )
             supabaseClient.from("wallet").insert(newWallet)
+            dao?.insertWallet(newWallet.toRoomEntity())
         } else {
             walletId = existing.id
-            balanceBefore = existing.balance
+            balanceBefore = existing.balance ?: 0.0
             balanceAfter = balanceBefore + amount
 
             supabaseClient.from("wallet").update({
@@ -163,6 +194,7 @@ class WalletRepository(
             }) {
                 filter { eq("id", walletId) }
             }
+            dao?.insertWallet(existing.copy(balance = balanceAfter, isActive = true).toRoomEntity())
         }
 
         val txn = WalletTransaction(
@@ -178,6 +210,7 @@ class WalletRepository(
             createdAt = Instant.now().toString()
         )
         supabaseClient.from("wallet_transaction").insert(txn)
+        dao?.insertTransaction(txn.toRoomEntity())
     }
 
     suspend fun payAppointmentViaWallet(
@@ -187,7 +220,7 @@ class WalletRepository(
         try {
             val currentWallet = getWallet(userId)
 
-            if (!currentWallet.isActive || currentWallet.id.isBlank()) {
+            if (currentWallet.isActive != true || currentWallet.id.isBlank()) {
                 return@withContext Result.failure(IllegalStateException("Wallet is inactive. Please activate your wallet with a top-up first."))
             }
 
@@ -199,6 +232,8 @@ class WalletRepository(
                         put("p_user_id", userId)
                     }
                 )
+                val refreshed = getWallet(userId)
+                dao?.insertWallet(refreshed.toRoomEntity())
                 return@withContext Result.success("TXN-WALLET-${System.currentTimeMillis()}")
             } catch (rpcEx: Exception) {
                 Log.w(TAG, "RPC pay_appointment_via_wallet failed, falling back to direct table update: ${rpcEx.localizedMessage}")
@@ -216,7 +251,7 @@ class WalletRepository(
         userId: String,
         wallet: Wallet
     ): String {
-        if (!wallet.isActive || wallet.id.isBlank()) {
+        if (wallet.isActive != true || wallet.id.isBlank()) {
             throw IllegalStateException("Wallet is inactive. Please activate your wallet with a top-up first.")
         }
 
@@ -225,13 +260,14 @@ class WalletRepository(
             .decodeSingle<Appointment>()
 
         val price = appt.Total_Price
-        if (wallet.balance < price) {
+        val walletBalance = wallet.balance ?: 0.0
+        if (walletBalance < price) {
             throw IllegalStateException(
-                "Insufficient wallet balance. Available: RM ${String.format("%.2f", wallet.balance)}, Required: RM ${String.format("%.2f", price)}"
+                "Insufficient wallet balance. Available: RM ${String.format("%.2f", walletBalance)}, Required: RM ${String.format("%.2f", price)}"
             )
         }
 
-        val balanceBefore = wallet.balance
+        val balanceBefore = walletBalance
         val balanceAfter = balanceBefore - price
 
         // Deduct wallet balance
@@ -241,6 +277,7 @@ class WalletRepository(
         }) {
             filter { eq("id", wallet.id) }
         }
+        dao?.insertWallet(wallet.copy(balance = balanceAfter).toRoomEntity())
 
         val targetPaymentId = if (!appt.PaymentId.isNullOrBlank()) appt.PaymentId else UUID.randomUUID().toString()
         val txnId = "TXN-WALLET-${System.currentTimeMillis()}"
@@ -252,13 +289,13 @@ class WalletRepository(
             userId = userId,
             totalAmount = price,
             paymentMethod = "In-App Wallet",
-            paymentMethodId = null, // Payment.paymentMethod_id FK references payment_method (saved cards); null for In-App Wallet
+            paymentMethodId = null,
             status = "Completed",
-            payAt = Instant.now().toString()
+            payAt = Instant.now().toString(),
+            createdAt = Instant.now().toString()
         )
         supabaseClient.from("Payment").upsert(paymentRecord)
 
-        // Log transaction
         val txn = WalletTransaction(
             id = UUID.randomUUID().toString(),
             walletId = wallet.id,
@@ -271,8 +308,8 @@ class WalletRepository(
             createdAt = Instant.now().toString()
         )
         supabaseClient.from("wallet_transaction").insert(txn)
+        dao?.insertTransaction(txn.toRoomEntity())
 
-        // Update Appointment
         supabaseClient.from("Appointment").update({
             set("Status", "Confirmed")
             set("PaymentId", targetPaymentId)
@@ -288,9 +325,9 @@ class WalletRepository(
         userId: String,
         refundAmount: Double? = null,
         paymentId: String? = null,
-        reason: String = "Appointment Cancellation"
-    ): Result<Double> {
-        return refundAppointmentToWallet(
+        reason: String = "Cancellation"
+    ): Result<Double> = withContext(Dispatchers.IO) {
+        refundAppointmentToWallet(
             appointmentId = appointmentId,
             userId = userId,
             refundAmount = refundAmount,
@@ -304,9 +341,9 @@ class WalletRepository(
         userId: String,
         refundAmount: Double? = null,
         paymentId: String? = null,
-        reason: String = "Appointment Reschedule"
-    ): Result<Double> {
-        return refundAppointmentToWallet(
+        reason: String = "Reschedule"
+    ): Result<Double> = withContext(Dispatchers.IO) {
+        refundAppointmentToWallet(
             appointmentId = appointmentId,
             userId = userId,
             refundAmount = refundAmount,
@@ -323,7 +360,6 @@ class WalletRepository(
         reason: String = "Appointment Cancellation"
     ): Result<Double> = withContext(Dispatchers.IO) {
         try {
-            // Attempt RPC
             try {
                 supabaseClient.postgrest.rpc(
                     function = "refund_appointment_to_wallet",
@@ -333,7 +369,10 @@ class WalletRepository(
                         put("p_reason", reason)
                     }
                 )
-                return@withContext Result.success(refundAmount ?: 0.0)
+                val refreshed = getWallet(userId)
+                dao?.insertWallet(refreshed.toRoomEntity())
+                val amount = refundAmount ?: refreshed.balance ?: 0.0
+                return@withContext Result.success(amount)
             } catch (rpcEx: Exception) {
                 Log.w(TAG, "RPC refund_appointment_to_wallet failed, falling back to direct table update: ${rpcEx.localizedMessage}")
                 val credited = fallbackRefund(appointmentId, userId, refundAmount, paymentId, reason)
@@ -393,9 +432,10 @@ class WalletRepository(
                 updateAt = Instant.now().toString()
             )
             supabaseClient.from("wallet").insert(newWallet)
+            dao?.insertWallet(newWallet.toRoomEntity())
         } else {
             walletId = existing.id
-            balanceBefore = existing.balance
+            balanceBefore = existing.balance ?: 0.0
             balanceAfter = balanceBefore + refundAmount
 
             supabaseClient.from("wallet").update({
@@ -405,6 +445,7 @@ class WalletRepository(
             }) {
                 filter { eq("id", walletId) }
             }
+            dao?.insertWallet(existing.copy(balance = balanceAfter, isActive = true).toRoomEntity())
         }
 
         // Verify payment record exists in Payment table before inserting foreign key
@@ -440,6 +481,7 @@ class WalletRepository(
             createdAt = Instant.now().toString()
         )
         supabaseClient.from("wallet_transaction").insert(txn)
+        dao?.insertTransaction(txn.toRoomEntity())
 
         return refundAmount
     }
@@ -463,18 +505,20 @@ class WalletRepository(
                         put("p_description", description)
                     }
                 )
+                val refreshed = getWallet(userId)
+                dao?.insertWallet(refreshed.toRoomEntity())
                 return@withContext Result.success(amountDiff)
             } catch (rpcEx: Exception) {
                 Log.w(TAG, "RPC adjust_reschedule_wallet failed, falling back: ${rpcEx.localizedMessage}")
                 val wallet = getWallet(userId)
-                if (!wallet.isActive || wallet.id.isBlank()) {
+                if (wallet.isActive != true || wallet.id.isBlank()) {
                     throw IllegalStateException("Wallet is inactive. Please activate your wallet first.")
                 }
 
                 val absDiff = kotlin.math.abs(amountDiff)
                 val isSurcharge = amountDiff > 0
 
-                val balanceBefore = wallet.balance
+                val balanceBefore = wallet.balance ?: 0.0
                 if (isSurcharge && balanceBefore < absDiff) {
                     throw IllegalStateException("Insufficient balance for reschedule surcharge of RM ${String.format("%.2f", absDiff)}")
                 }
@@ -487,6 +531,7 @@ class WalletRepository(
                 }) {
                     filter { eq("id", wallet.id) }
                 }
+                dao?.insertWallet(wallet.copy(balance = balanceAfter).toRoomEntity())
 
                 val txn = WalletTransaction(
                     id = UUID.randomUUID().toString(),
@@ -499,6 +544,7 @@ class WalletRepository(
                     createdAt = Instant.now().toString()
                 )
                 supabaseClient.from("wallet_transaction").insert(txn)
+                dao?.insertTransaction(txn.toRoomEntity())
 
                 return@withContext Result.success(amountDiff)
             }

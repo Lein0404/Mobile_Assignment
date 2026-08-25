@@ -2,26 +2,46 @@ package com.example.foodieheal.Payment.ViewModel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.Payment.data.payment
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.SupabaseClient as AppSupabaseClient
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
 
 class PaymentViewModel(
-    private val client: SupabaseClient = AppSupabaseClient.client
+    private val client: SupabaseClient = AppSupabaseClient.client,
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PaymentUiState())
     val uiState: StateFlow<PaymentUiState> = _uiState.asStateFlow()
+
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    init {
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        if (networkMonitor == null) return
+        viewModelScope.launch {
+            networkMonitor.isConnected.collectLatest { connected ->
+                _isNetworkAvailable.value = connected
+            }
+        }
+    }
 
     fun loadAppointmentById(appointmentId: String) {
         if (appointmentId.isBlank()) return
@@ -59,6 +79,13 @@ class PaymentViewModel(
         onSuccess: (transactionId: String) -> Unit,
         onError: (String) -> Unit
     ) {
+        if (!_isNetworkAvailable.value) {
+            val errorMsg = "No internet connection. Please connect to the internet to complete your payment."
+            _uiState.update { it.copy(errorMessage = errorMsg) }
+            onError(errorMsg)
+            return
+        }
+
         val currentAppointment = uiState.value.appointment
 
         if (currentAppointment == null) {
@@ -138,7 +165,8 @@ class PaymentViewModel(
                     paymentMethod = methodString,
                     paymentMethodId = paymentMethodId,
                     status = "Completed",
-                    payAt = Instant.now().toString()
+                    payAt = Instant.now().toString(),
+                    createdAt = Instant.now().toString()
                 )
 
                 client.from("Payment").upsert(paymentRecord)
@@ -171,7 +199,6 @@ class PaymentViewModel(
                     try {
                         client.from("Payment").delete {
                             filter {
-                                // Matching column casing to PaymentID
                                 eq("PaymentID", createdPaymentId)
                             }
                         }
@@ -194,5 +221,18 @@ class PaymentViewModel(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    class Factory(
+        private val client: SupabaseClient = AppSupabaseClient.client,
+        private val networkMonitor: NetworkMonitor? = null
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(PaymentViewModel::class.java)) {
+                return PaymentViewModel(client, networkMonitor) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }

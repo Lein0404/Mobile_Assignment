@@ -752,7 +752,12 @@ class MainActivity : ComponentActivity() {
                                     val context = LocalContext.current
                                     val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
 
-                                    val paymentViewModel: PaymentViewModel = viewModel()
+                                    val paymentViewModel: PaymentViewModel = viewModel(
+                                        factory = PaymentViewModel.Factory(
+                                            client = SupabaseClient.client,
+                                            networkMonitor = networkMonitor
+                                        )
+                                    )
 
                                     val database = remember { PayMethodDatabase.getDatabase(context) }
                                     val repository = remember {
@@ -763,7 +768,10 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
-                                        factory = PaymentMethodViewModel.Factory(repository)
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = repository,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
                                     PaymentScreen(
@@ -849,7 +857,10 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
-                                        factory = PaymentMethodViewModel.Factory(repository)
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = repository,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
                                     // Retrieve current logged-in user ID from your Auth State / Session
@@ -872,12 +883,24 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
-                                        factory = PaymentMethodViewModel.Factory(paymentRepo)
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = paymentRepo,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
-                                    val walletRepo = remember { com.example.foodieheal.wallet.data.WalletRepository() }
+                                    val walletDatabase = remember { com.example.foodieheal.wallet.local.WalletDatabase.getDatabase(context) }
+                                    val walletRepo = remember {
+                                        com.example.foodieheal.wallet.data.WalletRepository(
+                                            dao = walletDatabase.walletDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
                                     val walletViewModel: com.example.foodieheal.wallet.viewmodel.WalletViewModel = viewModel(
-                                        factory = com.example.foodieheal.wallet.viewmodel.WalletViewModel.Factory(walletRepo)
+                                        factory = com.example.foodieheal.wallet.viewmodel.WalletViewModel.Factory(
+                                            repository = walletRepo,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
                                     val currentUserId = sharedAuthViewModel.currentUser?.id.orEmpty()

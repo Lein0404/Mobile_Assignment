@@ -2,6 +2,7 @@ package com.example.foodieheal.wallet.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 enum class WalletTransactionType {
@@ -53,6 +54,27 @@ data class PaymentMethodSummary(
 }
 
 @Serializable
+data class PaymentMethodRecord(
+    @SerialName("payment_method_id")
+    val paymentMethodId: String = "",
+
+    @SerialName("card_brand")
+    val cardBrand: String? = null,
+
+    @SerialName("last4_digits")
+    val last4Digits: String? = null,
+
+    @SerialName("type")
+    val type: String? = null
+) {
+    fun toSummary(): PaymentMethodSummary = PaymentMethodSummary(
+        cardBrand = cardBrand,
+        last4Digits = last4Digits,
+        type = type
+    )
+}
+
+@Serializable
 data class WalletTransaction(
     @SerialName("id")
     val id: String = "",
@@ -66,39 +88,49 @@ data class WalletTransaction(
     @SerialName("paymentMethod_id")
     val paymentMethodId: String? = null,
 
-    @SerialName("payment_method")
-    val paymentMethod: PaymentMethodSummary? = null,
-
     @SerialName("transaction_type")
     val transactionType: String = "",
 
     @SerialName("amount")
-    val amount: Double = 0.0,
+    val amount: Double? = 0.0,
 
     @SerialName("balance_before")
-    val balanceBefore: Double = 0.0,
+    val balanceBefore: Double? = 0.0,
 
     @SerialName("balance_after")
-    val balanceAfter: Double = 0.0,
+    val balanceAfter: Double? = 0.0,
 
     @SerialName("description")
     val description: String? = null,
 
     @SerialName("created_at")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+
+    @Transient
+    val paymentMethod: PaymentMethodSummary? = null
 ) {
+    val safeAmount: Double
+        get() = amount ?: 0.0
+
+    val safeBalanceBefore: Double
+        get() = balanceBefore ?: 0.0
+
+    val safeBalanceAfter: Double
+        get() = balanceAfter ?: 0.0
+
     val typeEnum: WalletTransactionType
         get() = try {
-            WalletTransactionType.valueOf(transactionType)
+            WalletTransactionType.valueOf(transactionType.trim().uppercase())
         } catch (_: Exception) {
-            if (transactionType.contains("TOP_UP", ignoreCase = true)) WalletTransactionType.TOP_UP
-            else if (transactionType.contains("REFUND", ignoreCase = true)) WalletTransactionType.REFUND
-            else if (transactionType.contains("RESCHEDULE", ignoreCase = true)) WalletTransactionType.RESCHEDULE_ADJUSTMENT
+            val upper = transactionType.trim().uppercase()
+            if (upper.contains("TOP_UP") || upper.contains("TOPUP") || upper.contains("TOP UP")) WalletTransactionType.TOP_UP
+            else if (upper.contains("REFUND")) WalletTransactionType.REFUND
+            else if (upper.contains("RESCHEDULE")) WalletTransactionType.RESCHEDULE_ADJUSTMENT
             else WalletTransactionType.APPOINTMENT_PAYMENT
         }
 
     val isCredit: Boolean
-        get() = typeEnum == WalletTransactionType.TOP_UP || typeEnum == WalletTransactionType.REFUND || (typeEnum == WalletTransactionType.RESCHEDULE_ADJUSTMENT && balanceAfter > balanceBefore)
+        get() = typeEnum == WalletTransactionType.TOP_UP || typeEnum == WalletTransactionType.REFUND || (typeEnum == WalletTransactionType.RESCHEDULE_ADJUSTMENT && safeBalanceAfter >= safeBalanceBefore)
 
     val displayDescription: String
         get() {

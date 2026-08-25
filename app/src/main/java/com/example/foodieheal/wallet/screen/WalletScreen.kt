@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ fun WalletScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isOnline by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showTopUpSheet by remember { mutableStateOf(false) }
@@ -80,7 +82,7 @@ fun WalletScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "In-App Wallet",
+                        text = stringResource(R.string.wallet_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -89,17 +91,6 @@ fun WalletScreen(
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = stringResource(R.string.back)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.loadWalletData(userId, isRefresh = true) },
-                        enabled = !uiState.isLoading && !uiState.isRefreshing
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.refresh),
-                            contentDescription = "Refresh Wallet"
                         )
                     }
                 },
@@ -112,7 +103,15 @@ fun WalletScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = {
+                if (isOnline) {
+                    viewModel.loadWalletData(userId, isRefresh = true)
+                } else {
+                    Toast.makeText(context, "Cannot refresh while offline.", Toast.LENGTH_SHORT).show()
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -126,12 +125,45 @@ fun WalletScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    if (!isOnline) {
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.wifi_off),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = "Offline Mode: Showing cached balance and transactions. Reconnect to top up.",
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     item {
                         WalletBalanceCard(
                             uiState = uiState,
                             onToggleVisibility = { viewModel.toggleBalanceVisibility() },
-                            onTopUpClick = { showTopUpSheet = true }
+                            onTopUpClick = {
+                                if (isOnline) {
+                                    showTopUpSheet = true
+                                } else {
+                                    Toast.makeText(context, "Cannot top up while offline.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         )
                     }
 
@@ -149,13 +181,13 @@ fun WalletScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Transaction History",
+                                text = stringResource(R.string.transaction_history),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "${uiState.filteredTransactions.size} records",
+                                text = stringResource(R.string.wallet_records_count, uiState.filteredTransactions.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -173,7 +205,7 @@ fun WalletScreen(
                     } else {
                         items(
                             items = transactions,
-                            key = { it.id.ifEmpty { it.createdAt ?: "${it.amount}_${System.currentTimeMillis()}" } }
+                            key = { it.id.ifBlank { "${it.createdAt}_${it.amount}_${it.transactionType}" } }
                         ) { txn ->
                             WalletTransactionItem(
                                 transaction = txn,
@@ -235,9 +267,9 @@ fun WalletBalanceCard(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                            MaterialTheme.colorScheme.tertiary
+                            Color(0xFFEC5E3A), // Brand primary orange
+                            Color(0xFFE64A19), // Deep warm orange
+                            Color(0xFFBF360C)  // Rich burnt orange for depth
                         )
                     )
                 )
@@ -264,7 +296,7 @@ fun WalletBalanceCard(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "FoodieHeal Pay Balance",
+                            text = stringResource(R.string.wallet_pay_balance_title),
                             style = MaterialTheme.typography.titleSmall,
                             color = Color.White.copy(alpha = 0.9f),
                             fontWeight = FontWeight.Medium
@@ -278,7 +310,7 @@ fun WalletBalanceCard(
                         contentColor = Color.White
                     ) {
                         Text(
-                            text = if (isActive) "Active" else "Inactive",
+                            text = if (isActive) stringResource(R.string.wallet_status_active) else stringResource(R.string.wallet_status_inactive),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -294,13 +326,13 @@ fun WalletBalanceCard(
                 ) {
                     Column {
                         Text(
-                            text = if (isActive) "Current Balance" else "Inactive Balance",
+                            text = if (isActive) stringResource(R.string.wallet_current_balance) else stringResource(R.string.wallet_inactive_balance),
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.75f)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (isHidden) "RM ••••••" else String.format(Locale.US, "RM %.2f", balance),
+                            text = if (isHidden) stringResource(R.string.wallet_bal_hidden) else String.format(Locale.US, "RM %.2f", balance),
                             fontSize = 30.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -308,7 +340,7 @@ fun WalletBalanceCard(
                         if (!isActive) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "✨ Make your 1st top-up to activate your wallet!",
+                                text = stringResource(R.string.wallet_activate_prompt),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontWeight = FontWeight.Medium
@@ -324,7 +356,7 @@ fun WalletBalanceCard(
                     ) {
                         Icon(
                             painter = painterResource(if (isHidden) R.drawable.ic_hide else R.drawable.ic_view),
-                            contentDescription = if (isHidden) "Show balance" else "Hide balance",
+                            contentDescription = if (isHidden) stringResource(R.string.wallet_show_balance) else stringResource(R.string.wallet_hide_balance),
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
@@ -355,7 +387,7 @@ fun WalletBalanceCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isActive) "Top Up" else "Activate & Top Up",
+                            text = if (isActive) stringResource(R.string.wallet_top_up) else stringResource(R.string.wallet_activate_and_top_up),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -376,10 +408,16 @@ fun FilterChipsRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         items(TransactionFilterOption.values()) { option ->
+            val label = when (option) {
+                TransactionFilterOption.ALL -> stringResource(R.string.wallet_filter_all)
+                TransactionFilterOption.TOP_UP -> stringResource(R.string.wallet_filter_top_up)
+                TransactionFilterOption.PAYMENT -> stringResource(R.string.wallet_filter_payments)
+                TransactionFilterOption.REFUND -> stringResource(R.string.wallet_filter_refunds)
+            }
             FilterChip(
                 selected = selectedFilter == option,
                 onClick = { onFilterSelect(option) },
-                label = { Text(option.label) },
+                label = { Text(label) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -396,9 +434,15 @@ fun WalletTransactionItem(
     isBalanceHidden: Boolean
 ) {
     val isCredit = transaction.isCredit
-    val formattedDate = remember(transaction.createdAt) {
-        formatIsoDate(transaction.createdAt)
+    val recentFallback = stringResource(R.string.wallet_date_recent)
+    val formattedDate = remember(transaction.createdAt, recentFallback) {
+        formatIsoDate(transaction.createdAt, recentFallback)
     }
+
+    val topUpLabel = stringResource(R.string.wallet_txn_top_up)
+    val appointmentPaymentLabel = stringResource(R.string.wallet_txn_appointment_payment)
+    val refundLabel = stringResource(R.string.wallet_txn_refund)
+    val rescheduleAdjustmentLabel = stringResource(R.string.wallet_txn_reschedule_adjustment)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -435,14 +479,19 @@ fun WalletTransactionItem(
             Column(modifier = Modifier.weight(1f)) {
                 val titleText = if (transaction.typeEnum == WalletTransactionType.TOP_UP) {
                     if (transaction.paymentMethod != null) {
-                        "Top-up via ${transaction.paymentMethod.displayTitle}"
+                        stringResource(R.string.wallet_txn_top_up_via, transaction.paymentMethod.displayTitle)
                     } else if (!transaction.description.isNullOrBlank() && transaction.description.contains("via", ignoreCase = true)) {
                         transaction.description
                     } else {
-                        "Top Up"
+                        topUpLabel
                     }
                 } else {
-                    transaction.typeEnum.displayLabel
+                    when (transaction.typeEnum) {
+                        WalletTransactionType.APPOINTMENT_PAYMENT -> appointmentPaymentLabel
+                        WalletTransactionType.REFUND -> refundLabel
+                        WalletTransactionType.RESCHEDULE_ADJUSTMENT -> rescheduleAdjustmentLabel
+                        WalletTransactionType.TOP_UP -> topUpLabel
+                    }
                 }
 
                 Text(
@@ -484,7 +533,7 @@ fun WalletTransactionItem(
                 val amountColor = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828)
 
                 Text(
-                    text = "$sign RM ${String.format(Locale.US, "%.2f", transaction.amount)}",
+                    text = "$sign RM ${String.format(Locale.US, "%.2f", transaction.safeAmount)}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = amountColor
@@ -493,7 +542,7 @@ fun WalletTransactionItem(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    text = if (isBalanceHidden) "Bal: ••••••" else "Bal: RM ${String.format(Locale.US, "%.2f", transaction.balanceAfter)}",
+                    text = if (isBalanceHidden) stringResource(R.string.wallet_bal_hidden) else stringResource(R.string.wallet_bal_format, String.format(Locale.US, "%.2f", transaction.safeBalanceAfter)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -529,16 +578,16 @@ fun EmptyTransactionsView(
             )
             Text(
                 text = when (filter) {
-                    TransactionFilterOption.ALL -> "No Transactions Yet"
-                    TransactionFilterOption.TOP_UP -> "No Top-Up Records Found"
-                    TransactionFilterOption.PAYMENT -> "No Appointment Payments Found"
-                    TransactionFilterOption.REFUND -> "No Refund Records Found"
+                    TransactionFilterOption.ALL -> stringResource(R.string.wallet_empty_all)
+                    TransactionFilterOption.TOP_UP -> stringResource(R.string.wallet_empty_topup)
+                    TransactionFilterOption.PAYMENT -> stringResource(R.string.wallet_empty_payment)
+                    TransactionFilterOption.REFUND -> stringResource(R.string.wallet_empty_refund)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Your transaction history and receipts will be recorded here automatically.",
+                text = stringResource(R.string.wallet_empty_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -551,7 +600,7 @@ fun EmptyTransactionsView(
                 ) {
                     Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Top Up Now")
+                    Text(stringResource(R.string.wallet_top_up_now))
                 }
             }
         }
@@ -594,13 +643,13 @@ fun TopUpBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Top Up Wallet",
+                text = stringResource(R.string.wallet_top_up_sheet_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = "Select a preset amount or enter a custom value:",
+                text = stringResource(R.string.wallet_top_up_preset_prompt),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -646,8 +695,8 @@ fun TopUpBottomSheet(
                         }
                     }
                 },
-                label = { Text("Custom Amount (RM)") },
-                placeholder = { Text("e.g. 150.00") },
+                label = { Text(stringResource(R.string.wallet_custom_amount_label)) },
+                placeholder = { Text(stringResource(R.string.wallet_custom_amount_placeholder)) },
                 prefix = { Text("RM ", fontWeight = FontWeight.Bold) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
@@ -658,7 +707,7 @@ fun TopUpBottomSheet(
             // Payment Source Selection
             if (savedCards.isNotEmpty()) {
                 Text(
-                    text = "Payment Method:",
+                    text = stringResource(R.string.wallet_payment_method_label),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -721,7 +770,7 @@ fun TopUpBottomSheet(
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = "Instant Top-Up Gateway (Demo Mode)",
+                            text = stringResource(R.string.wallet_demo_gateway_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -748,7 +797,7 @@ fun TopUpBottomSheet(
                     )
                 } else {
                     Text(
-                        text = "Top Up RM ${String.format(Locale.US, "%.2f", finalAmount)}",
+                        text = stringResource(R.string.wallet_top_up_btn_format, String.format(Locale.US, "%.2f", finalAmount)),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -760,8 +809,8 @@ fun TopUpBottomSheet(
     }
 }
 
-private fun formatIsoDate(isoString: String?): String {
-    if (isoString.isNullOrBlank()) return "Recent"
+private fun formatIsoDate(isoString: String?, recentFallback: String = "Recent"): String {
+    if (isoString.isNullOrBlank()) return recentFallback
     return try {
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")

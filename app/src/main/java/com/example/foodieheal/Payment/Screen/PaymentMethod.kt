@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.foodieheal.Payment.ViewModel.PaymentMethod
 import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
@@ -31,6 +32,7 @@ fun PaymentMethodScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isOnline by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showAddCardSheet by remember { mutableStateOf(false) }
@@ -72,58 +74,99 @@ fun PaymentMethodScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddCardSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary,
+                onClick = {
+                    if (isOnline) {
+                        showAddCardSheet = true
+                    } else {
+                        Toast.makeText(context, "Cannot add cards while offline.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                containerColor = if (isOnline) MaterialTheme.colorScheme.primary else Color.Gray,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(painter = painterResource(R.drawable.ic_outline_add),
+                Icon(
+                    painter = painterResource(R.drawable.ic_outline_add),
                     contentDescription = "Add Payment Method"
                 )
             }
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (uiState.isLoading && uiState.availableMethods.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (uiState.availableMethods.isEmpty()) {
-                EmptyPaymentMethodsView(onAddClick = { showAddCardSheet = true })
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            if (!isOnline) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(
-                        items = uiState.availableMethods,
-                        key = { it.id }
-                    ) { method ->
-                        val isDefault = (method as? PaymentMethod.CreditCard)?.isDefault == true
-                        PaymentMethodManagementItem(
-                            method = method,
-                            isDefault = isDefault,
-                            onToggleDefault = {
-                                val nextDefaultState = !isDefault
-                                viewModel.setDefaultPaymentMethod(
-                                    methodId = method.id,
-                                    userId = userId,
-                                    isDefault = nextDefaultState,
-                                    onSuccess = {
-                                        val msg = if (nextDefaultState) "Set as default payment method" else "Removed default payment method"
-                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                    },
-                                    onError = { err ->
-                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            },
-                            onDelete = { methodToDelete = method }
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.wifi_off),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.size(16.dp)
                         )
+                        Text(
+                            text = "Offline Mode: Showing cached cards. Reconnect to manage.",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
+                if (uiState.isLoading && uiState.availableMethods.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (uiState.availableMethods.isEmpty()) {
+                    EmptyPaymentMethodsView(onAddClick = {
+                        if (isOnline) showAddCardSheet = true
+                        else Toast.makeText(context, "Cannot add cards while offline.", Toast.LENGTH_SHORT).show()
+                    })
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            items = uiState.availableMethods,
+                            key = { it.id }
+                        ) { method ->
+                            val isDefault = (method as? PaymentMethod.CreditCard)?.isDefault == true
+                            PaymentMethodManagementItem(
+                                method = method,
+                                isDefault = isDefault,
+                                onToggleDefault = {
+                                    val nextDefaultState = !isDefault
+                                    viewModel.setDefaultPaymentMethod(
+                                        methodId = method.id,
+                                        userId = userId,
+                                        isDefault = nextDefaultState,
+                                        onSuccess = {
+                                            val msg = if (nextDefaultState) "Set as default payment method" else "Removed default payment method"
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                        },
+                                        onError = { err ->
+                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                },
+                                onDelete = { methodToDelete = method }
+                            )
+                        }
                     }
                 }
             }
@@ -355,7 +398,8 @@ private fun EmptyPaymentMethodsView(onAddClick: () -> Unit) {
             onClick = onAddClick,
             shape = RoundedCornerShape(12.dp)
         ) {
-            Icon(painter = painterResource(R.drawable.ic_outline_add),
+            Icon(
+                painter = painterResource(R.drawable.ic_outline_add),
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))

@@ -101,8 +101,8 @@ fun PaymentScreen(
             if (uid.isNotEmpty()) {
                 try {
                     val w = walletRepo.getWallet(uid)
-                    walletBalance = w.balance
-                    isWalletActive = w.isActive
+                    walletBalance = w.balance ?: 0.0
+                    isWalletActive = w.isActive == true
                 } catch (_: Exception) {}
             }
         }
@@ -172,12 +172,14 @@ fun PaymentScreen(
 
     var showAddCardSheet by remember { mutableStateOf(false) }
 
+    val isOnline by paymentViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
+
     // Pricing
     val totalPrice = appointment.Total_Price ?: 0.0
     val isSelectedWallet = methodState.selectedMethod is PaymentMethod.InAppWallet
     val isWalletInactiveSelected = isSelectedWallet && !isWalletActive
     val isInsufficientWalletBalance = isSelectedWallet && isWalletActive && ((walletBalance ?: 0.0) < totalPrice)
-    val isPayButtonEnabled = !paymentState.isLoading && methodState.selectedMethod != null && !isWalletInactiveSelected && !isInsufficientWalletBalance
+    val isPayButtonEnabled = !paymentState.isLoading && methodState.selectedMethod != null && !isWalletInactiveSelected && !isInsufficientWalletBalance && isOnline
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -210,7 +212,31 @@ fun PaymentScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (isWalletInactiveSelected) {
+                    if (!isOnline) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.wifi_off),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "No internet connection. Please connect to proceed with payment.",
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    } else if (isWalletInactiveSelected) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.errorContainer,

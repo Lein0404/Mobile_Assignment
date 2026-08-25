@@ -12,10 +12,10 @@ data class Wallet(
     val userId: String = "",
 
     @SerialName("balance")
-    val balance: Double = 0.0,
+    val balance: Double? = 0.0,
 
     @SerialName("is_Active")
-    val isActive: Boolean = false,
+    val isActive: Boolean? = false,
 
     @SerialName("created_at")
     val createdAt: String? = null,
