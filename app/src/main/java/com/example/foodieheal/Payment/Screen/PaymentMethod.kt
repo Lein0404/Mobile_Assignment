@@ -87,6 +87,7 @@ fun PaymentMethodScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.isLoading && uiState.availableMethods.isEmpty()) {

@@ -52,7 +52,7 @@ fun PopularChefsTabContent(
         filterAndSortChefs(chefs, filterState)
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize().imePadding()) {
         // Search & Filter Trigger Bar
         ChefSearchBar(
             query = filterState.searchQuery,

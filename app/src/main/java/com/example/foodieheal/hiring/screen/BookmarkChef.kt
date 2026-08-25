@@ -43,7 +43,7 @@ fun BookmarkedChefsTabContent(
         filterAndSortChefs(bookmarkedChefs, filterState)
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize().imePadding()) {
         if (bookmarkedChefs.isNotEmpty()) {
             // Search & Filter Bar
             ChefSearchBar(
