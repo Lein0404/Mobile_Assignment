@@ -1,4 +1,4 @@
-package com.example.foodieheal.database
+package com.example.foodieheal.Recipe.local
 
 import androidx.room.Entity
 

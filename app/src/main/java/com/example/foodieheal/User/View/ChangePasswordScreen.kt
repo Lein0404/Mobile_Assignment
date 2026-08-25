@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.User.View
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,20 +12,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangePasswordScreen(navController: NavController) {
-    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ViewModelStoreOwner)
     
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -51,10 +53,10 @@ fun ChangePasswordScreen(navController: NavController) {
         modifier = Modifier.imePadding(), 
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Change Password", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White) },
+                title = { Text("Change Password", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -65,7 +67,7 @@ fun ChangePasswordScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState()) 
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -74,13 +76,13 @@ fun ChangePasswordScreen(navController: NavController) {
                 text = "Secure Your Account",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.align(Alignment.Start)
             )
             Text(
                 text = "Enter your current and new password below to update.",
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Start).padding(top = 4.dp)
             )
 
@@ -146,13 +148,13 @@ fun ChangePasswordScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color(0xFFD1D1D1),
-                    disabledContentColor = Color(0xFF666666)
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 ),
                 enabled = isFormFilled && !authViewModel.isProcessing
             ) {
                 if (authViewModel.isProcessing) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
                     Text("UPDATE PASSWORD", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
@@ -172,7 +174,7 @@ fun PasswordInputField(
     var passwordVisible by remember { mutableStateOf(false) }
     
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = value,
@@ -183,10 +185,10 @@ fun PasswordInputField(
             singleLine = true,
             isError = isError,
             // 🌟 Increased font size for better readability
-            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp), 
+            textStyle = TextStyle(fontSize = 16.sp),
             supportingText = {
                 if (supportingText != null) {
-                    Text(text = supportingText, color = Color.Red, fontSize = 12.sp)
+                    Text(text = supportingText, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
                 }
             },
             shape = RoundedCornerShape(12.dp),
@@ -199,15 +201,15 @@ fun PasswordInputField(
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                unfocusedContainerColor = Color(0xFFE8E8E8),
-                focusedContainerColor = Color(0xFFE8E8E8),
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 // 🌟 Keep background normal even if there is an error
-                errorContainerColor = Color(0xFFE8E8E8),
+                errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 errorIndicatorColor = Color.Transparent,
-                errorTextColor = Color.Black,
-                errorCursorColor = Color.Black
+                errorTextColor = MaterialTheme.colorScheme.onSurface,
+                errorCursorColor = MaterialTheme.colorScheme.onSurface
             )
         )
     }

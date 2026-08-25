@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.User.View
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -15,17 +15,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = false) {
     // Shared ViewModel from Activity context to keep everything in sync
-    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as androidx.lifecycle.ViewModelStoreOwner)
+    val authViewModel: AuthViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ViewModelStoreOwner)
     val user = authViewModel.currentUser
 
     var weight by remember { mutableStateOf(user?.weight?.let { if (it == 0.0) "" else it.toString() } ?: "") }
@@ -63,7 +64,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
         modifier = Modifier.imePadding().navigationBarsPadding(), // 🌟 Added IME and Navigation padding
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Body Status", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White) },
+                title = { Text("Body Status", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
                         if (fromRegister) {
@@ -75,7 +76,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                             navController.popBackStack() 
                         }
                     }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -86,7 +87,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF8F8F8))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
@@ -94,17 +95,17 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 text = "What’s your body status?",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = "This is for BMI calculation and meal planning purposes. You may skip first if you didn’t have any plans yet.",
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
 
             // Gender Selection
-            Text("Gender", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+            Text("Gender", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -114,14 +115,14 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     onClick = { gender = "Male" },
                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                 )
-                Text("Male", color = Color.Black, modifier = Modifier.padding(start = 4.dp, end = 24.dp))
+                Text("Male", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp, end = 24.dp))
 
                 RadioButton(
                     selected = gender == "Female",
                     onClick = { gender = "Female" },
                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                 )
-                Text("Female", color = Color.Black, modifier = Modifier.padding(start = 4.dp))
+                Text("Female", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,7 +170,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Calculated BMI", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(text = bmiValue, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                            Text(text = bmiValue, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
                             if (bmiCategory.isNotEmpty()) {
                                 Text(
                                     text = " ($bmiCategory)", 
@@ -198,7 +199,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = authViewModel.errorMessage,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
@@ -262,7 +263,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     enabled = !authViewModel.isProcessing
                 ) {
                     if (authViewModel.isProcessing) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                     } else {
                         Text(if (fromRegister) "REGISTER" else "SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -275,7 +276,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
 @Composable
 fun StatusInputField(label: String, value: String, onValueChange: (String) -> Unit, suffix: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = value,
@@ -285,15 +286,15 @@ fun StatusInputField(label: String, value: String, onValueChange: (String) -> Un
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             trailingIcon = {
-                Text(text = suffix, modifier = Modifier.padding(end = 16.dp), fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(text = suffix, modifier = Modifier.padding(end = 16.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             },
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFE8E8E8),
-                unfocusedContainerColor = Color(0xFFE8E8E8),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
     }

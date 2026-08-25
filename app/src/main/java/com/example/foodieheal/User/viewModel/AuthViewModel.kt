@@ -1,4 +1,4 @@
-package com.example.foodieheal.viewmodel
+package com.example.foodieheal.User.viewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -6,28 +6,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobileassignmentloginpart.Model.Chef
-import com.example.foodieheal.model.User
-import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.MainActivity
-import com.example.foodieheal.database.AppDatabase
-import com.example.foodieheal.database.UserEntity
-import com.example.foodieheal.database.ChefEntity
-import com.example.foodieheal.database.UserDao
+import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.User.local.UserDatabase
+import com.example.foodieheal.User.local.ChefEntity
+import com.example.foodieheal.User.local.UserDao
+import com.example.foodieheal.User.local.UserEntity
+import com.example.foodieheal.User.Model.User
+import com.example.mobileassignmentloginpart.Model.Chef
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.channels.Channel // 🌟 Added Channel for one-time events
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.receiveAsFlow // 🌟 Added receiveAsFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class AuthViewModel : ViewModel() {
     private val client = SupabaseClient.client
 
     private fun getDao(): UserDao? {
-        return MainActivity.appContext?.let { AppDatabase.getDatabase(it).userDao() }
+        return MainActivity.appContext?.let { UserDatabase.getDatabase(it).userDao() }
     }
 
     var currentUser by mutableStateOf<User?>(null)
@@ -55,6 +63,34 @@ class AuthViewModel : ViewModel() {
     fun setTempCredentials(email: String, password: String) {
         tempEmail = email
         tempPassword = password
+    }
+
+    // 🌟 Validation: Check if email already exists in users table
+    fun validateEmailUniqueness(emailInput: String, onSuccess: () -> Unit) {
+        isProcessing = true
+        errorMessage = ""
+        viewModelScope.launch {
+            try {
+                val cleanEmail = emailInput.trim()
+
+                val userExists = client.postgrest.from("users").select {
+                    filter { eq("email", cleanEmail) }
+                }.decodeList<User>().isNotEmpty()
+
+                if (userExists) {
+                    errorMessage = "Email already registered"
+                    isProcessing = false
+                    return@launch
+                }
+
+                // If clear, proceed to the next step
+                onSuccess()
+            } catch (e: Exception) {
+                errorMessage = parseError(e)
+            } finally {
+                isProcessing = false
+            }
+        }
     }
 
     var isProcessing by mutableStateOf(false)
@@ -170,19 +206,21 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
             try {
-                dao.insertUser(UserEntity(
-                    id = user.id ?: "",
-                    customId = user.customId,
-                    email = user.email,
-                    name = user.name,
-                    profilePicUrl = user.profilePicUrl,
-                    description = user.description,
-                    weight = user.weight ?: 0.0,
-                    height = user.height ?: 0.0,
-                    age = user.age ?: 0,
-                    gender = user.gender,
-                    bmi = user.bmi ?: 0.0
-                ))
+                dao.insertUser(
+                    UserEntity(
+                        id = user.id ?: "",
+                        customId = user.customId,
+                        email = user.email,
+                        name = user.name,
+                        profilePicUrl = user.profilePicUrl,
+                        description = user.description,
+                        weight = user.weight ?: 0.0,
+                        height = user.height ?: 0.0,
+                        age = user.age ?: 0,
+                        gender = user.gender,
+                        bmi = user.bmi ?: 0.0
+                    )
+                )
             } catch (e: Exception) { }
         }
     }
@@ -191,24 +229,26 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             val dao = getDao() ?: return@launch
             try {
-                dao.insertChef(ChefEntity(
-                    id = chef.id,
-                    chefId = chef.chefId,
-                    name = chef.name,
-                    gender = chef.gender,
-                    age = chef.age,
-                    phoneNumber = chef.phoneNumber,
-                    email = chef.email,
-                    address = chef.address,
-                    state = chef.state,
-                    postcode = chef.postcode,
-                    experience = chef.experience,
-                    description = chef.description,
-                    status = chef.status,
-                    profilePictureUrl = chef.profilePictureUrl,
-                    averagerating = chef.averagerating,
-                    Pricing = chef.Pricing
-                ))
+                dao.insertChef(
+                    ChefEntity(
+                        id = chef.id,
+                        chefId = chef.chefId,
+                        name = chef.name,
+                        gender = chef.gender,
+                        age = chef.age,
+                        phoneNumber = chef.phoneNumber,
+                        email = chef.email,
+                        address = chef.address,
+                        state = chef.state,
+                        postcode = chef.postcode,
+                        experience = chef.experience,
+                        description = chef.description,
+                        status = chef.status,
+                        profilePictureUrl = chef.profilePictureUrl,
+                        averagerating = chef.averagerating,
+                        Pricing = chef.Pricing
+                    )
+                )
             } catch (e: Exception) { }
         }
     }
@@ -275,10 +315,27 @@ class AuthViewModel : ViewModel() {
                     errorMessage = "Account details not found."
                 }
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Login Failed"
+                errorMessage = parseError(e)
             } finally {
                 isProcessing = false
             }
+        }
+    }
+
+    private fun parseError(e: Exception): String {
+        val msg = e.message ?: ""
+        return when {
+            msg.contains("Unable to resolve host", ignoreCase = true) ||
+            msg.contains("No address associated with hostname", ignoreCase = true) ||
+            msg.contains("HttpRequestException", ignoreCase = true) ||
+            msg.contains("Failed to connect", ignoreCase = true) ||
+            msg.contains("connection", ignoreCase = true) ->
+                "Please connect to wifi or network connection"
+            msg.contains("timeout", ignoreCase = true) ->
+                "Connection timeout. Please try again."
+            msg.contains("Invalid login credentials", ignoreCase = true) ->
+                "Invalid email or password"
+            else -> msg.split("\n").firstOrNull() ?: "An error occurred"
         }
     }
 
@@ -323,18 +380,18 @@ class AuthViewModel : ViewModel() {
                 )
 
                 client.postgrest.from("users").insert(newUser)
-                
+
                 // 4. Finalize
                 this@AuthViewModel.currentUser = newUser
                 saveUserToCache(newUser)
                 loginSuccess = true
-                
+
                 // 🌟 Emit success event to trigger navigation and show message
                 _profileEvents.send(ProfileEvent.BodyStatusSuccess)
-                
+
                 registerSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Registration Failed: ${e.message}"
+                errorMessage = "Registration Failed: ${parseError(e)}"
             } finally {
                 isProcessing = false
             }
@@ -349,12 +406,13 @@ class AuthViewModel : ViewModel() {
                 val maxIdNum = allUsers.mapNotNull { it.customId?.removePrefix("U")?.toIntOrNull() }.maxOrNull() ?: 0
                 val customId = "U${(maxIdNum + 1).toString().padStart(3, '0')}"
 
-                val newUser = User(id = uid, customId = customId, email = email, name = "User ($customId)")
+                val newUser =
+                    User(id = uid, customId = customId, email = email, name = "User ($customId)")
 
                 client.postgrest.from("users").insert(newUser)
                 this@AuthViewModel.currentUser = newUser
                 saveUserToCache(newUser)
-                
+
                 // 🌟 FIX: Explicitly set loginSuccess so the Bottom Navigation Bar appears immediately
                 loginSuccess = true
                 registerSuccess = true
@@ -398,6 +456,7 @@ class AuthViewModel : ViewModel() {
     fun updateProfile(
         name: String, email: String, profilePicUrl: String, description: String = "",
         weight: Double? = null, height: Double? = null, age: Int? = null, gender: String? = null, bmi: Double? = null,
+        imageBytes: ByteArray? = null, // 🌟 New parameter
         onSuccess: () -> Unit = {} // 🌟 Added callback for reliable navigation
     ) {
         val uid = currentUser?.id ?: return
@@ -406,8 +465,19 @@ class AuthViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                var finalUrl = profilePicUrl
+
+                // 1. Upload to Cloudinary if new image is provided
+                if (imageBytes != null) {
+                    uploadProfileImage(uid, imageBytes).onSuccess { url ->
+                        finalUrl = url
+                    }.onFailure { e ->
+                        throw e
+                    }
+                }
+
                 val updatedUser = currentUser?.copy(
-                    name = name, email = email, profilePicUrl = profilePicUrl, description = description,
+                    name = name, email = email, profilePicUrl = finalUrl, description = description,
                     weight = weight ?: currentUser?.weight, height = height ?: currentUser?.height,
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
@@ -419,24 +489,52 @@ class AuthViewModel : ViewModel() {
                 if (client.auth.currentUserOrNull()?.email != email && email.isNotEmpty()) {
                     client.auth.updateUser { this.email = email }
                 }
-                
+
                 // 🌟 Send one-time success events
                 if (weight != null || height != null || age != null || bmi != null) {
                     _profileEvents.send(ProfileEvent.BodyStatusSuccess)
                 } else {
                     _profileEvents.send(ProfileEvent.ProfileSuccess)
                 }
-                
+
                 errorMessage = ""
                 profileMessage = "Profile Updated" // 🌟 Uses dedicated profile holder
-                onSuccess() 
+                onSuccess()
             } catch (e: Exception) {
-                profileMessage = "Update Failed"
+                profileMessage = "Update Failed: ${parseError(e)}"
             } finally {
                 isProcessing = false
             }
         }
     }
+
+    private suspend fun uploadProfileImage(uid: String, imageBytes: ByteArray): Result<String> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val client = OkHttpClient()
+                val requestBody = MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("upload_preset", CloudinaryConfig.UPLOAD_PRESET)
+                    .addFormDataPart(
+                        "file",
+                        "user_$uid.jpg",
+                        imageBytes.toRequestBody("image/*".toMediaType())
+                    )
+                    .build()
+
+                val request = Request.Builder()
+                    .url("https://api.cloudinary.com/v1_1/${CloudinaryConfig.CLOUD_NAME}/image/upload")
+                    .post(requestBody)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw Exception("Cloudinary failed: ${response.message}")
+                    val responseBody = response.body?.string() ?: ""
+                    val json = JSONObject(responseBody)
+                    json.getString("secure_url")
+                }
+            }
+        }
 
     fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit = {}) {
         val email = currentUser?.email ?: return
@@ -445,11 +543,11 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // 1. Always verify identity with OLD password first
-                client.auth.signInWith(Email) { 
+                client.auth.signInWith(Email) {
                     this.email = email
-                    this.password = oldPassword 
+                    this.password = oldPassword
                 }
-                
+
                 // 2. ONLY proceed if the password is correct AND meets our 8-20 rule
                 if (newPassword.length !in 8..20) {
                     errorMessage = "Password must be 8-20 characters"
@@ -459,15 +557,15 @@ class AuthViewModel : ViewModel() {
 
                 // 3. Update to the NEW password
                 client.auth.updateUser { password = newPassword }
-                
+
                 _profileEvents.send(ProfileEvent.PasswordSuccess)
                 passwordErrorMessage = "" // 🌟 Clear errors on success
-                onSuccess() 
+                onSuccess()
             } catch (e: Exception) {
                 val msg = e.message ?: ""
                 passwordErrorMessage = when { // 🌟 Uses dedicated password holder
                     msg.contains("Invalid login credentials", ignoreCase = true) -> "Invalid current password"
-                    else -> "Failed to change password. Please try again."
+                    else -> "Failed to change password. ${parseError(e)}"
                 }
             } finally {
                 isProcessing = false
@@ -485,7 +583,7 @@ class AuthViewModel : ViewModel() {
                 client.auth.updateUser { password = newPassword }
                 errorMessage = "Profile Updated"
             } catch (e: Exception) {
-                errorMessage = "Password update failed"
+                errorMessage = "Password update failed: ${parseError(e)}"
             }
         }
     }
@@ -502,7 +600,7 @@ class AuthViewModel : ViewModel() {
                 client.auth.resetPasswordForEmail(emailInput)
                 errorMessage = "Reset link sent to your email"
             } catch (e: Exception) {
-                errorMessage = "Failed to send reset email"
+                errorMessage = "Failed to send reset email: ${parseError(e)}"
             } finally {
                 isProcessing = false
             }

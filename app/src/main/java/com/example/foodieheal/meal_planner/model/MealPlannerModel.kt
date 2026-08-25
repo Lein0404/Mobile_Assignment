@@ -1,6 +1,6 @@
 package com.example.foodieheal.meal_planner.model
 
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.DayOfWeek

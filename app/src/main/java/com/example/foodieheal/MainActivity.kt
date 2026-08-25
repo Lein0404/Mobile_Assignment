@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.net.http.SslCertificate.restoreState
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -84,28 +85,29 @@ import com.example.foodieheal.meal_planner.screen.calculateSuggestedDailyCalorie
 import com.example.foodieheal.meal_planner.viewModel.AddEditTemplateViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModelFactory
+import com.example.foodieheal.Recipe.View.AddRecipeScreen
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
-import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.repository.RecipeRepository
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 import com.example.foodieheal.view.AppointmentHistoryScreen
-import com.example.foodieheal.view.ChangePasswordScreen
-import com.example.foodieheal.view.EditBodyStatusScreen
-import com.example.foodieheal.view.EditProfileScreen
-import com.example.foodieheal.view.EditRecipeScreen
-import com.example.foodieheal.view.HomeScreen
-import com.example.foodieheal.view.LoginScreen
+import com.example.foodieheal.User.View.ChangePasswordScreen
+import com.example.foodieheal.User.View.EditBodyStatusScreen
+import com.example.foodieheal.User.View.EditProfileScreen
+import com.example.foodieheal.Recipe.View.EditRecipeScreen
+import com.example.foodieheal.User.View.HomeScreen
+import com.example.foodieheal.User.View.LoginScreen
+import com.example.foodieheal.User.View.ProfileScreen
+import com.example.foodieheal.Recipe.View.RecipeDetailsScreen
+import com.example.foodieheal.Recipe.View.RecipesScreen
+import com.example.foodieheal.User.View.RegisterScreen
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.view.PaymentMethodScreen
-import com.example.foodieheal.view.ProfileScreen
-import com.example.foodieheal.view.RecipeDetailsScreen
-import com.example.foodieheal.view.RecipesScreen
-import com.example.foodieheal.view.RegisterScreen
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
+import kotlin.collections.find
 import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
@@ -308,6 +310,7 @@ class MainActivity : ComponentActivity() {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(
                                         navController,
                                         sharedAuthViewModel,
+                                        sharedRecipeViewModel,
                                         onChefClick = { chef ->
                                             chefListViewModel.selectChef(chef)
                                             bookingViewModel.selectChef(chef)
@@ -951,7 +954,29 @@ class MainActivity : ComponentActivity() {
                     // Global Logout Logic
                     LaunchedEffect(sharedAuthViewModel.loginSuccess) {
                         if (!sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
-                            navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                            val currentRoute = navController.currentDestination?.route
+
+                            // 🌟 Screens that are allowed WITHOUT login (Auth flow)
+                            val authRoutes = listOf(
+                                Screen.Login.route,
+                                Screen.Register.route,
+                                Screen.Welcome.route,
+                                Screen.BasicInfo.route,
+                                Screen.Contact.route,
+                                Screen.Address.route,
+                                Screen.Description.route,
+                                Screen.ChefPicture.route,
+                                Screen.Review.route,
+                                Screen.EditBodyStatus.route // "editBodyStatus"
+                            )
+
+                            // Only kick to Login if we are NOT on an auth screen
+                            // 🌟 FIX: Use startsWith to handle routes with query parameters like ?fromRegister=true
+                            val isAuthRoute = authRoutes.any { currentRoute?.startsWith(it) == true }
+
+                            if (!isAuthRoute && currentRoute != null) {
+                                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                            }
                         }
                     }
                 }
@@ -1012,7 +1037,7 @@ fun SplashLogoOverlay() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
+            .background(MaterialTheme.colorScheme.background) // 🌟 Themed Background
     ) {
         // 🌟 Orange Strip Sync
         Box(
@@ -1036,7 +1061,7 @@ fun SplashLogoOverlay() {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Nourishing every bite.",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )

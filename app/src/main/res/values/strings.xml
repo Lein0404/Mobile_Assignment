@@ -198,6 +198,9 @@
     <string name="empty_no_bookmarked_chefs">No Bookmarked Chefs</string>
     <string name="empty_bookmarked_chefs_sub">Chefs you bookmark will appear here.</string>
 
+    <string name="empty_no_bookmarked_recipes">No Bookmarked Recipes</string>
+    <string name="empty_bookmarked_recipes_sub">Recipes you bookmark will appear here.</string>
+
     <!-- Hiring Chef Details Screen-->
     <string name="chef_profile_title">Chef Profile</string>
     <string name="title_about_chef">About Chef</string>

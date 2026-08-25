@@ -1,9 +1,9 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.Recipe.View
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,9 +19,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.ColorFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +72,7 @@ fun RecipeDetailsScreen(
                             painter = painterResource(id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark),
                             contentDescription = "Bookmark",
                             modifier = Modifier.size(22.dp),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                            colorFilter = ColorFilter.tint(Color.White)
                         )
                     }
                     IconButton(onClick = { /* More menu */ }) {
@@ -92,7 +93,7 @@ fun RecipeDetailsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface) // 🌟 Themed Background
             ) {
                 // Recipe Image or Artistic Placeholder
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
@@ -108,7 +109,7 @@ fun RecipeDetailsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
-                            .background(Color(0xFFFFF9E1)), // Soft cream color
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)), // 🌟 Themed Background
                         contentAlignment = Alignment.Center
                     ) {
                         val iconRes = when (recipe.recipeCourse.lowercase()) {
@@ -128,20 +129,19 @@ fun RecipeDetailsScreen(
 
                 Column(modifier = Modifier.padding(20.dp)) {
                     // Title and Course + Last Updated
-                    Text(text = recipe.recipeName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = recipe.recipeName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                        Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = recipe.recipeCourse, fontSize = 14.sp, color = Color.Gray)
+                        Text(text = recipe.recipeCourse, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         
-                        // 🌟 Show Last Updated Time on the right side with smaller text
+                        // 🌟 Show Last Updated Time on the same line, right next to the course
                         if (!recipe.lastUpdated.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.weight(1f))
                             val displayTime = recipe.lastUpdated.split("T").firstOrNull() ?: ""
                             Text(
-                                text = "Last updated: $displayTime", 
-                                fontSize = 11.sp, // Made it smaller
-                                color = Color.Gray
+                                text = "  •  Updated: $displayTime", 
+                                fontSize = 13.sp, // Sized closer to course
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -160,17 +160,61 @@ fun RecipeDetailsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) // 🌟 Themed Divider
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 🌟 Author Section
+                    val author = viewModel.recipeAuthor
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (author != null && !author.profilePicUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = author.profilePicUrl,
+                                contentDescription = "Author Profile",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_outline_account_circle),
+                                contentDescription = "Default Author Profile",
+                                modifier = Modifier.size(40.dp).clip(CircleShape),
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+                        }
+                        
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                            Text(
+                                text = "Recipe by",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = author?.name ?: "Unknown Chef",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // 🌟 Description (Hidden if empty)
                     if (recipe.recipeDescription.isNotBlank()) {
-                        Text(text = "Description", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = "Description", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         var isExpanded by remember { mutableStateOf(false) }
                         Text(
                             text = recipe.recipeDescription,
                             fontSize = 14.sp,
-                            color = Color.DarkGray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .padding(top = 8.dp)
                                 .animateContentSize()
@@ -183,7 +227,7 @@ fun RecipeDetailsScreen(
                                 text = "... See More",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black,
+                                color = MaterialTheme.colorScheme.primary, // 🌟 Use primary for action text
                                 modifier = Modifier.clickable { isExpanded = true }
                             )
                         }
@@ -196,9 +240,9 @@ fun RecipeDetailsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Ingredients", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text(text = "Ingredients", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         IconButton(onClick = { /* Add to cart */ }) {
-                            Icon(painterResource(id = R.drawable.ic_shopping_cart), null, modifier = Modifier.size(20.dp))
+                            Icon(painterResource(id = R.drawable.ic_shopping_cart), null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     recipe.ingredients.forEach { ingredient ->
@@ -208,20 +252,20 @@ fun RecipeDetailsScreen(
                                 .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = ingredient.name, fontSize = 14.sp, color = Color.DarkGray)
-                            Text(text = "${ingredient.quantity} ${ingredient.unit}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(text = ingredient.name, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(text = "${ingredient.quantity} ${ingredient.unit}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Steps
-                    Text(text = "Recipe Steps", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = "Recipe Steps", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     recipe.recipeStep.split("\n").forEachIndexed { index, step ->
                         if (step.isNotBlank()) {
                             Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                                Text(text = "${index + 1}. ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                                Text(text = step.trim(), fontSize = 14.sp, color = Color.DarkGray)
+                                Text(text = "${index + 1}. ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = step.trim(), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -235,9 +279,23 @@ fun RecipeDetailsScreen(
 
 @Composable
 fun StatItem(@DrawableRes icon: Int, label: String, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(id = icon), null, modifier = Modifier.size(20.dp), tint = Color.Black)
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+    Row(
+        modifier = modifier, 
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Icon(
+            painter = painterResource(id = icon), 
+            null, 
+            modifier = Modifier.size(18.dp), 
+            tint = MaterialTheme.colorScheme.primary // 🌟 Consistent Icon Color
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label, 
+            fontSize = 14.sp, 
+            fontWeight = FontWeight.Medium, 
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

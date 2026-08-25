@@ -1,4 +1,4 @@
-package com.example.foodieheal.view
+package com.example.foodieheal.User.View
 
 import android.app.Activity
 import androidx.compose.foundation.background
@@ -29,7 +29,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 
 @Composable
 fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
@@ -86,7 +86,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // 🌟 Seamless Orange Status Bar Strip
         Box(
@@ -111,7 +111,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 text = "Login",
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -122,7 +122,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 text = "Email",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             TextField(
@@ -132,7 +132,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     if (hasAttemptedSubmit) hasAttemptedSubmit = false 
                     if (viewModel.errorMessage.isNotEmpty()) viewModel.resetPasswordState()
                 },
-                placeholder = { Text("Email", color = Color.Gray) },
+                placeholder = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -140,10 +140,10 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = Color(0xFFE8E8E8),
-                    focusedContainerColor = Color(0xFFE8E8E8),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             // 🌟 Client-side Format Validation ONLY
@@ -151,7 +151,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             if (hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty()) {
                 Text(
                     text = "Invalid email",
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -166,7 +166,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 text = "Password",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             TextField(
@@ -177,24 +177,24 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     // 🌟 Clear server errors when user starts fixing the input
                     if (viewModel.errorMessage.isNotEmpty()) viewModel.resetPasswordState()
                 },
-                placeholder = { Text("Password", color = Color.Gray) },
+                placeholder = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val image = if (passwordVisible) R.drawable.ic_view else R.drawable.ic_hide
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(painter = painterResource(id = image), contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(painter = painterResource(id = image), contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = Color(0xFFE8E8E8),
-                    focusedContainerColor = Color(0xFFE8E8E8),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             
@@ -202,7 +202,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             if (viewModel.errorMessage.isNotEmpty() && viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
                 Text(
                     text = "Invalid password",
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -215,7 +215,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 text = "Forget Password?",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .clickable { viewModel.forgotPassword(email) }
@@ -239,14 +239,14 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = primaryColor,
-                contentColor = Color.White,
-                disabledContainerColor = Color(0xFFF0F0F0), // 🌟 Very light gray
-                disabledContentColor = Color(0xFF666666)     // 🌟 Dark text for maximum readability
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             ),
             enabled = isFormValid && !viewModel.isProcessing
         ) {
             if (viewModel.isProcessing) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
             } else {
                 Text("LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
@@ -259,7 +259,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             text = "Don't have an account? Sign up here!",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onBackground,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable { 
                 navController.navigate(Screen.Register.route)
@@ -271,7 +271,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             onClick = { navController.navigate(Screen.Welcome.route) },
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Register as a Chef", color = Color.Gray, fontSize = 12.sp)
+            Text("Register as a Chef", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
         }
 
         // Generic Error Message (if not wrong password)
@@ -279,7 +279,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             val isSuccess = viewModel.errorMessage.contains("sent")
             Text(
                 text = viewModel.errorMessage,
-                color = if (isSuccess) Color(0xFF4CAF50) else Color.Red,
+                color = if (isSuccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 16.dp)
             )

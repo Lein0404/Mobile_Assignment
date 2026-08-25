@@ -6,7 +6,7 @@ import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.model.Status
-import com.example.foodieheal.repo.UserRepository
+import com.example.foodieheal.User.Repo.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
