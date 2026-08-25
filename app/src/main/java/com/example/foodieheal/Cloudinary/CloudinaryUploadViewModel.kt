@@ -32,7 +32,7 @@ class CloudinaryUploadViewModel : ViewModel() {
      * Returns the uploaded URL on success, or null if no image is selected.
      *
      * Call this from the parent ViewModel's submit flow, e.g.:
-     *   val imageUrl = cloudinaryUploadViewModel.uploadImage(context)
+     *   `val imageUrl = cloudinaryUploadViewModel.uploadImage(context)`
      */
     suspend fun uploadImage(context: Context): String? {
         val uri = _uiState.value.selectedImageUri ?: return null
@@ -53,6 +53,10 @@ class CloudinaryUploadViewModel : ViewModel() {
      */
     fun setExistingImageUrl(url: String) {
         _uiState.update { it.copy(uploadedImageUrl = url) }
+    }
+
+    fun clearImage() {
+        _uiState.update { it.copy(selectedImageUri = null, uploadedImageUrl = "", imageError = null) }
     }
 
     fun clearState() {

@@ -1,5 +1,6 @@
 package com.example.foodieheal.ingredients.view
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,233 +8,297 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.foodieheal.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.ShoppingListItem
+import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.navigation.Screen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListScreen(
     navController: NavController,
-    viewModel: ShoppingListViewModel = viewModel()
+    viewModel: ShoppingListViewModel = viewModel(
+        factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     
     var showMenu by remember { mutableStateOf(false) }
-    var showClearCheckedDialog by remember { mutableStateOf(false) }
-    var showClearAllDialog by remember { mutableStateOf(false) }
 
     val checkedCount = uiState.items.count { it.entity.isChecked }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.shopping_list_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.shopping_list_back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        },
+        floatingActionButton = {
+            Box {
+                FloatingActionButton(
+                    onClick = { showMenu = !showMenu },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(dimensionResource(R.dimen.icon_xlarge_size))
+                        .offset(y = (-dimensionResource(id = R.dimen.padding_xxl)))
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_horiz_more),
+                        contentDescription = stringResource(R.string.shopping_list_options),
+                        modifier = Modifier.size(dimensionResource(R.dimen.padding_xxl))
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.background(
+                        color = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_add_items),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            navController.navigate(Screen.AddShoppingListItem.route)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_clear_checked),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            if (checkedCount > 0) {
+                                viewModel.onShowClearCheckedDialog(true)
+                            } else {
+                                Toast.makeText(context, R.string.shopping_list_no_checked_items, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(R.string.shopping_list_clear_all),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            if (uiState.items.isNotEmpty()) {
+                                viewModel.onShowClearAllDialog(true)
+                            } else {
+                                Toast.makeText(context, R.string.shopping_list_already_empty, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F8F8))
+                .padding(paddingValues)
         ) {
-            // Top Bar Section (similar to HiringScreen without tabs)
-            Box(
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
+
+            // Search Bar
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.onSearchQueryChange(it) },
+                placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), style = MaterialTheme.typography.bodyMedium) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
+                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = stringResource(R.string.search)
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                )
+            )
+
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
+            Text(
+                text = stringResource(R.string.shopping_list_categories),
+                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
+
+            // Categories chips
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
             ) {
-                Column(
-                    modifier = Modifier.statusBarsPadding()
-                ) {
+                items(IngredientCategory.entries) { category ->
+                    FilterChip(
+                        selected = uiState.selectedCategories.contains(category),
+                        onClick = { viewModel.toggleCategory(category) },
+                        label = {
+                            Text(
+                                text = category.categoryName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            labelColor = MaterialTheme.colorScheme.primary,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        border = null
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
+
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.filteredItems.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "Shopping List",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 16.dp)
+                        text = if (uiState.searchQuery.isEmpty()) 
+                            stringResource(R.string.shopping_list_empty_state) 
+                        else 
+                            stringResource(R.string.shopping_list_no_match)
                     )
                 }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Search Bar
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChange(it) },
-                    placeholder = { Text("Search ingredients here", fontSize = 14.sp) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    trailingIcon = { Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null) },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            } else {
+                val grouped = uiState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = dimensionResource(id = R.dimen.padding_l),
+                        end = dimensionResource(id = R.dimen.padding_l),
+                        bottom = dimensionResource(id = R.dimen.padding_xxl)
                     )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Categories", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Categories chips
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(IngredientCategory.entries) { category ->
-                        FilterChip(
-                            selected = uiState.selectedCategories.contains(category),
-                            onClick = { viewModel.toggleCategory(category) },
-                            label = { Text(category.categoryName, fontSize = 12.sp) },
-                            shape = RoundedCornerShape(20.dp),
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (uiState.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                } else if (uiState.filteredItems.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = if (uiState.searchQuery.isEmpty()) "Your shopping list is empty. Add new item now!" else "No items match your search.")
-                    }
-                } else {
-                    val grouped = uiState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        grouped.forEach { (category, items) ->
-                            item {
-                                Text(
-                                    text = category.categoryName,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
-                                )
-                            }
-                            items(items) { item ->
-                                ShoppingListItemCard(item) {
-                                    viewModel.toggleChecked(item)
-                                }
+                ) {
+                    grouped.forEach { (category, items) ->
+                        item {
+                            Text(
+                                text = category.categoryName,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        items(items) { item ->
+                            ShoppingListItemCard(item) {
+                                viewModel.toggleChecked(item)
                             }
                         }
-                        item { Spacer(modifier = Modifier.height(80.dp)) } // Space for FAB
                     }
                 }
-            }
-        }
-
-        // Floating Action Button overlaid
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            FloatingActionButton(
-                onClick = { showMenu = !showMenu },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Icon(painter = painterResource(R.drawable.ic_horiz_more), contentDescription = "Options")
-            }
-
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color(0xFFEBE6EF)) // Match subtle purple background from image
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Add items", fontSize = 12.sp) },
-                    onClick = {
-                        showMenu = false
-                        navController.navigate(Screen.AddShoppingListItem.route)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Clear checked items", fontSize = 12.sp) },
-                    onClick = {
-                        showMenu = false
-                        if (checkedCount > 0) {
-                            showClearCheckedDialog = true
-                        } else {
-                            Toast.makeText(context, "No checked items to clear.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Clear all items", fontSize = 12.sp) },
-                    onClick = {
-                        showMenu = false
-                        if (uiState.items.isNotEmpty()) {
-                            showClearAllDialog = true
-                        } else {
-                            Toast.makeText(context, "Shopping List is already empty.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
             }
         }
     }
 
     // Confirmation Dialogs
-    if (showClearCheckedDialog) {
+    if (uiState.showClearCheckedDialog) {
         AlertDialog(
-            onDismissRequest = { showClearCheckedDialog = false },
-            title = { Text("Clear Checked Items") },
-            text = { Text("There are $checkedCount checked item(s) to be clear from your Shopping List. Are you sure?") },
+            onDismissRequest = { viewModel.onShowClearCheckedDialog(false) },
+            title = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_title)) },
+            text = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_text, checkedCount)) },
             confirmButton = {
+                val toastMessage = stringResource(R.string.shopping_list_clear_checked_toast, checkedCount)
                 TextButton(onClick = {
                     viewModel.clearChecked()
-                    Toast.makeText(context, "$checkedCount checked item(s) cleared from your Shopping List", Toast.LENGTH_SHORT).show()
-                    showClearCheckedDialog = false
+                    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+                    viewModel.onShowClearCheckedDialog(false)
                 }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearCheckedDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                TextButton(onClick = { viewModel.onShowClearCheckedDialog(false) }) {
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
     }
 
-    if (showClearAllDialog) {
+    if (uiState.showClearAllDialog) {
         AlertDialog(
-            onDismissRequest = { showClearAllDialog = false },
-            title = { Text("Clear All Items") },
-            text = { Text("All items will be cleared from your Shopping List. Are you sure?") },
+            onDismissRequest = { viewModel.onShowClearAllDialog(false) },
+            title = { Text(stringResource(R.string.shopping_list_clear_all_dialog_title)) },
+            text = { Text(stringResource(R.string.shopping_list_clear_all_dialog_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearAll()
-                    Toast.makeText(context, "All items cleared from your Shopping List", Toast.LENGTH_SHORT).show()
-                    showClearAllDialog = false
+                    Toast.makeText(context, R.string.shopping_list_clear_all_toast, Toast.LENGTH_SHORT).show()
+                    viewModel.onShowClearAllDialog(false)
                 }) {
-                    Text("Yes", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearAllDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                TextButton(onClick = { viewModel.onShowClearAllDialog(false) }) {
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -249,20 +314,20 @@ fun ShoppingListItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.padding_xsm)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(dimensionResource(R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_sm))
             ) {
                 Text(
                     text = item.entity.ingredientName,
@@ -270,14 +335,14 @@ fun ShoppingListItemCard(
                         textDecoration = if (item.entity.isChecked) TextDecoration.LineThrough else TextDecoration.None
                     ),
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = item.calorieSummary,
+                    text = item.ingredientDesc,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Checkbox(

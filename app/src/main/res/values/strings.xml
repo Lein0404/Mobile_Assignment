@@ -8,6 +8,7 @@
     <string name="show_password">Show password</string>
     <string name="nav_home">Home</string>
     <string name="topapp_back">To previous page</string>
+    <string name="search">Search</string>
 
     <!-- Login -->
     <string name="full_name">Name</string>
@@ -44,7 +45,8 @@
     <string name="image">Image</string>
     <string name="select_image">Select Image</string>
     <string name="change_image">Change Image</string>
-    <string name="image_unavailable">No image available</string>"
+    <string name="remove_image">Remove Image</string>
+    <string name="image_unavailable">No image available</string>
     <string name="upload_failed">Failed to upload image.</string>
 
     <!-- Common Dialog Buttons -->
@@ -155,21 +157,6 @@
 
     <!-- Empty State Placeholders -->
     <string name="placeholder_empty_plan">Planning Something?</string>
-
-    <!-- Ingredient Request -->
-    <string name="ingredient_name">Ingredient Name</string>
-    <string name="category">Category</string>
-    <string name="add_ingredient">Add Ingredient</string>
-    <string name="serving_unit">Serving Unit</string>
-    <string name="calories">Calories</string>
-    <string name="minutes">Minutes</string>
-    <string name="calorie_information">Calorie Information</string>
-    <string name="request_new_ingredient">REQUEST NEW INGREDIENT</string>
-    <string name="delete_request">DELETE REQUEST</string>
-    <string name="edit_request">EDIT REQUEST</string>
-    <string name="update_request">UPDATE REQUEST</string>
-    <string name="reject">REJECT</string>
-    <string name="review_approve">REVIEW &amp; APPROVE</string>
 
     <!-- Hiring Screen-->
     <string name="btn_retry">Retry</string>
@@ -597,4 +584,169 @@
     <string name="section_professional_bg">Professional Background</string>
     <string name="years_format">%1$s Years</string>
 
+    <!-- INGREDIENTS MODULE -->
+    <!-- Shopping List -->
+    <string name="shopping_list_title">Shopping List</string>
+    <string name="shopping_list_back">Back</string>
+    <string name="shopping_list_options">Options</string>
+    <string name="shopping_list_add_items">Add items</string>
+    <string name="shopping_list_clear_checked">Clear checked items</string>
+    <string name="shopping_list_no_checked_items">No checked items to clear.</string>
+    <string name="shopping_list_clear_all">Clear all items</string>
+    <string name="shopping_list_already_empty">Shopping List is already empty.</string>
+    <string name="shopping_list_search_placeholder">Search ingredients here</string>
+    <string name="shopping_list_categories">Categories</string>
+    <string name="shopping_list_empty_state">Your shopping list is empty. Add new item now!</string>
+    <string name="shopping_list_no_match">No items match your search.</string>
+    <string name="shopping_list_clear_checked_dialog_title">Clear Checked Items</string>
+    <string name="shopping_list_clear_checked_dialog_text">There are %1$d checked item(s) to be clear from your Shopping List. Are you sure?</string>
+    <string name="shopping_list_clear_checked_toast">%1$d checked item(s) cleared from your Shopping List</string>
+    <string name="shopping_list_clear_all_dialog_title">Clear All Items</string>
+    <string name="shopping_list_clear_all_dialog_text">All items will be cleared from your Shopping List. Are you sure?</string>
+    <string name="shopping_list_clear_all_toast">All items cleared from your Shopping List</string>
+    <string name="shopping_list_error_local_data">Using local data only.</string>
+
+    <!-- Add Shopping List Item -->
+    <string name="add_shopping_item_title">Add to Shopping List</string>
+    <string name="add_shopping_item_no_ingredients">No ingredients found.</string>
+    <string name="add_shopping_item_toast_added">%1$d item(s) added to Shopping List</string>
+    <string name="add_shopping_item_button">Add %1$d Item(s) to Shopping List</string>
+
+    <!-- Ingredients -->
+    <string name="ingredients_title">Ingredients</string>
+    <string name="ingredients_tab_existing">Existing</string>
+    <string name="ingredients_tab_requests">Requests</string>
+    <string name="ingredients_fab_new_request">New Request</string>
+    <string name="ingredients_toast_added">%1$s added to Shopping List</string>
+    <string name="ingredients_requests_empty">No requests found.</string>
+    <string name="ingredients_requests_filter_title">Filter by Status</string>
+    <string name="ingredients_requests_filter_all">All</string>
+    <string name="ingredients_requests_filter_pending">Pending</string>
+    <string name="ingredients_requests_filter_approved">Approved</string>
+    <string name="ingredients_requests_filter_rejected">Rejected</string>
+    <string name="ingredients_requests_apply_filter">Apply Filter</string>
+    <string name="ingredients_existing_search_placeholder">Search ingredients here</string>
+    <string name="ingredients_requests_search_placeholder">Search ingredient requests here</string>
+    <string name="ingredients_existing_empty">No ingredients match your search.</string>
+    <string name="ingredients_error_fetch_ingredients">Failed to fetch ingredients</string>
+    <string name="ingredients_error_fetch_requests">Failed to fetch requests</string>
+    <string name="ingredients_error_fetch_details">Failed to fetch ingredient details</string>
+    <string name="ingredients_no_internet_requests">Please connect to the internet to view ingredient requests</string>
+
+    <!-- Ingredient Detail -->
+    <string name="ingredient_detail_request_processed_title">Request Processed</string>
+    <string name="ingredient_detail_request_processed_text">This request has already been approved or rejected by an administrator and can no longer be deleted.</string>
+    <string name="ingredient_detail_title_request">View Request</string>
+    <string name="ingredient_detail_title_ingredient">View Ingredient</string>
+    <string name="ingredient_detail_production_id_missing">Error: Production ID missing for this request</string>
+    <string name="ingredient_detail_description_label">Description</string>
+    <string name="ingredient_detail_no_description">No description available.</string>
+    <string name="ingredient_detail_no_calorie_info">No calorie information available.</string>
+    <string name="ingredient_detail_rejected_reason_label">Rejected Reason</string>
+    <string name="ingredient_detail_admin_notes_label">Admin Notes</string>
+    <string name="ingredient_detail_delete_title">Delete Request</string>
+    <string name="ingredient_detail_delete_text">Are you sure you want to delete this request?</string>
+    <string name="ingredient_detail_toast_deleted">Request deleted</string>
+    <string name="ingredient_detail_unspecified">Unspecified.</string>
+
+    <!-- Ingredient Request -->
+    <string name="ingredient_name">Ingredient Name</string>
+    <string name="category">Category</string>
+    <string name="add_ingredient">Add Ingredient</string>
+    <string name="serving_unit">Serving Unit</string>
+    <string name="calories">Calories</string>
+    <string name="minutes">Minutes</string>
+    <string name="calorie_information">Calorie Information</string>
+    <string name="request_new_ingredient">REQUEST NEW INGREDIENT</string>
+    <string name="delete_request">DELETE REQUEST</string>
+    <string name="edit_request">EDIT REQUEST</string>
+    <string name="update_request">UPDATE REQUEST</string>
+    <string name="reject">REJECT</string>
+    <string name="review_approve">REVIEW &amp; APPROVE</string>
+
+    <!-- Ingredient Request Form -->
+    <string name="ingredient_form_processed_title">Request Processed</string>
+    <string name="ingredient_form_processed_text">This request has already been processed by an administrator and can no longer be modified.</string>
+    <string name="ingredient_form_title_add">Request Ingredient</string>
+    <string name="ingredient_form_title_update">Update Request</string>
+    <string name="ingredient_form_online_required">You need to be online to submit a request</string>
+    <string name="ingredient_form_category_placeholder">e.g. Vegetables</string>
+    <string name="ingredient_form_add_unit">Add Unit</string>
+    <string name="ingredient_form_toast_submitted">Request submitted successfully</string>
+    <string name="ingredient_form_toast_updated">Request updated successfully</string>
+    <string name="ingredient_form_serving_unit_placeholder">e.g. gram</string>
+    <string name="ingredient_form_calories_placeholder_per">per %1$d %2$s</string>
+    <string name="ingredient_form_calories_placeholder_default">e.g. per 100 g</string>
+    <string name="ingredient_form_remove_unit">Remove Unit</string>
+    <string name="ingredient_form_error_submission_failed">Submission failed: %1$s</string>
+
+    <!-- Ingredients Module Validation Errors -->
+    <string name="error_name_required">Ingredient name is required</string>
+    <string name="error_category_required">Category is required</string>
+    <string name="error_description_required">Description is required</string>
+    <string name="error_at_least_one_unit_required">At least one calorie information entry is required</string>
+    <string name="error_unit_required">Serving unit is required</string>
+    <string name="error_calories_required">Calories value is required</string>
+    <string name="error_invalid_number">Must be a valid number</string>
+    <string name="error_no_decimal_allowed">Decimals are not allowed</string>
+
+    <!-- Admin Ingredients -->
+    <string name="admin_ingredients_title">Admin Ingredients</string>
+    <string name="admin_tab_community">Community</string>
+    <string name="admin_tab_requests">Requests</string>
+    <string name="admin_fab_add_ingredient">Add New Ingredient</string>
+    <string name="admin_offline_manage_message">Please connect to the internet to manage ingredients and requests</string>
+    <string name="admin_requests_search_placeholder">Search ingredient requests here</string>
+    <string name="admin_categories_header">Categories</string>
+    <string name="admin_no_requests_found">No requests found.</string>
+    <string name="admin_filter_status_title">Filter by Status</string>
+    <string name="admin_filter_all">All</string>
+    <string name="admin_filter_pending">Pending</string>
+    <string name="admin_filter_approved">Approved</string>
+    <string name="admin_filter_rejected">Rejected</string>
+    <string name="admin_apply_filter">Apply Filter</string>
+    <string name="admin_requested_by">Requested By: %1$s</string>
+    <string name="admin_error_fetch_requests">Failed to fetch requests</string>
+
+    <!-- Admin Ingredient Detail -->
+    <string name="admin_detail_title">View Request</string>
+    <string name="admin_detail_no_description">No description available.</string>
+    <string name="admin_detail_no_calorie_info">No calorie information available.</string>
+    <string name="admin_detail_request_info_header">Request Information</string>
+    <string name="admin_detail_user_id">User ID : </string>
+    <string name="admin_detail_user_name">User Name : </string>
+    <string name="admin_detail_created_date">Created date : </string>
+    <string name="admin_detail_request_not_found">Request not found</string>
+    <string name="admin_detail_toast_rejected">Request rejected</string>
+    <string name="admin_detail_reject_title">Reject Request</string>
+    <string name="admin_detail_reject_prompt">Please provide a reason for rejecting this Ingredient Request.</string>
+    <string name="admin_detail_reject_placeholder">Rejected reason</string>
+    <string name="admin_detail_error_reason_empty">Reason cannot be empty</string>
+    <string name="admin_detail_conflict_deleted_title">Request Deleted</string>
+    <string name="admin_detail_conflict_deleted_text">This request has been deleted by the user.</string>
+    <string name="admin_detail_conflict_processed_title">Request Processed</string>
+    <string name="admin_detail_conflict_processed_text">This request has already been approved or rejected by another administrator.</string>
+
+    <!-- Admin Add Ingredient -->
+    <string name="admin_add_title">Add New Ingredient</string>
+    <string name="admin_add_offline_message">You need to be online to add new ingredients</string>
+    <string name="admin_add_category_placeholder">e.g. Vegetables</string>
+    <string name="admin_add_toast_success">Ingredient added successfully</string>
+    <string name="admin_add_button">Add Ingredient</string>
+    <string name="admin_error_request_id_missing">Error: Request ID is missing</string>
+    <string name="admin_error_serving_units_missing">One or more serving units are not selected</string>
+    <string name="admin_error_original_metadata_missing">Original request metadata missing. Please try again.</string>
+    <string name="admin_error_submission_failed">Submission failed: %1$s</string>
+    <string name="admin_error_approval_failed">Approval failed: %1$s</string>
+
+    <!--Admin Review Ingredient Request -->
+    <string name="admin_review_title">Review Ingredient Request</string>
+    <string name="admin_review_error_validate">Please fix the errors in the form!</string>
+    <string name="admin_approve_ingredient_request">APPROVE INGREDIENT REQUEST</string>
+    <string name="admin_request_approved">Request Approved Successfully!</string>
+    <string name="admin_approval_failed_dialog_title">Approval Failed</string>
+    <string name="admin_approve_request_dialog_title">Approve Request</string>
+    <string name="admin_approve_request_dialog_warning">Warning:\nYou are unable to edit the request after approving it!</string>
+    <string name="admin_approve_request_dialog_note">You may write an optional note to the user, informing them the reason of your changes to their request.</string>
+    <string name="admin_approve_request_dialog_placeholder">Note (Optional)</string>
 </resources>

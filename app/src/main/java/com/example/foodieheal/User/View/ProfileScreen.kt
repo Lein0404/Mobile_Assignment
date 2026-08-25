@@ -141,10 +141,16 @@ fun ProfileScreen(
                         }
                     }
                     DrawerItem("View & Request Ingredients", R.drawable.ic_ingredient_list) {
-                        navController.navigate(Screen.Ingredients.route)
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.Ingredients.route)
+                        }
                     }
                     DrawerItem("Shopping List", R.drawable.ic_shopping_cart) {
-                        navController.navigate(Screen.ShoppingList.route)
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.ShoppingList.route)
+                        }
                     }
                     DrawerItem("Register as Chef", R.drawable.ic_hiring) {
                         navController.navigate(Screen.Welcome.route)

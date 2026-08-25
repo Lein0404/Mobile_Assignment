@@ -48,7 +48,9 @@ sealed class Screen(val route: String) {
     object Description : Screen("descriptionInfo")
     object ChefPicture : Screen("chefPicture")
     object Review : Screen("reviewInfo")
-    object AdminChefScreen : Screen("adminChefApproval")
+    object AdminChefScreen : Screen("adminChefApproval?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "adminChefApproval?tab=$tab"
+    }
     object ChefMain : Screen("chefMain")
     object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
         fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
@@ -76,19 +78,24 @@ sealed class Screen(val route: String) {
     object AppointmentReview : Screen("appointmentReview")
 
     // Ingredients module
-    object Ingredients : Screen("ingredients")
-    object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}") {
-        fun createRoute(id: String, isRequest: Boolean = false) = "ingredient_detail/$id/$isRequest"
+    object Ingredients : Screen("ingredients?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "ingredients?tab=$tab"
+    }
+    object IngredientDetail : Screen("ingredient_detail/{id}/{isRequest}?showAddToCart={showAddToCart}") {
+        fun createRoute(id: String, isRequest: Boolean = false, showAddToCart: Boolean = true) = "ingredient_detail/$id/$isRequest?showAddToCart=$showAddToCart"
     }
     object IngredientRequestForm : Screen("ingredient_request_form?id={id}") {
         fun createRoute(id: String? = null) = if (id != null) "ingredient_request_form?id=$id" else "ingredient_request_form"
     }
     object ShoppingList : Screen("shopping_list")
     object AddShoppingListItem : Screen("add_shopping_list_item")
-    object AdminIngredient: Screen("admin_ingredient")
+    object AdminIngredient: Screen("admin_ingredient?tab={tab}") {
+        fun createRoute(tab: Int = 0) = "admin_ingredient?tab=$tab"
+    }
     object AdminIngredientDetail : Screen("admin_ingredient_detail/{id}") {
         fun createRoute(id: String) = "admin_ingredient_detail/$id"
     }
+    object AdminAddIngredient : Screen("admin_add_ingredient")
     object AdminIngredientReview : Screen("admin_ingredient_review/{id}") {
         fun createRoute(id: String) = "admin_ingredient_review/$id"
     }

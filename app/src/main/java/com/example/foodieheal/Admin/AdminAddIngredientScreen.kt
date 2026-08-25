@@ -1,4 +1,4 @@
-package com.example.foodieheal.ingredients.view
+package com.example.foodieheal.Admin
 
 import android.app.Application
 import android.widget.Toast
@@ -20,85 +20,43 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
-import com.example.foodieheal.R
+import com.example.foodieheal.Admin.ViewModel.AdminAddIngredientViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
+import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.shared.IngredientFormBody
-import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
-import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
-import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.PrimaryButton
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IngredientRequestFormScreen(
+fun AdminAddIngredientScreen(
     navController: NavController,
-    requestId: String? = null,
     cloudinaryViewModel: CloudinaryUploadViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
-    
-    val viewModel: IngredientRequestViewModel = viewModel(
-        factory = IngredientsViewModelFactory(application)
+    val viewModel: AdminAddIngredientViewModel = viewModel(
+        factory = AdminViewModelFactory(application)
     )
     
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
-    
     val scope = rememberCoroutineScope()
-
-    if (formState.isStatusConflict) {
-        AlertDialog(
-            onDismissRequest = { },
-            title = {
-                Text(
-                    text = stringResource(R.string.ingredient_form_processed_title),
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = { Text(stringResource(R.string.ingredient_form_processed_text)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            }
-        )
-    }
-
-    LaunchedEffect(requestId) {
-        if (requestId != null) {
-            viewModel.populateFormForEdit(requestId)
-        } else {
-            viewModel.clearForm()
-        }
-    }
-
-    LaunchedEffect(formState.imageUrl) {
-        formState.imageUrl?.let {
-            cloudinaryViewModel.setExistingImageUrl(it)
-        }
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (requestId == null) stringResource(R.string.ingredient_form_title_add) else stringResource(R.string.ingredient_form_title_update),
+                        text = stringResource(R.string.admin_add_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -118,17 +76,14 @@ fun IngredientRequestFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .consumeWindowInsets(paddingValues)  // prevent adding navigation bar padding + keyboard padding
+                .consumeWindowInsets(paddingValues)
         ) {
-            // Offline gate: show message instead of form
             if (!uiState.isNetworkAvailable) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             painter = painterResource(R.drawable.wifi_off),
                             contentDescription = null,
@@ -137,7 +92,7 @@ fun IngredientRequestFormScreen(
                         )
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
                         Text(
-                            text = stringResource(R.string.ingredient_form_online_required),
+                            text = stringResource(R.string.admin_add_offline_message),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -162,7 +117,7 @@ fun IngredientRequestFormScreen(
                         categoryError = formState.categoryError,
                         descriptionError = formState.descriptionError,
                         unitRowsError = formState.unitRowsError,
-                        categoryPlaceholder = stringResource(R.string.ingredient_form_category_placeholder),
+                        categoryPlaceholder = stringResource(R.string.admin_add_category_placeholder),
                         onNameChange = { viewModel.updateFormName(it) },
                         onCategoryChange = { viewModel.updateFormCategory(it) },
                         onDescriptionChange = { viewModel.updateFormDescription(it) },
@@ -171,18 +126,17 @@ fun IngredientRequestFormScreen(
                         onAddUnitRow = { viewModel.addUnitRow() },
                     ) {
                         // Screen-specific bottom content
-                        formState.errorMessage?.let { resId ->
+                        uiState.errorMessage?.let { resId ->
                             Text(
                                 text = stringResource(id = resId),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(top = dimensionResource(R.dimen.padding_xxsm))
+                                modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_smd))
                             )
                         }
 
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
-                        val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
-                        val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
+                        val successToastMsg = stringResource(R.string.admin_add_toast_success)
                         PrimaryButton(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
@@ -193,23 +147,17 @@ fun IngredientRequestFormScreen(
                                         cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                                     }
 
-                                    viewModel.submitRequest(
+                                    viewModel.submitIngredient(
                                         imageUrl = imageUrl,
                                         onComplete = {
-                                            Toast.makeText(
-                                                context,
-                                                if (requestId == null) successToastSubmitted else successToastUpdated,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                                            }
+                                            Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
+                                            navController.popBackStack()
                                         }
                                     )
                                 }
                             },
-                            textID = if (requestId == null) R.string.request_new_ingredient else R.string.update_request,
-                            enabled = !formState.isSubmitting
+                            textID = R.string.admin_add_button,
+                            enabled = !uiState.isSubmitting
                         )
 
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
@@ -217,7 +165,7 @@ fun IngredientRequestFormScreen(
                 }
             }
 
-            if (formState.isSubmitting) {
+            if (uiState.isSubmitting) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
