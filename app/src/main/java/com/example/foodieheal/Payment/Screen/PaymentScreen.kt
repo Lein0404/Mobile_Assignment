@@ -50,10 +50,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.foodieheal.Payment.ViewModel.PaymentMethod
 import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailRow
+import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,11 +82,26 @@ fun PaymentScreen(
 
     val appointment = paymentState.appointment
 
-    //Fetch payment method
+    // Fetch payment methods
     LaunchedEffect(appointment?.userId) {
         appointment?.userId?.let { userId ->
             if (userId.isNotEmpty()) {
                 paymentMethodViewModel.observeAndFetchPaymentMethods(userId)
+            }
+        }
+    }
+
+    // Auto-select default payment method when methods are available
+    LaunchedEffect(methodState.availableMethods) {
+        if (methodState.availableMethods.isNotEmpty()) {
+            val defaultMethod = methodState.availableMethods.firstOrNull {
+                (it as? PaymentMethod.CreditCard)?.isDefault == true
+            } ?: methodState.availableMethods.firstOrNull()
+
+            val isSelectedValid = methodState.availableMethods.any { it.id == methodState.selectedMethod?.id }
+
+            if (!isSelectedValid || methodState.selectedMethod == null) {
+                defaultMethod?.let { paymentMethodViewModel.selectPaymentMethod(it) }
             }
         }
     }
@@ -250,9 +267,11 @@ fun PaymentScreen(
                         label = stringResource(R.string.label_date),
                         value = appointment.Date.orEmpty()
                     )
+                    val formattedStart = formatToAmPm(appointment.Start_Time)
+                    val formattedEnd = formatToAmPm(appointment.End_Time)
                     DetailRow(
                         label = stringResource(R.string.label_appointment_time),
-                        value = "${appointment.Start_Time.orEmpty()} - ${appointment.End_Time.orEmpty()}"
+                        value = if (formattedStart.isNotBlank() && formattedEnd.isNotBlank()) "$formattedStart - $formattedEnd" else "${appointment.Start_Time.orEmpty()} - ${appointment.End_Time.orEmpty()}"
                     )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

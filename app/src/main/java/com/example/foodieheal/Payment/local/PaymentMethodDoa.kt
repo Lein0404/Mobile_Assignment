@@ -28,4 +28,10 @@ interface PaymentMethodDao {
 
     @Query("DELETE FROM payment_methods WHERE userId = :userId")
     suspend fun clearUserPaymentMethods(userId: String)
+
+    @Query("UPDATE payment_methods SET isDefault = 0 WHERE userId = :userId")
+    suspend fun resetDefaultsForUser(userId: String)
+
+    @Query("UPDATE payment_methods SET isDefault = :isDefault WHERE paymentMethodId = :methodId")
+    suspend fun updateDefault(methodId: String, isDefault: Boolean)
 }

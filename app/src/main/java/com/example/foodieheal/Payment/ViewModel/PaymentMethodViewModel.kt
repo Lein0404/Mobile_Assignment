@@ -29,12 +29,26 @@ class PaymentMethodViewModel(
         // Observe local Room database for saved cards
         viewModelScope.launch {
             repository.getSavedCards(userId).collectLatest { savedCards ->
+                val defaultMethod = savedCards.firstOrNull { it.isDefault } ?: savedCards.firstOrNull()
                 _uiState.update { currentState ->
+                    val selected = currentState.selectedMethod
+                    val isCurrentSelectionInList = savedCards.any { it.id == selected?.id }
+
+                    val newSelected = if (selected == null || !isCurrentSelectionInList) {
+                        defaultMethod
+                    } else {
+                        val currentCardUpdated = savedCards.firstOrNull { it.id == selected.id }
+                        val hasExplicitDefault = savedCards.any { it.isDefault }
+                        if (hasExplicitDefault && currentCardUpdated?.isDefault != true) {
+                            defaultMethod
+                        } else {
+                            currentCardUpdated ?: defaultMethod
+                        }
+                    }
+
                     currentState.copy(
                         availableMethods = savedCards,
-                        selectedMethod = currentState.selectedMethod
-                            ?: savedCards.firstOrNull { it.isDefault }
-                            ?: savedCards.firstOrNull()
+                        selectedMethod = newSelected
                     )
                 }
             }
@@ -104,6 +118,32 @@ class PaymentMethodViewModel(
                 onSuccess()
             } catch (e: Exception) {
                 val errorMsg = e.localizedMessage ?: "Failed to delete payment method."
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = errorMsg)
+                }
+                onError(errorMsg)
+            }
+        }
+    }
+
+    fun setDefaultPaymentMethod(
+        methodId: String,
+        userId: String,
+        isDefault: Boolean,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                repository.setDefaultPaymentMethod(userId = userId, methodId = methodId, isDefault = isDefault)
+                // Refresh data from network to ensure full consistency
+                repository.refreshPaymentMethodsFromNetwork(userId)
+                _uiState.update { it.copy(isLoading = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("PaymentMethodViewModel", "Failed to set default payment method", e)
+                val errorMsg = e.localizedMessage ?: "Failed to set default payment method."
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = errorMsg)
                 }

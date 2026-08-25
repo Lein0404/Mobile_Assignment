@@ -44,7 +44,21 @@ class PaymentRepository(
         brand: String,
         expiryDate: String?,
         isDefault: Boolean
-    ) {
+    ) = withContext(Dispatchers.IO) {
+        if (isDefault) {
+            // Reset other default cards on remote & local
+            try {
+                supabaseClient.from("payment_method").update({
+                    set("is_default", false)
+                }) {
+                    filter {
+                        eq("user_id", userId)
+                    }
+                }
+            } catch (_: Exception) {}
+            dao.resetDefaultsForUser(userId)
+        }
+
         val newCardEntity = PaymentMethodEntity(
             paymentMethodId = UUID.randomUUID().toString(),
             userId = userId,
@@ -58,16 +72,55 @@ class PaymentRepository(
         // Save remote
         supabaseClient.from("payment_method").insert(newCardEntity)
 
-        //Save local
+        // Save local
         dao.insertPaymentMethod(newCardEntity.toRoomEntity())
+    }
+
+    // Toggle / set default payment method
+    suspend fun setDefaultPaymentMethod(
+        userId: String,
+        methodId: String,
+        isDefault: Boolean
+    ) = withContext(Dispatchers.IO) {
+        if (isDefault) {
+            // 1. Reset all cards for this user to is_default = false on Supabase
+            supabaseClient.from("payment_method").update({
+                set("is_default", false)
+            }) {
+                filter {
+                    eq("user_id", userId)
+                }
+            }
+            // 2. Set this specific card to is_default = true
+            supabaseClient.from("payment_method").update({
+                set("is_default", true)
+            }) {
+                filter {
+                    eq("payment_method_id", methodId)
+                }
+            }
+            // 3. Update local Room database
+            dao.resetDefaultsForUser(userId)
+            dao.updateDefault(methodId, true)
+        } else {
+            // If toggling off
+            supabaseClient.from("payment_method").update({
+                set("is_default", false)
+            }) {
+                filter {
+                    eq("payment_method_id", methodId)
+                }
+            }
+            dao.updateDefault(methodId, false)
+        }
     }
 
     // Delete payment method
     suspend fun deletePaymentMethod(methodId: String) = withContext(Dispatchers.IO) {
         // 1. Delete from remote Supabase database
-        supabaseClient.from("payment_methods").delete {
+        supabaseClient.from("payment_method").delete {
             filter {
-                eq("id", methodId)
+                eq("payment_method_id", methodId)
             }
         }
 

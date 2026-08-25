@@ -104,10 +104,25 @@ fun PaymentMethodScreen(
                         items = uiState.availableMethods,
                         key = { it.id }
                     ) { method ->
+                        val isDefault = (method as? PaymentMethod.CreditCard)?.isDefault == true
                         PaymentMethodManagementItem(
                             method = method,
-                            isSelected = uiState.selectedMethod?.id == method.id,
-                            onSelect = { viewModel.selectPaymentMethod(method) },
+                            isDefault = isDefault,
+                            onToggleDefault = {
+                                val nextDefaultState = !isDefault
+                                viewModel.setDefaultPaymentMethod(
+                                    methodId = method.id,
+                                    userId = userId,
+                                    isDefault = nextDefaultState,
+                                    onSuccess = {
+                                        val msg = if (nextDefaultState) "Set as default payment method" else "Removed default payment method"
+                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { err ->
+                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
                             onDelete = { methodToDelete = method }
                         )
                     }
@@ -176,15 +191,15 @@ fun PaymentMethodScreen(
 @Composable
 private fun PaymentMethodManagementItem(
     method: PaymentMethod,
-    isSelected: Boolean,
-    onSelect: () -> Unit,
+    isDefault: Boolean,
+    onToggleDefault: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            containerColor = if (isDefault) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -192,40 +207,44 @@ private fun PaymentMethodManagementItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 4.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.dollar_symbol),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     when (method) {
                         is PaymentMethod.CreditCard -> {
                             Text(
                                 text = "${method.cardBrand} •••• ${method.last4Digits}",
                                 fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "Expires ${method.expiryDate}",
+                                text = "Expires ${method.expiryDate ?: "N/A"}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    if (isSelected) {
+                    if (isDefault) {
                         Text(
                             text = "Default Payment Method",
                             style = MaterialTheme.typography.labelSmall,
@@ -237,20 +256,31 @@ private fun PaymentMethodManagementItem(
                 }
             }
 
-            Row {
-                IconButton(onClick = onSelect) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                IconButton(
+                    onClick = onToggleDefault,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Set Default",
-                        tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.4f)
+                        painter = painterResource(R.drawable.ic_star),
+                        contentDescription = if (isDefault) "Default Payment Method" else "Set as Default",
+                        tint = if (isDefault) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.4f),
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
-                IconButton(onClick = onDelete) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
+                        painter = painterResource(R.drawable.ic_delete),
                         contentDescription = "Delete Method",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
