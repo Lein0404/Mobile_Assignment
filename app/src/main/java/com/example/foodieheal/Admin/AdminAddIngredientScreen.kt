@@ -102,9 +102,9 @@ fun AdminAddIngredientScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .imePadding()
                         .verticalScroll(rememberScrollState())
-                        .padding(dimensionResource(id = R.dimen.padding_l))
-                        .imePadding(),
+                        .padding(dimensionResource(id = R.dimen.padding_l)),
                 ) {
                     IngredientFormBody(
                         cloudinaryViewModel = cloudinaryViewModel,

@@ -602,6 +602,7 @@
     <string name="error_unit_required">Serving unit is required</string>
     <string name="error_calories_required">Calories value is required</string>
     <string name="error_invalid_number">Must be a valid number</string>
+    <string name="error_no_decimal_allowed">Decimals are not allowed</string>
 
     <!-- Admin Ingredients -->
     <string name="admin_ingredients_title">Admin Ingredients</string>

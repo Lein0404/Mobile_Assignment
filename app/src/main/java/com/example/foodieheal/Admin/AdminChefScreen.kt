@@ -63,7 +63,7 @@ fun AdminApprovalScreen(
 ) {
     val navController = rememberNavController()
 
-    val startDestination = if (initialTab == 1) Screen.AdminIngredient.route else Screen.AdminChefScreen.route
+    val startDestination = if (initialTab == 1) Screen.AdminIngredient.createRoute(tab = 1) else Screen.AdminChefScreen.route
 
     val items = listOf(
         NavigationItem(

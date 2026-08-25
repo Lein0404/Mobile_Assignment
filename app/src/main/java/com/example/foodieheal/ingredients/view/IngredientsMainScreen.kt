@@ -256,6 +256,8 @@ fun IngredientRequestsScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
+
+        // 1. Search Bar
         OutlinedTextField(
             value = uiState.searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -306,6 +308,7 @@ fun IngredientRequestsScreen(
         )
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
 
+        // 2. Category Chips
         LazyRow(
             contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),

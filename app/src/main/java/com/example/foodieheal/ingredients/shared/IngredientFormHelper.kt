@@ -129,7 +129,10 @@ object IngredientFormHelper {
             val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
                 isValid = false
                 R.string.error_calories_required
-            } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
+            } else if (row.calories.contains(".")) {
+                isValid = false
+                R.string.error_no_decimal_allowed
+            } else if (row.calories.isNotBlank() && row.calories.toIntOrNull() == null) {
                 isValid = false
                 R.string.error_invalid_number
             } else null
