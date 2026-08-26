@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -464,50 +465,17 @@ fun ProfileScreen(
 
                         // 🌟 Content Display
                         if (selectedMainTab == 0) {
-                            val filtered = myRecipes.filter { 
-                                it.recipeName.contains(searchQuery, true) && 
-                                (selectedCourse == "All" || it.recipeCourse == selectedCourse) 
-                            }
-                            
-                            if (filtered.isEmpty()) {
+                            if (viewModel.isLoading) {
                                 item(span = { GridItemSpan(2) }) {
-                                    EmptyState(
-                                        iconRes = R.drawable.ic_recipe,
-                                        title = stringResource(R.string.empty_no_my_recipes),
-                                        subtitle = stringResource(R.string.empty_my_recipes_sub)
-                                    )
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(color = primaryColor)
+                                    }
                                 }
                             } else {
-                                gridItems(filtered) { recipe ->
-                                    RecipeCardItem(
-                                        recipe = recipe,
-                                        currentUser = user, // 🌟 Pass current user for card name sync
-                                        showMenu = true,
-                                        isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
-                                        onBookmarkClick = {
-                                            user?.customId?.let { cid ->
-                                                recipe.recipe_id?.let { rid ->
-                                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
-                                                }
-                                            }
-                                        },
-                                        onDeleteClick = { recipeToDelete = recipe },
-                                        onEditClick = {
-                                            recipe.recipe_id?.let { id ->
-                                                navController.navigate(Screen.EditRecipe.createRoute(id))
-                                            }
-                                        },
-                                        onClick = {
-                                            recipe.recipe_id?.let { id ->
-                                                navController.navigate(Screen.RecipeDetails.createRoute(id))
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        } else if (selectedMainTab == 1) {
-                            if (!showChefBookmarks) {
-                                val filtered = bookmarkedRecipes.filter { 
+                                val filtered = myRecipes.filter { 
                                     it.recipeName.contains(searchQuery, true) && 
                                     (selectedCourse == "All" || it.recipeCourse == selectedCourse) 
                                 }
@@ -515,9 +483,9 @@ fun ProfileScreen(
                                 if (filtered.isEmpty()) {
                                     item(span = { GridItemSpan(2) }) {
                                         EmptyState(
-                                            iconRes = R.drawable.bookmark,
-                                            title = stringResource(R.string.empty_no_bookmarked_recipes),
-                                            subtitle = stringResource(R.string.empty_bookmarked_recipes_sub)
+                                            iconRes = R.drawable.ic_recipe,
+                                            title = stringResource(R.string.empty_no_my_recipes),
+                                            subtitle = stringResource(R.string.empty_my_recipes_sub)
                                         )
                                     }
                                 } else {
@@ -525,12 +493,19 @@ fun ProfileScreen(
                                         RecipeCardItem(
                                             recipe = recipe,
                                             currentUser = user, // 🌟 Pass current user for card name sync
-                                            isBookmarked = true,
+                                            showMenu = true,
+                                            isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                             onBookmarkClick = {
                                                 user?.customId?.let { cid ->
                                                     recipe.recipe_id?.let { rid ->
                                                         viewModel.toggleBookmark(cid, rid, recipe.recipeName)
                                                     }
+                                                }
+                                            },
+                                            onDeleteClick = { recipeToDelete = recipe },
+                                            onEditClick = {
+                                                recipe.recipe_id?.let { id ->
+                                                    navController.navigate(Screen.EditRecipe.createRoute(id))
                                                 }
                                             },
                                             onClick = {
@@ -541,33 +516,93 @@ fun ProfileScreen(
                                         )
                                     }
                                 }
-                            } else {
-                                // Search Chefs by name
-                                val filteredChefs = bookmarkedChefs.filter { 
-                                    it.name.contains(searchQuery, true) 
-                                }
-                                
-                                if (filteredChefs.isEmpty()) {
+                            }
+                        } else if (selectedMainTab == 1) {
+                            if (!showChefBookmarks) {
+                                if (viewModel.isLoading) {
                                     item(span = { GridItemSpan(2) }) {
-                                        EmptyState(
-                                            iconRes = R.drawable.ic_hiring,
-                                            title = stringResource(R.string.empty_no_bookmarked_chefs),
-                                            subtitle = stringResource(R.string.empty_bookmarked_chefs_sub)
-                                        )
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = primaryColor)
+                                        }
                                     }
                                 } else {
-                                    gridItems(filteredChefs) { chef ->
-                                        ChefCardItem(
-                                            chef = chef,
-                                            onClick = {
-                                                val chefId = chef.chefId.ifEmpty { chef.id }
-                                                navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
-                                            }
-                                        )
+                                    val filtered = bookmarkedRecipes.filter { 
+                                        it.recipeName.contains(searchQuery, true) && 
+                                        (selectedCourse == "All" || it.recipeCourse == selectedCourse) 
+                                    }
+                                    
+                                    if (filtered.isEmpty()) {
+                                        item(span = { GridItemSpan(2) }) {
+                                            EmptyState(
+                                                iconRes = R.drawable.bookmark,
+                                                title = stringResource(R.string.empty_no_bookmarked_recipes),
+                                                subtitle = stringResource(R.string.empty_bookmarked_recipes_sub)
+                                            )
+                                        }
+                                    } else {
+                                        gridItems(filtered) { recipe ->
+                                            RecipeCardItem(
+                                                recipe = recipe,
+                                                currentUser = user, // 🌟 Pass current user for card name sync
+                                                isBookmarked = true,
+                                                onBookmarkClick = {
+                                                    user?.customId?.let { cid ->
+                                                        recipe.recipe_id?.let { rid ->
+                                                            viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                        }
+                                                    }
+                                                },
+                                                onClick = {
+                                                    recipe.recipe_id?.let { id ->
+                                                        navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (bookmarkViewModel.isLoadingBookmarks) {
+                                    item(span = { GridItemSpan(2) }) {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = primaryColor)
+                                        }
+                                    }
+                                } else {
+                                    // Search Chefs by name
+                                    val filteredChefs = bookmarkedChefs.filter { 
+                                        it.name.contains(searchQuery, true) 
+                                    }
+                                    
+                                    if (filteredChefs.isEmpty()) {
+                                        item(span = { GridItemSpan(2) }) {
+                                            EmptyState(
+                                                iconRes = R.drawable.ic_hiring,
+                                                title = stringResource(R.string.empty_no_bookmarked_chefs),
+                                                subtitle = stringResource(R.string.empty_bookmarked_chefs_sub)
+                                            )
+                                        }
+                                    } else {
+                                        gridItems(filteredChefs) { chef ->
+                                            ChefCardItem(
+                                                chef = chef,
+                                                onClick = {
+                                                    val chefId = chef.chefId.ifEmpty { chef.id }
+                                                    navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
+
                     }
                 }
             }
@@ -715,27 +750,109 @@ fun EmptyState(
 fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().height(200.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth() // 🌟 Changed from width(165.dp) to fillMaxWidth to fit grid
+            .padding(vertical = 4.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(12.dp)) {
-            if (!chef.profilePictureUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = chef.profilePictureUrl,
-                    contentDescription = null,
-                    modifier = Modifier.size(80.dp).clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) { // 🌟 Themed Background
-                    Icon(painterResource(id = R.drawable.foodieheallogo), null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary) // 🌟 Themed Icon
+        Column {
+            // Profile Image Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant) // 🌟 Themed Background
+            ) {
+                if (!chef.profilePictureUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = chef.profilePictureUrl,
+                        contentDescription = chef.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.foodieheallogo),
+                            contentDescription = null,
+                            modifier = Modifier.size(60.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+
+                // Price Tag Badge
+                Surface(
+                    shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(
+                        text = "$${chef.Pricing?.toInt() ?: 0}/hr",
+                        color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(chef.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
-            Text(chef.status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) // 🌟 Themed Text
+
+            // Info Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = chef.name.ifEmpty { "Chef" },
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Rating Display
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_star),
+                            contentDescription = "Rating",
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFFFFB300)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${chef.averagerating ?: "N/A"}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Text
+                        )
+                    }
+
+                    // Experience Tag
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = "${chef.experience} yrs exp",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

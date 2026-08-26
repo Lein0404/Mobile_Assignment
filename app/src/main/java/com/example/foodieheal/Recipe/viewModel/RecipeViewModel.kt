@@ -198,7 +198,7 @@ class RecipeViewModel(
             bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
             
             repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
-                _bookmarkMessage.emit(if (isBookmarked) "Removed from favorites" else "Added to favorites: $recipeName")
+                _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
                 fetchBookmarkedRecipes(userId)
             }
         }

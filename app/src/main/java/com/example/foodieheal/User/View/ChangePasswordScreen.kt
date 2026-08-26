@@ -39,7 +39,8 @@ fun ChangePasswordScreen(navController: NavController) {
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
     // 🌟 Validation Logic
-    val isLengthValid = newPassword.length in 8..20
+    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+    val isPasswordValid = newPassword.matches(passwordRegex)
     val passwordsMatch = newPassword == confirmPassword
     
     // Button is enabled if all fields are filled
@@ -126,8 +127,8 @@ fun ChangePasswordScreen(navController: NavController) {
                     if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
                 },
                 // 🌟 FIX: Wait for server result so it pops up at the exact same time as the current password error
-                isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isLengthValid,
-                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isLengthValid) "Password must be 8-20 characters" else null
+                isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid,
+                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid) "Password must be 8-20 characters with uppercase, lowercase and numbers" else null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -151,7 +152,7 @@ fun ChangePasswordScreen(navController: NavController) {
             Button(
                 onClick = { 
                     hasAttemptedSubmit = true 
-                    if (isLengthValid && passwordsMatch) {
+                    if (isPasswordValid && passwordsMatch) {
                         // 🌟 Use the callback to navigate ONLY when the server confirms success
                         authViewModel.changePassword(oldPassword, newPassword) {
                             navController.popBackStack()

@@ -42,8 +42,9 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
     // 🌟 Strict Validation Logic
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
+    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
     val isEmailValid = email.matches(emailRegex)
-    val isPasswordValid = password.length in 8..20
+    val isPasswordValid = password.matches(passwordRegex)
     val passwordsMatch = password == confirmPassword
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty() && !viewModel.isProcessing
 
@@ -207,7 +208,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 if (hasAttemptedSubmit && !isPasswordValid && password.isNotEmpty()) {
                     Text(
-                        text = "Password must be 8-20 characters",
+                        text = "Password must be 8-20 characters with uppercase, lowercase and numbers",
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
