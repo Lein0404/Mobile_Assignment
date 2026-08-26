@@ -146,10 +146,10 @@ fun ProfileScreen(
                             navController.navigate(Screen.Ingredients.route)
                         }
                     }
-                    DrawerItem("Shopping List", R.drawable.ic_shopping_cart) {
+                    DrawerItem("My Shopping Lists", R.drawable.ic_shopping_cart) {
                         scope.launch {
                             drawerState.close()
-                            navController.navigate(Screen.ShoppingList.route)
+                            navController.navigate(Screen.ShoppingListHome.route)
                         }
                     }
                     DrawerItem("Register as Chef", R.drawable.ic_hiring) {

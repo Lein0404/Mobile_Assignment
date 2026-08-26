@@ -70,6 +70,7 @@ import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.Payment.local.PayMethodDatabase
 import com.example.foodieheal.Payment.repo.PaymentRepository
 import com.example.foodieheal.ingredients.view.ShoppingListAddItemScreen
+import com.example.foodieheal.ingredients.view.ShoppingListHomeScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
 import com.example.foodieheal.ingredients.view.IngredientsMainScreen
@@ -949,11 +950,30 @@ class MainActivity : ComponentActivity() {
                                     val id = backStackEntry.arguments?.getString("id")
                                     IngredientRequestFormScreen(navController, requestId = id)
                                 }
-                                composable(Screen.ShoppingList.route) {
-                                    ShoppingListScreen(navController)
+                                composable(Screen.ShoppingListHome.route) {
+                                    ShoppingListHomeScreen(navController)
                                 }
-                                composable(Screen.AddShoppingListItem.route) {
-                                    ShoppingListAddItemScreen(navController)
+                                composable(
+                                    route = Screen.ShoppingList.route,
+                                    arguments = listOf(navArgument("shoppingListId") {
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    })
+                                ) { backStackEntry ->
+                                    val shoppingListId = backStackEntry.arguments?.getString("shoppingListId")
+                                    ShoppingListScreen(navController, shoppingListId = shoppingListId)
+                                }
+                                composable(
+                                    route = Screen.AddShoppingListItem.route,
+                                    arguments = listOf(navArgument("shoppingListId") {
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    })
+                                ) { backStackEntry ->
+                                    val shoppingListId = backStackEntry.arguments?.getString("shoppingListId")
+                                    ShoppingListAddItemScreen(navController, targetShoppingListId = shoppingListId)
                                 }
                             }
                         }

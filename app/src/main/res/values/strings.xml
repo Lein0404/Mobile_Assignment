@@ -593,7 +593,7 @@
     <string name="shopping_list_clear_checked">Clear checked items</string>
     <string name="shopping_list_no_checked_items">No checked items to clear.</string>
     <string name="shopping_list_clear_all">Clear all items</string>
-    <string name="shopping_list_already_empty">Shopping List is already empty.</string>
+    <string name="shopping_list_already_empty">Your shopping list is already empty.</string>
     <string name="shopping_list_search_placeholder">Search ingredients here</string>
     <string name="shopping_list_empty_state">Your shopping list is empty. Add new item now!</string>
     <string name="shopping_list_no_match">No items match your search.</string>

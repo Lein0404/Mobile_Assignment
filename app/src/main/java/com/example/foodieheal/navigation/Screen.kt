@@ -87,8 +87,15 @@ sealed class Screen(val route: String) {
     object IngredientRequestForm : Screen("ingredient_request_form?id={id}") {
         fun createRoute(id: String? = null) = if (id != null) "ingredient_request_form?id=$id" else "ingredient_request_form"
     }
-    object ShoppingList : Screen("shopping_list")
-    object AddShoppingListItem : Screen("add_shopping_list_item")
+    object ShoppingListHome : Screen("shopping_list_home")
+    object ShoppingList : Screen("shopping_list?shoppingListId={shoppingListId}") {
+        fun createRoute(shoppingListId: String? = null) =
+            if (shoppingListId != null) "shopping_list?shoppingListId=$shoppingListId" else "shopping_list"
+    }
+    object AddShoppingListItem : Screen("add_shopping_list_item?shoppingListId={shoppingListId}") {
+        fun createRoute(shoppingListId: String? = null) =
+            if (shoppingListId != null) "add_shopping_list_item?shoppingListId=$shoppingListId" else "add_shopping_list_item"
+    }
     object AdminIngredient: Screen("admin_ingredient?tab={tab}") {
         fun createRoute(tab: Int = 0) = "admin_ingredient?tab=$tab"
     }

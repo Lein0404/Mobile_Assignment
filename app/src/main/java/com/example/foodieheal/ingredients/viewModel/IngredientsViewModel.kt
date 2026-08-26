@@ -196,21 +196,20 @@ class IngredientsViewModel(
     }
 
     fun addToShoppingList(ingredient: Ingredients) {
-        addToShoppingList(ingredient.ingredientId, ingredient.ingredientName)
+        addToShoppingList(ingredient.ingredientId, ingredient.ingredientName, ingredient.ingredientCategory)
     }
 
-    fun addToShoppingList(ingredientId: String, ingredientName: String) {
+    fun addToShoppingList(ingredientId: String, ingredientName: String, category: IngredientCategory? = null) {
         viewModelScope.launch {
             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
             if (userId.isEmpty()) return@launch
 
-            val entity = ShoppingListEntity(
+            shoppingRepo.addItemToActiveOrCreateShoppingList(
                 userId = userId,
                 ingredientId = ingredientId,
                 ingredientName = ingredientName,
-                isChecked = false
+                category = category
             )
-            shoppingRepo.insertItem(entity)
         }
     }
 }

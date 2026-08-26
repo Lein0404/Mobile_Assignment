@@ -3,26 +3,32 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.ingredients.local.ShoppingListEntity
+import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
-import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.R
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class ShoppingListUiState(
-    val searchQuery: String = "",
+    val shoppingLists: List<ShoppingList> = emptyList(),
+    val filteredShoppingLists: List<ShoppingList> = emptyList(),
+    val listSearchQuery: String = "",
+    val selectedShoppingListId: String? = null,
+    val activeShoppingList: ShoppingList? = null,
+    val itemSearchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val isCategoriesExpanded: Boolean = false,
     val items: List<ShoppingListItem> = emptyList(),
     val filteredItems: List<ShoppingListItem> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: Int? = null,
+    val showCreateListDialog: Boolean = false,
+    val showDeleteListDialog: Boolean = false,
+    val listToDeleteId: String? = null,
     val showClearCheckedDialog: Boolean = false,
-    val showClearAllDialog: Boolean = false
+    val showClearAllDialog: Boolean = false,
 )
 
 class ShoppingListViewModel(
@@ -30,6 +36,7 @@ class ShoppingListViewModel(
     private val shoppingRepo: ShoppingListRepository,
     private val ingredientsRepo: IngredientsRepository
 ) : AndroidViewModel(application) {
+
     private val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
 
     private val _uiState = MutableStateFlow(ShoppingListUiState())
@@ -44,42 +51,111 @@ class ShoppingListViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
-            val ingredients = try { ingredientsRepo.getIngredients() } catch (_: Exception) { emptyList() }
-            val ingredientsMap = ingredients.associateBy { it.ingredientId }
 
-            shoppingRepo.getShoppingList(currentUserId).collectLatest { entities ->
-                val items = entities.map { entity ->
-                    val ingredient = ingredientsMap[entity.ingredientId]
-                    val category = ingredient?.ingredientCategory
-                    val description = ingredient?.ingredientDesc ?: ""
-                    
-                    ShoppingListItem(entity, category, description)
-                }
-                
-                _uiState.update { 
-                    it.copy(
+            shoppingRepo.getShoppingLists(currentUserId).collectLatest { lists ->
+                val currentSelectedId = _uiState.value.selectedShoppingListId
+                val activeList = lists.find { it.shoppingListId == currentSelectedId }
+                    ?: lists.firstOrNull()
+                val items = activeList?.items ?: emptyList()
+
+                _uiState.update { state ->
+                    state.copy(
+                        shoppingLists = lists,
+                        selectedShoppingListId = activeList?.shoppingListId,
+                        activeShoppingList = activeList,
                         items = items,
-                        isLoading = false,
-                        errorMessage = if (ingredients.isEmpty()) R.string.shopping_list_error_local_data else null
-                    ) 
+                        isLoading = false
+                    )
                 }
-                applyFilters()
+                applyListFilters()
+                applyItemFilters()
             }
         }
     }
 
-    fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-        applyFilters()
+    // ──────────────── Shopping Lists Management ────────────────
+
+    fun onListSearchQueryChange(query: String) {
+        _uiState.update { it.copy(listSearchQuery = query) }
+        applyListFilters()
     }
 
-    fun onShowClearCheckedDialog(show: Boolean) {
-        _uiState.update { it.copy(showClearCheckedDialog = show) }
+    private fun applyListFilters() {
+        _uiState.update { state ->
+            val query = state.listSearchQuery.trim()
+            val filtered = if (query.isEmpty()) {
+                state.shoppingLists
+            } else {
+                state.shoppingLists.filter {
+                    it.title.contains(query, ignoreCase = true) ||
+                    it.shoppingListId.contains(query, ignoreCase = true)
+                }
+            }
+            state.copy(filteredShoppingLists = filtered)
+        }
     }
 
-    fun onShowClearAllDialog(show: Boolean) {
-        _uiState.update { it.copy(showClearAllDialog = show) }
+    fun selectShoppingList(shoppingListId: String) {
+        val activeList = _uiState.value.shoppingLists.find { it.shoppingListId == shoppingListId }
+        val items = activeList?.items ?: emptyList()
+
+        _uiState.update {
+            it.copy(
+                selectedShoppingListId = shoppingListId,
+                activeShoppingList = activeList,
+                items = items,
+                itemSearchQuery = "",
+                selectedCategories = emptySet()
+            )
+        }
+        applyItemFilters()
+    }
+
+    fun createNewShoppingList(name: String = "", onCreated: ((String) -> Unit)? = null) {
+        if (currentUserId.isEmpty()) return
+        viewModelScope.launch {
+            val title = name.trim().ifEmpty { null }
+            val created = shoppingRepo.createShoppingList(currentUserId, title)
+            _uiState.update { it.copy(selectedShoppingListId = created.shoppingListId, showCreateListDialog = false) }
+            onCreated?.invoke(created.shoppingListId)
+        }
+    }
+
+    fun deleteShoppingList(shoppingListId: String) {
+        if (currentUserId.isEmpty()) return
+        viewModelScope.launch {
+            shoppingRepo.deleteShoppingList(shoppingListId, currentUserId)
+            _uiState.update { it.copy(showDeleteListDialog = false, listToDeleteId = null) }
+        }
+    }
+
+    fun updateShoppingListTitle(shoppingListId: String, newTitle: String) {
+        if (currentUserId.isEmpty()) return
+        val trimmed = newTitle.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            shoppingRepo.updateShoppingListTitle(shoppingListId, currentUserId, trimmed)
+        }
+    }
+
+    fun onShowCreateListDialog(show: Boolean) {
+        _uiState.update { it.copy(showCreateListDialog = show) }
+    }
+
+    fun onShowDeleteListDialog(show: Boolean, listId: String? = null) {
+        _uiState.update {
+            it.copy(
+                showDeleteListDialog = show,
+                listToDeleteId = listId ?: it.selectedShoppingListId
+            )
+        }
+    }
+
+    // ──────────────── Active List Items Management ────────────────
+
+    fun onItemSearchQueryChange(query: String) {
+        _uiState.update { it.copy(itemSearchQuery = query) }
+        applyItemFilters()
     }
 
     fun toggleCategory(category: IngredientCategory) {
@@ -91,17 +167,18 @@ class ShoppingListViewModel(
             }
             state.copy(selectedCategories = newCategories)
         }
-        applyFilters()
+        applyItemFilters()
     }
 
     fun toggleCategoriesExpanded() {
         _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
-    private fun applyFilters() {
+    private fun applyItemFilters() {
         _uiState.update { state ->
+            val query = state.itemSearchQuery.trim()
             val filtered = state.items.filter { item ->
-                (state.searchQuery.isEmpty() || item.entity.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
+                (query.isEmpty() || item.ingredientName.contains(query, ignoreCase = true)) &&
                 (state.selectedCategories.isEmpty() || item.category == null || state.selectedCategories.contains(item.category))
             }
             state.copy(filteredItems = filtered)
@@ -109,28 +186,46 @@ class ShoppingListViewModel(
     }
 
     fun toggleChecked(item: ShoppingListItem) {
-        viewModelScope.launch {
-            shoppingRepo.updateChecked(item.entity.id, !item.entity.isChecked)
-        }
-    }
-
-    fun addItems(items: List<ShoppingListEntity>) {
-        viewModelScope.launch {
-            items.forEach { shoppingRepo.insertItem(it) }
-        }
-    }
-
-    fun clearChecked() {
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
-            shoppingRepo.clearChecked(currentUserId)
+            shoppingRepo.updateChecked(
+                id = item.id,
+                shoppingListId = item.shoppingListId,
+                userId = currentUserId,
+                isChecked = !item.isChecked
+            )
         }
     }
 
-    fun clearAll() {
+    fun addItems(shoppingListId: String, items: List<ShoppingListItemEntity>) {
+        viewModelScope.launch {
+            shoppingRepo.insertItems(items)
+        }
+    }
+
+    fun onShowClearCheckedDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearCheckedDialog = show) }
+    }
+
+    fun onShowClearAllDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearAllDialog = show) }
+    }
+
+    fun clearChecked(shoppingListId: String? = null) {
+        val targetId = shoppingListId ?: _uiState.value.selectedShoppingListId ?: return
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
-            shoppingRepo.clearAll(currentUserId)
+            shoppingRepo.clearChecked(targetId, currentUserId)
+            _uiState.update { it.copy(showClearCheckedDialog = false) }
+        }
+    }
+
+    fun clearAll(shoppingListId: String? = null) {
+        val targetId = shoppingListId ?: _uiState.value.selectedShoppingListId ?: return
+        if (currentUserId.isEmpty()) return
+        viewModelScope.launch {
+            shoppingRepo.clearAll(targetId, currentUserId)
+            _uiState.update { it.copy(showClearAllDialog = false) }
         }
     }
 }

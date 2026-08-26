@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,7 +24,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
-import com.example.foodieheal.ingredients.local.ShoppingListEntity
+import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
@@ -38,6 +36,7 @@ import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 @Composable
 fun ShoppingListAddItemScreen(
     navController: NavController,
+    targetShoppingListId: String? = null,
     ingredientsViewModel: IngredientsViewModel = viewModel(
         factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
     ),
@@ -46,6 +45,7 @@ fun ShoppingListAddItemScreen(
     )
 ) {
     val uiState by ingredientsViewModel.uiState.collectAsState()
+    val shoppingUiState by shoppingListViewModel.uiState.collectAsState()
     val context = LocalContext.current
     
     // Track selected ingredients
@@ -148,25 +148,52 @@ fun ShoppingListAddItemScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = dimensionResource(id = R.dimen.padding_l)),
-                verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedIngredients.size)
                 Button(
                     onClick = {
                         if (selectedIngredients.isNotEmpty()) {
                             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
-                            val entities = selectedIngredients.map { item ->
-                                ShoppingListEntity(
-                                    userId = userId,
-                                    ingredientId = item.ingredient.ingredientId,
-                                    ingredientName = item.ingredient.ingredientName,
-                                    isChecked = false
-                                )
+                            if (userId.isEmpty()) return@Button
+
+                            val resolvedListId = targetShoppingListId
+                                ?: shoppingUiState.selectedShoppingListId
+                                ?: shoppingUiState.shoppingLists.firstOrNull()?.shoppingListId
+
+                            if (resolvedListId != null) {
+                                val entities = selectedIngredients.map { item ->
+                                    ShoppingListItemEntity(
+                                        shoppingListId = resolvedListId,
+                                        userId = userId,
+                                        ingredientId = item.ingredient.ingredientId,
+                                        ingredientName = item.ingredient.ingredientName,
+                                        ingredientCategory = item.ingredient.ingredientCategory?.name,
+                                        isChecked = false
+                                    )
+                                }
+                                shoppingListViewModel.addItems(resolvedListId, entities)
+                                Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            } else {
+                                // Create new shopping list first, then add items
+                                shoppingListViewModel.createNewShoppingList { newListId ->
+                                    val entities = selectedIngredients.map { item ->
+                                        ShoppingListItemEntity(
+                                            shoppingListId = newListId,
+                                            userId = userId,
+                                            ingredientId = item.ingredient.ingredientId,
+                                            ingredientName = item.ingredient.ingredientName,
+                                            ingredientCategory = item.ingredient.ingredientCategory?.name,
+                                            isChecked = false
+                                        )
+                                    }
+                                    shoppingListViewModel.addItems(newListId, entities)
+                                    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                }
                             }
-                            shoppingListViewModel.addItems(entities)
-                            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
                         }
                     },
                     modifier = Modifier
