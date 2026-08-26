@@ -46,6 +46,7 @@ import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import kotlinx.coroutines.launch
 
@@ -55,6 +56,7 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
+    chefRegisterViewModel: ChefRegisterViewModel,
     bookmarkViewModel: BookmarkViewModel = viewModel()
 ) {
     val user = authViewModel.currentUser
@@ -62,6 +64,9 @@ fun ProfileScreen(
     val view = LocalView.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    var chefStatusDialogInfo by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var showReapplyDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -155,8 +160,35 @@ fun ProfileScreen(
                             navController.navigate(Screen.ShoppingList.route)
                         }
                     }
-                    DrawerItem("Register as Chef", R.drawable.ic_hiring) {
-                        navController.navigate(Screen.Welcome.route)
+                    DrawerItem("Become a Chef", R.drawable.ic_hiring) {
+                        scope.launch {
+                            drawerState.close()
+                            authViewModel.checkChefApplicationStatus { existingChef ->
+                                val effectiveUserId = authViewModel.getEffectiveUserId()
+                                val effectiveEmail = authViewModel.getEffectiveUserEmail()
+
+                                if (existingChef != null) {
+                                    when (existingChef.status.lowercase()) {
+                                        "pending" -> {
+                                            chefStatusDialogInfo = "Application Under Review" to "Your chef application is currently under review by our administrators. Please wait for approval."
+                                        }
+                                        "approved" -> {
+                                            chefStatusDialogInfo = "Chef Account Active" to "You are already an approved Chef! Please use the Chef Login Portal from the login screen to access your chef dashboard."
+                                        }
+                                        "rejected" -> {
+                                            showReapplyDialog = true
+                                        }
+                                        else -> {
+                                            chefRegisterViewModel.initForUpgrade(user, effectiveEmail, effectiveUserId)
+                                            navController.navigate(Screen.BasicInfo.route)
+                                        }
+                                    }
+                                } else {
+                                    chefRegisterViewModel.initForUpgrade(user, effectiveEmail, effectiveUserId)
+                                    navController.navigate(Screen.BasicInfo.route)
+                                }
+                            }
+                        }
                     }
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
@@ -644,6 +676,42 @@ fun ProfileScreen(
             dismissButton = {
                 TextButton(onClick = { recipeToDelete = null }) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
+    // 🌟 Chef Application Status Dialogs
+    chefStatusDialogInfo?.let { (title, message) ->
+        AlertDialog(
+            onDismissRequest = { chefStatusDialogInfo = null },
+            title = { Text(title, fontWeight = FontWeight.Bold) },
+            text = { Text(message) },
+            confirmButton = {
+                Button(onClick = { chefStatusDialogInfo = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showReapplyDialog) {
+        AlertDialog(
+            onDismissRequest = { showReapplyDialog = false },
+            title = { Text("Re-apply as Chef", fontWeight = FontWeight.Bold) },
+            text = { Text("Your previous application was rejected. Would you like to submit an updated application?") },
+            confirmButton = {
+                Button(onClick = {
+                    showReapplyDialog = false
+                    chefRegisterViewModel.initForUpgrade(user, user?.email.orEmpty(), user?.id.orEmpty())
+                    navController.navigate(Screen.BasicInfo.route)
+                }) {
+                    Text("Re-apply")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReapplyDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )

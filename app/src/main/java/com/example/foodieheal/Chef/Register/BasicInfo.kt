@@ -122,25 +122,50 @@ fun basicInfo(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            PasswordInputField(
-                value = chefViewModel.password,
-                onValueChange = { chefViewModel.password = it },
-                textId = R.string.password,
-                placeholder = stringResource(R.string.password),
-                isError = passwordError != null,
-                supportingText = passwordError?.let { msg -> { Text(msg) } },
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (!chefViewModel.isUpgradeFlow) {
+                PasswordInputField(
+                    value = chefViewModel.password,
+                    onValueChange = { chefViewModel.password = it },
+                    textId = R.string.password,
+                    placeholder = stringResource(R.string.password),
+                    isError = passwordError != null,
+                    supportingText = passwordError?.let { msg -> { Text(msg) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            PasswordInputField(
-                value = chefViewModel.confirmPassword,
-                onValueChange = { chefViewModel.confirmPassword = it },
-                textId = R.string.confirm_password,
-                placeholder = stringResource(R.string.confirm_password),
-                isError = confirmPasswordError != null,
-                supportingText = confirmPasswordError?.let { msg -> { Text(msg) } },
-                modifier = Modifier.fillMaxWidth()
-            )
+                PasswordInputField(
+                    value = chefViewModel.confirmPassword,
+                    onValueChange = { chefViewModel.confirmPassword = it },
+                    textId = R.string.confirm_password,
+                    placeholder = stringResource(R.string.confirm_password),
+                    isError = confirmPasswordError != null,
+                    supportingText = confirmPasswordError?.let { msg -> { Text(msg) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                androidx.compose.material3.Surface(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_check),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 10.dp)
+                        )
+                        Text(
+                            text = "Linked to your current FoodieHeal account credentials.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 

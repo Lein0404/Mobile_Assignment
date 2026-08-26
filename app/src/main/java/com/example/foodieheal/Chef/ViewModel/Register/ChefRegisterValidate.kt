@@ -216,6 +216,26 @@ object ChefRegisterValidate {
         return isValidAddress(address) && isValidState(state) && isValidPostcode(postcode)
     }
 
+    fun canProceedBasicInfoUpgrade(
+        name: String,
+        gender: String,
+        age: String
+    ): Boolean {
+        return name.isNotBlank() &&
+                gender.isNotBlank() &&
+                age.isNotBlank()
+    }
+
+    fun validateBasicInfoUpgrade(
+        name: String,
+        gender: String,
+        age: String
+    ): Boolean {
+        return isValidName(name) &&
+                isValidGender(gender) &&
+                isValidAge(age)
+    }
+
     fun validateDescriptionInfo(experience: String, description: String): Boolean {
         return isValidExperience(experience) && isValidDescription(description)
     }

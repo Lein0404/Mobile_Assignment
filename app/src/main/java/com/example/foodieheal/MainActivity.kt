@@ -323,6 +323,12 @@ class MainActivity : ComponentActivity() {
                                         sharedAuthViewModel
                                     )
                                 }
+                                composable(Screen.ChefLogin.route) {
+                                    ChefLoginScreen(
+                                        navController,
+                                        sharedAuthViewModel
+                                    )
+                                }
                                 composable(Screen.Register.route) {
                                     RegisterScreen(
                                         navController,
@@ -646,7 +652,14 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(Screen.Profile.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
+                                        ProfileScreen(
+                                            navController,
+                                            sharedRecipeViewModel,
+                                            sharedAuthViewModel,
+                                            chefViewModel
+                                        )
+                                    }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---
@@ -1007,8 +1020,12 @@ class MainActivity : ComponentActivity() {
                                     AdminAddIngredientScreen(navController)
                                 }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
-                                composable("chefDetail/{chefId}") {
-                                    ChefDetailScreen(it.arguments?.getString("chefId") ?: "", navController)
+                                composable(
+                                    route = "chefDetail/{chefId}",
+                                    arguments = listOf(navArgument("chefId") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val chefId = backStackEntry.arguments?.getString("chefId") ?: ""
+                                    ChefDetailScreen(chefId, navController)
                                 }
                                 navigation(startDestination = Screen.Welcome.route, route = "chefRegisterRoute") {
                                     composable(Screen.Welcome.route) { ChefWelcomeScreen(navController, chefViewModel) }
@@ -1079,6 +1096,7 @@ class MainActivity : ComponentActivity() {
                             // 🌟 Screens that are allowed WITHOUT login (Auth flow)
                             val authRoutes = listOf(
                                 Screen.Login.route,
+                                Screen.ChefLogin.route,
                                 Screen.Register.route,
                                 Screen.Welcome.route,
                                 Screen.BasicInfo.route,
