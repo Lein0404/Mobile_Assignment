@@ -117,6 +117,8 @@ class RecipeViewModel(
                 repository.getAllRecipes()
                     .onSuccess { result ->
                         recipeList = result.sortedBy { it.recipe_id }
+                        // 🌟 Recovery: If some names are missing (Join failed), fetch them by ID automatically
+                        fetchMissingAuthorInfo(result)
                     }
                     .onFailure { e ->
                         errorMessage = "Failed to load recipes: ${e.message}"
@@ -124,6 +126,34 @@ class RecipeViewModel(
             } finally {
                 isLoading = false
                 isFetchingAll = false
+            }
+        }
+    }
+
+    /**
+     * 🌟 Recovery logic: Just like the Detail Screen, if a recipe arrives
+     * without a name, we fetch the User data by its ID separately.
+     */
+    private fun fetchMissingAuthorInfo(recipes: List<Recipe>) {
+        val missingIds = recipes.filter { it.authorName.isNullOrEmpty() && !it.author_id.isNullOrEmpty() }
+            .mapNotNull { it.author_id }
+            .distinct()
+
+        if (missingIds.isEmpty()) return
+
+        viewModelScope.launch {
+            missingIds.forEach { id ->
+                repository.getUserByCustomId(id).onSuccess { user ->
+                    if (user != null) {
+                        // Update all occurrences of this author in the lists
+                        val updater: (Recipe) -> Recipe = { r ->
+                            if (r.author_id == id) r.copy(authorName = user.name, authorImageUrl = user.profilePicUrl) else r
+                        }
+                        recipeList = recipeList.map(updater)
+                        myRecipes = myRecipes.map(updater)
+                        bookmarkedRecipes = bookmarkedRecipes.map(updater)
+                    }
+                }
             }
         }
     }
@@ -155,6 +185,7 @@ class RecipeViewModel(
                 repository.getMyRecipes(authorId)
                     .onSuccess { result ->
                         myRecipes = result.sortedBy { it.recipe_id }
+                        fetchMissingAuthorInfo(result)
                     }
             } finally {
                 isLoading = false
@@ -175,6 +206,7 @@ class RecipeViewModel(
                     .onSuccess { result ->
                         bookmarkedRecipes = result.sortedBy { it.recipe_id }
                         bookmarkedRecipeIds = bookmarkedRecipes.mapNotNull { it.recipe_id }.toSet()
+                        fetchMissingAuthorInfo(result)
                     }
             } finally {
                 isLoading = false
