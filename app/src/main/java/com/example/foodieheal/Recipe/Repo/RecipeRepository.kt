@@ -81,7 +81,9 @@ class RecipeRepository(
 
     suspend fun insertRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            client.from("recipes").insert(recipe)
+            // 🌟 CLEANUP: Remove join-only fields before sending to Supabase
+            val cleanRecipe = recipe.copy(authorInfo = null)
+            client.from("recipes").insert(cleanRecipe)
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
             Unit
         }
@@ -89,7 +91,9 @@ class RecipeRepository(
 
     suspend fun updateRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            client.from("recipes").update(recipe) {
+            // 🌟 CLEANUP: Remove join-only fields before sending to Supabase
+            val cleanRecipe = recipe.copy(authorInfo = null)
+            client.from("recipes").update(cleanRecipe) {
                 filter { eq("recipe_id", recipe.recipe_id ?: "") }
             }
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
