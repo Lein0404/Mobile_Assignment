@@ -77,6 +77,7 @@ fun AddRecipeScreen(
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             // 🌟 Description and Image are now optional, so they are removed from validation
             totalTime.isNotBlank() &&
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() &&
             ingredients.isNotEmpty() &&
@@ -260,6 +261,15 @@ fun AddRecipeScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
                     )
+                    // 🌟 Added time limit hint
+                    if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
+                        Text(
+                            text = "Time cannot exceed 24 hours.",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     LabelText("Calories (kcal)")
