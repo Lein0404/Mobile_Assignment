@@ -66,6 +66,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -177,13 +178,13 @@ fun RecipeBookmarkSelectorSheet(
             ) {
                 Column {
                     Text(
-                        text = "Attach Recipes / Menu",
+                        text = stringResource(R.string.attach_recipes_menu_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Select dishes for your chef to prepare",
+                        text = stringResource(R.string.select_dishes_for_chef_sub),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -195,7 +196,7 @@ fun RecipeBookmarkSelectorSheet(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "${selectedRecipes.size} selected",
+                            text = stringResource(R.string.dishes_selected_count, selectedRecipes.size),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
@@ -252,7 +253,7 @@ fun RecipeBookmarkSelectorSheet(
                     .height(48.dp),
                 placeholder = {
                     Text(
-                        text = "Search recipes by name...",
+                        text = stringResource(R.string.search_recipes_placeholder),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -349,14 +350,14 @@ fun RecipeBookmarkSelectorSheet(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No recipes in ${tabs.getOrElse(localSelectedTab) { "this tab" }}",
+                                text = stringResource(R.string.no_recipes_in_tab, tabs.getOrElse(localSelectedTab) { "this tab" }),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Explore and bookmark recipes to attach them here.",
+                                text = stringResource(R.string.explore_and_bookmark_sub),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -372,14 +373,14 @@ fun RecipeBookmarkSelectorSheet(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "No matching recipes",
+                                text = stringResource(R.string.no_matching_recipes),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "No recipe matches \"$searchQuery\" in $selectedCourse",
+                                text = stringResource(R.string.no_recipe_matches_query, searchQuery, selectedCourse),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -428,7 +429,7 @@ fun RecipeBookmarkSelectorSheet(
                 )
             ) {
                 Text(
-                    text = if (selectedRecipes.isEmpty()) "Close" else "Done (${selectedRecipes.size} selected)",
+                    text = if (selectedRecipes.isEmpty()) stringResource(R.string.btn_close) else stringResource(R.string.done_selected_count, selectedRecipes.size),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -578,7 +579,7 @@ fun RecipeSelectableCard(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_recipe),
-                        contentDescription = "View Details",
+                        contentDescription = stringResource(R.string.view_details),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
@@ -608,7 +609,7 @@ fun RecipeSelectableCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Portions for this dish:",
+                                text = stringResource(R.string.portions_for_this_dish),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -680,7 +681,7 @@ fun RecipeSelectableCard(
                             onValueChange = { onUpdateNote(it) },
                             placeholder = {
                                 Text(
-                                    text = "Optional note for chef (e.g. less salt, spicy)",
+                                    text = stringResource(R.string.optional_note_chef_placeholder),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )

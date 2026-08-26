@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +45,7 @@ fun TransactionReceiptCard(
     val sign = if (isCredit) "+" else "-"
     val statusColor = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828)
     val statusBg = if (isCredit) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+    val transactionIdLabel = stringResource(R.string.receipt_label_transaction_id)
 
     val formattedDate = formatReceiptDate(transaction.createdAt)
 
@@ -86,13 +88,13 @@ fun TransactionReceiptCard(
                         )
                         Column {
                             Text(
-                                text = "FoodieHeal Pay",
+                                text = stringResource(R.string.receipt_header_title),
                                 color = Color.White,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 17.sp
                             )
                             Text(
-                                text = "Official E-Wallet Receipt",
+                                text = stringResource(R.string.receipt_header_subtitle),
                                 color = Color.White.copy(alpha = 0.85f),
                                 fontSize = 11.sp
                             )
@@ -108,7 +110,7 @@ fun TransactionReceiptCard(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_share),
-                                contentDescription = "Share",
+                                contentDescription = stringResource(R.string.share),
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -149,10 +151,10 @@ fun TransactionReceiptCard(
                     contentColor = statusColor
                 ) {
                     val statusLabel = when (transaction.typeEnum) {
-                        WalletTransactionType.TOP_UP -> "Top-Up Successful"
-                        WalletTransactionType.APPOINTMENT_PAYMENT -> "Payment Completed"
-                        WalletTransactionType.REFUND -> "Refund Credited"
-                        WalletTransactionType.RESCHEDULE_ADJUSTMENT -> "Adjustment Applied"
+                        WalletTransactionType.TOP_UP -> stringResource(R.string.receipt_status_top_up)
+                        WalletTransactionType.APPOINTMENT_PAYMENT -> stringResource(R.string.receipt_status_payment)
+                        WalletTransactionType.REFUND -> stringResource(R.string.receipt_status_refund)
+                        WalletTransactionType.RESCHEDULE_ADJUSTMENT -> stringResource(R.string.receipt_status_adjustment)
                     }
                     Text(
                         text = statusLabel,
@@ -219,12 +221,12 @@ fun TransactionReceiptCard(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 ReceiptRow(
-                    label = "Transaction Type",
+                    label = stringResource(R.string.receipt_label_transaction_type),
                     value = when (transaction.typeEnum) {
-                        WalletTransactionType.TOP_UP -> "Wallet Top Up"
-                        WalletTransactionType.APPOINTMENT_PAYMENT -> "Appointment Booking"
-                        WalletTransactionType.REFUND -> "Refund Credited"
-                        WalletTransactionType.RESCHEDULE_ADJUSTMENT -> "Reschedule Adjustment"
+                        WalletTransactionType.TOP_UP -> stringResource(R.string.receipt_type_top_up)
+                        WalletTransactionType.APPOINTMENT_PAYMENT -> stringResource(R.string.receipt_type_appointment)
+                        WalletTransactionType.REFUND -> stringResource(R.string.receipt_type_refund)
+                        WalletTransactionType.RESCHEDULE_ADJUSTMENT -> stringResource(R.string.receipt_type_adjustment)
                     }
                 )
 
@@ -235,7 +237,7 @@ fun TransactionReceiptCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Transaction ID",
+                        text = transactionIdLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -252,14 +254,14 @@ fun TransactionReceiptCard(
                         IconButton(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                clipboard.setPrimaryClip(ClipData.newPlainText("Transaction ID", transaction.id))
-                                Toast.makeText(context, "Transaction ID copied", Toast.LENGTH_SHORT).show()
+                                clipboard.setPrimaryClip(ClipData.newPlainText(transactionIdLabel, transaction.id))
+                                Toast.makeText(context, R.string.receipt_toast_copied, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_content_copy),
-                                contentDescription = "Copy",
+                                contentDescription = stringResource(R.string.receipt_cd_copy),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp)
                             )
@@ -270,20 +272,20 @@ fun TransactionReceiptCard(
                 // Payment Method
                 val paymentMethodDisplay = if (transaction.typeEnum == WalletTransactionType.TOP_UP) {
                     if (transaction.paymentMethod != null) transaction.paymentMethod.displayTitle
-                    else "Instant Top-Up Gateway"
+                    else stringResource(R.string.receipt_method_gateway)
                 } else if (transaction.typeEnum == WalletTransactionType.REFUND) {
-                    "In-App Wallet (Refund)"
+                    stringResource(R.string.receipt_method_wallet_refund)
                 } else {
-                    "FoodieHeal In-App Wallet"
+                    stringResource(R.string.receipt_method_foodieheal_wallet)
                 }
-                ReceiptRow(label = "Payment Source", value = paymentMethodDisplay)
+                ReceiptRow(label = stringResource(R.string.receipt_label_payment_source), value = paymentMethodDisplay)
 
                 if (!transaction.description.isNullOrBlank()) {
-                    ReceiptRow(label = "Description", value = transaction.description)
+                    ReceiptRow(label = stringResource(R.string.label_description), value = transaction.description)
                 }
 
                 if (!transaction.paymentId.isNullOrBlank()) {
-                    ReceiptRow(label = "Reference ID", value = transaction.paymentId)
+                    ReceiptRow(label = stringResource(R.string.receipt_label_reference_id), value = transaction.paymentId)
                 }
 
                 HorizontalDivider(
@@ -293,11 +295,11 @@ fun TransactionReceiptCard(
 
                 // Balance summary
                 ReceiptRow(
-                    label = "Balance Before",
+                    label = stringResource(R.string.receipt_label_balance_before),
                     value = "RM ${String.format(Locale.US, "%.2f", transaction.safeBalanceBefore)}"
                 )
                 ReceiptRow(
-                    label = "Balance After",
+                    label = stringResource(R.string.receipt_label_balance_after),
                     value = "RM ${String.format(Locale.US, "%.2f", transaction.safeBalanceAfter)}",
                     valueColor = MaterialTheme.colorScheme.primary,
                     isBold = true
@@ -331,13 +333,13 @@ fun TransactionReceiptCard(
                 }
 
                 Text(
-                    text = "Ref: ${transaction.id.take(20).uppercase()}",
+                    text = stringResource(R.string.receipt_ref_format, transaction.id.take(20).uppercase()),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "This is a computer-generated receipt • No signature required",
+                    text = stringResource(R.string.receipt_computer_generated_notice),
                     fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.outline,
                     textAlign = TextAlign.Center

@@ -278,6 +278,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
         if (cleanEmail == "admin@gmail.com" && cleanPassword == "admin1234") {
             isAdmin = true
+            isChef = false
             loginSuccess = true
             return
         }
@@ -297,41 +298,112 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
                 fetchUserData(userId)
 
-                val chefData = client.postgrest["Chef"].select { filter { eq("chefId", userId) } }.decodeSingleOrNull<Chef>()
-
-                if (chefData != null) {
-                    when (chefData.status.lowercase()) {
-                        "approved" -> {
-                            this@AuthViewModel.currentChef = chefData
-                            saveChefToCache(chefData)
-                            isChef = true
-                            isAdmin = false
-                            loginSuccess = true
-                        }
-                        "pending" -> {
-                            client.auth.signOut()
-                            errorMessage = "Your chef application is pending admin approval."
-                        }
-                        else -> {
-                            client.auth.signOut()
-                            errorMessage = "Chef account is not active."
-                        }
-                    }
-                    return@launch
-                }
-
                 if (this@AuthViewModel.currentUser != null) {
                     isChef = false
                     isAdmin = false
                     loginSuccess = true
                 } else {
+                    // Check if this user is a Chef attempting customer login
+                    val chefData = try {
+                        client.postgrest["Chef"].select { filter { eq("chefId", userId) } }.decodeSingleOrNull<Chef>()
+                    } catch (e: Exception) {
+                        null
+                    }
+
                     client.auth.signOut()
-                    errorMessage = "Account details not found."
+                    if (chefData != null) {
+                        errorMessage = "This account is registered as a Chef. Please use the Chef Login Portal."
+                    } else {
+                        errorMessage = "Account details not found."
+                    }
                 }
             } catch (e: Exception) {
                 errorMessage = parseError(e)
             } finally {
                 isProcessing = false
+            }
+        }
+    }
+
+    fun loginAsChef(emailInput: String, passwordInput: String) {
+        val cleanEmail = emailInput.trim()
+        val cleanPassword = passwordInput.trim()
+
+        if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
+            errorMessage = "Email and password cannot be empty"
+            return
+        }
+
+        isProcessing = true
+        errorMessage = ""
+
+        viewModelScope.launch {
+            try {
+                client.auth.signInWith(Email) {
+                    email = cleanEmail
+                    password = cleanPassword
+                }
+
+                val authUser = client.auth.currentUserOrNull() ?: throw Exception("Auth failed")
+                val userId = authUser.id
+
+                val chefData = client.postgrest["Chef"].select { filter { eq("chefId", userId) } }.decodeSingleOrNull<Chef>()
+
+                if (chefData == null) {
+                    client.auth.signOut()
+                    errorMessage = "No chef account found."
+                    return@launch
+                }
+
+                when (chefData.status.lowercase()) {
+                    "approved" -> {
+                        this@AuthViewModel.currentChef = chefData
+                        saveChefToCache(chefData)
+                        isChef = true
+                        isAdmin = false
+                        loginSuccess = true
+                    }
+                    "pending" -> {
+                        client.auth.signOut()
+                        errorMessage = "Your chef application is currently under review by admin."
+                    }
+                    "rejected" -> {
+                        client.auth.signOut()
+                        errorMessage = "Your chef application was rejected by admin."
+                    }
+                    else -> {
+                        client.auth.signOut()
+                        errorMessage = "Chef account status: ${chefData.status}."
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage = parseError(e)
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    fun getEffectiveUserId(): String = client.auth.currentUserOrNull()?.id ?: currentUser?.id.orEmpty()
+
+    fun getEffectiveUserEmail(): String {
+        val userObjEmail = currentUser?.email.orEmpty().trim()
+        if (userObjEmail.isNotEmpty()) return userObjEmail
+        return client.auth.currentUserOrNull()?.email.orEmpty().trim()
+    }
+
+    fun checkChefApplicationStatus(onResult: (Chef?) -> Unit) {
+        val userId = getEffectiveUserId()
+        if (userId.isBlank()) {
+            onResult(null)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val chefData = client.postgrest["Chef"].select { filter { eq("chefId", userId) } }.decodeSingleOrNull<Chef>()
+                onResult(chefData)
+            } catch (e: Exception) {
+                onResult(null)
             }
         }
     }

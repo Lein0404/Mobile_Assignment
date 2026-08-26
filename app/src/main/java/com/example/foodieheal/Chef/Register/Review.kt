@@ -144,9 +144,17 @@ fun reviewInfo(
 
             Button(
                 onClick = {
-                    chefRegisterViewModel.registerChef(context = context) {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo("chefRegisterRoute") { inclusive = true }
+                    if (chefRegisterViewModel.isUpgradeFlow) {
+                        chefRegisterViewModel.upgradeChef(context = context) {
+                            navController.navigate(Screen.Profile.route) {
+                                popUpTo("chefRegisterRoute") { inclusive = true }
+                            }
+                        }
+                    } else {
+                        chefRegisterViewModel.registerChef(context = context) {
+                            navController.navigate(Screen.ChefLogin.route) {
+                                popUpTo("chefRegisterRoute") { inclusive = true }
+                            }
                         }
                     }
                 },
@@ -164,7 +172,7 @@ fun reviewInfo(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.submit_registration),
+                        text = if (chefRegisterViewModel.isUpgradeFlow) "Submit Application" else stringResource(R.string.submit_registration),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

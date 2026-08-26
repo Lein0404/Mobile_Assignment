@@ -80,21 +80,40 @@ fun contactInfo(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            CommonInputField(
-                value = chefViewModel.email,
-                onValueChange = {
-                    chefViewModel.email = it.trim()
-                    chefViewModel.clearEmailTakenError()
-                },
-                textId = R.string.email,
-                placeholder = stringResource(R.string.email),
-                isError = emailError != null,
-                supportingText = emailError?.let { msg -> { Text(msg) } },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (chefViewModel.isUpgradeFlow) {
+                CommonInputField(
+                    value = chefViewModel.email,
+                    onValueChange = { },
+                    textId = R.string.email,
+                    placeholder = stringResource(R.string.email),
+                    isError = false,
+                    enabled = false,
+                    supportingText = {
+                        Text(
+                            "Account email (reused from your profile)",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                CommonInputField(
+                    value = chefViewModel.email,
+                    onValueChange = {
+                        chefViewModel.email = it.trim()
+                        chefViewModel.clearEmailTakenError()
+                    },
+                    textId = R.string.email,
+                    placeholder = stringResource(R.string.email),
+                    isError = emailError != null,
+                    supportingText = emailError?.let { msg -> { Text(msg) } },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             CommonInputField(
                 value = chefViewModel.phoneNumber,

@@ -59,7 +59,7 @@ fun PopularChefsTabContent(
             onQueryChange = { filterState = filterState.copy(searchQuery = it) },
             onFilterClick = { showFilterSheet = true },
             activeFilterCount = filterState.activeFilterCount,
-            placeholder = "Search by name & state"
+            placeholder = stringResource(R.string.search_chef_placeholder)
         )
 
         // Active filter chips row
@@ -129,14 +129,14 @@ fun PopularChefsTabContent(
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    text = "No chefs match your filters",
+                                    text = stringResource(R.string.no_chefs_match_filters),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Try adjusting your search criteria or resetting filters.",
+                                    text = stringResource(R.string.adjust_search_criteria_or_reset),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
@@ -144,7 +144,7 @@ fun PopularChefsTabContent(
                                 TextButton(
                                     onClick = { filterState = ChefFilterState() }
                                 ) {
-                                    Text("Reset All Filters")
+                                    Text(stringResource(R.string.reset_all_filters))
                                 }
                             }
                         }
@@ -172,7 +172,7 @@ fun PopularChefsTabContent(
                                     )
 
                                     Text(
-                                        text = "${filteredChefs.size} found",
+                                        text = stringResource(R.string.chefs_found_count, filteredChefs.size),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -158,7 +158,7 @@ fun AdminApprovalScreen(
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.AdminChefScreen.route) {
-                AdminChefApprovalContent(viewModel, navController)
+                AdminChefApprovalContent(viewModel, parentNavController)
             }
             composable(
                 route = Screen.AdminIngredient.route,

@@ -1,10 +1,11 @@
-package com.example.foodieheal.User.View
+package com.example.foodieheal.Chef.Register
 
 import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,20 +30,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
-import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.navigation.Screen
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
+fun ChefLoginScreen(
+    navController: NavController,
+    viewModel: AuthViewModel
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val chefRegisterViewModel: ChefRegisterViewModel = viewModel()
-    
-    // 🌟 Track if user has tried to submit for validation display
+
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // 🌟 EXTRA Strict Email Validation (Requires at least 3 chars for TLD like .com)
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
     val isEmailFormatValid = email.matches(emailRegex)
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
@@ -58,9 +61,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
     LaunchedEffect(Unit) {
         chefRegisterViewModel.resetRegistrationFlow()
-        viewModel.resetPasswordState() // 🌟 Clear errors when re-entering Login
+        viewModel.resetPasswordState()
     }
-
 
     LaunchedEffect(viewModel.loginSuccess) {
         if (viewModel.loginSuccess) {
@@ -87,7 +89,6 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            // 🌟 Seamless Orange Status Bar Strip
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,22 +107,51 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(0.6f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Chef Portal Badge Header
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                modifier = Modifier.size(72.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_hiring),
+                        contentDescription = "Chef Portal",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Login",
-                fontSize = 40.sp,
+                text = "Chef Portal",
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Text(
+                text = "Sign in to manage your culinary profile & bookings",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp, start = 16.dp, end = 16.dp)
+            )
 
-                // Email Section
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Email",
-                    fontSize = 16.sp,
+                    text = "Chef Email",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -135,7 +165,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Email",
+                            "chef@example.com",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -153,16 +183,9 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     )
                 )
 
-                // 🌟 Email Specific Errors
-                val emailError = when {
-                    hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> "Invalid email"
-                    viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> "Account not found"
-                    else -> null
-                }
-
-                if (emailError != null) {
+                if (hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty()) {
                     Text(
-                        text = emailError,
+                        text = "Invalid email format",
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -176,7 +199,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Password",
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -190,7 +213,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Password",
+                            "Enter your password",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -218,50 +241,39 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
-
-                // 🌟 Password Specific Errors
-                if (viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
-                    viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
-                    Text(
-                        text = "Invalid password",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
             }
 
-            // Forgot Password
+            // Forgot Password Link
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp)
             ) {
                 Text(
-                    text = "Forget Password?",
+                    text = "Forgot Password?",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .clickable { viewModel.forgotPassword(email) }
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Login Button
+            // Chef Login Button
             Button(
                 onClick = {
                     if (isEmailFormatValid) {
-                        viewModel.login(email, password)
+                        viewModel.loginAsChef(email, password)
                     } else {
                         hasAttemptedSubmit = true
                     }
                 },
                 modifier = Modifier
-                    .width(150.dp)
-                    .height(50.dp),
+                    .fillMaxWidth()
+                    .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = primaryColor,
@@ -277,85 +289,17 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text("LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("CHEF LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Footer Link
-            Text(
-                text = "Don't have an account? Sign up here!",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.clickable {
-                    navController.navigate(Screen.Register.route)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                modifier = Modifier.fillMaxWidth(0.85f)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Chef Portal Access Button
-            OutlinedButton(
-                onClick = {
-                    viewModel.resetPasswordState()
-                    navController.navigate(Screen.ChefLogin.route)
-                },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_hiring),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Chef Login Portal",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp
-                )
-            }
-
-            // Register as Chef option
-            TextButton(
-                onClick = {
-                    chefRegisterViewModel.initForDirectRegistration()
-                    navController.navigate(Screen.Welcome.route)
-                },
-                modifier = Modifier.padding(top = 4.dp)
-            ) {
-                Text(
-                    "New Chef? Register here",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
-                )
-            }
-
-            // 🌟 Generic/System Error Messages (e.g., Network, Reset Link, Chef Redirect Notice)
-            val isAuthError = viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
-                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)
-
-            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
+            if (viewModel.errorMessage.isNotEmpty()) {
                 val isSuccess = viewModel.errorMessage.contains("sent", ignoreCase = true)
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp)
@@ -364,15 +308,63 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                         text = viewModel.errorMessage,
                         color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
                         fontSize = 13.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp)
+                            .padding(14.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Direct Registration Option
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "New chef? ",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Apply directly here",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable {
+                        chefRegisterViewModel.initForDirectRegistration()
+                        navController.navigate(Screen.Welcome.route)
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Back to Customer Login Option
+            OutlinedButton(
+                onClick = {
+                    viewModel.resetPasswordState()
+                    navController.popBackStack(Screen.Login.route, false)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrowback),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Back to Customer Login", fontWeight = FontWeight.Medium)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
