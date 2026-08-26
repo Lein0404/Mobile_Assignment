@@ -40,6 +40,9 @@
                 <data
                     android:host="share"
                     android:scheme="foodieheal" />
+                <data
+                    android:host="reset"
+                    android:scheme="foodieheal" />
             </intent-filter>
 
             <!-- App Links (https://tzh652.github.io/share) -->
