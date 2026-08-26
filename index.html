@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f0f2f5; padding: 20px; box-sizing: border-box; }
         .card { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h1 { color: #1a1a1a; margin-bottom: 0.5rem; }
-        p { color: #666; margin-bottom: 2rem; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        h1 { color: #1a1a1a; margin-bottom: 0.5rem; text-align: center; }
+        p { color: #666; margin-bottom: 1.5rem; font-size: 0.9rem; text-align: center; }
+        .requirement-box { background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #4CAF50; font-size: 0.85rem; color: #2e7d32; line-height: 1.4; }
+        .input-group { margin-bottom: 1rem; position: relative; }
+        input { width: 100%; padding: 12px 45px 12px 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; transition: border-color 0.3s; }
+        input:focus { border-color: #4CAF50; }
+        .counter { font-size: 0.75rem; color: #666; text-align: right; margin-top: 4px; }
+        .toggle-password { position: absolute; right: 12px; top: 12px; cursor: pointer; color: #666; user-select: none; z-index: 10; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.3s; margin-top: 10px; }
         button:hover { background: #45a049; }
         button:disabled { background: #ccc; cursor: not-allowed; }
-        #message { margin-top: 1rem; font-size: 0.9rem; font-weight: bold; }
+        #message { margin-top: 1rem; font-size: 0.9rem; font-weight: bold; text-align: center; }
         .success { color: #2e7d32; }
         .error { color: #d32f2f; }
     </style>
@@ -23,8 +28,26 @@
         <h1>Foodie Heal</h1>
         <p>Enter your new password below to reset your account.</p>
 
-        <input type="password" id="new-password" placeholder="New Password (min 6 chars)">
-        <input type="password" id="confirm-password" placeholder="Confirm New Password">
+        <div class="requirement-box">
+            <strong>Security Rule:</strong><br>
+            Password must be 8-20 characters with uppercase, lowercase and numbers.
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="new-password" placeholder="New Password" maxlength="20" oninput="updateCounter('new-password', 'new-counter')">
+            <span class="toggle-password" onclick="toggleVisibility('new-password', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </span>
+            <div id="new-counter" class="counter">0/20</div>
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="confirm-password" placeholder="Confirm New Password" maxlength="20" oninput="updateCounter('confirm-password', 'confirm-counter')">
+            <span class="toggle-password" onclick="toggleVisibility('confirm-password', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </span>
+            <div id="confirm-counter" class="counter">0/20</div>
+        </div>
 
         <button id="submit-btn">Update Password</button>
         <div id="message"></div>
@@ -47,8 +70,10 @@
             const password = document.getElementById('new-password').value;
             const confirm = document.getElementById('confirm-password').value;
 
-            if (password.length < 6) {
-                showMessage("Password must be at least 6 characters.", "error");
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$/;
+
+            if (!passwordRegex.test(password)) {
+                showMessage("Password does not meet the security requirements.", "error");
                 return;
             }
             if (password !== confirm) {
@@ -79,6 +104,23 @@
         function showMessage(text, type) {
             messageDiv.innerText = text;
             messageDiv.className = type;
+        }
+
+        function updateCounter(inputId, counterId) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            counter.innerText = `${input.value.length}/20`;
+        }
+
+        function toggleVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+            } else {
+                input.type = "password";
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            }
         }
     </script>
 </body>

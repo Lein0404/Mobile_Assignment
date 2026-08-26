@@ -4,44 +4,89 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.Payment.data.PaymentMethodEntity
 import com.example.foodieheal.Payment.repo.PaymentRepository
-import com.example.foodieheal.SupabaseClient
-import io.github.jan.supabase.postgrest.from
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class PaymentMethodViewModel(
-    private val repository: PaymentRepository
+    private val repository: PaymentRepository,
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PaymentMethodUiState())
     val uiState: StateFlow<PaymentMethodUiState> = _uiState.asStateFlow()
 
+    private val _isNetworkAvailable = MutableStateFlow(true)
+    val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+
+    private var activeUserId: String? = null
+
+    init {
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        if (networkMonitor == null) return
+        viewModelScope.launch {
+            networkMonitor.isConnected.collectLatest { connected ->
+                _isNetworkAvailable.value = connected
+                if (connected && !activeUserId.isNullOrBlank()) {
+                    Log.d("PaymentMethodViewModel", "Reconnected to internet. Refreshing payment methods.")
+                    repository.refreshPaymentMethodsFromNetwork(activeUserId!!)
+                }
+            }
+        }
+    }
+
     fun observeAndFetchPaymentMethods(userId: String) {
         if (userId.isBlank()) return
+        activeUserId = userId
 
         // Observe local Room database for saved cards
         viewModelScope.launch {
             repository.getSavedCards(userId).collectLatest { savedCards ->
+                val defaultMethod = savedCards.firstOrNull { it.isDefault } ?: savedCards.firstOrNull()
                 _uiState.update { currentState ->
+                    val selected = currentState.selectedMethod
+                    val isCurrentSelectionInList = savedCards.any { it.id == selected?.id }
+
+                    val newSelected = if (selected == null || !isCurrentSelectionInList) {
+                        defaultMethod
+                    } else {
+                        val currentCardUpdated = savedCards.firstOrNull { it.id == selected.id }
+                        val hasExplicitDefault = savedCards.any { it.isDefault }
+                        if (hasExplicitDefault && currentCardUpdated?.isDefault != true) {
+                            defaultMethod
+                        } else {
+                            currentCardUpdated ?: defaultMethod
+                        }
+                    }
+
                     currentState.copy(
                         availableMethods = savedCards,
-                        selectedMethod = currentState.selectedMethod
-                            ?: savedCards.firstOrNull { it.isDefault }
-                            ?: savedCards.firstOrNull()
+                        selectedMethod = newSelected
                     )
                 }
             }
         }
 
-        // Sync fresh card data from Supabase
+        // Sync fresh card data from Supabase if online
         viewModelScope.launch {
+            if (!_isNetworkAvailable.value) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                return@launch
+            }
+
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 repository.refreshPaymentMethodsFromNetwork(userId)
@@ -71,6 +116,13 @@ class PaymentMethodViewModel(
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
+        if (!_isNetworkAvailable.value) {
+            val errorMsg = "No internet connection. Please check your network."
+            _uiState.update { it.copy(errorMessage = errorMsg) }
+            onError(errorMsg)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
@@ -91,6 +143,13 @@ class PaymentMethodViewModel(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        if (!_isNetworkAvailable.value) {
+            val errorMsg = "No internet connection. Please check your network."
+            _uiState.update { it.copy(errorMessage = errorMsg) }
+            onError(errorMsg)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -112,16 +171,52 @@ class PaymentMethodViewModel(
         }
     }
 
+    fun setDefaultPaymentMethod(
+        methodId: String,
+        userId: String,
+        isDefault: Boolean,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        if (!_isNetworkAvailable.value) {
+            val errorMsg = "No internet connection. Please check your network."
+            _uiState.update { it.copy(errorMessage = errorMsg) }
+            onError(errorMsg)
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                repository.setDefaultPaymentMethod(userId = userId, methodId = methodId, isDefault = isDefault)
+                // Refresh data from network to ensure full consistency
+                repository.refreshPaymentMethodsFromNetwork(userId)
+                _uiState.update { it.copy(isLoading = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("PaymentMethodViewModel", "Failed to set default payment method", e)
+                val errorMsg = e.localizedMessage ?: "Failed to set default payment method."
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = errorMsg)
+                }
+                onError(errorMsg)
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
 
     // Factory required because ViewModel takes a repository argument in constructor
-    class Factory(private val repository: PaymentRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: PaymentRepository,
+        private val networkMonitor: NetworkMonitor? = null
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(PaymentMethodViewModel::class.java)) {
-                return PaymentMethodViewModel(repository) as T
+                return PaymentMethodViewModel(repository, networkMonitor) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

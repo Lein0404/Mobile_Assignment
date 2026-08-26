@@ -3,21 +3,32 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.R
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class ShoppingListViewModel(application: Application) : AndroidViewModel(application) {
+data class ShoppingListUiState(
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val items: List<ShoppingListItem> = emptyList(),
+    val filteredItems: List<ShoppingListItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: Int? = null,
+    val showClearCheckedDialog: Boolean = false,
+    val showClearAllDialog: Boolean = false
+)
 
-    private val database = IngredientsDatabase.getInstance(application)
-    private val shoppingRepo = ShoppingListRepository(database.shoppingListDao())
-    private val ingredientsRepo = IngredientsRepository(database.ingredientsDao())
+class ShoppingListViewModel(
+    application: Application,
+    private val shoppingRepo: ShoppingListRepository,
+    private val ingredientsRepo: IngredientsRepository
+) : AndroidViewModel(application) {
     private val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
 
     private val _uiState = MutableStateFlow(ShoppingListUiState())
@@ -34,32 +45,22 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
             _uiState.update { it.copy(isLoading = true) }
             
             val ingredients = try { ingredientsRepo.getIngredients() } catch (_: Exception) { emptyList() }
-            val allUnits = try { ingredientsRepo.getUnits() } catch (_: Exception) { emptyList() }.associateBy { it.unitID }
-            val allIngredientUnits = try { ingredientsRepo.getAllIngredientUnits() } catch (_: Exception) { emptyList() }
-
             val ingredientsMap = ingredients.associateBy { it.ingredientId }
 
             shoppingRepo.getShoppingList(currentUserId).collectLatest { entities ->
                 val items = entities.map { entity ->
                     val ingredient = ingredientsMap[entity.ingredientId]
                     val category = ingredient?.ingredientCategory
+                    val description = ingredient?.ingredientDesc ?: ""
                     
-                    val unitsForIngredient = allIngredientUnits.filter { it.ingredientID == entity.ingredientId }
-                    val summary = unitsForIngredient.joinToString(", ") { iu ->
-                        val unit = allUnits[iu.unitID]
-                        val qty = unit?.defaultQuantity?.toInt() ?: 0
-                        val name = unit?.unitName ?: ""
-                        "${iu.caloriesPerDefaultQuantity.toInt()}kcal/${qty}${name}"
-                    }
-                    
-                    ShoppingListItem(entity, category, summary)
+                    ShoppingListItem(entity, category, description)
                 }
                 
                 _uiState.update { 
                     it.copy(
                         items = items,
                         isLoading = false,
-                        errorMessage = if (ingredients.isEmpty()) "Using local data only." else null
+                        errorMessage = if (ingredients.isEmpty()) R.string.shopping_list_error_local_data else null
                     ) 
                 }
                 applyFilters()
@@ -70,6 +71,14 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
         applyFilters()
+    }
+
+    fun onShowClearCheckedDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearCheckedDialog = show) }
+    }
+
+    fun onShowClearAllDialog(show: Boolean) {
+        _uiState.update { it.copy(showClearAllDialog = show) }
     }
 
     fun toggleCategory(category: IngredientCategory) {

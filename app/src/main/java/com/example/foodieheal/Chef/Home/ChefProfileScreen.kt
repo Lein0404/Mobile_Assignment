@@ -43,10 +43,13 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.Home.DetailRow
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.R
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.ui.components.DetailSectionCard
+
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun ChefProfileScreen(
@@ -54,6 +57,7 @@ fun ChefProfileScreen(
     chef: Chef?,
     viewModel: AuthViewModel,
     onEditClick: () -> Unit,
+    onChangePasswordClick: () -> Unit = {},
     onLogoutSuccess: () -> Unit
 ) {
     val view = LocalView.current
@@ -265,6 +269,48 @@ fun ChefProfileScreen(
                         label = stringResource(R.string.label_location),
                         value = fullAddress.ifEmpty { stringResource(R.string.not_provided) }
                     )
+                }
+
+                // Account Security Section
+                DetailSectionCard(title = stringResource(R.string.account_security)) {
+                    Surface(
+                        onClick = onChangePasswordClick,
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.changepassword),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.change_password),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_arrow_right),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
 
                 // Action Buttons

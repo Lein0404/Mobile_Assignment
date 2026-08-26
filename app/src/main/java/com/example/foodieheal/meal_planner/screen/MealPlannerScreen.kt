@@ -29,7 +29,7 @@ import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle

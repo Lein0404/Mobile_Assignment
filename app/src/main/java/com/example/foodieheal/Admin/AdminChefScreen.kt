@@ -1,18 +1,7 @@
 package com.example.foodieheal.Admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -38,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -50,26 +38,31 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
 import com.example.foodieheal.NavigationItem
-import com.example.mobileassignmentloginpart.Model.Chef
+import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminApprovalScreen(
     parentNavController: NavHostController,
     viewModel: AdminApprovalViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    initialTab: Int = 0
 ) {
     val navController = rememberNavController()
+
+    val startDestination = if (initialTab == 1) Screen.AdminIngredient.createRoute(tab = 1) else Screen.AdminChefScreen.route
 
     val items = listOf(
         NavigationItem(
@@ -90,30 +83,7 @@ fun AdminApprovalScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Text(
-                        text = if (currentRoute == Screen.AdminIngredient.route) {
-                            stringResource(R.string.ingredient_requests)
-                        } else {
-                            stringResource(R.string.chef_approval)
-                        },
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
-                    )
-                }
-            }
-        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -123,7 +93,11 @@ fun AdminApprovalScreen(
                 val currentDestination = navBackStackEntry?.destination
 
                 items.forEach { item ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    val isSelected = currentDestination?.hierarchy?.any { 
+                        // Match either exact route or route without arguments
+                        it.route?.split("?")?.firstOrNull() == item.route.split("?")?.firstOrNull() 
+                    } == true
+
                     NavigationBarItem(
                         icon = {
                             Icon(
@@ -180,14 +154,18 @@ fun AdminApprovalScreen(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.AdminChefScreen.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.AdminChefScreen.route) {
-                AdminChefApprovalContent(viewModel, parentNavController)
+                AdminChefApprovalContent(viewModel, navController)
             }
-            composable(Screen.AdminIngredient.route) {
-                AdminIngredientsScreen(parentNavController)
+            composable(
+                route = Screen.AdminIngredient.route,
+                arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+            ) { backStackEntry ->
+                val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                AdminIngredientsScreen(parentNavController, initialTab = tab)
             }
         }
     }
@@ -198,43 +176,61 @@ fun AdminChefApprovalContent(
     viewModel: AdminApprovalViewModel,
     navController: NavController
 ) {
-    if (viewModel.pendingChefs.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_outline_account_circle),
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
+            Column(modifier = Modifier.statusBarsPadding()) {
                 Text(
-                    text = stringResource(R.string.no_pending_applications),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = stringResource(R.string.chef_approval),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 12.dp)
                 )
             }
         }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(viewModel.pendingChefs) { chef ->
-                ChefApprovalCard(
-                    chef = chef,
-                    onViewClick = {
-                        navController.navigate("chefDetail/${chef.chefId}")
-                    }
-                )
+
+        if (viewModel.pendingChefs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_outline_account_circle),
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = stringResource(R.string.no_pending_applications),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(viewModel.pendingChefs) { chef ->
+                    ChefApprovalCard(
+                        chef = chef,
+                        onViewClick = {
+                            navController.navigate("chefDetail/${chef.chefId}")
+                        }
+                    )
+                }
             }
         }
     }

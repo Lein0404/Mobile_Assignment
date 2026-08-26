@@ -66,12 +66,11 @@ import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
-import com.example.foodieheal.repository.RecipeRepository
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
-
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -89,8 +88,9 @@ fun TemplatesContent(
     )
     val coroutineScope = rememberCoroutineScope()
 
+    val context = LocalContext.current
     val planRepository = remember { PlanRepository() }
-    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
 
     val currentUserIdFlow = remember(authViewModel) {
         snapshotFlow { authViewModel.currentUser?.id }

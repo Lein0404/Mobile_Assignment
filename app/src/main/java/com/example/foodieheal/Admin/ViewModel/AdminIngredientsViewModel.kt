@@ -1,26 +1,34 @@
 package com.example.foodieheal.Admin.ViewModel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.R
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
-import com.example.foodieheal.repo.UserRepository
+import com.example.foodieheal.User.Repo.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AdminIngredientRequestUiState(
+data class AdminIngredientsUiState(
+    val selectedTab: Int = 0,
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null, // null means "All"
+    val tempSelectedStatus: Status? = null,
     val requests: List<AdminIngredientRequestItem> = emptyList(),
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val isRefreshing: Boolean = false,
+    val isNetworkAvailable: Boolean = true,
+    val errorMessage: Int? = null,
+    val showStatusFilterDialog: Boolean = false,
 )
 
 data class AdminIngredientRequestItem(
@@ -31,20 +39,39 @@ data class AdminIngredientRequestItem(
 )
 
 class AdminIngredientsViewModel(
-    private val repository: IngredientRequestRepository = IngredientRequestRepository(),
-    private val userRepository: UserRepository = UserRepository()
-) : ViewModel() {
+    application: Application,
+    private val repository: IngredientRequestRepository,
+    private val userRepository: UserRepository
+) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(AdminIngredientRequestUiState())
-    val uiState: StateFlow<AdminIngredientRequestUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AdminIngredientsUiState())
+    val uiState: StateFlow<AdminIngredientsUiState> = _uiState.asStateFlow()
+
+    private val networkMonitor = NetworkMonitor(application)
 
     init {
+        observeNetworkStatus()
         fetchRequests()
     }
 
-    fun fetchRequests() {
+    private fun observeNetworkStatus() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            networkMonitor.isConnected.collect { connected ->
+                _uiState.update { it.copy(isNetworkAvailable = connected) }
+                if (connected) {
+                    fetchRequests()
+                }
+            }
+        }
+    }
+
+    fun fetchRequests(isRefreshing: Boolean = false) {
+        viewModelScope.launch {
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val requests = repository.getAllIngredientRequests()
                 val users = userRepository.getAllUsers().associateBy { it.id }
@@ -67,13 +94,29 @@ class AdminIngredientsViewModel(
                         calorieSummary = summary
                     )
                 }
-                _uiState.update { it.copy(requests = items, isLoading = false) }
+                _uiState.update { it.copy(requests = items, isLoading = false, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.admin_error_fetch_requests) }
             }
         }
+    }
+
+    fun refresh() {
+        fetchRequests(isRefreshing = true)
+    }
+
+    fun onTabChange(index: Int) {
+        _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun onShowStatusFilterDialog(show: Boolean) {
+        _uiState.update { it.copy(showStatusFilterDialog = show, tempSelectedStatus = it.selectedStatus) }
+    }
+
+    fun updateTempStatus(status: Status?) {
+        _uiState.update { it.copy(tempSelectedStatus = status) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -109,3 +152,4 @@ class AdminIngredientsViewModel(
         }
     }
 }
+

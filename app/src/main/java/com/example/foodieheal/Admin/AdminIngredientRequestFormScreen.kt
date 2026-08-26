@@ -1,268 +1,251 @@
 package com.example.foodieheal.Admin
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import com.example.foodieheal.Admin.ViewModel.AdminIngredientRequestViewModel
+import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
-import com.example.foodieheal.Cloudinary.CloudinaryUploadScreen
 import com.example.foodieheal.Cloudinary.CloudinaryUploadViewModel
-import com.example.foodieheal.ingredients.model.IngredientCategory
-import com.example.foodieheal.ingredients.view.UnitRow
+import com.example.foodieheal.ingredients.shared.IngredientFormBody
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.ui.components.CommonInputField
-import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
+import com.example.foodieheal.ui.components.PrimaryButton
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminIngredientRequestFormScreen(
     navController: NavController,
     requestId: String,
-    viewModel: AdminIngredientRequestViewModel = viewModel(),
     cloudinaryViewModel: CloudinaryUploadViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val viewModel: AdminIngredientRequestViewModel = viewModel(
+        factory = AdminViewModelFactory(application)
+    )
+    
     val formState by viewModel.formState.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
     val requestDetail by viewModel.requestDetail.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val context = LocalContext.current
+    val actionUiState by viewModel.uiState.collectAsState()
+    val isLoading = actionUiState.isLoading
+    val scope = rememberCoroutineScope()
 
-    // TODO
-    val errorMessage = formState.errorMessage
-    var showErrorDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(errorMessage) {
-        if (errorMessage != null) {
-            showErrorDialog = true
+    RequestConflictDialog(
+        isDeleted = actionUiState.isDeletedByUser,
+        isProcessed = actionUiState.isAlreadyProcessed,
+        onDeletedConfirm = {
+            // Return to the list screen correctly
+            navController.popBackStack(Screen.AdminChefScreen.route, false)
+        },
+        onProcessedConfirm = {
+            // Return to the detail screen to see the updated status
+            navController.popBackStack()
         }
-    }
-    
-    var showApproveDialog by remember { mutableStateOf(false) }
+    )
+
+    val errorMessage = formState.errorMessage
 
     LaunchedEffect(requestId) {
         viewModel.populateFormForReview(requestId)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+    LaunchedEffect(formState.imageUrl) {
+        formState.imageUrl?.let {
+            cloudinaryViewModel.setExistingImageUrl(it)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.admin_review_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
         ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Column(modifier = Modifier.statusBarsPadding()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                        Text(
-                            text = "Review Ingredient Request",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
-                // 1. Cloudinary Upload
-                CloudinaryUploadScreen(viewModel = cloudinaryViewModel)
-                Spacer(Modifier.height(16.dp))
-
-                // 2. Ingredient Name
-                CommonInputField(
-                    value = formState.ingredientName,
-                    onValueChange = { viewModel.updateFormName(it) },
-                    textId = R.string.ingredient_name,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(16.dp))
-
-                // 3. Category
-                LargeSearchableDropdownMenu(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.category),
-                    fieldLabelTextStyle = MaterialTheme.typography.bodyLarge,
-                    selectedOption = formState.category,
-                    onItemSelected = { viewModel.updateFormCategory(it) },
-                    selectedItemToString = { it.categoryName },
-                    placeholder = "e.g. Vegetables",
-                    options = IngredientCategory.entries,
-                    drawItem = { item, selected, itemEnabled, onClick ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = itemEnabled, onClick = onClick)
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = item.categoryName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Black
-                            )
-                        }
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    )
-                )
-                Spacer(Modifier.height(16.dp))
-
-                // 4. Description
-                CommonInputField(
-                    value = formState.description,
-                    onValueChange = { viewModel.updateFormDescription(it) },
-                    textId = R.string.description,
-                    modifier = Modifier.height(200.dp).fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 8
-                )
-                Spacer(Modifier.height(16.dp))
-
-                // 5. Calorie Information
-                Text(
-                    text = stringResource(R.string.calorie_information),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-
-                if (availableUnits.isNotEmpty()) {
-                    formState.unitRows.forEachIndexed { index, row ->
-                        UnitRow(
-                            index = index,
-                            selectedUnit = row.selectedUnit,
-                            calories = row.calories,
-                            availableUnits = availableUnits,
-                            onUpdate = { unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
-                            onRemove = if (formState.unitRows.size > 1) { { viewModel.removeUnitRow(index) } } else null
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                TextButton(
-                    onClick = { viewModel.addUnitRow() },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+            if (!actionUiState.isNetworkAvailable) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)){
-                        Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text("Add Unit")
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painter = painterResource(R.drawable.wifi_off),
+                            contentDescription = null,
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_xlarge_size)),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
+                        Text(
+                            text = stringResource(R.string.admin_add_offline_message),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_xxl))
+                        )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(120.dp))
-            }
-        }
-
-        // Floating Approve Button
-        Button(
-            onClick = { showApproveDialog = true },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            enabled = !formState.isSubmitting && requestDetail != null && !isLoading
-        ) {
-            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
-                Text(
-                    text = "APPROVE INGREDIENT REQUEST",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding()
+                        .verticalScroll(rememberScrollState())
+                        .padding(dimensionResource(id = R.dimen.padding_l)),
+                ) {
+                    IngredientFormBody(
+                        cloudinaryViewModel = cloudinaryViewModel,
+                        ingredientName = formState.ingredientName,
+                        category = formState.category,
+                        description = formState.description,
+                        unitRows = formState.unitRows,
+                        availableUnits = availableUnits,
+                        nameError = formState.nameError,
+                        categoryError = formState.categoryError,
+                        descriptionError = formState.descriptionError,
+                        unitRowsError = formState.unitRowsError,
+                        categoryPlaceholder = stringResource(R.string.admin_add_category_placeholder),
+                        onNameChange = { viewModel.updateFormName(it) },
+                        onCategoryChange = { viewModel.updateFormCategory(it) },
+                        onDescriptionChange = { viewModel.updateFormDescription(it) },
+                        onUnitRowUpdate = { index, unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
+                        onUnitRowRemove = { viewModel.removeUnitRow(it) },
+                        onAddUnitRow = { viewModel.addUnitRow() },
+                    ) {
+                        // Screen-specific bottom content
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
+                        val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
+                        PrimaryButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                if (viewModel.validateForm()) {
+                                    viewModel.onShowApproveDialog(true)
+                                } else {
+                                    Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            textID = R.string.admin_approve_ingredient_request,
+                            enabled = !formState.isSubmitting && requestDetail != null && !isLoading
+                        )
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxl)))
+                    }
+                }
+            }
+
+            if (formState.isSubmitting || (isLoading && requestDetail == null)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        .clickable(enabled = false) {}, // Prevent interaction
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }
 
-    if (showApproveDialog) {
+    val requestApprovedMsg = stringResource(R.string.admin_request_approved)
+    if (actionUiState.showApproveDialog) {
         ApproveRequestDialog(
-            onDismiss = { showApproveDialog = false },
+            adminNote = actionUiState.adminNote,
+            onAdminNoteChange = { viewModel.onAdminNoteChange(it) },
+            onDismiss = { viewModel.onShowApproveDialog(false) },
             onConfirm = { adminNote ->
-                showApproveDialog = false
-                viewModel.approveRequest(
-                    imageUrl = cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { formState.imageUrl },
-                    adminNote = if (adminNote.isBlank()) null else adminNote,
-                    onComplete = {
-                        Toast.makeText(context, "Request Approved Successfully", Toast.LENGTH_SHORT).show()
-                        navController.navigate(Screen.AdminChefScreen.route) {
-                            popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
-                        }
+                viewModel.onShowApproveDialog(false)
+                scope.launch {
+                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                        cloudinaryViewModel.uploadImage(context)
+                    } else {
+                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                     }
-                )
+
+                    viewModel.approveRequest(
+                        imageUrl = imageUrl,
+                        adminNote = if (adminNote.isBlank()) null else adminNote,
+                        onComplete = {
+                            Toast.makeText(context, requestApprovedMsg, Toast.LENGTH_SHORT).show()
+
+                            navController.navigate(Screen.AdminChefScreen.createRoute(tab = 1)) {
+                                popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
         )
     }
 
-    if (showErrorDialog && errorMessage != null) {
+    if (actionUiState.showErrorDialog && errorMessage != null) {
         AlertDialog(
             onDismissRequest = { 
-                showErrorDialog = false
+                viewModel.onShowErrorDialog(false)
                 viewModel.clearError()
             },
-            title = { Text("Approval Failed", fontWeight = FontWeight.Bold) },
+            title = { Text(
+                text = stringResource(R.string.admin_approval_failed_dialog_title),
+                fontWeight = FontWeight.Bold)
+            },
             text = { 
                 Text(
-                    text = errorMessage,
+                    text = stringResource(errorMessage),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             confirmButton = {
                 TextButton(onClick = { 
-                    showErrorDialog = false
+                    viewModel.onShowErrorDialog(false)
                     viewModel.clearError()
                 }) {
-                    Text("OK", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = stringResource(R.string.ok),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         )
@@ -271,22 +254,29 @@ fun AdminIngredientRequestFormScreen(
 
 @Composable
 fun ApproveRequestDialog(
+    adminNote: String,
+    onAdminNoteChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var adminNote by remember { mutableStateOf("") }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Approve Request", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.admin_approve_request_dialog_title), fontWeight = FontWeight.Bold) },
         text = {
-            Column {
-                Text("You may write an optional note to the user, informing them the reason of your changes to their request.")
-                Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l))
+            ) {
+                Text(
+                    text = stringResource(R.string.admin_approve_request_dialog_warning),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Text(stringResource(R.string.admin_approve_request_dialog_note))
                 OutlinedTextField(
                     value = adminNote,
-                    onValueChange = { adminNote = it },
-                    placeholder = { Text("Note (Optional)") },
+                    onValueChange = onAdminNoteChange,
+                    placeholder = { Text(stringResource(R.string.admin_approve_request_dialog_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(120.dp)
                 )
             }
@@ -295,13 +285,51 @@ fun ApproveRequestDialog(
             TextButton(onClick = {
                 onConfirm(adminNote)
             }) {
-                Text("Approve", color = MaterialTheme.colorScheme.primary)
+                Text(
+                    text = stringResource(R.string.approve),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color.Gray)
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     )
+}
+
+@Composable
+private fun RequestConflictDialog(
+    isDeleted: Boolean,
+    isProcessed: Boolean,
+    onDeletedConfirm: () -> Unit,
+    onProcessedConfirm: () -> Unit
+) {
+    if (isDeleted) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text(stringResource(R.string.admin_detail_conflict_deleted_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_deleted_text)) },
+            confirmButton = {
+                TextButton(onClick = onDeletedConfirm) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        )
+    } else if (isProcessed) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text(stringResource(R.string.admin_detail_conflict_processed_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_processed_title)) },
+            confirmButton = {
+                TextButton(onClick = onProcessedConfirm) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        )
+    }
 }

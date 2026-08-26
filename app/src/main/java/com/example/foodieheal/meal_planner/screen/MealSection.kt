@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.ui.theme.BreakfastColor
 import com.example.foodieheal.ui.theme.CaloriesColor
 import com.example.foodieheal.ui.theme.DinnerColor

@@ -39,6 +39,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.foodieheal.Admin.AdminAddIngredientScreen
 import com.example.foodieheal.Admin.AdminApprovalScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
@@ -59,6 +60,7 @@ import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import com.example.foodieheal.hiring.local.HiringDatabase
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.data.BookmarkRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.Admin.AdminIngredientDetailScreen
 import com.example.foodieheal.Admin.AdminIngredientRequestFormScreen
 import com.example.foodieheal.Admin.AdminIngredientsScreen
@@ -83,10 +85,10 @@ import com.example.foodieheal.meal_planner.screen.calculateSuggestedDailyCalorie
 import com.example.foodieheal.meal_planner.viewModel.AddEditTemplateViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModelFactory
+import com.example.foodieheal.Recipe.View.AddRecipeScreen
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
-import com.example.foodieheal.view.AddRecipeScreen
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.repository.RecipeRepository
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 import com.example.foodieheal.view.AppointmentHistoryScreen
 import com.example.foodieheal.view.ChangePasswordScreen
@@ -102,8 +104,10 @@ import com.example.foodieheal.view.RecipesScreen
 import com.example.foodieheal.view.RegisterScreen
 import com.example.foodieheal.viewmodel.AuthViewModel
 import com.example.foodieheal.viewmodel.RecipeViewModel
+import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
 
@@ -127,10 +131,23 @@ class MainActivity : ComponentActivity() {
         // 1. Process deep link on initial cold start
         handleDeepLink(intent)
 
+        // 2. Start cache cleanup services to listen for app removal on App Switcher
+        try {
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.hiring.local.HiringCacheCleanupService::class.java))
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.Chef.local.ChefCacheCleanupService::class.java))
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.ui.components.AppCacheCleanupService::class.java))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start cleanup services in MainActivity", e)
+        }
+
         setContent {
             FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
-                val sharedAuthViewModel: AuthViewModel = viewModel()
+                val context = LocalContext.current
+                val networkMonitor = remember { NetworkMonitor(context) }
+                val sharedAuthViewModel: AuthViewModel = viewModel(
+                    factory = AuthViewModel.Factory(networkMonitor)
+                )
 
                 // 1. Unified Entry Navigation Logic (Cold & Warm Start)
                 LaunchedEffect(sharedAuthViewModel.loginSuccess, sharedAuthViewModel.isInitializing, pendingDeepLinkRoute) {
@@ -174,15 +191,27 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+
+                val recipeDb = remember { com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context) }
+                val recipeRepo = remember { RecipeRepository(recipeDb.recipeDao()) }
                 val sharedRecipeViewModel: RecipeViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return RecipeViewModel(RecipeRepository(SupabaseClient.client)) as T
+                            return RecipeViewModel(
+                                repository = recipeRepo,
+                                networkMonitor = networkMonitor
+                            ) as T
                         }
                     }
                 )
-                val context = LocalContext.current
+
+                // 🌟 FIX: Observe the name and pic specifically to trigger instant card sync
+                LaunchedEffect(sharedAuthViewModel.currentUser?.name, sharedAuthViewModel.currentUser?.profilePicUrl) {
+                    sharedAuthViewModel.currentUser?.let { user ->
+                        sharedRecipeViewModel.syncRecipeAuthorInfo(user)
+                    }
+                }
                 val hiringDb = remember { HiringDatabase.getInstance(context) }
                 val hiringRepo = remember {
                     HiringRepository(
@@ -201,25 +230,29 @@ class MainActivity : ComponentActivity() {
                 val chefListViewModel: ChefListViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = ChefListViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            ChefListViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val bookingViewModel: AppointmentBookingViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = AppointmentBookingViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AppointmentBookingViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val userAppointmentViewModel: UserAppointmentViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = UserAppointmentViewModel(hiringRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            UserAppointmentViewModel(hiringRepo, networkMonitor) as T
                     }
                 )
                 val bookmarkViewModel: BookmarkViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = BookmarkViewModel(bookmarkRepo) as T
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            BookmarkViewModel(bookmarkRepo, networkMonitor) as T
                     }
                 )
                 val chefViewModel: ChefRegisterViewModel = viewModel()
@@ -310,8 +343,10 @@ class MainActivity : ComponentActivity() {
                                 // --- TABS ---
                                 composable(Screen.Home.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(
-                                        navController,
-                                        sharedAuthViewModel,
+                                        navController = navController,
+                                        viewModel = sharedAuthViewModel,
+                                        recipeViewModel = sharedRecipeViewModel,
+                                        chefViewModel = chefListViewModel,
                                         onChefClick = { chef ->
                                             chefListViewModel.selectChef(chef)
                                             bookingViewModel.selectChef(chef)
@@ -479,7 +514,7 @@ class MainActivity : ComponentActivity() {
                                             defaultValue = null
                                         }
                                     )
-                                ) {
+                                ) { backStackEntry ->
                                     val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
                                     val addEditTemplateViewModel: AddEditTemplateViewModel = viewModel(
                                         factory = object : ViewModelProvider.Factory {
@@ -535,7 +570,7 @@ class MainActivity : ComponentActivity() {
                                     val isMyTemplate = backStackEntry.arguments?.getBoolean("isMyTemplate") ?: false
 
                                     val planRepository = remember { PlanRepository() }
-                                    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+                                    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
 
                                     val currentUserIdFlow = remember(sharedAuthViewModel) {
                                         snapshotFlow { sharedAuthViewModel.currentUser?.id }
@@ -706,6 +741,8 @@ class MainActivity : ComponentActivity() {
                                 composable(Screen.AddHiringAppointment.route) {
                                     AddAppointmentFormScreen(
                                         viewModel = bookingViewModel,
+                                        authViewModel = sharedAuthViewModel,
+                                        recipeViewModel = sharedRecipeViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onSuccessConfirm = {
                                             navController.navigate(Screen.AppointmentReview.route)
@@ -753,7 +790,12 @@ class MainActivity : ComponentActivity() {
                                     val context = LocalContext.current
                                     val appointmentId = backStackEntry.arguments?.getString("appointmentId").orEmpty()
 
-                                    val paymentViewModel: PaymentViewModel = viewModel()
+                                    val paymentViewModel: PaymentViewModel = viewModel(
+                                        factory = PaymentViewModel.Factory(
+                                            client = SupabaseClient.client,
+                                            networkMonitor = networkMonitor
+                                        )
+                                    )
 
                                     val database = remember { PayMethodDatabase.getDatabase(context) }
                                     val repository = remember {
@@ -764,7 +806,10 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
-                                        factory = PaymentMethodViewModel.Factory(repository)
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = repository,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
                                     PaymentScreen(
@@ -850,7 +895,10 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
-                                        factory = PaymentMethodViewModel.Factory(repository)
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = repository,
+                                            networkMonitor = networkMonitor
+                                        )
                                     )
 
                                     // Retrieve current logged-in user ID from your Auth State / Session
@@ -859,6 +907,70 @@ class MainActivity : ComponentActivity() {
                                     PaymentMethodScreen(
                                         userId = currentUserId,
                                         viewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() }
+                                    )
+                                }
+
+                                composable(route = Screen.Wallet.route) {
+                                    val context = LocalContext.current
+                                    val database = remember { PayMethodDatabase.getDatabase(context) }
+                                    val paymentRepo = remember {
+                                        PaymentRepository(
+                                            dao = database.paymentMethodDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+                                    val paymentMethodViewModel: PaymentMethodViewModel = viewModel(
+                                        factory = PaymentMethodViewModel.Factory(
+                                            repository = paymentRepo,
+                                            networkMonitor = networkMonitor
+                                        )
+                                    )
+
+                                    val walletDatabase = remember { com.example.foodieheal.wallet.local.WalletDatabase.getDatabase(context) }
+                                    val walletRepo = remember {
+                                        com.example.foodieheal.wallet.data.WalletRepository(
+                                            dao = walletDatabase.walletDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+                                    val walletViewModel: com.example.foodieheal.wallet.viewmodel.WalletViewModel = viewModel(
+                                        factory = com.example.foodieheal.wallet.viewmodel.WalletViewModel.Factory(
+                                            repository = walletRepo,
+                                            networkMonitor = networkMonitor
+                                        )
+                                    )
+
+                                    val currentUserId = sharedAuthViewModel.currentUser?.id.orEmpty()
+
+                                    WalletScreen(
+                                        userId = currentUserId,
+                                        viewModel = walletViewModel,
+                                        paymentMethodViewModel = paymentMethodViewModel,
+                                        onBackClick = { navController.popBackStack() },
+                                        onTransactionClick = { transactionId ->
+                                            navController.navigate(Screen.WalletTransactionDetail.createRoute(transactionId))
+                                        }
+                                    )
+                                }
+
+                                composable(
+                                    route = Screen.WalletTransactionDetail.route,
+                                    arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val context = LocalContext.current
+                                    val transactionId = backStackEntry.arguments?.getString("transactionId").orEmpty()
+                                    val walletDatabase = remember { com.example.foodieheal.wallet.local.WalletDatabase.getDatabase(context) }
+                                    val walletRepo = remember {
+                                        com.example.foodieheal.wallet.data.WalletRepository(
+                                            dao = walletDatabase.walletDao(),
+                                            supabaseClient = SupabaseClient.client
+                                        )
+                                    }
+
+                                    WalletTransactionDetailScreen(
+                                        transactionId = transactionId,
+                                        walletRepository = walletRepo,
                                         onBackClick = { navController.popBackStack() }
                                     )
                                 }
@@ -873,11 +985,19 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // --- ADMIN & CHEF ---
-                                composable(Screen.AdminChefScreen.route) {
-                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel)
+                                composable(
+                                    route = Screen.AdminChefScreen.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = 0; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel, initialTab = tab)
                                 }
-                                composable(Screen.AdminIngredient.route){
-                                    AdminIngredientsScreen(navController)
+                                composable(
+                                    route = Screen.AdminIngredient.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                                    AdminIngredientsScreen(navController, initialTab = tab)
                                 }
                                 composable(
                                     route = Screen.AdminIngredientDetail.route,
@@ -892,6 +1012,9 @@ class MainActivity : ComponentActivity() {
                                 ) { backStackEntry ->
                                     val id = backStackEntry.arguments?.getString("id") ?: ""
                                     AdminIngredientRequestFormScreen(navController, id)
+                                }
+                                composable(Screen.AdminAddIngredient.route) {
+                                    AdminAddIngredientScreen(navController)
                                 }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
                                 composable("chefDetail/{chefId}") {
@@ -908,19 +1031,25 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 // Ingredients module
-                                composable(Screen.Ingredients.route) {
-                                    IngredientsMainScreen(navController)
+                                composable(
+                                    route = Screen.Ingredients.route,
+                                    arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val tab = backStackEntry.arguments?.getInt("tab") ?: -1
+                                    IngredientsMainScreen(navController, initialTab = tab)
                                 }
                                 composable(
                                     route = Screen.IngredientDetail.route,
                                     arguments = listOf(
                                         navArgument("id") { type = NavType.StringType },
-                                        navArgument("isRequest") { type = NavType.BoolType }
+                                        navArgument("isRequest") { type = NavType.BoolType },
+                                        navArgument("showAddToCart") { type = NavType.BoolType; defaultValue = true }
                                     )
                                 ) { backStackEntry ->
                                     val id = backStackEntry.arguments?.getString("id") ?: ""
                                     val isRequest = backStackEntry.arguments?.getBoolean("isRequest") ?: false
-                                    IngredientDetailScreen(navController, id, isRequest)
+                                    val showAddToCart = backStackEntry.arguments?.getBoolean("showAddToCart") ?: true
+                                    IngredientDetailScreen(navController, id, isRequest, showAddToCart)
                                 }
                                 composable(
                                     route = Screen.IngredientRequestForm.route,
@@ -955,7 +1084,29 @@ class MainActivity : ComponentActivity() {
                     // Global Logout Logic
                     LaunchedEffect(sharedAuthViewModel.loginSuccess) {
                         if (!sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
-                            navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                            val currentRoute = navController.currentDestination?.route
+
+                            // 🌟 Screens that are allowed WITHOUT login (Auth flow)
+                            val authRoutes = listOf(
+                                Screen.Login.route,
+                                Screen.Register.route,
+                                Screen.Welcome.route,
+                                Screen.BasicInfo.route,
+                                Screen.Contact.route,
+                                Screen.Address.route,
+                                Screen.Description.route,
+                                Screen.ChefPicture.route,
+                                Screen.Review.route,
+                                Screen.EditBodyStatus.route // "editBodyStatus"
+                            )
+
+                            // Only kick to Login if we are NOT on an auth screen
+                            // 🌟 FIX: Use startsWith to handle routes with query parameters like ?fromRegister=true
+                            val isAuthRoute = authRoutes.any { currentRoute?.startsWith(it) == true }
+
+                            if (!isAuthRoute && currentRoute != null) {
+                                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                            }
                         }
                     }
                 }
@@ -979,32 +1130,20 @@ class MainActivity : ComponentActivity() {
 
     private fun processDeepLink(uri: Uri) {
         Log.d("DeepLink", "Processing URI: $uri")
-        val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io"
-        val isCustomScheme = uri.scheme == "foodieheal"
+        val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io" && uri.path?.startsWith("/share") == true
+        val isCustomScheme = uri.scheme == "foodieheal" && uri.host == "share"
 
         if (isHttpsLink || isCustomScheme) {
-            when {
-                // 1. Weekly Plan Share (Original)
-                uri.path?.startsWith("/share") == true || uri.host == "share" -> {
-                    val dateStr = uri.getQueryParameter("sourceStart")
-                    val sharerId = uri.getQueryParameter("sharerId")
-
-                    dateStr?.let {
-                        runCatching { LocalDate.parse(it) }.onSuccess { startDate ->
-                            Log.d("DeepLink", "Successfully parsed start date: $startDate | Sharer: $sharerId")
-                            pendingDeepLinkRoute = Screen.Planner.route
-                            mealPlannerViewModel.prepareSharedWeeklyPlan(startDate, sharerId)
-                        }
-                    }
-                }
-                // 2. Template Share (New)
-                uri.path?.startsWith("/template") == true || uri.host == "template" -> {
-                    val planId = uri.getQueryParameter("id") ?: uri.getQueryParameter("templateId")
-
-                    planId?.let { id ->
-                        Log.d("DeepLink", "Successfully parsed template ID: $id")
-                        pendingDeepLinkRoute = Screen.TemplateDetails.createRoute(id, false)
-                    }
+            uri.getQueryParameter("sourceStart")?.let { dateStr ->
+                runCatching {
+                    LocalDate.parse(dateStr)
+                }.onSuccess { startDate ->
+                    Log.d("DeepLink", "Successfully parsed start date: $startDate")
+                    // Store pending route for the NavHost
+                    pendingDeepLinkRoute = Screen.Planner.route
+                    mealPlannerViewModel.prepareSharedWeeklyPlan(startDate)
+                }.onFailure { e ->
+                    Log.e("DeepLink", "Failed to parse date: $dateStr", e)
                 }
             }
         }
@@ -1029,7 +1168,7 @@ fun SplashLogoOverlay() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
     ) {
         // 🌟 Seamless Background Spacer
         Box(
@@ -1053,7 +1192,7 @@ fun SplashLogoOverlay() {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Nourishing every bite.",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )

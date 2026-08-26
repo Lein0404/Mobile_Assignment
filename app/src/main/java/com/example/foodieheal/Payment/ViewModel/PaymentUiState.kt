@@ -1,12 +1,21 @@
 package com.example.foodieheal.Payment.ViewModel
 
-import com.example.foodieheal.model.Appointment
+import com.example.foodieheal.hiring.model.Appointment
 
 sealed class PaymentMethod(
     open val id: String,
     open val title: String,
     open val subtitle: String? = null
 ) {
+    data class InAppWallet(
+        val balance: Double = 0.0,
+        val isActive: Boolean = true
+    ) : PaymentMethod(
+        id = "in_app_wallet",
+        title = "In-App Wallet",
+        subtitle = "Balance: RM " + String.format(java.util.Locale.US, "%.2f", balance)
+    )
+
     data class CreditCard(
         override val id: String,
         val last4Digits: String,
@@ -16,7 +25,10 @@ sealed class PaymentMethod(
     ) : PaymentMethod(
         id = id,
         title = "$cardBrand •••• $last4Digits",
-        subtitle = expiryDate?.let { "Expires $it" } ?: "Saved Card"
+        subtitle = expiryDate?.let {
+            val formatted = if (it.length == 4 && !it.contains("/")) "${it.take(2)}/${it.takeLast(2)}" else it
+            "Expires $formatted"
+        } ?: "Saved Card"
     )
 }
 

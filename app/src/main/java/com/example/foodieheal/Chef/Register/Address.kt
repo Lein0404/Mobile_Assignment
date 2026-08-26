@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,14 +23,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
-import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,24 +39,20 @@ fun addressInfo(
     navController: NavController,
     chefViewModel: ChefRegisterViewModel
 ) {
-
-    val isAddressError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidAddress()
-    val isPostcodeError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidPostcode()
-    val isStateError = chefViewModel.showAddressErrorMessage && !chefViewModel.isValidState()
+    val addressError = chefViewModel.addressErrorRes?.let { stringResource(it) }
+    val postcodeError = chefViewModel.postcodeErrorRes?.let { stringResource(it) }
+    val stateError = chefViewModel.stateErrorRes?.let { stringResource(it) }
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Address Information") },
-
+                    title = { Text(stringResource(R.string.title_address_info)) },
                     navigationIcon = {
-                        IconButton(
-                            onClick = { navController.popBackStack() }
-                        ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrowback),
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     }
@@ -72,24 +70,24 @@ fun addressInfo(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ){
+        ) {
             Text(
-                text = "Step 3 of 4",
-                style = MaterialTheme.typography.titleMedium
+                text = stringResource(R.string.step_3_of_5),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
             CommonInputField(
                 value = chefViewModel.address,
                 onValueChange = { chefViewModel.address = it },
                 textId = R.string.address,
-                placeholder = "Enter your address",
-                isError = isAddressError,
-                supportingText = if (isAddressError) {
-                    { Text("Address cannot be empty.") }
-                } else null,
+                placeholder = stringResource(R.string.placeholder_enter_address),
+                isError = addressError != null,
+                supportingText = addressError?.let { msg -> { Text(msg) } },
                 singleLine = false,
                 maxLines = 3,
                 minLines = 2,
@@ -102,11 +100,9 @@ fun addressInfo(
                     chefViewModel.postcode = input.filter { it.isDigit() }.take(5)
                 },
                 textId = R.string.postcode,
-                placeholder = "Enter your Postcode",
-                isError = isPostcodeError,
-                supportingText = if (isPostcodeError) {
-                    { Text("Postcode must contain exactly 5 digits.") }
-                } else null,
+                placeholder = stringResource(R.string.placeholder_enter_postcode),
+                isError = postcodeError != null,
+                supportingText = postcodeError?.let { msg -> { Text(msg) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
@@ -120,9 +116,9 @@ fun addressInfo(
                 options = States,
                 onOptionSelected = { chefViewModel.updateState(it ?: "") }
             )
-            if (isStateError) {
+            if (stateError != null) {
                 Text(
-                    text = "Please select a state.",
+                    text = stateError,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -132,20 +128,16 @@ fun addressInfo(
 
             Button(
                 onClick = {
-                    // Validate input
-                    // Save data to ViewModel
                     if (chefViewModel.validateAddressInfo()) {
                         navController.navigate("descriptionInfo")
                     }
                 },
-                enabled = chefViewModel.canProceedAddressInfo(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Next")
+                Text(stringResource(R.string.next))
             }
         }
-
     }
 }

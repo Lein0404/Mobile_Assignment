@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,12 +50,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodieheal.Payment.ViewModel.PaymentMethod
 import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Appointment
 import com.example.foodieheal.ui.components.DetailRow
+import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,11 +82,54 @@ fun PaymentScreen(
 
     val appointment = paymentState.appointment
 
-    //Fetch payment method
+    // Fetch payment methods
     LaunchedEffect(appointment?.userId) {
         appointment?.userId?.let { userId ->
             if (userId.isNotEmpty()) {
                 paymentMethodViewModel.observeAndFetchPaymentMethods(userId)
+            }
+        }
+    }
+
+    var walletBalance by remember { mutableStateOf<Double?>(null) }
+    var isWalletActive by remember { mutableStateOf(false) }
+    val walletRepo = remember { com.example.foodieheal.wallet.data.WalletRepository() }
+
+    // Fetch user wallet without auto-creating
+    LaunchedEffect(appointment?.userId) {
+        appointment?.userId?.let { uid ->
+            if (uid.isNotEmpty()) {
+                try {
+                    val w = walletRepo.getWallet(uid)
+                    walletBalance = w.balance ?: 0.0
+                    isWalletActive = w.isActive == true
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    val inAppWalletMethod = remember(walletBalance, isWalletActive) {
+        PaymentMethod.InAppWallet(
+            balance = walletBalance ?: 0.0,
+            isActive = isWalletActive
+        )
+    }
+
+    // Auto-select default payment method when methods are available
+    LaunchedEffect(methodState.availableMethods, inAppWalletMethod, appointment) {
+        val apptPrice = appointment?.Total_Price ?: 0.0
+        if (methodState.selectedMethod == null) {
+            val defaultCard = methodState.availableMethods.firstOrNull {
+                (it as? PaymentMethod.CreditCard)?.isDefault == true
+            }
+            if (defaultCard != null) {
+                paymentMethodViewModel.selectPaymentMethod(defaultCard)
+            } else if (isWalletActive && (walletBalance ?: 0.0) >= apptPrice && apptPrice > 0.0) {
+                paymentMethodViewModel.selectPaymentMethod(inAppWalletMethod)
+            } else if (methodState.availableMethods.isNotEmpty()) {
+                paymentMethodViewModel.selectPaymentMethod(methodState.availableMethods.first())
+            } else {
+                paymentMethodViewModel.selectPaymentMethod(inAppWalletMethod)
             }
         }
     }
@@ -128,10 +172,14 @@ fun PaymentScreen(
 
     var showAddCardSheet by remember { mutableStateOf(false) }
 
-    // Pricing Breakdown
-    val basePrice = appointment.Total_Price ?: 0.0
-    val serviceFee = basePrice * 0.05
-    val finalTotal = basePrice + serviceFee
+    val isOnline by paymentViewModel.isNetworkAvailable.collectAsStateWithLifecycle()
+
+    // Pricing
+    val totalPrice = appointment.Total_Price ?: 0.0
+    val isSelectedWallet = methodState.selectedMethod is PaymentMethod.InAppWallet
+    val isWalletInactiveSelected = isSelectedWallet && !isWalletActive
+    val isInsufficientWalletBalance = isSelectedWallet && isWalletActive && ((walletBalance ?: 0.0) < totalPrice)
+    val isPayButtonEnabled = !paymentState.isLoading && methodState.selectedMethod != null && !isWalletInactiveSelected && !isInsufficientWalletBalance && isOnline
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -164,6 +212,58 @@ fun PaymentScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    if (!isOnline) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.wifi_off),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "No internet connection. Please connect to proceed with payment.",
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    } else if (isWalletInactiveSelected) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Your in-app wallet is currently inactive. Please top up your wallet first or select a card.",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    } else if (isInsufficientWalletBalance) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Insufficient wallet balance (RM ${String.format(Locale.US, "%.2f", walletBalance ?: 0.0)}). Please top up or select a card.",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -175,7 +275,7 @@ fun PaymentScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = String.format(Locale.US, "RM %.2f", finalTotal),
+                            text = String.format(Locale.US, "RM %.2f", totalPrice),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -195,7 +295,7 @@ fun PaymentScreen(
                                 }
                             )
                         },
-                        enabled = !paymentState.isLoading && methodState.selectedMethod != null,
+                        enabled = isPayButtonEnabled,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -209,8 +309,13 @@ fun PaymentScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
+                            val buttonLabel = if (isSelectedWallet) {
+                                "Pay RM ${String.format(Locale.US, "%.2f", totalPrice)} via Wallet"
+                            } else {
+                                "Pay RM ${String.format(Locale.US, "%.2f", totalPrice)}"
+                            }
                             Text(
-                                text = "Pay RM ${String.format(Locale.US, "%.2f", finalTotal)}",
+                                text = buttonLabel,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -225,6 +330,7 @@ fun PaymentScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -248,8 +354,16 @@ fun PaymentScreen(
                     )
                     HorizontalDivider()
 
-                    DetailRow(label = "Chef Service Fee", value = String.format(Locale.US, "RM %.2f", basePrice))
-                    DetailRow(label = "Platform Service Fee", value = String.format(Locale.US, "RM %.2f", serviceFee))
+                    DetailRow(
+                        label = stringResource(R.string.label_date),
+                        value = appointment.Date.orEmpty()
+                    )
+                    val formattedStart = formatToAmPm(appointment.Start_Time)
+                    val formattedEnd = formatToAmPm(appointment.End_Time)
+                    DetailRow(
+                        label = stringResource(R.string.label_appointment_time),
+                        value = if (formattedStart.isNotBlank() && formattedEnd.isNotBlank()) "$formattedStart - $formattedEnd" else "${appointment.Start_Time.orEmpty()} - ${appointment.End_Time.orEmpty()}"
+                    )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
@@ -257,9 +371,9 @@ fun PaymentScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total Payable", fontWeight = FontWeight.Bold)
+                        Text("Total Price", fontWeight = FontWeight.Bold)
                         Text(
-                            String.format(Locale.US, "RM %.2f", finalTotal),
+                            String.format(Locale.US, "RM %.2f", totalPrice),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -282,7 +396,16 @@ fun PaymentScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
-                    // Display list fetched by PaymentMethodViewModel
+                    // 1. Always display In-App Wallet option
+                    PaymentMethodItem(
+                        method = inAppWalletMethod,
+                        isSelected = methodState.selectedMethod?.id == inAppWalletMethod.id,
+                        onSelect = { paymentMethodViewModel.selectPaymentMethod(inAppWalletMethod) }
+                    )
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    // 2. Display saved cards list fetched by PaymentMethodViewModel
                     methodState.availableMethods.forEach { method ->
                         PaymentMethodItem(
                             method = method,

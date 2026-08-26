@@ -11,7 +11,7 @@ import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.model.WeeklyPlanEntity
 import com.example.foodieheal.meal_planner.model.toDomain
 import com.example.foodieheal.meal_planner.model.toEntity
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest

@@ -22,12 +22,5 @@ val healthPreferencesList = listOf(
     "Vegan",
     "Halal",
     "Keto",
-    "Gluten-Free")
-
-val ServingSize = listOf(
-    "1 - 2 Pax",
-    "3 - 5 Pax",
-    "6 - 10 Pax",
-    "10 - 15 Pax",
-    "More than 15 Pax"
+    "Gluten-Free"
 )

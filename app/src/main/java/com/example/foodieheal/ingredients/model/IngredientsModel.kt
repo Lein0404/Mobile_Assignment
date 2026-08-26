@@ -51,30 +51,3 @@ enum class IngredientCategory(val categoryName: String){
     @SerialName("VEGETABLES") VEGETABLES("Vegetables"),
     @SerialName("OTHERS") OTHERS("Others")
 }
-
-data class IngredientItem(
-    val ingredient: Ingredients,
-    val calorieSummary: String = ""
-)
-
-data class IngredientDetailInfo(
-    val ingredient: Ingredients,
-    val calorieEntries: List<CalorieEntry> = emptyList(),
-    val calorieSummary: String = ""
-)
-
-data class CalorieEntry(
-    val calories: Double,
-    val quantity: Double,
-    val unitName: String
-)
-
-data class IngredientsUiState(
-    val searchQuery: String = "",
-    val selectedCategories: Set<IngredientCategory> = emptySet(),
-    val ingredients: List<IngredientItem> = emptyList(),
-    val filteredIngredients: List<IngredientItem> = emptyList(),
-    val isLoading: Boolean = false,
-    val ingredientDetail: IngredientDetailInfo? = null,
-    val errorMessage: String? = null
-)

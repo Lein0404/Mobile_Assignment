@@ -8,6 +8,7 @@
     <string name="show_password">Show password</string>
     <string name="nav_home">Home</string>
     <string name="topapp_back">To previous page</string>
+    <string name="search">Search</string>
 
     <!-- Login -->
     <string name="full_name">Name</string>
@@ -44,7 +45,8 @@
     <string name="image">Image</string>
     <string name="select_image">Select Image</string>
     <string name="change_image">Change Image</string>
-    <string name="image_unavailable">No image available</string>"
+    <string name="remove_image">Remove Image</string>
+    <string name="image_unavailable">No image available</string>
     <string name="upload_failed">Failed to upload image.</string>
 
     <!-- Common Dialog Buttons -->
@@ -134,6 +136,9 @@
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">No Internet Connection</string>
     <string name="desc_connect_internet_prompt">Please connect to the internet to view and update your meal plans.</string>
+    <string name="desc_connect_internet_recipe">Please connect to the internet to view and update your recipes.</string>
+    <string name="desc_connect_internet_profile">Please connect to the internet to update your profile.</string>
+    <string name="desc_connect_internet_password">Please connect to the internet to change your password.</string>
     <string name="label_loading_plans">Loading plans…</string>
 
     <!-- Meal Sections Categories -->
@@ -157,21 +162,6 @@
     <!-- Empty State Placeholders -->
     <string name="placeholder_empty_plan">Planning Something?</string>
 
-    <!-- Ingredient Request -->
-    <string name="ingredient_name">Ingredient Name</string>
-    <string name="category">Category</string>
-    <string name="add_ingredient">Add Ingredient</string>
-    <string name="serving_unit">Serving Unit</string>
-    <string name="calories">Calories</string>
-    <string name="minutes">Minutes</string>
-    <string name="calorie_information">Calorie Information</string>
-    <string name="request_new_ingredient">REQUEST NEW INGREDIENT</string>
-    <string name="delete_request">DELETE REQUEST</string>
-    <string name="edit_request">EDIT REQUEST</string>
-    <string name="update_request">UPDATE REQUEST</string>
-    <string name="reject">REJECT</string>
-    <string name="review_approve">REVIEW &amp; APPROVE</string>
-
     <!-- Hiring Screen-->
     <string name="btn_retry">Retry</string>
     <string name="default_chef_name">Chef</string>
@@ -180,7 +170,7 @@
     <string name="title_hiring">Hiring</string>
     <string name="tab_popular">Popular</string>
     <string name="tab_appointment">Appointment</string>
-    <string name="tab_bookmarks">Bookmarks</string>
+    <string name="tab_bookmarks">Bookmark</string>
 
     <string name="header_chef">Chef</string>
     <string name="header_my_bookings">My Bookings (%1$d)</string>
@@ -198,6 +188,11 @@
     <string name="empty_no_appointments_found">No Appointments Found</string>
     <string name="empty_no_bookmarked_chefs">No Bookmarked Chefs</string>
     <string name="empty_bookmarked_chefs_sub">Chefs you bookmark will appear here.</string>
+
+    <string name="empty_no_bookmarked_recipes">No Bookmarked Recipes</string>
+    <string name="empty_bookmarked_recipes_sub">Recipes you bookmark will appear here.</string>
+    <string name="empty_no_my_recipes">No recipes created yet.</string>
+    <string name="empty_my_recipes_sub">Your created recipes will appear here.</string>
 
     <!-- Hiring Chef Details Screen-->
     <string name="chef_profile_title">Chef Profile</string>
@@ -271,6 +266,12 @@
     <string name="error_select_state">Please select a state.</string>
     <string name="error_invalid_serving_size">Please enter a valid serving size.</string>
     <string name="error_empty_description">Description cannot be empty.</string>
+
+    <!-- Pricing Estimate -->
+    <string name="label_estimated_price">Estimated Total Price</string>
+    <string name="label_estimated_duration">Duration</string>
+    <string name="estimated_price_summary">Price Summary</string>
+    <string name="hourly_rate_format">RM %.2f / hr</string>
 
     <!-- Appointment Review -->
     <string name="review_booking">Review Booking</string>
@@ -370,7 +371,9 @@
     <string name="yes_cancel">Yes, Cancel</string>
     <string name="keep_booking">Keep Booking</string>
     <string name="pay_now">Pay Now</string>
-    <string name ="no_rejection_reason">No Rejected Reason</string>
+    <string name="no_rejection_reason">No Rejected Reason</string>
+    <string name="declined_by_chef">Declined by chef</string>
+    <string name="rejection_hint_text">You can choose another time slot or explore other chefs.</string>
 
     <string name="dialog_complete_title">Complete Booking?</string>
     <string name="dialog_complete_message">Has the chef completed the service to your satisfaction?</string>
@@ -414,7 +417,7 @@
     <string name="nav_appointments">Appointments</string>
     <string name="nav_profile">Profile</string>
 
-    <string name="greeting_good_morning">Good Morning 👋</string>
+    <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>
 
     <string name="banner_title_schedule">Your Schedule</string>
@@ -449,9 +452,9 @@
     <string name="date_time">Date &amp; Time</string>
     <string name="event_location">Event Location</string>
     <string name="section_booking_details">Booking Details</string>
-    <string name="label_party_size">Party Size</string>
+    <string name="label_party_size">Service Size</string>
     <string name="label_dietary_preference">Dietary Preference</string>
-    <string name="label_special_notes">Special Notes:</string>
+    <string name="label_special_notes">Description : </string>
     <string name="none_specified">None Specified</string>
 
     <string name="label_contact_format">Contact: %1$s</string>
@@ -512,65 +515,4 @@
     <string name="category_low_carb">Low-carbohydrate</string>
     <string name="category_cost_friendly">Cost Friendly</string>
     <string name="category_others">Others</string>
-
-    <!-- Meal Planner -->
-    <string name="msg_recipe_removed">Recipe removed from meal</string>
-    <string name="share_weekly_plan">Share Weekly Meal Plan</string>
-    <string name="tab_planner">Planner</string>
-    <string name="tab_template">Template</string>
-    <string name="tab_all">All</string>
-    <string name="tab_my_templates">My Templates</string>
-    <string name="search_template">Search Template</string>
-    <string name="msg_template_added">Template added to your collection!</string>
-    <string name="menu_edit">Edit</string>
-    <string name="menu_delete">Delete</string>
-    <string name="menu_add_to_my_template">Add to my template</string>
-    <string name="menu_share">Share</string>
-    <string name="meals_scheduled_count">%1$d meals scheduled this week</string>
-    <string name="btn_apply_template">Apply template to your plan</string>
-    <string name="dialog_title_apply_template">Apply Template to Weekly Planner</string>
-    <string name="placeholder_no_meals_scheduled">No meals scheduled for this day</string>
-    <string name="confirm">Confirm</string>
-    <string name="select_7_day_range">Select 7-Day Range</string>
-    <string name="select_date">Select Date</string>
-    <string name="dialog_discard_changes_title">Discard Changes?</string>
-    <string name="dialog_discard_draft_title">Discard Draft?</string>
-    <string name="dialog_discard_changes_msg">Are you sure you want to discard your edits? Changes will not be saved.</string>
-    <string name="dialog_discard_draft_msg">Are you sure you want to discard this template? Unsaved changes will be lost.</string>
-    <string name="btn_discard">Discard</string>
-    <string name="btn_continue_editing">Continue Editing</string>
-    <string name="dialog_edit_template_name_title">Edit Template Name</string>
-    <string name="dialog_set_template_name_title">Set Template Name</string>
-    <string name="dialog_template_name_prompt">Please enter a name for this meal plan template:</string>
-    <string name="label_template_name">Template Name</string>
-    <string name="placeholder_template_name_hint">e.g. High Protein Week</string>
-    <string name="title_edit_template">Edit Template</string>
-    <string name="title_create_template">Create Template</string>
-    <string name="label_make_plan_public">Make Plan Public</string>
-    <string name="msg_visible_to_community">Visible to all community users</string>
-    <string name="msg_only_visible_to_you">Only visible to you</string>
-    <string name="msg_template_updated">Template updated successfully!</string>
-    <string name="msg_template_created">Template created successfully!</string>
-    <string name="err_select_category">Please select a category</string>
-    <string name="err_empty_template_name">Template name cannot be empty</string>
-    <string name="err_failed_load_template">Failed to load template</string>
-    <string name="err_failed_save_template">Failed to save template</string>
-    <string name="placeholder_search_recipes">Search recipes here</string>
-    <string name="label_course">Course</string>
-    <string name="btn_apply_filters">Apply Filters</string>
-    <string name="btn_clear_all">Clear All</string>
-    <string name="title_filter_recipes">Filter Recipes</string>
-    <string name="label_max_prep_time">Max Prep Time (mins)</string>
-    <string name="label_max_calories">Max Calories (kcal)</string>
-    <string name="label_cooking_skill">Cooking Skill</string>
-    <string name="label_budget_rm">Budget (RM)</string>
-    <string name="msg_recipes_added_singular">1 recipe added!</string>
-    <string name="msg_recipes_added_plural">%1$d recipes added!</string>
-    <string name="btn_add_selected_recipes">Add Selected Recipes (%1$d)</string>
-    <string name="title_select_recipes">Select Recipes</string>
-    <string name="title_selected_count">%1$d Selected</string>
-
-    <string name="dialog_title_confirm_paste_week">Confirm Weekly Paste?</string>
-    <string name="dialog_msg_confirm_paste_week">This will overwrite any existing meals in the week of %1$s. Do you want to proceed?</string>
-    <string name="btn_paste">Paste</string>
 </resources>
