@@ -3,6 +3,7 @@ package com.example.foodieheal.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val Green = Color(0XFF4CD88B)
+val LightBlue = Color(0XFF06C9C3)
 val Yellow = Color(0XFFCC9900)
 val Orange = Color(0XFFFA8F2A)
 val Red = Color(0xFFD32F2F)
@@ -12,4 +13,3 @@ val LunchColor = Color(0XFF65B960)
 val DinnerColor = Color(0XFF4F6D7A)
 val SnackColor = Color(0XFFFCBA03)
 val CaloriesColor = Color(0XFFFF5A00)
-val TimerColor = Color(0XFF09B091)

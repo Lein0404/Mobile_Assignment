@@ -35,12 +35,10 @@ fun RecipeDetailsScreen(
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel
 ) {
-    // 1. Fetch data if needed (Smart fetching)
     LaunchedEffect(recipeId) {
-        viewModel.fetchRecipeById(recipeId)
+        viewModel.fetchRecipeLocalFirst(recipeId)
     }
 
-    // 🌟 2. Clear state when leaving the screen
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearSelectedRecipe()
@@ -50,7 +48,6 @@ fun RecipeDetailsScreen(
     val recipe = viewModel.selectedRecipe
     val user = authViewModel.currentUser
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
-    // 🌟 FIX: Use customId for ownership check to match database logic
     val isMyRecipe = recipe?.author_id == user?.customId
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -74,13 +71,11 @@ fun RecipeDetailsScreen(
                     }
                 },
                 actions = {
-                    // 🌟 Bookmark is now enabled for all recipes, including your own
                     IconButton(onClick = {
                         user?.customId?.let { cid ->
                             recipe?.let { r -> viewModel.toggleBookmark(cid, r.recipe_id ?: "", r.recipeName) }
                         }
                     }) {
-                        // 🌟 FIX: Use Image with specific size and tint for PNG icons to keep them sharp
                         Image(
                             painter = painterResource(id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark),
                             contentDescription = "Bookmark",
@@ -172,7 +167,30 @@ fun RecipeDetailsScreen(
             )
         }
     ) { paddingValues ->
-        if (recipe == null) {
+        if (viewModel.isNotFound) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(id = if (viewModel.isNetworkAvailable) R.drawable.ic_image else R.drawable.wifi_off),
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (viewModel.isNetworkAvailable) 
+                            "Recipe not found." 
+                        else 
+                            "Recipe data not available offline.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                    TextButton(onClick = { navController.popBackStack() }) {
+                        Text("Go Back")
+                    }
+                }
+            }
+        } else if (recipe == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -182,7 +200,7 @@ fun RecipeDetailsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .background(MaterialTheme.colorScheme.surface) // 🌟 Themed Background
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 // Recipe Image or Artistic Placeholder
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
@@ -193,12 +211,11 @@ fun RecipeDetailsScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    // 🌟 Option 3: Artistic "Food Sketch" Placeholder
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)), // 🌟 Themed Background
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         contentAlignment = Alignment.Center
                     ) {
                         val iconRes = when (recipe.recipeCourse.lowercase()) {
@@ -218,7 +235,41 @@ fun RecipeDetailsScreen(
 
                 Column(modifier = Modifier.padding(20.dp)) {
                     // Title and Course + Last Updated
-                    Text(text = recipe.recipeName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = recipe.recipeName,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (recipe.isOffline) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_star), // Using ic_star as a placeholder for "available"
+                                        contentDescription = null,
+                                        modifier = Modifier.size(12.dp),
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "OFFLINE READY",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                         Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))

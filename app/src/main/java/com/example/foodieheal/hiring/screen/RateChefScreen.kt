@@ -133,7 +133,7 @@ fun RateChefScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Internet required to submit review",
+                            text = stringResource(R.string.rate_offline_mode),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium

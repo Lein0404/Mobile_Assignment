@@ -23,8 +23,10 @@ data class Recipe(
     // 🌟 Join result field: catches the author name/pic during decoding.
     @SerialName("users") var authorInfo: AuthorInfo? = null,
 
-    @kotlinx.serialization.Transient var authorName: String? = null,
-    @kotlinx.serialization.Transient var authorImageUrl: String? = null
+    @SerialName("author_name_cache") var authorName: String? = null,
+    @SerialName("author_image_cache") var authorImageUrl: String? = null,
+
+    @kotlinx.serialization.Transient var isOffline: Boolean = false
 )
 
 @Serializable

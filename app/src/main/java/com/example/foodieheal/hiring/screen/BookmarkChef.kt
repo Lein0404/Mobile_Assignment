@@ -51,7 +51,7 @@ fun BookmarkedChefsTabContent(
                 onQueryChange = { filterState = filterState.copy(searchQuery = it) },
                 onFilterClick = { showFilterSheet = true },
                 activeFilterCount = filterState.activeFilterCount,
-                placeholder = "Search bookmarks..."
+                placeholder = stringResource(R.string.search_bookmarks_placeholder)
             )
 
             // Active Filters Row
@@ -99,20 +99,20 @@ fun BookmarkedChefsTabContent(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "No bookmarks match your filters",
+                                text = stringResource(R.string.no_bookmarks_match_filters),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Try adjusting your search criteria or resetting filters.",
+                                text = stringResource(R.string.adjust_search_criteria_or_reset),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             TextButton(onClick = { filterState = ChefFilterState() }) {
-                                Text("Reset Filters")
+                                Text(stringResource(R.string.reset_filters))
                             }
                         }
                     }
@@ -140,7 +140,7 @@ fun BookmarkedChefsTabContent(
                                 )
 
                                 Text(
-                                    text = "${filteredBookmarkedChefs.size} saved",
+                                    text = stringResource(R.string.chefs_saved_count, filteredBookmarkedChefs.size),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -10,6 +10,7 @@ import java.time.DayOfWeek
  */
 data class WeeklyPlan(
     val planName: String = "",
+    val planDescription: String = "",
     val planId: String = "",
     val userId: String = "",
     val category: PlanCategory = PlanCategory.BALANCED,
@@ -30,6 +31,9 @@ data class WeeklyPlanEntity(
 
     @SerialName("planName")
     val planName: String = "",
+
+    @SerialName("planDescription")
+    val planDescription: String = "",
 
     @SerialName("userId")
     val userId: String = "",
@@ -54,6 +58,7 @@ fun WeeklyPlan.toEntity(): WeeklyPlanEntity {
     return WeeklyPlanEntity(
         planId = this.planId,
         planName = this.planName,
+        planDescription = this.planDescription,
         userId = this.userId,
         category = this.category,
         dailyPlans = this.dailyPlans.entries.associate { (day, mealSlots) ->
@@ -90,6 +95,7 @@ fun WeeklyPlanEntity.toDomain(allRecipes: List<Recipe>): WeeklyPlan {
 
     return WeeklyPlan(
         planName = this.planName,
+        planDescription = this.planDescription,
         planId = this.planId,
         userId = this.userId,
         category = this.category,

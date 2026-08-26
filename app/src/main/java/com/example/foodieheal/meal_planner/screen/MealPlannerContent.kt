@@ -59,6 +59,7 @@ fun MealPlannerContent(
     onRecipeDetails: (String) -> Unit,
     onCopyPlanClick: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onAppointmentClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -108,18 +109,18 @@ fun MealPlannerContent(
                 onLoadPlanForDate(pageDate)
             }
 
-            val dailyPlanForThisPage = mealPlansCache[pageDate]
-
             MealPageContent(
                 pageDate = pageDate,
                 isNetworkAvailable = isNetworkAvailable,
-                dailyPlan = dailyPlanForThisPage,
+                dailyPlan = mealPlansCache[pageDate],
+                isLoaded = mealPlansCache.containsKey(pageDate),
                 appointments = appointments,
                 chefsMap = chefsMap,
                 onAddMealRecipe = { type -> onAddMealRecipe(pageDate, type) },
                 onDeleteMealRecipe = { type, recipe -> onDeleteMealRecipe(pageDate, type, recipe) },
                 onRecipeDetails = onRecipeDetails,
-                onCopyPlanClick = onCopyPlanClick
+                onCopyPlanClick = onCopyPlanClick,
+                onAppointmentClick = onAppointmentClick
             )
         }
     }
@@ -208,12 +209,14 @@ fun MealPageContent(
     pageDate: LocalDate,
     isNetworkAvailable: Boolean,
     dailyPlan: DailyPlan?,
+    isLoaded: Boolean = true,
     appointments: List<Appointment> = emptyList(),
     chefsMap: Map<String, User> = emptyMap(),
     onAddMealRecipe: (MealType) -> Unit,
     onDeleteMealRecipe: (MealType, Recipe) -> Unit,
     onRecipeDetails: (String) -> Unit,
-    onCopyPlanClick: () -> Unit
+    onCopyPlanClick: () -> Unit,
+    onAppointmentClick: (String) -> Unit
 ) {
     val pageScrollState = rememberScrollState()
 
@@ -222,7 +225,7 @@ fun MealPageContent(
             .fillMaxSize()
             .verticalScroll(pageScrollState)
     ) {
-        if (!isNetworkAvailable) {
+        if (!isNetworkAvailable && !isLoaded) {
             OfflinePlaceholder()
         } else {
             val dailyBannerText = remember(pageDate) {
@@ -247,7 +250,7 @@ fun MealPageContent(
                 )
 
                 if (appointments.isNotEmpty()) {
-                    AppointmentSummarySection(appointments, chefsMap)
+                    AppointmentSummarySection(appointments, chefsMap, onAppointmentClick)
                 }
 
                 val sections = remember(breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes) {
@@ -308,7 +311,8 @@ fun MealPageContent(
 @Composable
 fun AppointmentSummarySection(
     appointments: List<Appointment>,
-    chefsMap: Map<String, User>
+    chefsMap: Map<String, User>,
+    onAppointmentClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -317,7 +321,10 @@ fun AppointmentSummarySection(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-        )
+        ),
+        onClick = {
+            appointments.firstOrNull()?.AppointmentID?.let { onAppointmentClick(it) }
+        }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -335,7 +342,7 @@ fun AppointmentSummarySection(
                     color = MaterialTheme.colorScheme.onTertiary
                 )
             }
-            
+
             Spacer(Modifier.height(12.dp))
 
             appointments.forEach { appointment ->
@@ -362,20 +369,10 @@ fun AppointmentSummarySection(
                             color = Color.Gray
                         )
                     }
-                    
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = when (appointment.Status.lowercase()) {
-                            "confirmed" -> Color(0xFFE8F5E9)
-                            "pending" -> Color(0xFFFFF3E0)
-                            "completed" -> Color(0xFFE3F2FD)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    ) {
-                        AppointmentStatusBadge(appointment.Status)
-                    }
+
+                    AppointmentStatusBadge(appointment.Status)
                 }
-                
+
                 if (appointment != appointments.last()) {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),

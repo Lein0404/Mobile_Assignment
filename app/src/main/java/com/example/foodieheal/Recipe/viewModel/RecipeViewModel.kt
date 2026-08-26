@@ -41,6 +41,8 @@ class RecipeViewModel(
         private set
     var recipeAuthor by mutableStateOf<User?>(null)
         private set
+    var isNotFound by mutableStateOf(false)
+        private set
     var isNetworkAvailable by mutableStateOf(true)
         private set
 
@@ -57,6 +59,9 @@ class RecipeViewModel(
     private var isFetchingMyRecipes = false
     private var isFetchingBookmarks = false
     private var isFetchingIngredients = false
+    
+    // 🌟 Track active toggle jobs to allow cancellation/restarts
+    private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     init {
         observeNetworkStatus()
@@ -117,6 +122,8 @@ class RecipeViewModel(
                 repository.getAllRecipes()
                     .onSuccess { result ->
                         recipeList = result.sortedBy { it.recipe_id }
+                        // 🌟 Recovery: If some names are missing (Join failed), fetch them by ID automatically
+                        fetchMissingAuthorInfo(result)
                     }
                     .onFailure { e ->
                         errorMessage = "Failed to load recipes: ${e.message}"
@@ -124,6 +131,34 @@ class RecipeViewModel(
             } finally {
                 isLoading = false
                 isFetchingAll = false
+            }
+        }
+    }
+
+    /**
+     * 🌟 Recovery logic: Just like the Detail Screen, if a recipe arrives
+     * without a name, we fetch the User data by its ID separately.
+     */
+    private fun fetchMissingAuthorInfo(recipes: List<Recipe>) {
+        val missingIds = recipes.filter { it.authorName.isNullOrEmpty() && !it.author_id.isNullOrEmpty() }
+            .mapNotNull { it.author_id }
+            .distinct()
+
+        if (missingIds.isEmpty()) return
+
+        viewModelScope.launch {
+            missingIds.forEach { id ->
+                repository.getUserByCustomId(id).onSuccess { user ->
+                    if (user != null) {
+                        // Update all occurrences of this author in the lists
+                        val updater: (Recipe) -> Recipe = { r ->
+                            if (r.author_id == id) r.copy(authorName = user.name, authorImageUrl = user.profilePicUrl) else r
+                        }
+                        recipeList = recipeList.map(updater)
+                        myRecipes = myRecipes.map(updater)
+                        bookmarkedRecipes = bookmarkedRecipes.map(updater)
+                    }
+                }
             }
         }
     }
@@ -155,6 +190,7 @@ class RecipeViewModel(
                 repository.getMyRecipes(authorId)
                     .onSuccess { result ->
                         myRecipes = result.sortedBy { it.recipe_id }
+                        fetchMissingAuthorInfo(result)
                     }
             } finally {
                 isLoading = false
@@ -175,6 +211,7 @@ class RecipeViewModel(
                     .onSuccess { result ->
                         bookmarkedRecipes = result.sortedBy { it.recipe_id }
                         bookmarkedRecipeIds = bookmarkedRecipes.mapNotNull { it.recipe_id }.toSet()
+                        fetchMissingAuthorInfo(result)
                     }
             } finally {
                 isLoading = false
@@ -192,30 +229,75 @@ class RecipeViewModel(
     }
 
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
+        // 🌟 1. Cancel any existing job for this specific recipe to prevent race conditions
+        bookmarkJobs[recipeId]?.cancel()
+        
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
-        viewModelScope.launch {
-            // 🌟 Optimistic Update: Immediate UI feedback
-            bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
-            
-            repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
-                _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
-                fetchBookmarkedRecipes(userId)
+        
+        // 🌟 2. Instant UI Update (Always happens regardless of network speed)
+        bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
+        
+        if (isBookmarked) {
+            bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+        } else {
+            recipeList.find { it.recipe_id == recipeId }?.let { 
+                bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
+            }
+        }
+
+        // 🌟 3. Launch the new request (This job can be cancelled by the next click)
+        bookmarkJobs[recipeId] = viewModelScope.launch {
+            try {
+                repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
+                    _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
+                    fetchBookmarkedRecipes(userId)
+                }.onFailure {
+                    // Revert UI only if this specific job wasn't cancelled
+                    bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
+                }
+            } finally {
+                // Cleanup job map when done
+                if (bookmarkJobs[recipeId]?.isActive == false) {
+                    bookmarkJobs.remove(recipeId)
+                }
             }
         }
     }
 
     fun fetchRecipeById(recipeId: String) {
         viewModelScope.launch {
-            // 🌟 1. Clear previous recipe instantly so the loader shows for the new one
             selectedRecipe = null
             recipeAuthor = null
-            
+            isNotFound = false
             isLoading = true
             repository.getRecipeById(recipeId)
                 .onSuccess { recipe ->
                     selectedRecipe = recipe
-                    recipe?.author_id?.let { fetchAuthorData(it) }
+                    if (recipe == null) isNotFound = true
+                    else recipe.author_id?.let { fetchAuthorData(it) }
                 }
+                .onFailure { isNotFound = true }
+            isLoading = false
+        }
+    }
+
+    /**
+     * 🌟 EXCLUSIVE FUNCTION: Uses local-first logic for instant meal plan recipe viewing.
+     */
+    fun fetchRecipeLocalFirst(recipeId: String) {
+        viewModelScope.launch {
+            selectedRecipe = null
+            recipeAuthor = null
+            isNotFound = false
+            isLoading = true
+            
+            repository.getRecipeByIdLocalFirst(recipeId)
+                .onSuccess { recipe ->
+                    selectedRecipe = recipe
+                    if (recipe == null) isNotFound = true
+                    else recipe.author_id?.let { fetchAuthorData(it) }
+                }
+                .onFailure { isNotFound = true }
             isLoading = false
         }
     }
@@ -227,6 +309,7 @@ class RecipeViewModel(
     fun clearSelectedRecipe() {
         selectedRecipe = null
         recipeAuthor = null
+        isNotFound = false
     }
 
     fun fetchAuthorData(authorId: String) {

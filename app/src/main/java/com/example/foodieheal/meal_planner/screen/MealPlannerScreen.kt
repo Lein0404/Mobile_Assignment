@@ -2,6 +2,7 @@ package com.example.foodieheal.meal_planner.screen
 
 import android.content.Intent
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +35,13 @@ import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
+import com.example.foodieheal.meal_planner.model.DailyPlan
+import com.example.foodieheal.Recipe.Model.Recipe
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.heightIn
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -54,7 +63,8 @@ fun MealPlannerScreen(
     onAddMeal: (LocalDate, MealType) -> Unit,
     onAddTemplateClick: () -> Unit,
     onPlanDetails: (String, Boolean) -> Unit,
-    onEdit: (String) -> Unit
+    onEdit: (String) -> Unit,
+    onAppointmentClick: (String) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -182,7 +192,7 @@ fun MealPlannerScreen(
     val maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
 
     // 🌟 Load current and adjacent months immediately on screen launch
-    LaunchedEffect(currentMonth) {
+    LaunchedEffect(currentMonth, maxCalories) {
         mealPlannerViewModel.loadMonthConditions(currentMonth, maxCalories)
         mealPlannerViewModel.prefetchAdjacentMonths(currentMonth, maxCalories)
     }
@@ -208,7 +218,7 @@ fun MealPlannerScreen(
                 val sourcePlan = activeDailyPlan
                 if (sourcePlan != null) {
                     mealPlannerViewModel.copyDailyPlanToDate(sourcePlan, targetDate)
-                    Toast.makeText(context, dailyCopySuccessMessage, Toast.LENGTH_SHORT).show()
+                    Toasty.custom(context, dailyCopySuccessMessage, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                 }
                 showPasteDatePicker = false
             },
@@ -256,7 +266,7 @@ fun MealPlannerScreen(
                     onClick = {
                         val daysToCopy = mealPlannerViewModel.deepLinkSourceDays ?: weekDays
                         mealPlannerViewModel.copyWeeklyPlanToDate(daysToCopy, targetWeeklyPasteDate!!)
-                        Toast.makeText(context, weeklyCopySuccessMessage, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, weeklyCopySuccessMessage, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         
                         showConfirmWeeklyPaste = false
                         targetWeeklyPasteDate = null
@@ -334,12 +344,15 @@ fun MealPlannerScreen(
                     },
                     onAddMealRecipe = { date, type -> onAddMeal(date, type) },
                     onDeleteMealRecipe = { date, type, recipe ->
-                        mealPlannerViewModel.deleteRecipeFromMeal(date, type, recipe)
-                        Toast.makeText(context, recipeRemovedMsg, Toast.LENGTH_SHORT).show()
+                        coroutineScope.launch {
+                            mealPlannerViewModel.deleteRecipeFromMealSuspend(date, type, recipe)
+                            Toasty.custom(context, recipeRemovedMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+                        }
                     },
                     onRecipeDetails = onRecipeDetails,
                     onCopyPlanClick = { showPasteDatePicker = true },
-                    onNavigateToProfile = onNavigateToProfile
+                    onNavigateToProfile = onNavigateToProfile,
+                    onAppointmentClick = onAppointmentClick
                 )
             }
             1 -> {

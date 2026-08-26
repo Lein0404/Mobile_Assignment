@@ -13,8 +13,6 @@ import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.model.toEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -90,6 +88,7 @@ class TemplateViewModel(
             val result = entityList.map { entity ->
                 WeeklyPlan(
                     planName = entity.planName,
+                    planDescription = entity.planDescription,
                     planId = entity.planId,
                     userId = entity.userId,
                     category = entity.category,

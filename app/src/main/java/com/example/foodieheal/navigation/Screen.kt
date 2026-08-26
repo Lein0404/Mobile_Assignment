@@ -7,6 +7,7 @@ import java.time.LocalDate
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object ChefLogin : Screen("chef_login")
     object Register : Screen("register")
     object Home : Screen("home")
     object Recipes : Screen("recipes")

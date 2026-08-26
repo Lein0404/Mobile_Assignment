@@ -48,7 +48,7 @@ fun WalletTransactionDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Transaction Details",
+                        text = stringResource(R.string.transaction_details_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -67,7 +67,7 @@ fun WalletTransactionDetailScreen(
                         }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_share),
-                                contentDescription = "Share Receipt",
+                                contentDescription = stringResource(R.string.share_receipt),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
@@ -106,20 +106,20 @@ fun WalletTransactionDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Transaction Not Found",
+                        text = stringResource(R.string.transaction_not_found_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "The requested transaction details could not be loaded.",
+                        text = stringResource(R.string.transaction_not_found_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(onClick = onBackClick) {
-                        Text("Go Back")
+                        Text(stringResource(R.string.btn_go_back))
                     }
                 }
             } else {
@@ -160,7 +160,7 @@ fun WalletTransactionDetailScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Share", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.share), fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -171,7 +171,7 @@ fun WalletTransactionDetailScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "Done",
+                                text = stringResource(R.string.done),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
                             )

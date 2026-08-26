@@ -173,7 +173,7 @@ fun AddAppointmentFormScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Internet required to submit booking",
+                            text = stringResource(R.string.booking_offline_mode),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -391,7 +391,7 @@ fun AddAppointmentFormScreen(
                                     .padding(end = 8.dp)
                             ) {
                                 Text(
-                                    text = "Requested Dishes (Optional)",
+                                    text = stringResource(R.string.requested_dishes_optional),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -399,7 +399,7 @@ fun AddAppointmentFormScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Attach bookmarked recipes for the chef",
+                                    text = stringResource(R.string.attach_bookmarked_recipes_sub),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
@@ -413,7 +413,7 @@ fun AddAppointmentFormScreen(
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Text(
-                                        text = "${selectedRecipes.size} selected",
+                                        text = stringResource(R.string.dishes_selected_count, selectedRecipes.size),
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
@@ -443,7 +443,7 @@ fun AddAppointmentFormScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "No specific recipes attached. You can pick dishes from your bookmarks for your chef to prepare.",
+                                        text = stringResource(R.string.no_specific_recipes_attached),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -489,7 +489,7 @@ fun AddAppointmentFormScreen(
                                                     color = MaterialTheme.colorScheme.onSurface
                                                 )
                                                 Text(
-                                                    text = "${item.serviceCount} portion(s)" +
+                                                    text = stringResource(R.string.portion_count_format, item.serviceCount) +
                                                             if (item.customNote.isNotBlank()) " • “${item.customNote}”" else "",
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -508,7 +508,7 @@ fun AddAppointmentFormScreen(
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(R.drawable.ic_recipe),
-                                                        contentDescription = "View Details",
+                                                        contentDescription = stringResource(R.string.view_details),
                                                         tint = MaterialTheme.colorScheme.primary,
                                                         modifier = Modifier.size(17.dp)
                                                     )
@@ -522,7 +522,7 @@ fun AddAppointmentFormScreen(
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(R.drawable.cancel),
-                                                        contentDescription = "Remove",
+                                                        contentDescription = stringResource(R.string.remove),
                                                         tint = MaterialTheme.colorScheme.error,
                                                         modifier = Modifier.size(17.dp)
                                                     )
@@ -549,7 +549,7 @@ fun AddAppointmentFormScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (selectedRecipes.isEmpty()) "+ Attach from Bookmarks" else "Edit Attached Recipes (${selectedRecipes.size})",
+                                text = if (selectedRecipes.isEmpty()) stringResource(R.string.attach_from_bookmarks_btn) else stringResource(R.string.edit_attached_recipes_btn, selectedRecipes.size),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }

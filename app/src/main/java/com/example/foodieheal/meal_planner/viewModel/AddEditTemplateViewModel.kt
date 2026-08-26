@@ -79,6 +79,7 @@
                         _uiState.update { currentState ->
                             currentState.copy(
                                 planName = existingPlanDto.planName,
+                                planDescription = existingPlanDto.planDescription,
                                 category = existingPlanDto.category,
                                 isPublic = existingPlanDto.public,
                                 dailyPlans = domainDailyPlans,
@@ -105,6 +106,11 @@
         fun updatePlanName(newName: String) {
             Log.d(TAG, "updatePlanName(): New name = '$newName'")
             _uiState.update { it.copy(planName = newName) }
+        }
+
+        fun updatePlanDescription(newDescription: String) {
+            Log.d(TAG, "updatePlanDescription(): New description = '$newDescription'")
+            _uiState.update { it.copy(planDescription = newDescription) }
         }
 
         fun updateCategory(newCategory: PlanCategory) {
@@ -223,6 +229,7 @@
                     val planToSave = WeeklyPlan(
                         planId = finalPlanId,
                         planName = currentState.planName.trim(),
+                        planDescription = currentState.planDescription.trim(),
                         userId = currentUserId,
                         category = currentState.category,
                         dailyPlans = currentState.dailyPlans,

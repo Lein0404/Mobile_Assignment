@@ -1,6 +1,8 @@
 package com.example.foodieheal.Recipe.Repo
 
 import android.util.Log
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
@@ -34,24 +36,28 @@ class RecipeRepository(
         runCatching {
             try {
                 val recipes = try {
-                    // Try to fetch with Join first (Requires RLS permission on 'users' table)
                     client.from("recipes")
                         .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)"))
                         .decodeList<Recipe>()
                 } catch (e: Exception) {
-                    Log.e("RecipeRepository", "Join Query Failed (likely RLS on users table): ${e.localizedMessage}")
-                    // SAFETY FALLBACK: Fetch only recipes without join
+                    Log.d("RecipeRepository", "AllRecipes Join Fallback Triggered: ${e.localizedMessage}")
                     client.from("recipes").select().decodeList<Recipe>()
+                }
+
+                recipes.forEach { recipe ->
+                    recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                    recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
                 }
 
                 recipeDao?.let { dao ->
                     dao.clearRecipes()
                     dao.insertRecipes(recipes.map { it.toEntity(json) })
                 }
+                
                 recipes
             } catch (e: Exception) {
                 Log.e("RecipeRepository", "Error fetching all recipes", e)
-                recipeDao?.getAllRecipes()?.map { it.toDomain(json) } ?: emptyList()
+                recipeDao?.getAllRecipes()?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
         }
     }
@@ -66,22 +72,28 @@ class RecipeRepository(
                 val recipes = try {
                     response.decodeList<Recipe>()
                 } catch (e: Exception) {
-                    Log.e("RecipeRepository", "MyRecipes Join Error: ${e.localizedMessage}")
-                    // FALLBACK: Fetch without join
+                    Log.d("RecipeRepository", "MyRecipes Join Fallback Triggered: ${e.localizedMessage}")
                     client.from("recipes").select { filter { eq("recipe_author", authorId) } }.decodeList<Recipe>()
                 }
+                
+                // 🌟 FIX: Flatten author info immediately so UI and Local DB can see it
+                recipes.forEach { recipe ->
+                    recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                    recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+                }
+
                 recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+                
                 recipes
             } catch (e: Exception) {
-                Log.e("RecipeRepository", "Error fetching my recipes", e)
-                recipeDao?.getMyRecipes(authorId)?.map { it.toDomain(json) } ?: emptyList()
+                Log.w("RecipeRepository", "Notice: Empty or failed fetch for my recipes: ${e.localizedMessage}")
+                recipeDao?.getMyRecipes(authorId)?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
         }
     }
 
     suspend fun insertRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            // 🌟 CLEANUP: Remove join-only fields before sending to Supabase
             val cleanRecipe = recipe.copy(authorInfo = null)
             client.from("recipes").insert(cleanRecipe)
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
@@ -91,7 +103,6 @@ class RecipeRepository(
 
     suspend fun updateRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            // 🌟 CLEANUP: Remove join-only fields before sending to Supabase
             val cleanRecipe = recipe.copy(authorInfo = null)
             client.from("recipes").update(cleanRecipe) {
                 filter { eq("recipe_id", recipe.recipe_id ?: "") }
@@ -173,15 +184,20 @@ class RecipeRepository(
                         }.decodeList<Recipe>()
                 } catch (e: Exception) {
                     Log.e("RecipeRepository", "Bookmarks Join Error: ${e.localizedMessage}")
-                    // FALLBACK: Fetch without join
                     client.from("recipes").select { filter { isIn("recipe_id", bookmarkedIds) } }.decodeList<Recipe>()
                 }
                 
+                recipes.forEach { recipe ->
+                    recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                    recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+                }
+
                 recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+                
                 recipes
             } catch (e: Exception) {
                 Log.e("RecipeRepository", "Error fetching bookmarks", e)
-                recipeDao?.getBookmarkedRecipes(userId)?.map { it.toDomain(json) } ?: emptyList()
+                recipeDao?.getBookmarkedRecipes(userId)?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
         }
     }
@@ -214,15 +230,30 @@ class RecipeRepository(
                             filter { eq("recipe_id", recipeId) }
                         }.decodeSingle<Recipe>()
                 } catch (e: Exception) {
-                    Log.e("RecipeRepository", "RecipeById Join Error: ${e.localizedMessage}")
-                    // FALLBACK: Fetch without join
                     client.from("recipes").select { filter { eq("recipe_id", recipeId) } }.decodeSingle<Recipe>()
                 }
+                
+                recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+
                 recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
                 recipe
             } catch (e: Exception) {
-                recipeDao?.getRecipeById(recipeId)?.toDomain(json)
+                recipeDao?.getRecipeById(recipeId)?.toDomain(json)?.apply { isOffline = true }
             }
+        }
+    }
+
+    /**
+     * 🌟 EXCLUSIVE FUNCTION: Prioritizes local cache for instant meal planner viewing.
+     */
+    suspend fun getRecipeByIdLocalFirst(recipeId: String): Result<Recipe?> = withContext(Dispatchers.IO) {
+        runCatching {
+            val local = recipeDao?.getRecipeById(recipeId)?.toDomain(json)
+            if (local != null) return@runCatching local.apply { isOffline = true }
+            
+            // If not in local, then try network
+            getRecipeById(recipeId).getOrNull()
         }
     }
 
@@ -230,21 +261,39 @@ class RecipeRepository(
         runCatching {
             if (recipeIds.isEmpty()) return@runCatching emptyList<Recipe>()
             try {
-                try {
+                val recipes = try {
                     client.from("recipes")
                         .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
                             filter { isIn("recipe_id", recipeIds) }
                         }.decodeList<Recipe>()
                 } catch (e: Exception) {
-                    Log.e("RecipeRepository", "RecipesByIds Join Error: ${e.localizedMessage}")
-                    // FALLBACK: Fetch without join
                     client.from("recipes").select { filter { isIn("recipe_id", recipeIds) } }.decodeList<Recipe>()
                 }
+                
+                recipes.forEach { recipe ->
+                    recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                    recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+                }
+                recipes
             } catch (e: Exception) {
                 val local = recipeDao?.getAllRecipes() ?: emptyList()
                 local.filter { entity -> recipeIds.contains(entity.recipe_id) }
-                    .map { it.toDomain(json) }
+                    .map { it.toDomain(json).apply { isOffline = true } }
             }
+        }
+    }
+
+    /**
+     * 🌟 EXCLUSIVE FUNCTION: Optimized for batch loading meal plan recipes from local DB.
+     */
+    suspend fun getRecipesByIdsLocalFirst(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val local = recipeDao?.getAllRecipes() ?: emptyList()
+            val cached = local.filter { it.recipe_id in recipeIds }.map { it.toDomain(json).apply { isOffline = true } }
+            
+            if (cached.size == recipeIds.size) return@runCatching cached
+            
+            getRecipesByIds(recipeIds).getOrDefault(cached)
         }
     }
 
@@ -253,6 +302,27 @@ class RecipeRepository(
             client.from("users")
                 .select { filter { eq("custom_id", customId) } }
                 .decodeSingleOrNull<User>()
+        }
+    }
+
+    /**
+     * Pre-fetches images for a list of recipes and stores them in Coil's disk cache.
+     */
+    suspend fun prefetchRecipeImages(recipes: List<Recipe>, context: android.content.Context) = withContext(Dispatchers.IO) {
+        val imageLoader = context.imageLoader
+        recipes.forEach { recipe ->
+            recipe.recipeImageUrl?.let { url ->
+                val request = ImageRequest.Builder(context)
+                    .data(url)
+                    .build()
+                imageLoader.enqueue(request)
+            }
+            recipe.authorImageUrl?.let { url ->
+                val request = ImageRequest.Builder(context)
+                    .data(url)
+                    .build()
+                imageLoader.enqueue(request)
+            }
         }
     }
 }

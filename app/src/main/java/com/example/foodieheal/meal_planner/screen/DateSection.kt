@@ -52,6 +52,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import com.example.foodieheal.ui.theme.Green
+import com.example.foodieheal.ui.theme.LightBlue
 import com.example.foodieheal.ui.theme.Orange
 import com.example.foodieheal.ui.theme.Red
 import com.example.foodieheal.ui.theme.Yellow
@@ -82,8 +83,8 @@ fun DateCard(
     }
 
     val dotColor = when (condition) {
-        DayCondition.UNDER_INTAKE -> Red
-        DayCondition.SLIGHTLY_LOW -> Yellow
+        DayCondition.UNDER_INTAKE -> Yellow
+        DayCondition.SLIGHTLY_LOW -> LightBlue
         DayCondition.IDEAL -> Green
         DayCondition.SLIGHTLY_HIGH -> Orange
         DayCondition.EXCESS_INTAKE -> Red
@@ -523,8 +524,8 @@ fun CalendarDateCard(
     }
 
     val dotColor = when (condition) {
-        DayCondition.UNDER_INTAKE -> Red
-        DayCondition.SLIGHTLY_LOW -> Yellow
+        DayCondition.UNDER_INTAKE -> Yellow
+        DayCondition.SLIGHTLY_LOW -> LightBlue
         DayCondition.IDEAL -> Green
         DayCondition.SLIGHTLY_HIGH -> Orange
         DayCondition.EXCESS_INTAKE -> Red

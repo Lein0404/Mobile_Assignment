@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -80,7 +81,6 @@ import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.screen.AddRecipeToPlanScreen
 import com.example.foodieheal.meal_planner.screen.AddEditTemplateRoute
 import com.example.foodieheal.meal_planner.screen.MealPlannerScreen
-import com.example.foodieheal.meal_planner.screen.RecipesSelectingScreen
 import com.example.foodieheal.meal_planner.screen.TemplateDetailsScreen
 import com.example.foodieheal.meal_planner.screen.calculateSuggestedDailyCalories
 import com.example.foodieheal.meal_planner.viewModel.AddEditTemplateViewModel
@@ -131,6 +131,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         appContext = applicationContext
         enableEdgeToEdge()
+
+        // 0. Configure Toasty
+        Toasty.Config.getInstance().allowQueue(true).apply()
 
         // 1. Process deep link on initial cold start
         handleDeepLink(intent)
@@ -210,7 +213,6 @@ class MainActivity : ComponentActivity() {
                     }
                 )
 
-                // 🌟 FIX: Observe the name and pic specifically to trigger instant card sync
                 LaunchedEffect(sharedAuthViewModel.currentUser?.name, sharedAuthViewModel.currentUser?.profilePicUrl) {
                     sharedAuthViewModel.currentUser?.let { user ->
                         sharedRecipeViewModel.syncRecipeAuthorInfo(user)
@@ -314,11 +316,8 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        // 🌟 Stable Start Route: The NavHost always starts at Login,
-                        // and LaunchedEffects handle the redirection once Auth is ready.
                         val startRoute = Screen.Login.route
 
-                        // Use a Box to keep the NavHost full screen and avoid resizing lag
                         Box(modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)) {
@@ -332,6 +331,12 @@ class MainActivity : ComponentActivity() {
                                 // --- AUTH ---
                                 composable(Screen.Login.route) {
                                     LoginScreen(
+                                        navController,
+                                        sharedAuthViewModel
+                                    )
+                                }
+                                composable(Screen.ChefLogin.route) {
+                                    ChefLoginScreen(
                                         navController,
                                         sharedAuthViewModel
                                     )
@@ -400,7 +405,10 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             )
                                         },
-                                        onEdit = { id -> navController.navigate(Screen.AddEditTemplate.createRoute(id)) }
+                                        onEdit = { id -> navController.navigate(Screen.AddEditTemplate.createRoute(id)) },
+                                        onAppointmentClick = { appointmentId ->
+                                            navController.navigate(Screen.UserAppointmentDetail.createRoute(appointmentId))
+                                        }
                                     )
                                 }
 
@@ -476,9 +484,11 @@ class MainActivity : ComponentActivity() {
                                         parentEntry?.let { viewModel(it) }
                                     } else null
 
-                                    RecipesSelectingScreen(
-                                        recipeViewModel = sharedRecipeViewModel,
+                                    RecipesScreen(
+                                        parentNavController = navController,
+                                        viewModel = sharedRecipeViewModel,
                                         authViewModel = sharedAuthViewModel,
+                                        isSelectionMode = true,
                                         onSave = { selectedIds ->
                                             val selectedRecipes = selectedIds.mapNotNull { recipeId ->
                                                 sharedRecipeViewModel.recipeList.find { it.recipe_id == recipeId }
@@ -612,7 +622,7 @@ class MainActivity : ComponentActivity() {
                                                     template = plan,
                                                     startDate = startDate
                                                 )
-                                                Toast.makeText(appContext, "Template applied to meal planner!", Toast.LENGTH_SHORT).show()
+                                                Toasty.custom(appContext!!, "Template applied to meal planner!", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                                 navController.popBackStack()
                                             },
                                             onBack = { navController.popBackStack() },
@@ -627,14 +637,14 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onRecipeDelete = { recipeId ->
                                                 templateViewModel.deleteRecipeFromTemplate(recipeId)
-                                                Toast.makeText(appContext, "Recipe removed from template", Toast.LENGTH_SHORT).show()
+                                                Toasty.custom(appContext!!, "Recipe removed from template", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                             },
                                             onEdit = { navController.navigate(Screen.AddEditTemplate.createRoute(plan.planId)) },
                                             onDelete = {
                                                 templateViewModel.deleteWeeklyPlan(
                                                     planId = plan.planId,
                                                     onSuccess = {
-                                                        Toast.makeText(appContext, "Template deleted successfully!", Toast.LENGTH_SHORT).show()
+                                                        Toasty.custom(appContext!!, "Template deleted successfully!", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                                         navController.popBackStack()
                                                     }
                                                 )
@@ -644,10 +654,10 @@ class MainActivity : ComponentActivity() {
                                                     sourcePlanId = plan.planId,
                                                     currentUserId = sharedAuthViewModel.currentUser?.id ?: "",
                                                     onSuccess = {
-                                                        Toast.makeText(appContext, "Template saved to your collection!", Toast.LENGTH_SHORT).show()
+                                                        Toasty.custom(appContext!!, "Template saved to your collection!", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                                     },
                                                     onError = { error ->
-                                                        Toast.makeText(appContext, error, Toast.LENGTH_SHORT).show()
+                                                        Toasty.custom(appContext!!, error, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                                     }
                                                 )
                                             }
@@ -661,7 +671,14 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable(Screen.Profile.route) {
-                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { ProfileScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
+                                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
+                                        ProfileScreen(
+                                            navController,
+                                            sharedRecipeViewModel,
+                                            sharedAuthViewModel,
+                                            chefViewModel
+                                        )
+                                    }
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---
@@ -1022,8 +1039,12 @@ class MainActivity : ComponentActivity() {
                                     AdminAddIngredientScreen(navController)
                                 }
                                 composable(Screen.ChefMain.route) { ChefMainScreen(navController, sharedAuthViewModel) }
-                                composable("chefDetail/{chefId}") {
-                                    ChefDetailScreen(it.arguments?.getString("chefId") ?: "", navController)
+                                composable(
+                                    route = "chefDetail/{chefId}",
+                                    arguments = listOf(navArgument("chefId") { type = NavType.StringType })
+                                ) { backStackEntry ->
+                                    val chefId = backStackEntry.arguments?.getString("chefId") ?: ""
+                                    ChefDetailScreen(chefId, navController)
                                 }
                                 navigation(startDestination = Screen.Welcome.route, route = "chefRegisterRoute") {
                                     composable(Screen.Welcome.route) { ChefWelcomeScreen(navController, chefViewModel) }
@@ -1094,6 +1115,7 @@ class MainActivity : ComponentActivity() {
                             // 🌟 Screens that are allowed WITHOUT login (Auth flow)
                             val authRoutes = listOf(
                                 Screen.Login.route,
+                                Screen.ChefLogin.route,
                                 Screen.Register.route,
                                 Screen.Welcome.route,
                                 Screen.BasicInfo.route,

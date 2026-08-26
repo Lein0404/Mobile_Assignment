@@ -2,6 +2,7 @@ package com.example.foodieheal.meal_planner.screen
 
 import android.content.Intent
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -261,10 +262,10 @@ fun AllTemplatesScreen(
                         sourcePlanId = id,
                         currentUserId = templateViewModel.currentUserId ?: "",
                         onSuccess = {
-                            Toast.makeText(context, templateAddedMsg, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, templateAddedMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         },
                         onError = { error ->
-                            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, error, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         }
                     )
                 },
@@ -325,7 +326,7 @@ fun MyTemplatesScreen(
                     templateViewModel.deleteWeeklyPlan(
                         planId = id,
                         onSuccess = {
-                            Toast.makeText(context, "Template deleted successfully!", Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, "Template deleted successfully!", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         }
                     )
                 },
@@ -438,7 +439,7 @@ fun PlanCard(
             .width(260.dp)
             .clickable(onClick = onPlanDetails),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
