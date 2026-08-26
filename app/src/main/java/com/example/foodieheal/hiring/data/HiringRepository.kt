@@ -217,8 +217,9 @@ class HiringRepository(
         if (selectedRecipes.isNotEmpty()) {
             try {
                 val appointmentRecipes = selectedRecipes.mapNotNull { item ->
-                    val rId = item.recipe.recipe_id ?: return@mapNotNull null
+                    val rId = item.recipe.recipe_id?.ifBlank { null } ?: return@mapNotNull null
                     AppointmentRecipe(
+                        id = UUID.randomUUID().toString(),
                         appointmentId = generatedAppointmentId,
                         recipeId = rId,
                         service_count = item.serviceCount.toDouble(),
@@ -226,10 +227,18 @@ class HiringRepository(
                     )
                 }
                 if (appointmentRecipes.isNotEmpty()) {
-                    client.from("appointment_recipe").insert(appointmentRecipes)
+                    try {
+                        client.from("appointment_recipe").insert(appointmentRecipes)
+                    } catch (batchErr: Exception) {
+                        Log.w("HiringRepository", "Batch insert into appointment_recipe failed, trying individual inserts: ${batchErr.localizedMessage}")
+                        for (apptRecipe in appointmentRecipes) {
+                            client.from("appointment_recipe").insert(apptRecipe)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("HiringRepository", "Error batch inserting appointment recipes: ${e.localizedMessage}", e)
+                throw e
             }
         }
 

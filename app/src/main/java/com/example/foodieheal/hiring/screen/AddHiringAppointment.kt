@@ -39,6 +39,7 @@ import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.ui.components.TimePickerDialog
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,22 +80,14 @@ fun AddAppointmentFormScreen(
         }
     }
 
-    var startTimeFormatted by remember { mutableStateOf("09:00 AM") }
-    var endTimeFormatted by remember { mutableStateOf("11:00 AM") }
+    val startTimeFormatted = uiState.startTime.ifBlank { "09:00 AM" }
+    val endTimeFormatted = uiState.endTime.ifBlank { "11:00 AM" }
 
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        if (uiState.appointmentTime.isBlank()) {
-            viewModel.onAppointmentTimeChanged("$startTimeFormatted - $endTimeFormatted")
-        }
-    }
-
     fun updateAppointmentTimeSlot(start: String, end: String) {
-        startTimeFormatted = start
-        endTimeFormatted = end
-        viewModel.onAppointmentTimeChanged("$start - $end")
+        viewModel.onAppointmentTimeSlotChanged(start, end)
     }
 
     val hourlyRate = selectedChef?.Pricing ?: 0.0
@@ -392,23 +385,31 @@ fun AddAppointmentFormScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                            ) {
                                 Text(
                                     text = "Requested Dishes (Optional)",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "Attach bookmarked recipes for the chef",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
                             if (selectedRecipes.isNotEmpty()) {
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Text(
@@ -416,6 +417,8 @@ fun AddAppointmentFormScreen(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
+                                        softWrap = false,
+                                        maxLines = 1,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
@@ -460,15 +463,15 @@ fun AddAppointmentFormScreen(
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(10.dp),
+                                            modifier = Modifier.padding(8.dp),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             AsyncImage(
                                                 model = recipe.recipeImageUrl,
                                                 contentDescription = recipe.recipeName,
                                                 modifier = Modifier
-                                                    .size(44.dp)
+                                                    .size(42.dp)
                                                     .clip(RoundedCornerShape(8.dp))
                                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                                 contentScale = ContentScale.Crop,
@@ -495,30 +498,35 @@ fun AddAppointmentFormScreen(
                                                 )
                                             }
 
-                                            IconButton(
-                                                onClick = { previewingRecipeInForm = recipe },
-                                                modifier = Modifier.size(28.dp)
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(2.dp)
                                             ) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_recipe),
-                                                    contentDescription = "View Details",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                            }
+                                                IconButton(
+                                                    onClick = { previewingRecipeInForm = recipe },
+                                                    modifier = Modifier.size(30.dp)
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_recipe),
+                                                        contentDescription = "View Details",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(17.dp)
+                                                    )
+                                                }
 
-                                            IconButton(
-                                                onClick = {
-                                                    recipe.recipe_id?.let { viewModel.removeSelectedRecipe(it) }
-                                                },
-                                                modifier = Modifier.size(28.dp)
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.cancel),
-                                                    contentDescription = "Remove",
-                                                    tint = MaterialTheme.colorScheme.error,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
+                                                IconButton(
+                                                    onClick = {
+                                                        recipe.recipe_id?.let { viewModel.removeSelectedRecipe(it) }
+                                                    },
+                                                    modifier = Modifier.size(30.dp)
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.cancel),
+                                                        contentDescription = "Remove",
+                                                        tint = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.size(17.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -662,7 +670,23 @@ fun AddAppointmentFormScreen(
 
     // Start Time Picker Dialog
     if (showStartTimePicker) {
-        val timePickerState = rememberTimePickerState(is24Hour = false)
+        val (initHour, initMinute) = remember(startTimeFormatted) {
+            try {
+                val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+                val date = sdf.parse(startTimeFormatted)
+                if (date != null) {
+                    val cal = Calendar.getInstance().apply { time = date }
+                    Pair(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+                } else Pair(9, 0)
+            } catch (e: Exception) {
+                Pair(9, 0)
+            }
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = initHour,
+            initialMinute = initMinute,
+            is24Hour = false
+        )
         TimePickerDialog(
             onDismissRequest = { showStartTimePicker = false },
             confirmButton = {
@@ -689,7 +713,23 @@ fun AddAppointmentFormScreen(
 
     // End Time Picker Dialog
     if (showEndTimePicker) {
-        val timePickerState = rememberTimePickerState(is24Hour = false)
+        val (initHour, initMinute) = remember(endTimeFormatted) {
+            try {
+                val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+                val date = sdf.parse(endTimeFormatted)
+                if (date != null) {
+                    val cal = Calendar.getInstance().apply { time = date }
+                    Pair(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+                } else Pair(11, 0)
+            } catch (e: Exception) {
+                Pair(11, 0)
+            }
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = initHour,
+            initialMinute = initMinute,
+            is24Hour = false
+        )
         TimePickerDialog(
             onDismissRequest = { showEndTimePicker = false },
             confirmButton = {

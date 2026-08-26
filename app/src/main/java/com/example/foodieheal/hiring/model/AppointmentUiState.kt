@@ -13,7 +13,9 @@ sealed interface AppointmentValidationError {
 }
 
 data class AppointmentUiState(
-    val appointmentTime: String = "",
+    val appointmentTime: String = "09:00 AM - 11:00 AM",
+    val startTime: String = "09:00 AM",
+    val endTime: String = "11:00 AM",
     val isTimeSlotOccupied: Boolean = false,
     val address: String = "",
     val postcode: String = "",

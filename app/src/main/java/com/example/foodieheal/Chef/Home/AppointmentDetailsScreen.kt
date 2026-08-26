@@ -4,9 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,13 +52,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
 
@@ -77,6 +84,7 @@ fun AppointmentDetailScreen(
     var showDeclineDialog by remember { mutableStateOf(false) }
     var rejectionReason by remember { mutableStateOf("") }
     var rejectionReasonError by remember { mutableStateOf(false) }
+    var previewingRecipeItem by remember { mutableStateOf<AppointmentRecipeWithDetails?>(null) }
 
     val acceptedToastMsg = stringResource(R.string.booking_accepted)
     val declinedToastMsg = stringResource(R.string.booking_declined)
@@ -290,7 +298,11 @@ fun AppointmentDetailScreen(
                         attachedRecipes.forEach { item ->
                             val recipe = item.recipe
                             Surface(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = recipe != null) {
+                                        previewingRecipeItem = item
+                                    },
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                                 border = androidx.compose.foundation.BorderStroke(
@@ -299,16 +311,16 @@ fun AppointmentDetailScreen(
                                 )
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier = Modifier.padding(10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     AsyncImage(
                                         model = recipe?.recipeImageUrl,
                                         contentDescription = recipe?.recipeName ?: "Recipe image",
                                         modifier = Modifier
-                                            .size(54.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .size(46.dp)
+                                            .clip(RoundedCornerShape(8.dp))
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentScale = ContentScale.Crop,
                                         error = painterResource(R.drawable.ic_recipe),
@@ -318,27 +330,34 @@ fun AppointmentDetailScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = recipe?.recipeName ?: "Recipe #${item.recipeId}",
-                                            style = MaterialTheme.typography.titleMedium,
+                                            style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontSize = 14.sp
                                         )
 
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(3.dp))
 
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                        FlowRow(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
+                                                shape = RoundedCornerShape(4.dp),
                                                 color = MaterialTheme.colorScheme.primaryContainer
                                             ) {
                                                 Text(
                                                     text = "${item.service_count.toInt()} portion(s)",
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    fontSize = 10.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
 
@@ -346,26 +365,49 @@ fun AppointmentDetailScreen(
                                                 Text(
                                                     text = "${recipe?.calories} kcal",
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 11.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
 
                                             if ((recipe?.time ?: 0) > 0) {
                                                 Text(
-                                                    text = "• ${recipe?.time} mins",
+                                                    text = "• ${recipe?.time}m",
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 11.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
                                         }
 
                                         if (!item.custom_note.isNullOrBlank()) {
-                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Spacer(modifier = Modifier.height(3.dp))
                                             Text(
                                                 text = "Client note: “${item.custom_note}”",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.primary,
-                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                                fontSize = 11.sp,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    if (recipe != null) {
+                                        IconButton(
+                                            onClick = { previewingRecipeItem = item },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_recipe),
+                                                contentDescription = "View Details",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
                                     }
@@ -555,6 +597,23 @@ fun AppointmentDetailScreen(
             shape = RoundedCornerShape(16.dp),
             containerColor = MaterialTheme.colorScheme.surface
         )
+    }
+
+    // Recipe Detail Sheet Modal for Chef
+    previewingRecipeItem?.let { item ->
+        item.recipe?.let { targetRecipe ->
+            val selectedState = SelectedAppointmentRecipe(
+                recipe = targetRecipe,
+                serviceCount = item.service_count.toInt(),
+                customNote = item.custom_note.orEmpty()
+            )
+            RecipeDetailPreviewSheet(
+                recipe = targetRecipe,
+                selectedRecipeState = selectedState,
+                isReadOnly = true,
+                onDismiss = { previewingRecipeItem = null }
+            )
+        }
     }
 }
 

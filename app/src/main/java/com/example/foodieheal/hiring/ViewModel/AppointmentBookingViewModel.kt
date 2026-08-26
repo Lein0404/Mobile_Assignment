@@ -88,8 +88,36 @@ class AppointmentBookingViewModel(
         _selectedChef.value = null
     }
 
+    fun onAppointmentTimeSlotChanged(startTime: String, endTime: String) {
+        val combined = "$startTime - $endTime"
+        _uiState.update {
+            it.copy(
+                startTime = startTime,
+                endTime = endTime,
+                appointmentTime = combined
+            )
+        }
+        validateTimeSlot(combined)
+        revalidateIfSubmitted()
+    }
+
     fun onAppointmentTimeChanged(time: String) {
-        _uiState.update { it.copy(appointmentTime = time) }
+        if (time.contains("-")) {
+            val parts = time.split("-").map { it.trim() }
+            if (parts.size == 2) {
+                _uiState.update {
+                    it.copy(
+                        startTime = parts[0],
+                        endTime = parts[1],
+                        appointmentTime = time
+                    )
+                }
+            } else {
+                _uiState.update { it.copy(appointmentTime = time) }
+            }
+        } else {
+            _uiState.update { it.copy(appointmentTime = time) }
+        }
         validateTimeSlot(time)
         revalidateIfSubmitted()
     }
@@ -156,7 +184,7 @@ class AppointmentBookingViewModel(
         if (existingIndex >= 0) {
             currentList.removeAt(existingIndex)
         } else {
-            val defaultServings = uiState.value.servingSize.toIntOrNull()?.takeIf { it > 0 } ?: 2
+            val defaultServings = uiState.value.servingSize.toIntOrNull()?.takeIf { it > 0 } ?: 1
             currentList.add(
                 SelectedAppointmentRecipe(
                     recipe = recipe,
@@ -422,13 +450,59 @@ class AppointmentBookingViewModel(
         }
 
         if (userId.isBlank() || chefId.isBlank()) {
-            onError("Invalid user or chef ID.")
+            onError("Invalid booking parameters. Please select a valid chef.")
+            return
+        }
+
+        if (selectedDate.isBlank() || startTime.isBlank() || endTime.isBlank()) {
+            onError("Please select a valid appointment date and time slot.")
+            return
+        }
+
+        val state = uiState.value
+        val appointmentTimeSlot = "$startTime - $endTime"
+
+        // Comprehensive Pre-Validation Check before touching database
+        val validationErrors = validateFormValues(
+            appointmentTime = appointmentTimeSlot,
+            address = state.address,
+            postcode = state.postcode,
+            state = state.state,
+            servingSize = state.servingSize,
+            description = state.description,
+            targetDate = selectedDate
+        )
+
+        if (validationErrors.isNotEmpty()) {
+            _uiState.update { it.copy(errors = validationErrors, hasAttemptedSubmit = true) }
+            val firstErrorMessage = when {
+                validationErrors.contains(AppointmentValidationError.TimeSlotOccupied) ->
+                    "The selected time slot is already occupied by another booking. Please choose a different time."
+                validationErrors.contains(AppointmentValidationError.InvalidTime) ->
+                    "Invalid time range selected. End time must be after start time."
+                validationErrors.contains(AppointmentValidationError.InvalidAddress) ->
+                    "Please enter a valid appointment address."
+                validationErrors.contains(AppointmentValidationError.InvalidPostcode) ->
+                    "Please enter a valid 5-digit Malaysian postcode."
+                validationErrors.contains(AppointmentValidationError.InvalidState) ->
+                    "Please select a state from the dropdown."
+                validationErrors.contains(AppointmentValidationError.InvalidServingSize) ->
+                    "Please specify a valid party / serving size greater than 0."
+                validationErrors.contains(AppointmentValidationError.InvalidDescription) ->
+                    "Please provide event notes or cooking details for your chef."
+                else -> "Please check the form and fix the highlighted errors."
+            }
+            onError(firstErrorMessage)
+            return
+        }
+
+        if (totalPrice <= 0.0) {
+            onError("Invalid total price calculation. Total price must be greater than zero.")
             return
         }
 
         _uiState.update { it.copy(isSubmitting = true) }
 
-        val state = uiState.value
         val newAppointment = Appointment(
             Date = selectedDate,
             Start_Time = startTime,
@@ -452,8 +526,9 @@ class AppointmentBookingViewModel(
                 clearAppointmentForm()
                 onSuccess()
             } catch (e: Exception) {
+                Log.e("AppointmentBookingVM", "Error creating appointment in repository", e)
                 _uiState.update { it.copy(isSubmitting = false) }
-                onError(e.localizedMessage ?: "An error occurred while creating appointment")
+                onError("Failed to create appointment: ${e.localizedMessage ?: "Unknown error occurred. Please try again."}")
             }
         }
     }

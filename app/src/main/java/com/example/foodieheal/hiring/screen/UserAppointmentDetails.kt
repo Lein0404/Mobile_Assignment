@@ -3,9 +3,12 @@ package com.example.foodieheal.hiring.screen
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -59,6 +62,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.hiring.model.Appointment
@@ -100,6 +106,7 @@ fun UserAppointmentDetailScreen(
 
     var showCancelDialog by remember { mutableStateOf(false) }
     var showCompleteDialog by remember { mutableStateOf(false) }
+    var previewingRecipeItem by remember { mutableStateOf<AppointmentRecipeWithDetails?>(null) }
 
     if (appointment == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -546,7 +553,11 @@ fun UserAppointmentDetailScreen(
                             attachedRecipes.forEach { item ->
                                 val recipe = item.recipe
                                 Surface(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(enabled = recipe != null) {
+                                            previewingRecipeItem = item
+                                        },
                                     shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                     border = BorderStroke(
@@ -557,13 +568,13 @@ fun UserAppointmentDetailScreen(
                                     Row(
                                         modifier = Modifier.padding(10.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         AsyncImage(
                                             model = recipe?.recipeImageUrl,
                                             contentDescription = recipe?.recipeName ?: "Recipe Image",
                                             modifier = Modifier
-                                                .size(48.dp)
+                                                .size(46.dp)
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                                             contentScale = ContentScale.Crop,
@@ -577,25 +588,53 @@ fun UserAppointmentDetailScreen(
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                fontSize = 14.sp
                                             )
 
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                            Spacer(modifier = Modifier.height(2.dp))
+
+                                            FlowRow(
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                                modifier = Modifier.fillMaxWidth()
                                             ) {
-                                                Text(
-                                                    text = "${item.service_count.toInt()} portion(s)",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = MaterialTheme.colorScheme.primaryContainer
+                                                ) {
+                                                    Text(
+                                                        text = "${item.service_count.toInt()} portion(s)",
+                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                        fontSize = 10.sp,
+                                                        maxLines = 1,
+                                                        softWrap = false
+                                                    )
+                                                }
+
                                                 if ((recipe?.calories ?: 0) > 0) {
                                                     Text(
-                                                        text = "• ${recipe?.calories} kcal",
+                                                        text = "${recipe?.calories} kcal",
                                                         style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 11.sp,
+                                                        maxLines = 1,
+                                                        softWrap = false
+                                                    )
+                                                }
+
+                                                if ((recipe?.time ?: 0) > 0) {
+                                                    Text(
+                                                        text = "• ${recipe?.time}m",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 11.sp,
+                                                        maxLines = 1,
+                                                        softWrap = false
                                                     )
                                                 }
                                             }
@@ -606,7 +645,24 @@ fun UserAppointmentDetailScreen(
                                                     text = "“${item.custom_note}”",
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontStyle = FontStyle.Italic
+                                                    fontStyle = FontStyle.Italic,
+                                                    fontSize = 11.sp,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+
+                                        if (recipe != null) {
+                                            IconButton(
+                                                onClick = { previewingRecipeItem = item },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.ic_recipe),
+                                                    contentDescription = "View Details",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(16.dp)
                                                 )
                                             }
                                         }
@@ -795,5 +851,22 @@ fun UserAppointmentDetailScreen(
                 }
             }
         )
+    }
+
+    // Recipe Preview Sheet Modal
+    previewingRecipeItem?.let { item ->
+        item.recipe?.let { targetRecipe ->
+            val selectedState = SelectedAppointmentRecipe(
+                recipe = targetRecipe,
+                serviceCount = item.service_count.toInt(),
+                customNote = item.custom_note.orEmpty()
+            )
+            RecipeDetailPreviewSheet(
+                recipe = targetRecipe,
+                selectedRecipeState = selectedState,
+                isReadOnly = true,
+                onDismiss = { previewingRecipeItem = null }
+            )
+        }
     }
 }

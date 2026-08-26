@@ -62,6 +62,7 @@ import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 fun RecipeDetailPreviewSheet(
     recipe: Recipe,
     selectedRecipeState: SelectedAppointmentRecipe? = null,
+    isReadOnly: Boolean = false,
     onDismiss: () -> Unit,
     onToggleSelect: ((Recipe) -> Unit)? = null,
     onUpdateServings: ((recipeId: String, servings: Int) -> Unit)? = null,
@@ -429,7 +430,74 @@ fun RecipeDetailPreviewSheet(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (selectedRecipeState != null) {
+                    if (isReadOnly) {
+                        if (selectedRecipeState != null) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Portions Requested:",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.primaryContainer
+                                        ) {
+                                            Text(
+                                                text = "${selectedRecipeState.serviceCount} portion(s)",
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+
+                                    if (selectedRecipeState.customNote.isNotBlank()) {
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                        Text(
+                                            text = "Client special request:",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "“${selectedRecipeState.customNote}”",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(text = "Close", fontWeight = FontWeight.Bold)
+                        }
+                    } else if (selectedRecipeState != null) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -569,6 +637,7 @@ fun RecipeDetailPreviewSheet(
                         Button(
                             onClick = {
                                 onToggleSelect?.invoke(recipe)
+                                onDismiss()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
