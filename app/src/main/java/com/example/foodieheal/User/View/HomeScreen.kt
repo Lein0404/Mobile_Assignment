@@ -152,7 +152,7 @@ fun  HomeScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Promo Banner
-                    PromoBanner()
+                    PromoBanner(navController)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -413,27 +413,47 @@ fun ChefCard(
 
 
 @Composable
-fun PromoBanner() {
+fun PromoBanner(navController: NavController) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(150.dp),
+        onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(165.dp), // 🌟 Increased height to prevent clipping
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer) // 🌟 Themed Background
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), // 🌟 Refined padding
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Only a few ingredients left?", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onTertiaryContainer) // 🌟 Themed Text
-            Text("You might be surprised what you can cook!", fontSize = 13.sp, color = MaterialTheme.colorScheme.onTertiaryContainer, textAlign = TextAlign.Center) // 🌟 Themed Text
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.height(36.dp)
+            Text(
+                text = "Missing an Ingredient?", 
+                fontWeight = FontWeight.ExtraBold, 
+                fontSize = 17.sp, 
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Help us expand! Register new items and unlock more delicious possibilities.", 
+                fontSize = 13.sp, 
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f), 
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Text("Let's Find Out", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) // 🌟 Themed Text
+                Text(
+                    text = "Contribute Now",
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
