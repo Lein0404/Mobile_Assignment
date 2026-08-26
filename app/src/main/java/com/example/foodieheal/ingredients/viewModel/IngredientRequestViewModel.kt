@@ -34,6 +34,7 @@ data class IngredientRequestUiState(
     val errorMessage: Int? = null,
     val showDeleteDialog: Boolean = false,
     val showStatusFilterDialog: Boolean = false,
+    val isCategoriesExpanded: Boolean = false
 )
 
 data class IngredientRequestItem(
@@ -116,6 +117,10 @@ class IngredientRequestViewModel(
 
     fun refresh() {
         fetchRequests(isRefreshing = true)
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
     
     private fun fetchUnits() {

@@ -25,7 +25,8 @@ data class IngredientsUiState(
     val isRefreshing: Boolean = false,
     val ingredientDetail: IngredientDetailInfo? = null,
     val errorMessage: Int? = null,
-    val isNetworkAvailable: Boolean = true
+    val isNetworkAvailable: Boolean = true,
+    val isCategoriesExpanded: Boolean = false
 )
 
 data class IngredientItem(
@@ -113,6 +114,10 @@ class IngredientsViewModel(
 
     fun onTabChange(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
     fun onSearchQueryChange(query: String) {

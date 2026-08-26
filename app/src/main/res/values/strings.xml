@@ -595,7 +595,6 @@
     <string name="shopping_list_clear_all">Clear all items</string>
     <string name="shopping_list_already_empty">Shopping List is already empty.</string>
     <string name="shopping_list_search_placeholder">Search ingredients here</string>
-    <string name="shopping_list_categories">Categories</string>
     <string name="shopping_list_empty_state">Your shopping list is empty. Add new item now!</string>
     <string name="shopping_list_no_match">No items match your search.</string>
     <string name="shopping_list_clear_checked_dialog_title">Clear Checked Items</string>
@@ -627,11 +626,14 @@
     <string name="ingredients_requests_apply_filter">Apply Filter</string>
     <string name="ingredients_existing_search_placeholder">Search ingredients here</string>
     <string name="ingredients_requests_search_placeholder">Search ingredient requests here</string>
+    <string name="categories_filter_header">Categories Filter</string>
     <string name="ingredients_existing_empty">No ingredients match your search.</string>
     <string name="ingredients_error_fetch_ingredients">Failed to fetch ingredients</string>
     <string name="ingredients_error_fetch_requests">Failed to fetch requests</string>
     <string name="ingredients_error_fetch_details">Failed to fetch ingredient details</string>
     <string name="ingredients_no_internet_requests">Please connect to the internet to view ingredient requests</string>
+    <string name="ingredients_expand_categories">Expand categories filter</string>
+    <string name="ingredients_collapse_categories">Collapse categories filter</string>
 
     <!-- Ingredient Detail -->
     <string name="ingredient_detail_request_processed_title">Request Processed</string>

@@ -249,7 +249,7 @@ fun IngredientRequestsScreen(
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                 Text(
                     text = stringResource(R.string.ingredients_no_internet_requests),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
@@ -270,7 +270,9 @@ fun IngredientRequestsScreen(
             showFilterIcon = true,
             isFilterActive = uiState.selectedStatus != null,
             onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
-            lazyRowState = categoryScrollState
+            lazyRowState = categoryScrollState,
+            isExpanded = uiState.isCategoriesExpanded,
+            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -449,7 +451,9 @@ fun IngredientsExistingScreen(
             searchPlaceholder = stringResource(R.string.ingredients_existing_search_placeholder),
             selectedCategories = uiState.selectedCategories,
             onToggleCategory = { viewModel.toggleCategory(it) },
-            lazyRowState = categoryScrollState
+            lazyRowState = categoryScrollState,
+            isExpanded = uiState.isCategoriesExpanded,
+            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -530,7 +534,7 @@ fun IngredientCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(dimensionResource(id = R.dimen.padding_l))
+                .padding(dimensionResource(id = R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically

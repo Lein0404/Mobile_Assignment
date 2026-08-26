@@ -69,7 +69,7 @@ import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.Payment.local.PayMethodDatabase
 import com.example.foodieheal.Payment.repo.PaymentRepository
-import com.example.foodieheal.ingredients.view.AddShoppingListItemScreen
+import com.example.foodieheal.ingredients.view.ShoppingListAddItemScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
 import com.example.foodieheal.ingredients.view.IngredientRequestFormScreen
 import com.example.foodieheal.ingredients.view.IngredientsMainScreen
@@ -953,7 +953,7 @@ class MainActivity : ComponentActivity() {
                                     ShoppingListScreen(navController)
                                 }
                                 composable(Screen.AddShoppingListItem.route) {
-                                    AddShoppingListItemScreen(navController)
+                                    ShoppingListAddItemScreen(navController)
                                 }
                             }
                         }

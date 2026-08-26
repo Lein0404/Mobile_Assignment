@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.ShoppingListItem
+import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.navigation.Screen
@@ -154,65 +155,15 @@ fun ShoppingListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
-
-            // Search Bar
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = { viewModel.onSearchQueryChange(it) },
-                placeholder = { Text(stringResource(R.string.shopping_list_search_placeholder), style = MaterialTheme.typography.bodyMedium) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-                trailingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = stringResource(R.string.search)
-                    )
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                )
+            IngredientSearchAndFilter(
+                searchQuery = uiState.searchQuery,
+                onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                searchPlaceholder = stringResource(R.string.shopping_list_search_placeholder),
+                selectedCategories = uiState.selectedCategories,
+                onToggleCategory = { viewModel.toggleCategory(it) },
+                isExpanded = uiState.isCategoriesExpanded,
+                onExpandedChange = { viewModel.toggleCategoriesExpanded() }
             )
-
-            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-            Text(
-                text = stringResource(R.string.shopping_list_categories),
-                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-            )
-            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-
-            // Categories chips
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
-            ) {
-                items(IngredientCategory.entries) { category ->
-                    FilterChip(
-                        selected = uiState.selectedCategories.contains(category),
-                        onClick = { viewModel.toggleCategory(category) },
-                        label = {
-                            Text(
-                                text = category.categoryName,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        },
-                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                            labelColor = MaterialTheme.colorScheme.primary,
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        border = null
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

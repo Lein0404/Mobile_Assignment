@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 data class ShoppingListUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val isCategoriesExpanded: Boolean = false,
     val items: List<ShoppingListItem> = emptyList(),
     val filteredItems: List<ShoppingListItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -91,6 +92,10 @@ class ShoppingListViewModel(
             state.copy(selectedCategories = newCategories)
         }
         applyFilters()
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
     private fun applyFilters() {

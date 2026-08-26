@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -215,7 +214,7 @@ fun IngredientDetailScreen(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
-                                        text = displayData.category ?: stringResource(R.string.shopping_list_categories),
+                                        text = displayData.category ?: stringResource(R.string.categories_filter_header),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

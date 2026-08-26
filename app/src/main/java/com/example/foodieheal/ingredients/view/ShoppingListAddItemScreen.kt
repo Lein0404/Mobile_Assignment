@@ -28,6 +28,7 @@ import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
@@ -35,7 +36,7 @@ import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddShoppingListItemScreen(
+fun ShoppingListAddItemScreen(
     navController: NavController,
     ingredientsViewModel: IngredientsViewModel = viewModel(
         factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
@@ -85,71 +86,15 @@ fun AddShoppingListItemScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                // Search Bar
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { ingredientsViewModel.onSearchQueryChange(it) },
-                    placeholder = {
-                        Text(
-                            stringResource(R.string.shopping_list_search_placeholder),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_search),
-                            contentDescription = stringResource(R.string.search)
-                        )
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    )
+                IngredientSearchAndFilter(
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChange = { ingredientsViewModel.onSearchQueryChange(it) },
+                    searchPlaceholder = stringResource(R.string.shopping_list_search_placeholder),
+                    selectedCategories = uiState.selectedCategories,
+                    onToggleCategory = { ingredientsViewModel.toggleCategory(it) },
+                    isExpanded = uiState.isCategoriesExpanded,
+                    onExpandedChange = { ingredientsViewModel.toggleCategoriesExpanded() }
                 )
-
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-                Text(
-                    text = stringResource(R.string.shopping_list_categories),
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-                )
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-
-                // Categories chips
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
-                ) {
-                    items(IngredientCategory.entries) { category ->
-                        FilterChip(
-                            selected = uiState.selectedCategories.contains(category),
-                            onClick = { ingredientsViewModel.toggleCategory(category) },
-                            label = {
-                                Text(
-                                    text = category.categoryName,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                labelColor = MaterialTheme.colorScheme.primary,
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            border = null
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                 if (uiState.isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
