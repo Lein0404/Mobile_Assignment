@@ -74,6 +74,17 @@ class ChefRegisterRepository(
         client.postgrest.from("Chef").insert(chef)
     }
 
+    suspend fun getChefByUserId(userId: String): Chef? {
+        return try {
+            client.postgrest.from("Chef").select {
+                filter { eq("chefId", userId) }
+            }.decodeSingleOrNull<Chef>()
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching chef by userId: ${e.message}")
+            null
+        }
+    }
+
     suspend fun updateChef(chef: Chef) {
         client.postgrest.from("Chef").update(chef) {
             filter {

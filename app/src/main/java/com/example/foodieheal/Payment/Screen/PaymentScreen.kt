@@ -155,12 +155,12 @@ fun PaymentScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = paymentState.errorMessage ?: "Error loading appointment.",
+                        text = paymentState.errorMessage ?: stringResource(R.string.error_loading_appointment),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Button(onClick = { paymentViewModel.loadAppointmentById(appointmentId) }) {
-                        Text("Retry")
+                        Text(stringResource(R.string.btn_retry))
                     }
                 }
             } else {
@@ -185,7 +185,7 @@ fun PaymentScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Checkout & Payment", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_checkout_payment), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -230,7 +230,7 @@ fun PaymentScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "No internet connection. Please connect to proceed with payment.",
+                                    text = stringResource(R.string.payment_offline_banner),
                                     color = MaterialTheme.colorScheme.onErrorContainer,
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -243,7 +243,7 @@ fun PaymentScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Your in-app wallet is currently inactive. Please top up your wallet first or select a card.",
+                                text = stringResource(R.string.wallet_inactive_warning),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(8.dp)
@@ -256,7 +256,7 @@ fun PaymentScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Insufficient wallet balance (RM ${String.format(Locale.US, "%.2f", walletBalance ?: 0.0)}). Please top up or select a card.",
+                                text = stringResource(R.string.wallet_insufficient_warning_format, String.format(Locale.US, "RM %.2f", walletBalance ?: 0.0)),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(8.dp)
@@ -270,7 +270,7 @@ fun PaymentScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Total Amount",
+                            text = stringResource(R.string.label_total_amount),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -287,7 +287,7 @@ fun PaymentScreen(
                             paymentViewModel.processPayment(
                                 selectedMethod = methodState.selectedMethod,
                                 onSuccess = { transactionId ->
-                                    Toast.makeText(context, "Payment Successful!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.toast_payment_success, Toast.LENGTH_SHORT).show()
                                     onPaymentSuccess(transactionId)
                                 },
                                 onError = { error ->
@@ -309,10 +309,11 @@ fun PaymentScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
+                            val formattedPrice = String.format(Locale.US, "RM %.2f", totalPrice)
                             val buttonLabel = if (isSelectedWallet) {
-                                "Pay RM ${String.format(Locale.US, "%.2f", totalPrice)} via Wallet"
+                                stringResource(R.string.pay_amount_via_wallet_format, formattedPrice)
                             } else {
-                                "Pay RM ${String.format(Locale.US, "%.2f", totalPrice)}"
+                                stringResource(R.string.pay_amount_format, formattedPrice)
                             }
                             Text(
                                 text = buttonLabel,
@@ -347,7 +348,7 @@ fun PaymentScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Order Summary",
+                        text = stringResource(R.string.title_order_summary),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -371,7 +372,7 @@ fun PaymentScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total Price", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.label_total_price), fontWeight = FontWeight.Bold)
                         Text(
                             String.format(Locale.US, "RM %.2f", totalPrice),
                             fontWeight = FontWeight.Bold,
@@ -383,7 +384,7 @@ fun PaymentScreen(
 
             // Payment Options Selector
             Text(
-                text = "Select Payment Method",
+                text = stringResource(R.string.title_select_payment_method),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface
@@ -429,7 +430,7 @@ fun PaymentScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("+ Add New Credit / Debit Card")
+                        Text(stringResource(R.string.btn_add_new_card))
                     }
                 }
             }

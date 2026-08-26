@@ -111,7 +111,7 @@ fun WalletScreen(
                 if (isOnline) {
                     viewModel.loadWalletData(userId, isRefresh = true)
                 } else {
-                    Toast.makeText(context, "Cannot refresh while offline.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.wallet_offline_cannot_refresh, Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
@@ -146,7 +146,7 @@ fun WalletScreen(
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Text(
-                                        text = "Offline Mode: Showing cached balance and transactions. Reconnect to top up.",
+                                        text = stringResource(R.string.wallet_offline_banner),
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                         style = MaterialTheme.typography.bodySmall
                                     )
@@ -163,7 +163,7 @@ fun WalletScreen(
                                 if (isOnline) {
                                     showTopUpSheet = true
                                 } else {
-                                    Toast.makeText(context, "Cannot top up while offline.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.wallet_offline_cannot_top_up, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )
@@ -693,7 +693,7 @@ fun TopUpBottomSheet(
                                     modifier = Modifier.fillMaxSize()
                                 ) {
                                     Text(
-                                        text = "RM ${preset.toInt()}",
+                                        text = stringResource(R.string.currency_rm_int, preset.toInt()),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         maxLines = 1,
@@ -720,7 +720,7 @@ fun TopUpBottomSheet(
                 },
                 label = { Text(stringResource(R.string.wallet_custom_amount_label)) },
                 placeholder = { Text(stringResource(R.string.wallet_custom_amount_placeholder)) },
-                prefix = { Text("RM ", fontWeight = FontWeight.Bold) },
+                prefix = { Text(stringResource(R.string.currency_prefix), fontWeight = FontWeight.Bold) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),

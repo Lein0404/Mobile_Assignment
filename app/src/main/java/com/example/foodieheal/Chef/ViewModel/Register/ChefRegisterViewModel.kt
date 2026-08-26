@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
@@ -21,6 +22,15 @@ class ChefRegisterViewModel(
     private val repository: ChefRegisterRepository = ChefRegisterRepository(),
     private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
+
+    var isUpgradeFlow by mutableStateOf(false)
+        private set
+
+    var loggedInUserId by mutableStateOf("")
+        private set
+
+    var loggedInUserEmail by mutableStateOf("")
+        private set
 
     var name by mutableStateOf("")
     var gender by mutableStateOf("")
@@ -85,13 +95,13 @@ class ChefRegisterViewModel(
         get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getAgeErrorRes(age) else null
 
     val passwordErrorRes: Int?
-        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getPasswordErrorRes(password) else null
+        get() = if (showBasicInfoErrorMessage && !isUpgradeFlow) ChefRegisterValidate.getPasswordErrorRes(password) else null
 
     val confirmPasswordErrorRes: Int?
-        get() = if (showBasicInfoErrorMessage) ChefRegisterValidate.getConfirmPasswordErrorRes(password, confirmPassword) else null
+        get() = if (showBasicInfoErrorMessage && !isUpgradeFlow) ChefRegisterValidate.getConfirmPasswordErrorRes(password, confirmPassword) else null
 
     val emailErrorRes: Int?
-        get() = if (showContactErrorMessage) {
+        get() = if (showContactErrorMessage && !isUpgradeFlow) {
             when {
                 isEmailTaken -> R.string.error_email_already_exists
                 else -> ChefRegisterValidate.getEmailErrorRes(email)
@@ -124,6 +134,27 @@ class ChefRegisterViewModel(
         if (showProfilePictureErrorMessage && uri != null) {
             showProfilePictureErrorMessage = false
         }
+    }
+
+    fun initForUpgrade(user: User?, email: String, userId: String) {
+        resetRegistrationFlow()
+        isUpgradeFlow = true
+        loggedInUserId = userId
+        loggedInUserEmail = email
+
+        name = user?.name.orEmpty()
+        gender = user?.gender.orEmpty()
+        age = if ((user?.age ?: 0) > 0) user!!.age.toString() else ""
+        this.email = email
+        password = ""
+        confirmPassword = ""
+    }
+
+    fun initForDirectRegistration() {
+        resetRegistrationFlow()
+        isUpgradeFlow = false
+        loggedInUserId = ""
+        loggedInUserEmail = ""
     }
 
     fun canProceedReviewPage(): Boolean {
@@ -169,10 +200,54 @@ class ChefRegisterViewModel(
                 repository.signOut()
 
                 isSubmitting = false
-                clearData()
+                resetRegistrationFlow()
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("ChefRegister", "Registration error trace", e)
+                isSubmitting = false
+                errorMessage = repository.mapRegistrationError(e.message)
+            }
+        }
+    }
+
+    fun upgradeChef(context: Context, onSuccess: () -> Unit) {
+        isSubmitting = true
+        errorMessage = null
+
+        viewModelScope.launch {
+            try {
+                var imageUrl = ""
+                selectedImageUri?.let { uri ->
+                    imageUrl = repository.uploadProfileImage(context, uri)
+                }
+
+                val newChef = Chef(
+                    id = repository.generateCustomChefId(),
+                    chefId = loggedInUserId,
+                    name = name.trim(),
+                    gender = gender,
+                    age = age.trim().toIntOrNull() ?: 0,
+                    phoneNumber = phoneNumber.trim(),
+                    email = loggedInUserEmail.trim(),
+                    address = address.trim(),
+                    state = state,
+                    postcode = postcode.trim(),
+                    experience = experience.trim().toIntOrNull() ?: 0,
+                    description = description.trim(),
+                    profilePictureUrl = imageUrl,
+                    averagerating = null,
+                    Pricing = null,
+                    status = "Pending"
+                )
+
+                repository.insertChef(newChef)
+                // Note: In upgrade flow, we DO NOT sign out the user!
+
+                isSubmitting = false
+                resetRegistrationFlow()
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("ChefUpgrade", "Upgrade error trace", e)
                 isSubmitting = false
                 errorMessage = repository.mapRegistrationError(e.message)
             }
@@ -233,10 +308,10 @@ class ChefRegisterViewModel(
     fun isValidName(): Boolean = ChefRegisterValidate.isValidName(name)
     fun isValidAge(): Boolean = ChefRegisterValidate.isValidAge(age)
     fun isValidGender(): Boolean = ChefRegisterValidate.isValidGender(gender)
-    fun isValidPassword(): Boolean = ChefRegisterValidate.isValidPassword(password)
+    fun isValidPassword(): Boolean = if (isUpgradeFlow) true else ChefRegisterValidate.isValidPassword(password)
     fun isPasswordMatched(): Boolean =
-        ChefRegisterValidate.isPasswordMatched(password, confirmPassword)
-    fun isValidEmail(): Boolean = ChefRegisterValidate.isValidEmail(email)
+        if (isUpgradeFlow) true else ChefRegisterValidate.isPasswordMatched(password, confirmPassword)
+    fun isValidEmail(): Boolean = if (isUpgradeFlow) true else ChefRegisterValidate.isValidEmail(email)
     fun isValidPhoneNumber(): Boolean = ChefRegisterValidate.isValidPhoneNumber(phoneNumber)
     fun isValidAddress(): Boolean = ChefRegisterValidate.isValidAddress(address)
     fun isValidState(): Boolean = ChefRegisterValidate.isValidState(state)
@@ -246,12 +321,17 @@ class ChefRegisterViewModel(
     fun isValidProfilePicture(): Boolean =
         ChefRegisterValidate.isValidProfilePicture(selectedImageUri)
 
-    fun canProceedBasicInfo(): Boolean = ChefRegisterValidate.canProceedBasicInfo(
-        name, gender, age, password, confirmPassword
-    )
+    fun canProceedBasicInfo(): Boolean = if (isUpgradeFlow) {
+        ChefRegisterValidate.canProceedBasicInfoUpgrade(name, gender, age)
+    } else {
+        ChefRegisterValidate.canProceedBasicInfo(name, gender, age, password, confirmPassword)
+    }
 
-    fun canProceedContactInfo(): Boolean =
+    fun canProceedContactInfo(): Boolean = if (isUpgradeFlow) {
+        phoneNumber.isNotBlank()
+    } else {
         ChefRegisterValidate.canProceedContactInfo(email, phoneNumber)
+    }
 
     fun canProceedAddressInfo(): Boolean =
         ChefRegisterValidate.canProceedAddressInfo(address, postcode, state)
@@ -261,29 +341,39 @@ class ChefRegisterViewModel(
 
     fun validateBasicInfo(): Boolean {
         showBasicInfoErrorMessage = true
-        return ChefRegisterValidate.validateBasicInfo(
-            name, gender, age, password, confirmPassword
-        )
+        return if (isUpgradeFlow) {
+            ChefRegisterValidate.validateBasicInfoUpgrade(name, gender, age)
+        } else {
+            ChefRegisterValidate.validateBasicInfo(
+                name, gender, age, password, confirmPassword
+            )
+        }
     }
 
     fun validateContactInfo(onSuccess: () -> Unit) {
         showContactErrorMessage = true
         isEmailTaken = false
-        if (ChefRegisterValidate.validateContactInfo(email, phoneNumber)) {
-            viewModelScope.launch {
-                isCheckingContact = true
-                try {
-                    val alreadyExists = repository.isEmailRegistered(email)
-                    if (alreadyExists) {
-                        isEmailTaken = true
-                    } else {
+        if (isUpgradeFlow) {
+            if (ChefRegisterValidate.isValidPhoneNumber(phoneNumber)) {
+                onSuccess()
+            }
+        } else {
+            if (ChefRegisterValidate.validateContactInfo(email, phoneNumber)) {
+                viewModelScope.launch {
+                    isCheckingContact = true
+                    try {
+                        val alreadyExists = repository.isEmailRegistered(email)
+                        if (alreadyExists) {
+                            isEmailTaken = true
+                        } else {
+                            onSuccess()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ChefRegister", "Error checking email", e)
                         onSuccess()
+                    } finally {
+                        isCheckingContact = false
                     }
-                } catch (e: Exception) {
-                    Log.e("ChefRegister", "Error checking email", e)
-                    onSuccess()
-                } finally {
-                    isCheckingContact = false
                 }
             }
         }
@@ -315,5 +405,8 @@ class ChefRegisterViewModel(
         isCheckingContact = false
         errorMessage = null
         selectedImageUri = null
+        isUpgradeFlow = false
+        loggedInUserId = ""
+        loggedInUserEmail = ""
     }
 }

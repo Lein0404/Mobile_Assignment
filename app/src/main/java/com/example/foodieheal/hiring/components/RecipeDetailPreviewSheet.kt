@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -167,7 +168,7 @@ fun RecipeDetailPreviewSheet(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 painter = painterResource(id = R.drawable.cancel),
-                                contentDescription = "Close",
+                                contentDescription = stringResource(R.string.btn_close),
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
@@ -213,7 +214,7 @@ fun RecipeDetailPreviewSheet(
                             )
                         }
                         Text(
-                            text = "By $authorName",
+                            text = stringResource(R.string.by_author_format, authorName),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -228,13 +229,13 @@ fun RecipeDetailPreviewSheet(
                 ) {
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.ic_fire,
-                        label = "Calories",
+                        label = stringResource(R.string.label_calories_badge),
                         value = if (recipe.calories > 0) "${recipe.calories} kcal" else "--",
                         modifier = Modifier.weight(1f)
                     )
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.ic_clock,
-                        label = "Prep Time",
+                        label = stringResource(R.string.label_prep_time_badge),
                         value = if (recipe.time > 0) "${recipe.time} mins" else "--",
                         modifier = Modifier.weight(1f)
                     )
@@ -248,13 +249,13 @@ fun RecipeDetailPreviewSheet(
                 ) {
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.skill,
-                        label = "Skill",
+                        label = stringResource(R.string.label_skill_badge),
                         value = recipe.cookingSkill.ifBlank { "Standard" },
                         modifier = Modifier.weight(1f)
                     )
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.dollar_symbol,
-                        label = "Budget",
+                        label = stringResource(R.string.label_budget_badge),
                         value = if (recipe.estimatedBudget.isNotBlank()) "RM ${recipe.estimatedBudget}" else "--",
                         modifier = Modifier.weight(1f)
                     )
@@ -263,7 +264,7 @@ fun RecipeDetailPreviewSheet(
                 if (recipe.recipeDescription.isNotBlank()) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Description",
+                        text = stringResource(R.string.label_description),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -285,7 +286,7 @@ fun RecipeDetailPreviewSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Ingredients",
+                            text = stringResource(R.string.label_ingredients),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -295,7 +296,7 @@ fun RecipeDetailPreviewSheet(
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                         ) {
                             Text(
-                                text = "${recipe.ingredients.size} items",
+                                text = stringResource(R.string.ingredients_items_count, recipe.ingredients.size),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -362,7 +363,7 @@ fun RecipeDetailPreviewSheet(
                 if (recipe.recipeStep.isNotBlank()) {
                     Spacer(modifier = Modifier.height(18.dp))
                     Text(
-                        text = "Cooking Steps",
+                        text = stringResource(R.string.label_cooking_steps),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -447,7 +448,7 @@ fun RecipeDetailPreviewSheet(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Portions Requested:",
+                                            text = stringResource(R.string.portions_requested_label),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -457,7 +458,7 @@ fun RecipeDetailPreviewSheet(
                                             color = MaterialTheme.colorScheme.primaryContainer
                                         ) {
                                             Text(
-                                                text = "${selectedRecipeState.serviceCount} portion(s)",
+                                                text = stringResource(R.string.portion_count_format, selectedRecipeState.serviceCount),
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold,
@@ -469,7 +470,7 @@ fun RecipeDetailPreviewSheet(
                                     if (selectedRecipeState.customNote.isNotBlank()) {
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                         Text(
-                                            text = "Client special request:",
+                                            text = stringResource(R.string.client_special_request_label),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -495,7 +496,7 @@ fun RecipeDetailPreviewSheet(
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
-                            Text(text = "Close", fontWeight = FontWeight.Bold)
+                            Text(text = stringResource(R.string.btn_close), fontWeight = FontWeight.Bold)
                         }
                     } else if (selectedRecipeState != null) {
                         Row(
@@ -504,7 +505,7 @@ fun RecipeDetailPreviewSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Portions for Appointment:",
+                                text = stringResource(R.string.portions_for_appointment_label),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -581,7 +582,7 @@ fun RecipeDetailPreviewSheet(
                             },
                             placeholder = {
                                 Text(
-                                    text = "Custom request for chef (e.g. less spicy)",
+                                    text = stringResource(R.string.custom_request_chef_placeholder),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
@@ -616,7 +617,7 @@ fun RecipeDetailPreviewSheet(
                                 ),
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
                             ) {
-                                Text(text = "Remove Dish", fontWeight = FontWeight.SemiBold)
+                                Text(text = stringResource(R.string.remove_dish_btn), fontWeight = FontWeight.SemiBold)
                             }
 
                             Button(
@@ -630,7 +631,7 @@ fun RecipeDetailPreviewSheet(
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             ) {
-                                Text(text = "Done", fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.done), fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
@@ -655,7 +656,7 @@ fun RecipeDetailPreviewSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Select this Recipe for Appointment",
+                                text = stringResource(R.string.select_recipe_for_appointment_btn),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
                             )

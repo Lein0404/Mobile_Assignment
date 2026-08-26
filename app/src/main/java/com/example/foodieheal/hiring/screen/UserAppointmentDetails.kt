@@ -137,7 +137,7 @@ fun UserAppointmentDetailScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "ID: $appointmentId",
+                            text = stringResource(R.string.appointment_id_format, appointmentId),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.8f),
                             maxLines = 1,
@@ -185,7 +185,7 @@ fun UserAppointmentDetailScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Actions require internet",
+                            text = stringResource(R.string.details_offline_mode),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -487,7 +487,7 @@ fun UserAppointmentDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Attached Dishes / Meal Plan",
+                            text = stringResource(R.string.attached_dishes_meal_plan),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -503,7 +503,11 @@ fun UserAppointmentDetailScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    text = "${attachedRecipes.size} ${if (attachedRecipes.size == 1) "dish" else "dishes"}",
+                                    text = if (attachedRecipes.size == 1) {
+                                        stringResource(R.string.dish_count_singular)
+                                    } else {
+                                        stringResource(R.string.dish_count_plural, attachedRecipes.size)
+                                    },
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -540,7 +544,7 @@ fun UserAppointmentDetailScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "No specific recipes attached to this booking",
+                                text = stringResource(R.string.no_recipes_attached_booking),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -584,7 +588,7 @@ fun UserAppointmentDetailScreen(
 
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                text = recipe?.recipeName ?: "Recipe #${item.recipeId}",
+                                                text = recipe?.recipeName ?: stringResource(R.string.recipe_fallback_title, item.recipeId),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface,
@@ -605,7 +609,7 @@ fun UserAppointmentDetailScreen(
                                                     color = MaterialTheme.colorScheme.primaryContainer
                                                 ) {
                                                     Text(
-                                                        text = "${item.service_count.toInt()} portion(s)",
+                                                        text = stringResource(R.string.portion_count_format, item.service_count.toInt()),
                                                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.Bold,
@@ -660,7 +664,7 @@ fun UserAppointmentDetailScreen(
                                             ) {
                                                 Icon(
                                                     painter = painterResource(R.drawable.ic_recipe),
-                                                    contentDescription = "View Details",
+                                                    contentDescription = stringResource(R.string.view_details),
                                                     tint = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.size(16.dp)
                                                 )

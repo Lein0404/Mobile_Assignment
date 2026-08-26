@@ -79,7 +79,8 @@ fun  HomeScreen(
 
     LaunchedEffect(Unit) {
         recipeViewModel.bookmarkMessage.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
 
