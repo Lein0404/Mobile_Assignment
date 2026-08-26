@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,11 +63,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -96,6 +96,8 @@ fun RecipeBookmarkSelectorSheet(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
+
+    var previewingRecipe by remember { mutableStateOf<Recipe?>(null) }
 
     val tabs = listOf("Popular", "My Recipes", "Bookmarks")
     var localSelectedTab by remember { mutableIntStateOf(recipeViewModel?.activeTab ?: 0) }
@@ -230,7 +232,7 @@ fun RecipeBookmarkSelectorSheet(
                             text = {
                                 Text(
                                     text = title,
-                                    fontSize = 14.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = if (localSelectedTab == index) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
@@ -238,7 +240,7 @@ fun RecipeBookmarkSelectorSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Search Bar
@@ -247,11 +249,11 @@ fun RecipeBookmarkSelectorSheet(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(48.dp),
                 placeholder = {
                     Text(
                         text = "Search recipes by name...",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
@@ -260,7 +262,7 @@ fun RecipeBookmarkSelectorSheet(
                         painter = painterResource(id = R.drawable.search),
                         contentDescription = "Search",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 },
                 trailingIcon = {
@@ -270,15 +272,16 @@ fun RecipeBookmarkSelectorSheet(
                                 painter = painterResource(id = R.drawable.cancel),
                                 contentDescription = "Clear",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
                 },
                 singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -287,39 +290,39 @@ fun RecipeBookmarkSelectorSheet(
                 )
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Course Filter Chips (All, Breakfast, Lunch, Dinner, Snack)
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(courses) { course ->
                     val isSelected = selectedCourse == course
                     Surface(
                         onClick = { selectedCourse = course },
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ) {
                         Text(
                             text = course,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Recipe List Content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 180.dp, max = 380.dp)
+                    .heightIn(min = 140.dp, max = 400.dp)
             ) {
                 when {
                     isDataLoading && currentDataList.isEmpty() -> {
@@ -334,7 +337,7 @@ fun RecipeBookmarkSelectorSheet(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -342,18 +345,18 @@ fun RecipeBookmarkSelectorSheet(
                                 painter = painterResource(id = R.drawable.bookmark),
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(44.dp)
+                                modifier = Modifier.size(36.dp)
                             )
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No recipes found in ${tabs.getOrElse(localSelectedTab) { "this tab" }}",
+                                text = "No recipes in ${tabs.getOrElse(localSelectedTab) { "this tab" }}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Explore and bookmark recipes in the Recipes tab to easily attach them here.",
+                                text = "Explore and bookmark recipes to attach them here.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -364,7 +367,7 @@ fun RecipeBookmarkSelectorSheet(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -385,7 +388,7 @@ fun RecipeBookmarkSelectorSheet(
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(filteredRecipes, key = { it.recipe_id ?: it.hashCode().toString() }) { recipe ->
                                 val selectedItem = selectedRecipes.find { it.recipe.recipe_id == recipe.recipe_id }
@@ -396,6 +399,7 @@ fun RecipeBookmarkSelectorSheet(
                                     isSelected = isSelected,
                                     selectedRecipeState = selectedItem,
                                     onToggle = { onToggleSelect(recipe) },
+                                    onViewDetails = { previewingRecipe = recipe },
                                     onUpdateServings = { servings ->
                                         recipe.recipe_id?.let { onUpdateServings(it, servings) }
                                     },
@@ -409,14 +413,14 @@ fun RecipeBookmarkSelectorSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Action Button
             Button(
                 onClick = onDismiss,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(46.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -431,22 +435,35 @@ fun RecipeBookmarkSelectorSheet(
             }
         }
     }
+
+    // Recipe Details Sheet Modal
+    previewingRecipe?.let { targetRecipe ->
+        val selectedState = selectedRecipes.find { it.recipe.recipe_id == targetRecipe.recipe_id }
+        RecipeDetailPreviewSheet(
+            recipe = targetRecipe,
+            selectedRecipeState = selectedState,
+            onDismiss = { previewingRecipe = null },
+            onToggleSelect = { recipe -> onToggleSelect(recipe) },
+            onUpdateServings = { recipeId, servings -> onUpdateServings(recipeId, servings) },
+            onUpdateNote = { recipeId, note -> onUpdateNote(recipeId, note) }
+        )
+    }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RecipeSelectableCard(
     recipe: Recipe,
     isSelected: Boolean,
     selectedRecipeState: SelectedAppointmentRecipe?,
     onToggle: () -> Unit,
+    onViewDetails: () -> Unit,
     onUpdateServings: (Int) -> Unit,
     onUpdateNote: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggle() },
-        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
@@ -460,50 +477,58 @@ fun RecipeSelectableCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 1.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Checkbox
                 Checkbox(
                     checked = isSelected,
                     onCheckedChange = { onToggle() },
+                    modifier = Modifier.size(24.dp),
                     colors = CheckboxDefaults.colors(
                         checkedColor = MaterialTheme.colorScheme.primary,
                         uncheckedColor = MaterialTheme.colorScheme.outline
                     )
                 )
 
-                // Thumbnail Image
+                // Thumbnail Image (Clickable for details)
                 AsyncImage(
                     model = recipe.recipeImageUrl,
                     contentDescription = recipe.recipeName,
                     modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { onViewDetails() },
                     contentScale = ContentScale.Crop,
                     error = painterResource(R.drawable.ic_recipe),
                     placeholder = painterResource(R.drawable.ic_recipe)
                 )
 
-                // Recipe details
-                Column(modifier = Modifier.weight(1f)) {
+                // Recipe details (Clickable for full preview)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onViewDetails() }
+                ) {
                     Text(
                         text = recipe.recipeName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp
                     )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         if (recipe.recipeCourse.isNotBlank()) {
                             Surface(
@@ -512,9 +537,12 @@ fun RecipeSelectableCard(
                             ) {
                                 Text(
                                     text = recipe.recipeCourse,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
@@ -523,18 +551,37 @@ fun RecipeSelectableCard(
                             Text(
                                 text = "${recipe.calories} kcal",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
 
                         if (recipe.time > 0) {
                             Text(
-                                text = "• ${recipe.time} mins",
+                                text = "• ${recipe.time}m",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }
+                }
+
+                // Info / Details Button
+                IconButton(
+                    onClick = onViewDetails,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_recipe),
+                        contentDescription = "View Details",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
 

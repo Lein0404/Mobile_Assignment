@@ -2,6 +2,7 @@ package com.example.foodieheal.hiring.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,10 +29,11 @@ import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.Chef.healthPreferencesList
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.components.RecipeBookmarkSelectorSheet
-import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
+import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
@@ -62,6 +63,7 @@ fun AddAppointmentFormScreen(
     val focusManager = LocalFocusManager.current
 
     var showBookmarkSelectorSheet by remember { mutableStateOf(false) }
+    var previewingRecipeInForm by remember { mutableStateOf<Recipe?>(null) }
 
     // Fetch user's bookmarks
     LaunchedEffect(currentUserId) {
@@ -450,7 +452,9 @@ fun AddAppointmentFormScreen(
                                 selectedRecipes.forEach { item ->
                                     val recipe = item.recipe
                                     Surface(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { previewingRecipeInForm = recipe },
                                         shape = RoundedCornerShape(10.dp),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
@@ -488,6 +492,18 @@ fun AddAppointmentFormScreen(
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = { previewingRecipeInForm = recipe },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.ic_recipe),
+                                                    contentDescription = "View Details",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(16.dp)
                                                 )
                                             }
 
@@ -710,6 +726,19 @@ fun AddAppointmentFormScreen(
             onUpdateServings = { recipeId, servings -> viewModel.updateRecipeServings(recipeId, servings) },
             onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) },
             onDismiss = { showBookmarkSelectorSheet = false }
+        )
+    }
+
+    // Recipe Details Sheet Modal from main form
+    previewingRecipeInForm?.let { targetRecipe ->
+        val selectedState = selectedRecipes.find { it.recipe.recipe_id == targetRecipe.recipe_id }
+        RecipeDetailPreviewSheet(
+            recipe = targetRecipe,
+            selectedRecipeState = selectedState,
+            onDismiss = { previewingRecipeInForm = null },
+            onToggleSelect = { recipe -> viewModel.toggleRecipeSelection(recipe) },
+            onUpdateServings = { recipeId, servings -> viewModel.updateRecipeServings(recipeId, servings) },
+            onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) }
         )
     }
 }
