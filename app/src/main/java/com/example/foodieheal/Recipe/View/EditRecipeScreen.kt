@@ -102,6 +102,7 @@ fun EditRecipeScreen(
         derivedStateOf {
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             totalTime.isNotBlank() &&
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() &&
             ingredients.isNotEmpty() &&
@@ -293,6 +294,15 @@ fun EditRecipeScreen(
                                 )
                             }
                         )
+                        // 🌟 Added time limit hint
+                        if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
+                            Text(
+                                text = "Time cannot exceed 24 hours.",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         LabelText("Calories (kcal)")

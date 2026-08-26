@@ -715,201 +715,188 @@ fun RecipeCardItem(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.height(310.dp).clickable { onClick() } // 🌟 Increased height for 2-line names + Author
+        modifier = modifier.height(260.dp).clickable { onClick() } // 🌟 Reduced height to feel compact
     ) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(MaterialTheme.colorScheme.surfaceVariant)) { // 🌟 Optimized image height
-                if (!recipe.recipeImageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = recipe.recipeImageUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    // 🌟 Artistic Placeholder
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)), // 🌟 Themed Background
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val iconRes = when (recipe.recipeCourse.lowercase()) {
-                            "breakfast" -> R.drawable.ic_breakfast
-                            "lunch" -> R.drawable.ic_lunch
-                            "dinner" -> R.drawable.ic_dinner
-                            else -> R.drawable.ic_snack
-                        }
-                        Image(
-                            painter = painterResource(id = iconRes),
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween // 🌟 Distributes space naturally
+        ) {
+            Column {
+                Box(modifier = Modifier.fillMaxWidth().height(135.dp).background(MaterialTheme.colorScheme.surfaceVariant)) { // 🌟 Shorter image
+                    if (!recipe.recipeImageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = recipe.recipeImageUrl,
                             contentDescription = null,
-                            modifier = Modifier.size(60.dp),
-                            alpha = 0.3f,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiaryContainer) // 🌟 Themed Icon
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val iconRes = when (recipe.recipeCourse.lowercase()) {
+                                "breakfast" -> R.drawable.ic_breakfast
+                                "lunch" -> R.drawable.ic_lunch
+                                "dinner" -> R.drawable.ic_dinner
+                                else -> R.drawable.ic_snack
+                            }
+                            Image(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(50.dp),
+                                alpha = 0.3f,
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiaryContainer)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(26.dp)
+                    ) {
+                        IconButton(onClick = onBookmarkClick) {
+                            Image(
+                                painter = painterResource(
+                                    id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
+                                ),
+                                contentDescription = "Bookmark",
+                                modifier = Modifier.size(14.dp),
+                                colorFilter = ColorFilter.tint(
+                                    if (isBookmarked) MaterialTheme.colorScheme.primary 
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(26.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_recipe),
+                            contentDescription = "Add to Planner",
+                            modifier = Modifier.padding(5.dp).clickable { onAddClick() },
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
-
-                // 🌟 Always show bookmark icon, even if showMenu is true
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
-                    modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
-                ) {
-                    IconButton(onClick = onBookmarkClick) {
-                        Image(
-                            painter = painterResource(
-                                id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
-                            ),
-                            contentDescription = "Bookmark",
-                            modifier = Modifier.size(16.dp),
-                            colorFilter = ColorFilter.tint(
-                                if (isBookmarked) MaterialTheme.colorScheme.primary 
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            ) // 🌟 Themed Icon matching Chef Bookmark logic
+                
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = recipe.recipeName,
+                            fontSize = 13.sp, // 🌟 Slightly smaller font for tighter look
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
-                    modifier = Modifier.align(Alignment.TopStart).padding(10.dp).size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_recipe),
-                        contentDescription = "Add to Planner",
-                        modifier = Modifier.padding(6.dp).clickable { onAddClick() },
-                        tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
-                    )
-                }
-            }
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = recipe.recipeName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis, // 🌟 Limit to 2 lines with ...
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (showMenu) {
-                        Box {
-                            IconButton(onClick = { expanded = true }, modifier = Modifier.size(20.dp)) {
+                        if (showMenu) {
+                            IconButton(onClick = { expanded = true }, modifier = Modifier.size(18.dp)) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_vertical_more),
                                     contentDescription = "Menu",
-                                    tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Edit Recipe") },
-                                    onClick = {
-                                        expanded = false
-                                        onEditClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) }, // 🌟 Themed Error
-                                    onClick = {
-                                        expanded = false
-                                        onDeleteClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
-                                )
+                                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                    DropdownMenuItem(
+                                        text = { Text("Edit Recipe", fontSize = 12.sp) },
+                                        onClick = { expanded = false; onEditClick() },
+                                        leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(16.dp)) }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error, fontSize = 12.sp) },
+                                        onClick = { expanded = false; onDeleteClick() },
+                                        leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp)) }
+                                    )
+                                }
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(6.dp)) // 🌟 Tighter spacing
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_fire), 
-                            contentDescription = null, 
-                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "${recipe.calories} kcal", 
-                            fontSize = 11.sp, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 4.dp)
-                        ) 
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_clock), 
-                            contentDescription = null, 
-                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${recipe.time} mins", 
-                            fontSize = 11.sp, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
+            }
 
-                    // 🌟 Use the live name from currentUser if this is the user's own recipe
-                    val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
-                        currentUser.name
-                    } else {
-                        recipe.authorInfo?.name ?: recipe.authorName ?: "Chef"
+            Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
+                // 🌟 Compact Stats Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_fire),
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${recipe.calories} kcal",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     
-                    if (!authorToDisplay.isNullOrEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.author),
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = authorToDisplay,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(start = 4.dp).weight(1f, fill = false)
-                            )
-                        }
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_clock),
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${recipe.time} mins",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 🌟 Author Row
+                val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
+                    currentUser.name
+                } else {
+                    recipe.authorInfo?.name ?: recipe.authorName ?: "Chef"
+                }
+
+                if (!authorToDisplay.isNullOrEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.author),
+                            contentDescription = null,
+                            modifier = Modifier.size(10.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = authorToDisplay,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }
+
 }
 
 @Composable
