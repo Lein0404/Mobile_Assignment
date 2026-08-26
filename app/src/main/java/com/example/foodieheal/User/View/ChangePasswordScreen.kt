@@ -106,9 +106,11 @@ fun ChangePasswordScreen(navController: NavController) {
                 label = "Current Password",
                 value = oldPassword,
                 onValueChange = { 
-                    oldPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        oldPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
                 // 🌟 FIX: Only looks at password-specific errors now
                 isError = authViewModel.passwordErrorMessage.isNotEmpty(),
@@ -122,9 +124,11 @@ fun ChangePasswordScreen(navController: NavController) {
                 label = "New Password",
                 value = newPassword,
                 onValueChange = { 
-                    newPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        newPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
                 // 🌟 FIX: Wait for server result so it pops up at the exact same time as the current password error
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid,
@@ -138,9 +142,11 @@ fun ChangePasswordScreen(navController: NavController) {
                 label = "Confirm New Password",
                 value = confirmPassword,
                 onValueChange = { 
-                    confirmPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        confirmPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
                 // 🌟 FIX: Wait for server result so it pops up at the exact same time as the others
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch,
@@ -203,8 +209,15 @@ fun PasswordInputField(
             // 🌟 Increased font size for better readability
             textStyle = TextStyle(fontSize = 16.sp),
             supportingText = {
-                if (supportingText != null) {
-                    Text(text = supportingText, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        if (supportingText != null) {
+                            Text(text = supportingText, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                        Text("${value.length}/20", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             },
             shape = RoundedCornerShape(12.dp),
