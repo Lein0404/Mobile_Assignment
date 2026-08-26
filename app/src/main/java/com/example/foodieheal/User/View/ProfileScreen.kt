@@ -895,7 +895,8 @@ fun ProfileScreen(
     if (showChefFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showChefFilterSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             ChefFilterBottomSheet(
                 filterState = chefFilterState,
