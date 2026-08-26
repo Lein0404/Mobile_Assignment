@@ -575,8 +575,9 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 }
 
                 // 2. ONLY proceed if the password is correct AND meets our 8-20 rule
-                if (newPassword.length !in 8..20) {
-                    errorMessage = "Password must be 8-20 characters"
+                val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+                if (!newPassword.matches(passwordRegex)) {
+                    passwordErrorMessage = "Password must be 8-20 characters with uppercase, lowercase and numbers"
                     isProcessing = false
                     return@launch
                 }
@@ -600,8 +601,9 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun updatePassword(newPassword: String) {
-        if (newPassword.length < 8) {
-            errorMessage = "Password must be at least 8 characters"
+        val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+        if (!newPassword.matches(passwordRegex)) {
+            errorMessage = "Password must be 8-20 characters with uppercase, lowercase and numbers"
             return
         }
         viewModelScope.launch {
