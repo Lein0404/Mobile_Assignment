@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -21,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,14 +85,24 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
-        ) {
+        if (!authViewModel.isNetworkAvailable) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                OfflinePlaceholder(message = stringResource(R.string.desc_connect_internet_profile))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
+            ) {
             Text(
                 text = "What’s your body status?",
                 fontSize = 28.sp,
@@ -271,6 +283,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             }
         }
     }
+}
 }
 
 @Composable

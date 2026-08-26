@@ -135,6 +135,9 @@
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">No Internet Connection</string>
     <string name="desc_connect_internet_prompt">Please connect to the internet to view and update your meal plans.</string>
+    <string name="desc_connect_internet_recipe">Please connect to the internet to view and update your recipes.</string>
+    <string name="desc_connect_internet_profile">Please connect to the internet to update your profile.</string>
+    <string name="desc_connect_internet_password">Please connect to the internet to change your password.</string>
     <string name="label_loading_plans">Loading plans…</string>
 
     <!-- Meal Sections Categories -->
@@ -187,6 +190,8 @@
 
     <string name="empty_no_bookmarked_recipes">No Bookmarked Recipes</string>
     <string name="empty_bookmarked_recipes_sub">Recipes you bookmark will appear here.</string>
+    <string name="empty_no_my_recipes">No recipes created yet.</string>
+    <string name="empty_my_recipes_sub">Your created recipes will appear here.</string>
 
     <!-- Hiring Chef Details Screen-->
     <string name="chef_profile_title">Chef Profile</string>

@@ -23,6 +23,7 @@ import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.navigation.Screen
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.ColorFilter
 
@@ -39,12 +40,22 @@ fun RecipeDetailsScreen(
         viewModel.fetchRecipeById(recipeId)
     }
 
+    // 🌟 2. Clear state when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSelectedRecipe()
+        }
+    }
+
     val recipe = viewModel.selectedRecipe
     val user = authViewModel.currentUser
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
-    val isMyRecipe = recipe?.author_id == user?.id
+    // 🌟 FIX: Use customId for ownership check to match database logic
+    val isMyRecipe = recipe?.author_id == user?.customId
 
     val snackbarHostState = remember { SnackbarHostState() }
+    var expanded by remember { mutableStateOf(false) }
+    var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
@@ -77,8 +88,84 @@ fun RecipeDetailsScreen(
                             colorFilter = ColorFilter.tint(Color.White)
                         )
                     }
-                    IconButton(onClick = { /* More menu */ }) {
-                        Icon(painterResource(id = R.drawable.ic_vertical_more), "More", tint = Color.White)
+                    
+                    if (isMyRecipe) {
+                        Box {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(painterResource(id = R.drawable.ic_vertical_more), "More", tint = Color.White)
+                            }
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Edit Recipe") },
+                                    onClick = {
+                                        expanded = false
+                                        navController.navigate(Screen.EditRecipe.createRoute(recipeId))
+                                    },
+                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        expanded = false
+                                        recipeToDelete = recipe
+                                    },
+                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Share Recipe") },
+                                    onClick = {
+                                        expanded = false
+                                        val shareIntent = android.content.Intent().apply {
+                                            action = android.content.Intent.ACTION_SEND
+                                            val shareCard = buildString {
+                                                append("🥘 RECIPE: ${recipe?.recipeName?.uppercase()}\n")
+                                                append("━━━━━━━━━━━━━━━━━━━━\n")
+                                                append("⏱️ Time: ${recipe?.time} mins\n")
+                                                append("🔥 Calories: ${recipe?.calories} kcal\n")
+                                                append("👤 Author: ${recipe?.authorName ?: recipe?.authorInfo?.name ?: "Unknown"}\n")
+                                                append("━━━━━━━━━━━━━━━━━━━━\n")
+                                                if (!recipe?.recipeDescription.isNullOrBlank()) {
+                                                    append("📖 Description:\n${recipe?.recipeDescription}\n")
+                                                    append("━━━━━━━━━━━━━━━━━━━━\n")
+                                                }
+                                                append("\nShared from Foodie Heal")
+                                            }
+                                            putExtra(android.content.Intent.EXTRA_TEXT, shareCard)
+                                            type = "text/plain"
+                                        }
+                                        navController.context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Recipe"))
+                                    },
+                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_share), null, modifier = Modifier.size(18.dp)) }
+                                )
+                            }
+                        }
+                    } else {
+                        IconButton(onClick = { 
+                            val shareIntent = android.content.Intent().apply {
+                                action = android.content.Intent.ACTION_SEND
+                                val shareCard = buildString {
+                                    append("🥘 RECIPE: ${recipe?.recipeName?.uppercase()}\n")
+                                    append("━━━━━━━━━━━━━━━━━━━━\n")
+                                    append("⏱️ Time: ${recipe?.time} mins\n")
+                                    append("🔥 Calories: ${recipe?.calories} kcal\n")
+                                    append("👤 Author: ${recipe?.authorName ?: recipe?.authorInfo?.name ?: "Unknown"}\n")
+                                    append("━━━━━━━━━━━━━━━━━━━━\n")
+                                    if (!recipe?.recipeDescription.isNullOrBlank()) {
+                                        append("📖 Description:\n${recipe?.recipeDescription}\n")
+                                        append("━━━━━━━━━━━━━━━━━━━━\n")
+                                    }
+                                    append("\nShared from Foodie Heal")
+                                }
+                                putExtra(android.content.Intent.EXTRA_TEXT, shareCard)
+                                type = "text/plain"
+                            }
+                            navController.context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Recipe"))
+                        }) {
+                            Icon(painterResource(id = R.drawable.ic_share), "Share", tint = Color.White)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -167,13 +254,17 @@ fun RecipeDetailsScreen(
 
                     // 🌟 Author Section
                     val author = viewModel.recipeAuthor
+                    // 🌟 FIX: Prioritize live session name for instant profile sync
+                    val displayAuthorName = (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorName ?: recipe.authorInfo?.name)) ?: "Unknown Author"
+                    val displayAuthorImage = if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorImageUrl ?: recipe.authorInfo?.profile_pic_url)
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (author != null && !author.profilePicUrl.isNullOrBlank()) {
+                        if (!displayAuthorImage.isNullOrBlank()) {
                             AsyncImage(
-                                model = author.profilePicUrl,
+                                model = displayAuthorImage,
                                 contentDescription = "Author Profile",
                                 modifier = Modifier
                                     .size(40.dp)
@@ -197,7 +288,7 @@ fun RecipeDetailsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = author?.name ?: "Unknown Chef",
+                                text = displayAuthorName,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -255,7 +346,7 @@ fun RecipeDetailsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(text = ingredient.name, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(text = "${ingredient.quantity} ${ingredient.unit}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(text = "${ingredient.displayQuantity} ${ingredient.unit}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
 
@@ -275,6 +366,58 @@ fun RecipeDetailsScreen(
                     Spacer(modifier = Modifier.height(40.dp))
                 }
             }
+        }
+    }
+
+    if (recipeToDelete != null) {
+        if (!viewModel.isNetworkAvailable) {
+            AlertDialog(
+                onDismissRequest = { recipeToDelete = null },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("No Internet Connection")
+                    }
+                },
+                text = { Text("You cannot delete recipes while offline. Please check your network settings.") },
+                confirmButton = {
+                    TextButton(onClick = { recipeToDelete = null }) {
+                        Text("OK", fontWeight = FontWeight.Bold)
+                    }
+                }
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { recipeToDelete = null },
+                title = { Text("Delete Recipe") },
+                text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val rid = recipeToDelete?.recipe_id
+                            val uid = user?.customId
+                            if (rid != null && uid != null) {
+                                viewModel.deleteRecipe(rid, uid)
+                                navController.popBackStack() // Go back after successful deletion
+                            }
+                            recipeToDelete = null
+                        }
+                    ) {
+                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { recipeToDelete = null }) {
+                        Text("Cancel", color = Color.Gray)
+                    }
+                }
+            )
         }
     }
 }

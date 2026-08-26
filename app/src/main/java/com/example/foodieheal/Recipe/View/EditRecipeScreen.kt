@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,8 +38,10 @@ import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.IngredientItem
+import kotlinx.serialization.json.*
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -86,7 +89,7 @@ fun EditRecipeScreen(
             
             ingredients.clear()
             r.ingredients.forEach { 
-                ingredients.add(IngredientInputState(it.name, it.quantity, it.unit))
+                ingredients.add(IngredientInputState(it.name, it.displayQuantity, it.unit))
             }
         }
     }
@@ -174,7 +177,16 @@ fun EditRecipeScreen(
             )
         }
     ) { paddingValues ->
-        if (existingRecipe == null) {
+        if (!viewModel.isNetworkAvailable) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                OfflinePlaceholder(message = stringResource(R.string.desc_connect_internet_recipe))
+            }
+        } else if (existingRecipe == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -407,7 +419,7 @@ fun EditRecipeScreen(
                             cookingSkill = cookingSkill,
                             estimatedBudget = budget,
                             recipeStep = steps,
-                            ingredients = ingredients.map { IngredientItem(it.name, it.quantity, it.unit) }
+                            ingredients = ingredients.map { IngredientItem(it.name, JsonPrimitive(it.quantity), it.unit) }
                         )
                         viewModel.updateRecipe(updatedRecipe, imageBytes)
                     },

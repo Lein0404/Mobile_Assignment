@@ -135,7 +135,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             FoodieHealTheme(dynamicColor = false) {
                 val navController = rememberNavController()
-                val sharedAuthViewModel: AuthViewModel = viewModel()
+                val context = LocalContext.current
+                val networkMonitor = remember { NetworkMonitor(context) }
+                val sharedAuthViewModel: AuthViewModel = viewModel(
+                    factory = AuthViewModel.Factory(networkMonitor)
+                )
 
                 // 1. Unified Entry Navigation Logic (Cold & Warm Start)
                 LaunchedEffect(sharedAuthViewModel.loginSuccess, sharedAuthViewModel.isInitializing, pendingDeepLinkRoute) {
@@ -167,16 +171,27 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+
+                val recipeDb = remember { com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context) }
+                val recipeRepo = remember { RecipeRepository(recipeDb.recipeDao()) }
                 val sharedRecipeViewModel: RecipeViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return RecipeViewModel(RecipeRepository(SupabaseClient.client)) as T
+                            return RecipeViewModel(
+                                repository = recipeRepo,
+                                networkMonitor = networkMonitor
+                            ) as T
                         }
                     }
                 )
-                val context = LocalContext.current
-                val networkMonitor = remember { NetworkMonitor(context) }
+
+                // 🌟 FIX: Observe the name and pic specifically to trigger instant card sync
+                LaunchedEffect(sharedAuthViewModel.currentUser?.name, sharedAuthViewModel.currentUser?.profilePicUrl) {
+                    sharedAuthViewModel.currentUser?.let { user ->
+                        sharedRecipeViewModel.syncRecipeAuthorInfo(user)
+                    }
+                }
                 val hiringDb = remember { HiringDatabase.getInstance(context) }
                 val hiringRepo = remember {
                     HiringRepository(
@@ -479,7 +494,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                 ) { backStackEntry ->
-                                    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+                                    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
                                     val addEditTemplateViewModel: AddEditTemplateViewModel = viewModel(
                                         factory = object : ViewModelProvider.Factory {
                                             @Suppress("UNCHECKED_CAST")
@@ -534,7 +549,7 @@ class MainActivity : ComponentActivity() {
                                     val isMyTemplate = backStackEntry.arguments?.getBoolean("isMyTemplate") ?: false
 
                                     val planRepository = remember { PlanRepository() }
-                                    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+                                    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
 
                                     val currentUserIdFlow = remember(sharedAuthViewModel) {
                                         snapshotFlow { sharedAuthViewModel.currentUser?.id }

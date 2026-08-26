@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.MainActivity
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.User.local.UserDatabase
 import com.example.foodieheal.User.local.ChefEntity
 import com.example.foodieheal.User.local.UserDao
@@ -30,8 +31,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import androidx.lifecycle.ViewModelProvider
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewModel() {
     private val client = SupabaseClient.client
 
     private fun getDao(): UserDao? {
@@ -54,6 +56,9 @@ class AuthViewModel : ViewModel() {
         private set
 
     var registerSuccess by mutableStateOf(false)
+        private set
+
+    var isNetworkAvailable by mutableStateOf(true)
         private set
 
     // 🌟 Temporary holders for registration data
@@ -126,6 +131,7 @@ class AuthViewModel : ViewModel() {
     }
 
     init {
+        observeNetworkStatus()
         viewModelScope.launch {
             try {
                 restoreOfflineSessionSync()
@@ -153,6 +159,14 @@ class AuthViewModel : ViewModel() {
             } finally {
                 delay(200)
                 isInitializing = false
+            }
+        }
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor?.isConnected?.collect { connected ->
+                isNetworkAvailable = connected
             }
         }
     }
@@ -343,6 +357,10 @@ class AuthViewModel : ViewModel() {
     fun registerWithProfile(
         weight: Double?, height: Double?, age: Int?, gender: String, bmi: Double?
     ) {
+        if (!isNetworkAvailable) {
+            errorMessage = "No internet connection. Cannot register."
+            return
+        }
         if (tempEmail.isBlank() || tempPassword.isBlank()) {
             errorMessage = "Registration data lost. Please try again."
             return
@@ -459,6 +477,10 @@ class AuthViewModel : ViewModel() {
         imageBytes: ByteArray? = null, // 🌟 New parameter
         onSuccess: () -> Unit = {} // 🌟 Added callback for reliable navigation
     ) {
+        if (!isNetworkAvailable) {
+            profileMessage = "No internet connection. Cannot update profile."
+            return
+        }
         val uid = currentUser?.id ?: return
         isProcessing = true
         errorMessage = ""
@@ -537,6 +559,10 @@ class AuthViewModel : ViewModel() {
         }
 
     fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit = {}) {
+        if (!isNetworkAvailable) {
+            passwordErrorMessage = "No internet connection. Cannot change password."
+            return
+        }
         val email = currentUser?.email ?: return
         isProcessing = true
         errorMessage = ""
@@ -641,5 +667,12 @@ class AuthViewModel : ViewModel() {
         errorMessage = ""
         passwordErrorMessage = ""
         profileMessage = ""
+    }
+
+    class Factory(private val networkMonitor: NetworkMonitor) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return AuthViewModel(networkMonitor) as T
+        }
     }
 }
