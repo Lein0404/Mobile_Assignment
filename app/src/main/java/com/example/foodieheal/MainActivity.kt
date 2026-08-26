@@ -276,7 +276,12 @@ class MainActivity : ComponentActivity() {
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         containerColor = Color(0xFFF8F8F8), // 🌟 FIX: Stop the "black gap" during transitions
                         bottomBar = {
-                            if (shouldShowBottomBar) {
+                            // 🌟 FIX: Animate the bar visibility to prevent sudden layout jumps/flickering
+                            AnimatedVisibility(
+                                visible = shouldShowBottomBar,
+                                enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
+                                exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
+                            ) {
                                 NavigationBar(
                                     containerColor = MaterialTheme.colorScheme.tertiary,
                                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -302,10 +307,16 @@ class MainActivity : ComponentActivity() {
                                                 indicatorColor = Color.Transparent
                                             ),
                                             onClick = {
-                                                navController.navigate(item.route) {
-                                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                                    launchSingleTop = true
-                                                    restoreState = true
+                                                // 🌟 FIX: Only navigate if the clicked tab is NOT already selected
+                                                // This prevents the screen from "refreshing/flickering" when re-clicking the same tab.
+                                                val isAlreadySelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                                                
+                                                if (!isAlreadySelected) {
+                                                    navController.navigate(item.route) {
+                                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
                                                 }
                                             }
                                         )
@@ -881,8 +892,19 @@ class MainActivity : ComponentActivity() {
                                 }
 
 
-                                composable(Screen.AddRecipe.route) { AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) }
-                                composable(Screen.EditRecipe.route) { backStackEntry ->
+                                composable(
+                                    route = Screen.AddRecipe.route,
+                                    enterTransition = { slideInVertically(initialOffsetY = { it }, animationSpec = tween(400)) + fadeIn() },
+                                    exitTransition = { slideOutVertically(targetOffsetY = { it }, animationSpec = tween(400)) + fadeOut() }
+                                ) { 
+                                    AddRecipeScreen(navController, sharedRecipeViewModel, sharedAuthViewModel) 
+                                }
+                                
+                                composable(
+                                    route = Screen.EditRecipe.route,
+                                    enterTransition = { slideInVertically(initialOffsetY = { it }, animationSpec = tween(400)) + fadeIn() },
+                                    exitTransition = { slideOutVertically(targetOffsetY = { it }, animationSpec = tween(400)) + fadeOut() }
+                                ) { backStackEntry ->
                                     val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
                                     EditRecipeScreen(navController, recipeId, sharedRecipeViewModel, sharedAuthViewModel)
                                 }
