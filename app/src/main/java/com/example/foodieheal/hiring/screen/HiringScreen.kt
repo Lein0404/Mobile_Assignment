@@ -153,7 +153,7 @@ fun HiringScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Offline Mode: Showing cached data",
+                        text = stringResource(R.string.hiring_offline_mode),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium

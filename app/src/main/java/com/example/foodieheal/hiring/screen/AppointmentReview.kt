@@ -151,7 +151,7 @@ fun AppointmentReviewScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Internet required to confirm booking",
+                            text = stringResource(R.string.review_booking_offline_mode),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -265,7 +265,7 @@ fun AppointmentReviewScreen(
             }
 
             // Attached Dish / Meal Plan Card
-            ReviewSectionCard(title = "Attached Dishes / Meal Plan") {
+            ReviewSectionCard(title = stringResource(R.string.attached_dishes_meal_plan)) {
                 if (selectedRecipes.isEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -279,7 +279,7 @@ fun AppointmentReviewScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "No specific recipes requested (Chef will propose standard menu)",
+                            text = stringResource(R.string.no_specific_recipes_requested),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -331,7 +331,7 @@ fun AppointmentReviewScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Text(
-                                                text = "${item.serviceCount} portions",
+                                                text = stringResource(R.string.portions_format, item.serviceCount),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.primary,
@@ -483,8 +483,8 @@ fun AppointmentReviewScreen(
                     )
                     if (selectedRecipes.isNotEmpty()) {
                         BookingDetailRow(
-                            label = "Requested Dishes",
-                            value = "${selectedRecipes.size} recipe(s)"
+                            label = stringResource(R.string.requested_dishes_label),
+                            value = stringResource(R.string.recipes_count_format, selectedRecipes.size)
                         )
                     }
                     BookingDetailRow(

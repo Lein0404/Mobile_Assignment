@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +53,7 @@ fun AddNewCardBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var formState by remember { mutableStateOf(NewCardFormState()) }
+    val defaultExpiryError = stringResource(R.string.error_invalid_expiry_date)
 
     val expiryError = validateExpiryDate(formState.expiryDate)
     val isExpiryComplete = formState.expiryDate.length == 5
@@ -71,7 +73,7 @@ fun AddNewCardBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Add Credit or Debit Card",
+                text = stringResource(R.string.title_add_card),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -82,8 +84,8 @@ fun AddNewCardBottomSheet(
                     val clean = input.filter { it.isDigit() }.take(16)
                     formState = formState.copy(cardNumber = clean)
                 },
-                label = { Text("Card Number") },
-                placeholder = { Text("16-digit card number") },
+                label = { Text(stringResource(R.string.label_card_number)) },
+                placeholder = { Text(stringResource(R.string.placeholder_card_number)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -93,7 +95,7 @@ fun AddNewCardBottomSheet(
             OutlinedTextField(
                 value = formState.cardHolderName,
                 onValueChange = { formState = formState.copy(cardHolderName = it) },
-                label = { Text("Cardholder Name") },
+                label = { Text(stringResource(R.string.label_cardholder_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -109,11 +111,11 @@ fun AddNewCardBottomSheet(
                         val formatted = formatExpiryDateInput(input)
                         formState = formState.copy(expiryDate = formatted)
                     },
-                    label = { Text("MM/YY") },
-                    placeholder = { Text("MM/YY") },
+                    label = { Text(stringResource(R.string.label_expiry_date)) },
+                    placeholder = { Text(stringResource(R.string.placeholder_expiry_date)) },
                     isError = isExpiryInvalid,
                     supportingText = if (isExpiryInvalid) {
-                        { Text(expiryError ?: validateMonth(formState.expiryDate) ?: "Invalid MM/YY", color = MaterialTheme.colorScheme.error) }
+                        { Text(expiryError ?: validateMonth(formState.expiryDate) ?: defaultExpiryError, color = MaterialTheme.colorScheme.error) }
                     } else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
@@ -127,8 +129,8 @@ fun AddNewCardBottomSheet(
                         val clean = input.filter { it.isDigit() }.take(4)
                         formState = formState.copy(cvv = clean)
                     },
-                    label = { Text("CVV") },
-                    placeholder = { Text("3-4 digits") },
+                    label = { Text(stringResource(R.string.label_cvv)) },
+                    placeholder = { Text(stringResource(R.string.placeholder_cvv)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -145,7 +147,7 @@ fun AddNewCardBottomSheet(
                     onCheckedChange = { formState = formState.copy(isSaveForFuture = it) }
                 )
                 Text(
-                    text = "Save card for future bookings",
+                    text = stringResource(R.string.save_card_for_future),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -169,7 +171,7 @@ fun AddNewCardBottomSheet(
                     .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Save & Select Card", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_save_select_card), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -286,7 +288,7 @@ fun PaymentMethodItem(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "Default",
+                            text = stringResource(R.string.tag_default),
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
@@ -300,7 +302,7 @@ fun PaymentMethodItem(
                         color = MaterialTheme.colorScheme.tertiaryContainer
                     ) {
                         Text(
-                            text = "Instant",
+                            text = stringResource(R.string.tag_instant),
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,

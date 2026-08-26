@@ -166,7 +166,7 @@ fun RescheduleAppointmentScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Internet required to reschedule",
+                            text = stringResource(R.string.reschedule_offline_mode),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium

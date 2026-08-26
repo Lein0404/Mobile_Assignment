@@ -56,7 +56,7 @@ fun PaymentMethodScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Payment Methods", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.title_payment_methods), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -78,7 +78,7 @@ fun PaymentMethodScreen(
                     if (isOnline) {
                         showAddCardSheet = true
                     } else {
-                        Toast.makeText(context, "Cannot add cards while offline.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.toast_cannot_add_cards_offline, Toast.LENGTH_SHORT).show()
                     }
                 },
                 containerColor = if (isOnline) MaterialTheme.colorScheme.primary else Color.Gray,
@@ -86,7 +86,7 @@ fun PaymentMethodScreen(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
-                    contentDescription = "Add Payment Method"
+                    contentDescription = stringResource(R.string.cd_add_payment_method)
                 )
             }
         }
@@ -115,7 +115,7 @@ fun PaymentMethodScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Offline Mode: Showing cached cards. Reconnect to manage.",
+                            text = stringResource(R.string.payment_methods_offline_banner),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -133,7 +133,7 @@ fun PaymentMethodScreen(
                 } else if (uiState.availableMethods.isEmpty()) {
                     EmptyPaymentMethodsView(onAddClick = {
                         if (isOnline) showAddCardSheet = true
-                        else Toast.makeText(context, "Cannot add cards while offline.", Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(context, R.string.toast_cannot_add_cards_offline, Toast.LENGTH_SHORT).show()
                     })
                 } else {
                     LazyColumn(
@@ -156,8 +156,8 @@ fun PaymentMethodScreen(
                                         userId = userId,
                                         isDefault = nextDefaultState,
                                         onSuccess = {
-                                            val msg = if (nextDefaultState) "Set as default payment method" else "Removed default payment method"
-                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            val msgRes = if (nextDefaultState) R.string.msg_set_default_payment_method else R.string.msg_removed_default_payment_method
+                                            Toast.makeText(context, msgRes, Toast.LENGTH_SHORT).show()
                                         },
                                         onError = { err ->
                                             Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
@@ -185,7 +185,7 @@ fun PaymentMethodScreen(
                     expiryDate = expiry,
                     onSuccess = {
                         showAddCardSheet = false
-                        Toast.makeText(context, "Card added successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.toast_card_added_success, Toast.LENGTH_SHORT).show()
                     },
                     onError = { error ->
                         Toast.makeText(context, error, Toast.LENGTH_LONG).show()
@@ -199,8 +199,8 @@ fun PaymentMethodScreen(
     methodToDelete?.let { method ->
         AlertDialog(
             onDismissRequest = { methodToDelete = null },
-            title = { Text("Delete Payment Method") },
-            text = { Text("Are you sure you want to remove this payment method? This action cannot be undone.") },
+            title = { Text(stringResource(R.string.dialog_delete_payment_method_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_payment_method_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -209,7 +209,7 @@ fun PaymentMethodScreen(
                             userId = userId,
                             onSuccess = {
                                 methodToDelete = null
-                                Toast.makeText(context, "Payment method deleted", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_payment_method_deleted, Toast.LENGTH_SHORT).show()
                             },
                             onError = { err ->
                                 methodToDelete = null
@@ -218,12 +218,12 @@ fun PaymentMethodScreen(
                         )
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete_action), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { methodToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -305,7 +305,7 @@ private fun PaymentMethodManagementItem(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "•••• ${method.last4Digits}",
+                                    text = stringResource(R.string.card_masked_number_format, method.last4Digits),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodyLarge,
                                     maxLines = 1
@@ -313,7 +313,7 @@ private fun PaymentMethodManagementItem(
                             }
 
                             Text(
-                                text = "Expires $formattedExpiry",
+                                text = stringResource(R.string.card_expires_format, formattedExpiry),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -322,7 +322,7 @@ private fun PaymentMethodManagementItem(
 
                     if (isDefault) {
                         Text(
-                            text = "Default Payment Method",
+                            text = stringResource(R.string.label_default_payment_method),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
@@ -344,7 +344,7 @@ private fun PaymentMethodManagementItem(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_star),
-                        contentDescription = if (isDefault) "Default Payment Method" else "Set as Default",
+                        contentDescription = if (isDefault) stringResource(R.string.label_default_payment_method) else stringResource(R.string.cd_set_as_default),
                         tint = if (isDefault) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.4f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -356,7 +356,7 @@ private fun PaymentMethodManagementItem(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_delete),
-                        contentDescription = "Delete Method",
+                        contentDescription = stringResource(R.string.cd_delete_method),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp)
                     )
@@ -383,13 +383,13 @@ private fun EmptyPaymentMethodsView(onAddClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No Payment Methods Added",
+            text = stringResource(R.string.empty_payment_methods_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Add a credit or debit card to quickly complete your appointments and purchases.",
+            text = stringResource(R.string.empty_payment_methods_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -403,7 +403,7 @@ private fun EmptyPaymentMethodsView(onAddClick: () -> Unit) {
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Add Payment Method")
+            Text(stringResource(R.string.btn_add_payment_method))
         }
     }
 }

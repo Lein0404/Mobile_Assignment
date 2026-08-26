@@ -31,14 +31,14 @@ import com.example.foodieheal.ui.components.formatToAmPm
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-enum class AppointmentFilterOption(val displayName: String) {
-    ALL("All Statuses"),
-    PENDING("Pending"),
-    UNPAID("Unpaid"),
-    CONFIRMED("Confirmed"),
-    COMPLETED("Completed"),
-    CANCELLED("Cancelled"),
-    REJECTED("Rejected")
+enum class AppointmentFilterOption(val displayNameRes: Int) {
+    ALL(R.string.filter_all_statuses),
+    PENDING(R.string.status_pending),
+    UNPAID(R.string.status_unpaid),
+    CONFIRMED(R.string.status_confirmed),
+    COMPLETED(R.string.status_completed),
+    CANCELLED(R.string.status_cancelled),
+    REJECTED(R.string.status_rejected)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,12 +97,12 @@ fun AppointmentHistoryScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Appointment History",
+                            text = stringResource(R.string.appointment_history_title),
                             fontWeight = FontWeight.Bold
                         )
                         if (selectedFilter != AppointmentFilterOption.ALL) {
                             Text(
-                                text = "Filter: ${selectedFilter.displayName}",
+                                text = stringResource(R.string.filter_prefix, stringResource(selectedFilter.displayNameRes)),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
@@ -113,7 +113,7 @@ fun AppointmentHistoryScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -131,7 +131,7 @@ fun AppointmentHistoryScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.filter),
-                                contentDescription = "Filter Status",
+                                contentDescription = stringResource(R.string.filter_by_status),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -182,7 +182,7 @@ fun AppointmentHistoryScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Button(onClick = { viewModel.fetchAppointmentsForCurrentUser() }) {
-                                Text("Retry")
+                                Text(stringResource(R.string.retry_action))
                             }
                         }
                     }
@@ -190,7 +190,7 @@ fun AppointmentHistoryScreen(
 
                 is UserAppointmentsUiState.Success -> {
                     if (filteredAppointments.isEmpty()) {
-                        EmptyHistoryState(filterName = selectedFilter.displayName)
+                        EmptyHistoryState(filterName = stringResource(selectedFilter.displayNameRes))
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -205,7 +205,7 @@ fun AppointmentHistoryScreen(
 
                                 AppointmentHistoryCard(
                                     appointment = appointment,
-                                    chefName = chefUser?.name ?: "Private Chef",
+                                    chefName = chefUser?.name ?: stringResource(R.string.private_chef_name),
                                     chefPicture = chefUser?.profilePicUrl,
                                     onClick = {
                                         val id = appointment.AppointmentID.orEmpty()
@@ -239,7 +239,7 @@ fun AppointmentHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Filter by Status",
+                    text = stringResource(R.string.filter_by_status),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -265,7 +265,7 @@ fun AppointmentHistoryScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = option.displayName,
+                                text = stringResource(option.displayNameRes),
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
@@ -298,14 +298,16 @@ fun AppointmentHistoryScreen(
             },
             title = {
                 Text(
-                    text = "Remove from History",
+                    text = stringResource(R.string.remove_from_history),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
-                Text("Are you sure you want to remove this ${target.Status.lowercase()} appointment from your history? This will only remove it from your history view.")
+                Text(stringResource(R.string.confirm_remove_history_msg, target.Status.lowercase()))
             },
             confirmButton = {
+                val removedMessage = stringResource(R.string.appointment_removed_snackbar)
+                val undoLabel = stringResource(R.string.undo)
                 Button(
                     onClick = {
                         val id = target.AppointmentID.orEmpty()
@@ -313,8 +315,8 @@ fun AppointmentHistoryScreen(
                             viewModel.softDeleteAppointment(context, id)
                             coroutineScope.launch {
                                 val result = snackbarHostState.showSnackbar(
-                                    message = "Appointment removed from history",
-                                    actionLabel = "Undo",
+                                    message = removedMessage,
+                                    actionLabel = undoLabel,
                                     duration = SnackbarDuration.Short
                                 )
                                 if (result == SnackbarResult.ActionPerformed) {
@@ -326,12 +328,12 @@ fun AppointmentHistoryScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_action))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { appointmentToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             shape = RoundedCornerShape(16.dp),
@@ -378,7 +380,7 @@ fun AppointmentHistoryCard(
                 ) {
                     AsyncImage(
                         model = chefPicture,
-                        contentDescription = "Chef Picture",
+                        contentDescription = stringResource(R.string.chef_picture),
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
@@ -400,12 +402,15 @@ fun AppointmentHistoryCard(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_star),
-                                contentDescription = "Rating",
+                                contentDescription = stringResource(R.string.label_rating),
                                 modifier = Modifier.size(14.dp),
                                 tint = Color(0xFFFFC107)
                             )
                             Text(
-                                text = "Rating: ${appointment.rating ?: "N/A"}",
+                                text = stringResource(
+                                    R.string.rating_format_prefix,
+                                    appointment.rating ?: stringResource(R.string.not_available)
+                                ),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -426,7 +431,7 @@ fun AppointmentHistoryCard(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_delete),
-                                contentDescription = "Delete appointment history",
+                                contentDescription = stringResource(R.string.delete_action),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -489,7 +494,7 @@ fun AppointmentHistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total Price",
+                    text = stringResource(R.string.label_total_price),
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -506,6 +511,7 @@ fun AppointmentHistoryCard(
 
 @Composable
 fun EmptyHistoryState(filterName: String) {
+    val allStatusesLabel = stringResource(R.string.filter_all_statuses)
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -521,7 +527,11 @@ fun EmptyHistoryState(filterName: String) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             )
             Text(
-                text = if (filterName == "All Statuses") "No appointments found" else "No $filterName appointments",
+                text = if (filterName == allStatusesLabel) {
+                    stringResource(R.string.no_appointments_found)
+                } else {
+                    stringResource(R.string.no_appointments_found_filter, filterName)
+                },
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

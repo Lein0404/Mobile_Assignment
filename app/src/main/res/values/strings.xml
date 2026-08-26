@@ -229,6 +229,17 @@
     <string name="empty_no_appointments_for_date">No appointments booked for this date.</string>
     <string name = "no_comment_provided">No comment provided</string>
 
+    <string name="hiring_offline_mode">Offline Mode: Showing cached data</string>
+    <string name="search_chef_placeholder">Search by name &amp; state</string>
+    <string name="no_chefs_match_filters">No chefs match your filters</string>
+    <string name="adjust_search_criteria_or_reset">Try adjusting your search criteria or resetting filters.</string>
+    <string name="reset_all_filters">Reset All Filters</string>
+    <string name="reset_filters">Reset Filters</string>
+    <string name="chefs_found_count">%1$d found</string>
+    <string name="search_bookmarks_placeholder">Search bookmarks...</string>
+    <string name="no_bookmarks_match_filters">No bookmarks match your filters</string>
+    <string name="chefs_saved_count">%1$d saved</string>
+
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
     <string name="cd_pick_date">Pick Date</string>
@@ -253,6 +264,46 @@
     <string name="label_serving_size">Serving Size</string>
     <string name="label_description">Description</string>
 
+    <string name="booking_offline_mode">Offline Mode: Internet required to submit booking</string>
+    <string name="requested_dishes_optional">Requested Dishes (Optional)</string>
+    <string name="attach_bookmarked_recipes_sub">Attach bookmarked recipes for the chef</string>
+    <string name="dishes_selected_count">%1$d selected</string>
+    <string name="no_specific_recipes_attached">No specific recipes attached. You can pick dishes from your bookmarks for your chef to prepare.</string>
+    <string name="portion_count_format">%1$d portion(s)</string>
+    <string name="view_details">View Details</string>
+    <string name="remove">Remove</string>
+    <string name="attach_from_bookmarks_btn">+ Attach from Bookmarks</string>
+    <string name="edit_attached_recipes_btn">Edit Attached Recipes (%1$d)</string>
+    <string name="dish_count_singular">1 dish</string>
+    <string name="dish_count_plural">%1$d dishes</string>
+    <string name="no_recipes_attached_booking">No specific recipes attached to this booking</string>
+    <string name="recipe_fallback_title">Recipe #%1$s</string>
+    <string name="attach_recipes_menu_title">Attach Recipes / Menu</string>
+    <string name="select_dishes_for_chef_sub">Select dishes for your chef to prepare</string>
+    <string name="search_recipes_placeholder">Search recipes by name...</string>
+    <string name="tab_my_recipes">My Recipes</string>
+    <string name="no_recipes_in_tab">No recipes in %1$s</string>
+    <string name="explore_and_bookmark_sub">Explore and bookmark recipes to attach them here.</string>
+    <string name="no_matching_recipes">No matching recipes</string>
+    <string name="no_recipe_matches_query">No recipe matches \"%1$s\" in %2$s</string>
+    <string name="done_selected_count">Done (%1$d selected)</string>
+    <string name="done">Done</string>
+    <string name="portions_for_this_dish">Portions for this dish:</string>
+    <string name="optional_note_chef_placeholder">Optional note for chef (e.g. less salt, spicy)</string>
+    <string name="by_author_format">By %1$s</string>
+    <string name="label_calories_badge">Calories</string>
+    <string name="label_prep_time_badge">Prep Time</string>
+    <string name="label_skill_badge">Skill</string>
+    <string name="label_budget_badge">Budget</string>
+    <string name="label_cooking_steps">Cooking Steps</string>
+    <string name="ingredients_items_count">%1$d items</string>
+    <string name="portions_requested_label">Portions Requested:</string>
+    <string name="client_special_request_label">Client special request:</string>
+    <string name="portions_for_appointment_label">Portions for Appointment:</string>
+    <string name="custom_request_chef_placeholder">Custom request for chef (e.g. less spicy)</string>
+    <string name="remove_dish_btn">Remove Dish</string>
+    <string name="select_recipe_for_appointment_btn">Select this Recipe for Appointment</string>
+
     <string name="placeholder_address">Address</string>
     <string name="placeholder_postcode">Postcode</string>
     <string name="placeholder_serving_size">Enter number of pax (e.g. 5)</string>
@@ -272,6 +323,28 @@
     <string name="estimated_price_summary">Price Summary</string>
     <string name="hourly_rate_format">RM %.2f / hr</string>
 
+    <!-- Appointment History-->
+    <string name="appointment_history_title">Appointment History</string>
+    <string name="filter_prefix">Filter: %1$s</string>
+    <string name="filter_by_status">Filter by Status</string>
+    <string name="remove_from_history">Remove from History</string>
+    <string name="confirm_remove_history_msg">Are you sure you want to remove this %1$s appointment from your history? This will only remove it from your history view.</string>
+    <string name="appointment_removed_snackbar">Appointment removed from history</string>
+    <string name="undo">Undo</string>
+    <string name="delete_action">Delete</string>
+    <string name="retry_action">Retry</string>
+    <string name="rating_format_prefix">Rating: %1$s</string>
+    <string name="filter_all_statuses">All Statuses</string>
+    <string name="status_unpaid">Unpaid</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_rejected">Rejected</string>
+    <string name="no_appointments_found_filter">No %1$s appointments</string>
+    <string name="rate_offline_mode">Offline Mode: Internet required to submit review</string>
+    <string name="reschedule_offline_mode">Offline Mode: Internet required to reschedule</string>
+    <string name="appointment_id_format">ID: %1$s</string>
+    <string name="details_offline_mode">Offline Mode: Actions require internet</string>
+
     <!-- Appointment Review -->
     <string name="review_booking">Review Booking</string>
 
@@ -287,6 +360,13 @@
     <string name="label_hourly_rate">Hourly Rate</string>
     <string name="label_chef">Chef</string>
     <string name="label_time">Time</string>
+
+    <string name="portions_format">%1$d portions</string>
+    <string name="review_booking_offline_mode">Offline Mode: Internet required to confirm booking</string>
+    <string name="attached_dishes_meal_plan">Attached Dishes / Meal Plan</string>
+    <string name="no_specific_recipes_requested">No specific recipes requested (Chef will propose standard menu)</string>
+    <string name="requested_dishes_label">Requested Dishes</string>
+    <string name="recipes_count_format">%1$d recipe(s)</string>
 
     <string name="not_selected">Not Selected</string>
     <string name="not_provided">Not Provided</string>
@@ -792,4 +872,97 @@
     <string name="wallet_demo_gateway_label">Instant Top-Up Gateway (Demo Mode)</string>
     <string name="wallet_top_up_btn_format">Top Up RM %1$s</string>
     <string name="wallet_date_recent">Recent</string>
+    <string name="wallet_offline_cannot_refresh">Cannot refresh while offline.</string>
+    <string name="wallet_offline_banner">Offline Mode: Showing cached balance and transactions. Reconnect to top up.</string>
+    <string name="wallet_offline_cannot_top_up">Cannot top up while offline.</string>
+    <string name="currency_rm_int">RM %1$d</string>
+
+    <!-- Wallet Transaction Details & Receipt -->
+    <string name="transaction_details_title">Transaction Details</string>
+    <string name="share_receipt">Share Receipt</string>
+    <string name="transaction_not_found_title">Transaction Not Found</string>
+    <string name="transaction_not_found_desc">The requested transaction details could not be loaded.</string>
+    <string name="btn_go_back">Go Back</string>
+
+    <string name="receipt_header_title">FoodieHeal Pay</string>
+    <string name="receipt_header_subtitle">Official E-Wallet Receipt</string>
+    <string name="receipt_status_top_up">Top-Up Successful</string>
+    <string name="receipt_status_payment">Payment Completed</string>
+    <string name="receipt_status_refund">Refund Credited</string>
+    <string name="receipt_status_adjustment">Adjustment Applied</string>
+
+    <string name="receipt_label_transaction_type">Transaction Type</string>
+    <string name="receipt_type_top_up">Wallet Top Up</string>
+    <string name="receipt_type_appointment">Appointment Booking</string>
+    <string name="receipt_type_refund">Refund Credited</string>
+    <string name="receipt_type_adjustment">Reschedule Adjustment</string>
+
+    <string name="receipt_label_transaction_id">Transaction ID</string>
+    <string name="receipt_toast_copied">Transaction ID copied</string>
+    <string name="receipt_cd_copy">Copy</string>
+
+    <string name="receipt_label_payment_source">Payment Source</string>
+    <string name="receipt_method_gateway">Instant Top-Up Gateway</string>
+    <string name="receipt_method_wallet_refund">In-App Wallet (Refund)</string>
+    <string name="receipt_method_foodieheal_wallet">FoodieHeal In-App Wallet</string>
+    <string name="receipt_label_reference_id">Reference ID</string>
+    <string name="receipt_label_balance_before">Balance Before</string>
+    <string name="receipt_label_balance_after">Balance After</string>
+    <string name="receipt_ref_format">Ref: %1$s</string>
+    <string name="receipt_computer_generated_notice">This is a computer-generated receipt • No signature required</string>
+
+    <!-- Add New Card -->
+    <string name="title_add_card">Add Credit or Debit Card</string>
+    <string name="label_card_number">Card Number</string>
+    <string name="placeholder_card_number">16-digit card number</string>
+    <string name="label_cardholder_name">Cardholder Name</string>
+    <string name="label_expiry_date">MM/YY</string>
+    <string name="placeholder_expiry_date">MM/YY</string>
+    <string name="error_invalid_expiry_date">Invalid MM/YY</string>
+    <string name="error_month_range">Month must be 01-12</string>
+    <string name="error_format_mmyy">Format: MM/YY</string>
+    <string name="error_invalid_year">Invalid year</string>
+    <string name="error_card_expired">Card has expired</string>
+    <string name="error_invalid_expiry_year">Invalid expiry year</string>
+    <string name="label_cvv">CVV</string>
+    <string name="placeholder_cvv">3-4 digits</string>
+    <string name="save_card_for_future">Save card for future bookings</string>
+    <string name="btn_save_select_card">Save &amp; Select Card</string>
+    <string name="brand_card_fallback">Card</string>
+    <string name="tag_default">Default</string>
+    <string name="tag_instant">Instant</string>
+
+    <!-- Payment Method Management -->
+    <string name="title_payment_methods">Payment Methods</string>
+    <string name="cd_add_payment_method">Add Payment Method</string>
+    <string name="toast_cannot_add_cards_offline">Cannot add cards while offline.</string>
+    <string name="payment_methods_offline_banner">Offline Mode: Showing cached cards. Reconnect to manage.</string>
+    <string name="msg_set_default_payment_method">Set as default payment method</string>
+    <string name="msg_removed_default_payment_method">Removed default payment method</string>
+    <string name="toast_card_added_success">Card added successfully!</string>
+    <string name="dialog_delete_payment_method_title">Delete Payment Method</string>
+    <string name="dialog_delete_payment_method_msg">Are you sure you want to remove this payment method? This action cannot be undone.</string>
+    <string name="toast_payment_method_deleted">Payment method deleted</string>
+    <string name="card_masked_number_format">• • • • %1$s</string>
+    <string name="card_expires_format">Expires %1$s</string>
+    <string name="label_default_payment_method">Default Payment Method</string>
+    <string name="cd_set_as_default">Set as Default</string>
+    <string name="cd_delete_method">Delete Method</string>
+    <string name="empty_payment_methods_title">No Payment Methods Added</string>
+    <string name="empty_payment_methods_desc">Add a credit or debit card to quickly complete your appointments and purchases.</string>
+    <string name="btn_add_payment_method">Add Payment Method</string>
+
+    <!-- Checkout Payment -->
+    <string name="title_checkout_payment">Checkout &amp; Payment</string>
+    <string name="error_loading_appointment">Error loading appointment.</string>
+    <string name="payment_offline_banner">No internet connection. Please connect to proceed with payment.</string>
+    <string name="wallet_inactive_warning">Your in-app wallet is currently inactive. Please top up your wallet first or select a card.</string>
+    <string name="wallet_insufficient_warning_format">Insufficient wallet balance (%1$s). Please top up or select a card.</string>
+    <string name="label_total_amount">Total Amount</string>
+    <string name="toast_payment_success">Payment Successful!</string>
+    <string name="pay_amount_via_wallet_format">Pay %1$s via Wallet</string>
+    <string name="pay_amount_format">Pay %1$s</string>
+    <string name="title_order_summary">Order Summary</string>
+    <string name="title_select_payment_method">Select Payment Method</string>
+    <string name="btn_add_new_card">+ Add New Credit / Debit Card</string>
 </resources>
