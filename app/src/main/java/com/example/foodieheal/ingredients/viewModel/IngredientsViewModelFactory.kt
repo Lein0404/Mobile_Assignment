@@ -31,7 +31,7 @@ class IngredientsViewModelFactory(
                 ShoppingListViewModel(application, shoppingRepo, ingredientsRepo) as T
             }
             modelClass.isAssignableFrom(IngredientRequestViewModel::class.java) -> {
-                IngredientRequestViewModel(application, requestRepo) as T
+                IngredientRequestViewModel(application, requestRepo, ingredientsRepo) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

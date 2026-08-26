@@ -51,6 +51,7 @@ fun ColumnScope.IngredientFormBody(
 
     // Validation errors
     nameError: Int?,
+    nameErrorArg: String? = null,
     categoryError: Int?,
     descriptionError: Int?,
     unitRowsError: Int?,
@@ -82,8 +83,13 @@ fun ColumnScope.IngredientFormBody(
         isError = nameError != null
     )
     nameError?.let { resId ->
+        val errorMsg = if (nameErrorArg != null) {
+            stringResource(id = resId, nameErrorArg)
+        } else {
+            stringResource(id = resId)
+        }
         Text(
-            text = stringResource(id = resId),
+            text = errorMsg,
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))

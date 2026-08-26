@@ -682,6 +682,8 @@
 
     <!-- Ingredients Module Validation Errors -->
     <string name="ingredients_error_name_required">Ingredient name is required</string>
+    <string name="ingredients_error_name_exists">An ingredient (%1$s) already exists.</string>
+    <string name="ingredients_error_request_exists">An ingredient request (%1$s) already exists.</string>
     <string name="error_category_required">Category is required</string>
     <string name="ingredients_error_description_required">Description is required</string>
     <string name="error_at_least_one_unit_required">At least one calorie information entry is required</string>

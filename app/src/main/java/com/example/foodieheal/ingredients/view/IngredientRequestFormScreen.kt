@@ -159,6 +159,7 @@ fun IngredientRequestFormScreen(
                         unitRows = formState.unitRows,
                         availableUnits = availableUnits,
                         nameError = formState.nameError,
+                        nameErrorArg = formState.nameErrorArg,
                         categoryError = formState.categoryError,
                         descriptionError = formState.descriptionError,
                         unitRowsError = formState.unitRowsError,
