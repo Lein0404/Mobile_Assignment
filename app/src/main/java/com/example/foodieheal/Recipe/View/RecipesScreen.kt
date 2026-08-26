@@ -740,7 +740,7 @@ fun RecipeCardItem(
                     val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
                         currentUser.name
                     } else {
-                        recipe.authorInfo?.name ?: recipe.authorName
+                        recipe.authorInfo?.name ?: recipe.authorName ?: "Chef"
                     }
                     
                     if (!authorToDisplay.isNullOrEmpty()) {
