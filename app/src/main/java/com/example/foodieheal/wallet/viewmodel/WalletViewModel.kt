@@ -126,9 +126,21 @@ class WalletViewModel(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSubmittingTopUp = true, errorMessage = null) }
+        // Get the current server-confirmed balance for rollback.
+        val originalBalance = _uiState.value.wallet?.balance ?: 0.0
 
+        // Immediate show the project new balance — no waiting for network.
+        val projectedBalance = originalBalance + amount
+        _uiState.update {
+            it.copy(
+                isSubmittingTopUp = true,
+                errorMessage = null,
+                optimisticBalance = projectedBalance
+            )
+        }
+
+
+        viewModelScope.launch {
             val result = repository.topUpWallet(
                 userId = targetUserId,
                 amount = amount,
@@ -137,21 +149,25 @@ class WalletViewModel(
             )
 
             result.onSuccess { updatedWallet ->
+                // Server confirmed then replace optimistic value with real server data
                 val txns = repository.getTransactions(updatedWallet.id)
                 _uiState.update {
                     it.copy(
                         isSubmittingTopUp = false,
                         wallet = updatedWallet,
                         transactions = txns,
+                        optimisticBalance = null,           // ← clear optimistic; real data wins
                         successMessage = "Top-up of RM ${String.format("%.2f", amount)} was successful!"
                     )
                 }
                 onSuccess()
             }.onFailure { ex ->
+                // Network or server error it will rollback the optimistic balance display
                 val errMsg = ex.localizedMessage ?: "Top-up failed. Please try again."
                 _uiState.update {
                     it.copy(
                         isSubmittingTopUp = false,
+                        optimisticBalance = null,
                         errorMessage = errMsg
                     )
                 }

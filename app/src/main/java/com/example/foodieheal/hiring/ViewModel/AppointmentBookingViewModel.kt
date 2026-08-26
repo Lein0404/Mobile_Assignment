@@ -3,6 +3,7 @@ package com.example.foodieheal.hiring.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.hiring.data.AppointmentConflictException
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.model.AppointmentUiState
 import com.example.foodieheal.hiring.model.AppointmentValidationError
@@ -525,6 +526,16 @@ class AppointmentBookingViewModel(
                 _uiState.update { it.copy(isSubmitting = false) }
                 clearAppointmentForm()
                 onSuccess()
+            } catch (e: AppointmentConflictException) {
+                // Server confirmed a time-slot clash then show the precise conflict message
+                Log.w("AppointmentBookingVM", "Booking conflict detected: ${e.message}")
+                _uiState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        errors = it.errors + AppointmentValidationError.TimeSlotOccupied
+                    )
+                }
+                onError(e.message ?: "This time slot is already booked. Please choose a different time.")
             } catch (e: Exception) {
                 Log.e("AppointmentBookingVM", "Error creating appointment in repository", e)
                 _uiState.update { it.copy(isSubmitting = false) }

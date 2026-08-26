@@ -37,6 +37,7 @@ import com.example.foodieheal.wallet.model.WalletTransactionType
 import com.example.foodieheal.wallet.viewmodel.TransactionFilterOption
 import com.example.foodieheal.wallet.viewmodel.WalletUiState
 import com.example.foodieheal.wallet.viewmodel.WalletViewModel
+import com.example.foodieheal.ui.components.WalletScreenSkeleton
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -120,7 +121,7 @@ fun WalletScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.isLoading && uiState.wallet == null) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                WalletScreenSkeleton(modifier = Modifier.align(Alignment.TopCenter))
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),

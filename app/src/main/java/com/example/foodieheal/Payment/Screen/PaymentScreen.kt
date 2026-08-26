@@ -55,6 +55,7 @@ import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailRow
+import com.example.foodieheal.ui.components.PaymentScreenSkeleton
 import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
@@ -164,7 +165,7 @@ fun PaymentScreen(
                     }
                 }
             } else {
-                CircularProgressIndicator()
+                PaymentScreenSkeleton()
             }
         }
         return

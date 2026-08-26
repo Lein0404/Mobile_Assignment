@@ -59,6 +59,10 @@ fun AddNewCardBottomSheet(
     val isExpiryComplete = formState.expiryDate.length == 5
     val isExpiryInvalid = formState.expiryDate.isNotEmpty() && (isExpiryComplete && expiryError != null || (!isExpiryComplete && formState.expiryDate.length >= 2 && validateMonth(formState.expiryDate) != null))
 
+    // Luhn validation — only shown once the user has typed >= 13 digits
+    val cardError = cardNumberError(formState.cardNumber)
+    val isCardNumberInvalid = cardError != null
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -86,6 +90,21 @@ fun AddNewCardBottomSheet(
                 },
                 label = { Text(stringResource(R.string.label_card_number)) },
                 placeholder = { Text(stringResource(R.string.placeholder_card_number)) },
+                isError = isCardNumberInvalid,
+                supportingText = if (isCardNumberInvalid) {
+                    { Text(cardError!!, color = MaterialTheme.colorScheme.error) }
+                } else null,
+                trailingIcon = {
+                    // Show detected card brand as subtle hint while typing
+                    if (formState.cardNumber.isNotEmpty()) {
+                        Text(
+                            text = detectCardBrand(formState.cardNumber),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -152,7 +171,8 @@ fun AddNewCardBottomSheet(
                 )
             }
 
-            val isFormValid = formState.cardNumber.length in 15..16 &&
+            val isFormValid = formState.cardNumber.length in 13..16 &&
+                    !isCardNumberInvalid &&
                     formState.cardHolderName.isNotBlank() &&
                     formState.expiryDate.length == 5 &&
                     expiryError == null &&
@@ -229,15 +249,7 @@ fun validateExpiryDate(expiry: String): String? {
     return null
 }
 
-// Simple brand detection logic
-private fun detectCardBrand(cardNumber: String): String {
-    return when {
-        cardNumber.startsWith("4") -> "Visa"
-        cardNumber.startsWith("5") || cardNumber.startsWith("2") -> "Mastercard"
-        cardNumber.startsWith("3") -> "Amex"
-        else -> "Card"
-    }
-}
+// detectCardBrand() is now in CardValidator.kt (top-level) with full IIN range coverage.
 
 @Composable
 fun PaymentMethodItem(
