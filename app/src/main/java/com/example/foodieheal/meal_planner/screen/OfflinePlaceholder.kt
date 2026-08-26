@@ -24,7 +24,8 @@ import com.example.foodieheal.R
 
 @Composable
 fun OfflinePlaceholder(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    message: String = stringResource(R.string.desc_connect_internet_prompt)
 ) {
     Column(
         modifier = modifier
@@ -48,7 +49,7 @@ fun OfflinePlaceholder(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = stringResource(R.string.desc_connect_internet_prompt),
+            text = message,
             fontSize = 15.sp,
             color = Color.Gray,
             textAlign = TextAlign.Center

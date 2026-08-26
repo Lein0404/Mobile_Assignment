@@ -3,32 +3,83 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class IngredientsViewModel(application: Application) : AndroidViewModel(application) {
+data class IngredientsUiState(
+    val selectedTab: Int = 0,
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val ingredients: List<IngredientItem> = emptyList(),
+    val filteredIngredients: List<IngredientItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val ingredientDetail: IngredientDetailInfo? = null,
+    val errorMessage: Int? = null,
+    val isNetworkAvailable: Boolean = true
+)
 
-    private val database = IngredientsDatabase.getInstance(application)
-    private val repository = IngredientsRepository(database.ingredientsDao())
-    private val shoppingRepo = ShoppingListRepository(database.shoppingListDao())
+data class IngredientItem(
+    val ingredient: Ingredients,
+    val calorieSummary: String = ""
+)
+
+data class IngredientDetailInfo(
+    val ingredient: Ingredients,
+    val calorieEntries: List<CalorieEntry> = emptyList(),
+    val calorieSummary: String = ""
+)
+
+data class CalorieEntry(
+    val calories: Double,
+    val quantity: Double,
+    val unitName: String
+)
+
+class IngredientsViewModel(
+    application: Application,
+    private val repository: IngredientsRepository,
+    private val shoppingRepo: ShoppingListRepository
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(IngredientsUiState())
     val uiState: StateFlow<IngredientsUiState> = _uiState.asStateFlow()
 
+    // Network connectivity monitoring
+    private val networkMonitor = NetworkMonitor(application)
+
     init {
+        observeNetworkStatus()
         fetchIngredients()
     }
 
-    fun fetchIngredients() {
+    private fun observeNetworkStatus() {
         viewModelScope.launch {
-            updateLoading(true)
+            networkMonitor.isConnected.collect { connected ->
+                _uiState.update { it.copy(isNetworkAvailable = connected) }
+                if (connected) {
+                    fetchIngredients()
+                }
+            }
+        }
+    }
+
+    fun fetchIngredients(isRefreshing: Boolean = false) {
+        viewModelScope.launch {
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val ingredients = repository.getIngredients()
                 val allUnits = repository.getUnits().associateBy { it.unitID }
@@ -45,15 +96,23 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
                     IngredientItem(ingredient, summary)
                 }
 
-                _uiState.update { it.copy(ingredients = ingredientItems, errorMessage = null) }
+                _uiState.update { it.copy(ingredients = ingredientItems, errorMessage = null, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredients") }
+                _uiState.update { it.copy(errorMessage = R.string.ingredients_error_fetch_ingredients, isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }
         }
+    }
+
+    fun refresh() {
+        fetchIngredients(isRefreshing = true)
+    }
+
+    fun onTabChange(index: Int) {
+        _uiState.update { it.copy(selectedTab = index) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -88,9 +147,16 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.update { it.copy(isLoading = loading) }
     }
 
-    fun fetchIngredientDetail(id: String) {
+    fun fetchIngredientDetail(
+        id: String,
+        isRefreshing: Boolean = false
+    ) {
         viewModelScope.launch {
-            updateLoading(true)
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                updateLoading(true)
+            }
             try {
                 val ingredient = repository.getIngredientById(id)
                 if (ingredient != null) {
@@ -109,15 +175,19 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
                     val calorieSummary = calorieEntries.joinToString("\n") { entry ->
                         "${entry.calories.toInt()} kcal / ${entry.quantity.toInt()} ${entry.unitName}"
                     }
-                    _uiState.update { it.copy(ingredientDetail = IngredientDetailInfo(ingredient, calorieEntries, calorieSummary)) }
+                    _uiState.update { it.copy(ingredientDetail = IngredientDetailInfo(ingredient, calorieEntries, calorieSummary), isRefreshing = false) }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Failed to fetch ingredient details") }
+                _uiState.update { it.copy(errorMessage = R.string.ingredients_error_fetch_details, isRefreshing = false) }
             } finally {
                 updateLoading(false)
             }
         }
+    }
+
+    fun refreshIngredientDetail(id: String) {
+        fetchIngredientDetail(id, isRefreshing = true)
     }
 
     fun addToShoppingList(ingredient: Ingredients) {
@@ -139,4 +209,3 @@ class IngredientsViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 }
-

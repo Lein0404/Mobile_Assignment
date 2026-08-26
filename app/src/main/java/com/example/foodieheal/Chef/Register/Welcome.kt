@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ fun ChefWelcomeScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = "Back to Login",
+                            contentDescription = stringResource(R.string.back_to_login),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -57,6 +58,7 @@ fun ChefWelcomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,7 +72,7 @@ fun ChefWelcomeScreen(
                 // Image for deco
                 Image(
                     painter = painterResource(R.drawable.ic_hiring),
-                    contentDescription = "Chef Illustration",
+                    contentDescription = stringResource(R.string.chef_illustration),
                     modifier = Modifier
                         .size(220.dp)
                         .padding(bottom = 16.dp)
@@ -78,7 +80,7 @@ fun ChefWelcomeScreen(
 
                 // Title
                 Text(
-                    text = "Become a Chef Partner",
+                    text = stringResource(R.string.chef_welcome_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -89,7 +91,7 @@ fun ChefWelcomeScreen(
 
                 // Subtitle
                 Text(
-                    text = "Share your culinary talent, create tailored menus, and connect with health-conscious clients.",
+                    text = stringResource(R.string.chef_welcome_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -102,9 +104,9 @@ fun ChefWelcomeScreen(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    FeatureCard(text = "Create & customize your personal chef profile")
-                    FeatureCard(text = "Offer flexible home cooking services")
-                    FeatureCard(text = "Connect directly with hungry customers")
+                    FeatureCard(text = stringResource(R.string.chef_feature_customize_profile))
+                    FeatureCard(text = stringResource(R.string.chef_feature_home_cooking))
+                    FeatureCard(text = stringResource(R.string.chef_feature_connect_customers))
                 }
             }
 
@@ -129,7 +131,7 @@ fun ChefWelcomeScreen(
                     )
                 ) {
                     Text(
-                        text = "Get Started",
+                        text = stringResource(R.string.get_started),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -144,7 +146,7 @@ fun ChefWelcomeScreen(
                     }
                 ) {
                     Text(
-                        text = "Already have a chef account? Login",
+                        text = stringResource(R.string.already_have_account_login),
                         color = MaterialTheme.colorScheme.secondary,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold

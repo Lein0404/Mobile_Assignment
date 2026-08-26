@@ -1,6 +1,8 @@
 package com.example.foodieheal.ui.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,7 +71,9 @@ fun PrimaryButton(
     onClick: () -> Unit,
     textID: Int,
     enabled: Boolean = true,
-    padding: PaddingValues? = null
+    padding: PaddingValues? = null,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     val finalModifier = if (padding != null) {
         modifier.padding(padding)
@@ -80,8 +85,8 @@ fun PrimaryButton(
         onClick = onClick,
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = containerColor,
+            contentColor = contentColor,
         ),
         enabled = enabled,
         modifier = finalModifier
@@ -99,7 +104,9 @@ fun SecondaryButton(
     onClick: () -> Unit,
     textId: Int,
     enabled: Boolean = true,
-    padding: PaddingValues? = null
+    padding: PaddingValues? = null,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.primary
 ) {
     val finalModifier = if (padding != null) {
         modifier.padding(padding)
@@ -110,6 +117,13 @@ fun SecondaryButton(
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
+        border = BorderStroke(
+            width = 1.dp,
+            color = borderColor
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = contentColor
+        ),
         enabled = enabled,
         modifier = finalModifier
     ) {
@@ -162,7 +176,7 @@ fun CommonInputField(
     minLines: Int = 1,
 ) {
     // Modifier is applied ONLY to the parent container
-    Column(modifier = modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(textId),
             style = MaterialTheme.typography.bodyLarge,
@@ -172,7 +186,7 @@ fun CommonInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(), // Inner field always takes full container width
+            modifier = modifier, // Apply modifier directly
             enabled = enabled,
             placeholder = placeholder?.let { { Text(it) } },
             leadingIcon = leadingIconRes?.let {
@@ -426,15 +440,16 @@ fun GenderDropdown(
 
 @Composable
 fun StatusBadge(status: Status) {
+    val isDark = isSystemInDarkTheme()
     val (color, text) = when (status) {
-        Status.APPROVED -> Color(0xFFB1E0C0) to Status.APPROVED.statusName
-        Status.PENDING -> Color(0xFFFFF3E0) to Status.PENDING.statusName
+        Status.APPROVED -> (if (isDark) Color(0xFF1B5E20) else Color(0xFFB1E0C0)) to Status.APPROVED.statusName
+        Status.PENDING -> (if (isDark) Color(0xFFE65100) else Color(0xFFFFF3E0)) to Status.PENDING.statusName
         Status.REJECTED -> MaterialTheme.colorScheme.errorContainer to Status.REJECTED.statusName
     }
 
     val textColor = when (status) {
-        Status.APPROVED -> Color(0xFF008000)
-        Status.PENDING -> Color(0xFFFF9800)
+        Status.APPROVED -> (if (isDark) Color(0xFFC8E6C9) else Color(0xFF008000))
+        Status.PENDING -> (if (isDark) Color(0xFFFFE0B2) else Color(0xFFFF9800))
         Status.REJECTED -> MaterialTheme.colorScheme.onErrorContainer
     }
 
@@ -456,6 +471,32 @@ fun StatusBadge(status: Status) {
 }
 
 @Composable
+fun ImagePlaceholder(
+    modifier: Modifier = Modifier,
+    iconSize: Dp = dimensionResource(R.dimen.icon_xlarge_size),
+    spacerSize: Dp = dimensionResource(id = R.dimen.padding_smd),
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_no_image_available),
+            contentDescription = null,
+            modifier = Modifier.size(iconSize),
+            tint = tint
+        )
+        Spacer(modifier = Modifier.height(spacerSize))
+        Text(
+            text = stringResource(R.string.image_unavailable),
+            color = tint,
+        )
+    }
+}
+
+@Composable
 fun DetailRow(
     label: String,
     value: String,
@@ -472,6 +513,7 @@ fun DetailRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
+                modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -486,14 +528,17 @@ fun DetailRow(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = valueFontWeight,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
             )
         }
     } else {
@@ -729,3 +774,23 @@ fun BottomNavBar(
         }
     }
 }*/
+
+fun formatToAmPm(timeStr: String?): String {
+    if (timeStr.isNullOrBlank()) return ""
+    val trimmed = timeStr.trim()
+    if (trimmed.contains("AM", ignoreCase = true) || trimmed.contains("PM", ignoreCase = true)) {
+        return trimmed
+    }
+    val patterns = listOf("HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
+    for (pattern in patterns) {
+        try {
+            val parser = java.text.SimpleDateFormat(pattern, Locale.US)
+            val date = parser.parse(trimmed)
+            if (date != null) {
+                val outputFormat = java.text.SimpleDateFormat("hh:mm a", Locale.US)
+                return outputFormat.format(date)
+            }
+        } catch (_: Exception) {}
+    }
+    return trimmed
+}

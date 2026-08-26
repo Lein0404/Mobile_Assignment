@@ -28,10 +28,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -49,9 +51,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,12 +70,11 @@ import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
-import com.example.foodieheal.repository.RecipeRepository
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
-
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -89,8 +92,9 @@ fun TemplatesContent(
     )
     val coroutineScope = rememberCoroutineScope()
 
+    val context = LocalContext.current
     val planRepository = remember { PlanRepository() }
-    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
 
     val currentUserIdFlow = remember(authViewModel) {
         snapshotFlow { authViewModel.currentUser?.id }
@@ -183,14 +187,23 @@ fun AllTemplatesScreen(
     onPlanDetails:(String,Boolean)-> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val templateAddedMsg = stringResource(R.string.msg_template_added)
     val allPlans by templateViewModel.publicCommunityPlans.collectAsStateWithLifecycle()
+    val isLoading by templateViewModel.isLoading.collectAsStateWithLifecycle()
+
+    // 🌟 Pre-resolve category names for better search matching (e.g. "High Protein" instead of "HIGH_PROTEIN")
+    val categoryNames = PlanCategory.entries.associateWith { stringResource(it.displayNameRes) }
+
     var query by remember { mutableStateOf("") }
-    val filteredContacts = remember(query, allPlans) {
+    val filteredContacts = remember(query, allPlans, categoryNames) {
         if (query.isBlank()) allPlans
-        else allPlans.filter { it.planName.contains(query, ignoreCase = true)
-                || it.category.toString().contains(query, ignoreCase = true)
-                || it.planId.contains(query, ignoreCase = false)}
+        else allPlans.filter { plan ->
+            val categoryName = categoryNames[plan.category] ?: ""
+            plan.planName.contains(query, ignoreCase = true)
+                || categoryName.contains(query, ignoreCase = true)
+                || plan.planId.contains(query, ignoreCase = false)
+        }
     }
 
     fun shareTemplate(id: String) {
@@ -204,32 +217,60 @@ fun AllTemplatesScreen(
         context.startActivity(shareIntent)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(bottom = 50.dp)) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
             label = { Text(stringResource(R.string.search_template)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp) // 🌟 Reduced vertical padding
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            trailingIcon = {
+                IconButton(onClick = { focusManager.clearFocus() }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.search),
+                        contentDescription = "Search",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                imeAction = ImeAction.Search
+            ),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                onSearch = { focusManager.clearFocus() }
+            ),
+            shape = RoundedCornerShape(12.dp)
         )
-        CategorizedTemplatesScreen(
-            weeklyPlans = filteredContacts,
-            onPlanDetails = {id ->  onPlanDetails(id,false) },
-            onShare = { id -> shareTemplate(id) },
-            onAdd = { id ->
-                templateViewModel.duplicateTemplate(
-                    sourcePlanId = id,
-                    currentUserId = templateViewModel.currentUserId ?: "",
-                    onSuccess = {
-                        Toast.makeText(context, templateAddedMsg, Toast.LENGTH_SHORT).show()
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                    }
-                )
+        if (isLoading && allPlans.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        )
+        } else {
+            CategorizedTemplatesScreen(
+                weeklyPlans = filteredContacts,
+                onPlanDetails = { id -> onPlanDetails(id, false) },
+                onShare = { id -> shareTemplate(id) },
+                onAdd = { id ->
+                    templateViewModel.duplicateTemplate(
+                        sourcePlanId = id,
+                        currentUserId = templateViewModel.currentUserId ?: "",
+                        onSuccess = {
+                            Toast.makeText(context, templateAddedMsg, Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { error ->
+                            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
+                emptyMessage = if (query.isBlank()) "No community templates available" else "No templates match your search"
+            )
+        }
     }
 }
 
@@ -241,6 +282,7 @@ fun MyTemplatesScreen(
     onEdit: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val isLoading by templateViewModel.isLoading.collectAsStateWithLifecycle()
 
     fun shareTemplate(id: String) {
         val shareUrl = "https://tzh652.github.io/template?id=$id"
@@ -261,7 +303,7 @@ fun MyTemplatesScreen(
                 onClick = onAddTemplateClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(bottom = 80.dp) //  Lift the FAB up so it's not blocked
+                modifier = Modifier.padding(bottom = 120.dp) //  Lift the FAB up so it's not blocked
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
@@ -273,7 +315,7 @@ fun MyTemplatesScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding).padding(bottom = 50.dp)
         ) {
             val userPlans by templateViewModel.userWeeklyPlans.collectAsStateWithLifecycle()
 
@@ -290,7 +332,8 @@ fun MyTemplatesScreen(
                 onPlanDetails = { id -> onPlanDetails(id,true) },
                 onEdit =  onEdit,
                 onShare = { id -> shareTemplate(id) },
-                isMyTemplate = true
+                isMyTemplate = true,
+                emptyMessage = "You haven't created any templates yet"
             )
         }
     }
@@ -304,8 +347,25 @@ fun CategorizedTemplatesScreen(
     onEdit: (String) -> Unit = {},
     onDelete:(String)-> Unit = {},
     onShare: (String) -> Unit = {},
-    onAdd: (String) -> Unit = {}
+    onAdd: (String) -> Unit = {},
+    emptyMessage: String = "No templates found"
 ) {
+    if (weeklyPlans.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = emptyMessage,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
     val categorizedPlans = remember(weeklyPlans) {
         weeklyPlans.groupBy { it.category }
     }

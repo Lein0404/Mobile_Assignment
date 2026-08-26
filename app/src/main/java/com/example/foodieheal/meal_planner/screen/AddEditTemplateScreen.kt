@@ -25,10 +25,10 @@ import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.viewModel.AddEditTemplateViewModel
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.ui.theme.Green
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
@@ -294,7 +294,7 @@ fun AddEditTemplateScreen(
                 Text(
                     text = if (isPublic) stringResource(R.string.msg_visible_to_community) else stringResource(R.string.msg_only_visible_to_you),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.Gray
                 )
             }
             Switch(
@@ -303,7 +303,15 @@ fun AddEditTemplateScreen(
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 2.dp,
+            color = Color.LightGray
+        )
+
+        Spacer(Modifier.height(4.dp))
 
         // --- Weekly Day Selection Row ---
         WeeklyDayCardRow(
@@ -330,7 +338,7 @@ fun AddEditTemplateScreen(
         Spacer(Modifier.height(8.dp))
 
         HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.outlineVariant
         )

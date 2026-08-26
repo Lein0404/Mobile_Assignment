@@ -4,13 +4,13 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.meal_planner.data.PlanRepository
 import com.example.foodieheal.meal_planner.model.MealSlotDTO
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.model.toEntity
-import com.example.foodieheal.model.Recipe
-import com.example.foodieheal.repository.RecipeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
@@ -56,6 +57,9 @@ class TemplateViewModel(
 
     private val refreshTrigger = MutableStateFlow(0)
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     fun refreshPlans() {
         refreshTrigger.value++
     }
@@ -66,6 +70,7 @@ class TemplateViewModel(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val allWeeklyPlans: StateFlow<List<WeeklyPlan>> = refreshTrigger
+        .onEach { _isLoading.value = true }
         .flatMapLatest {
             planRepository.observeAllPlans()
         }
@@ -82,7 +87,7 @@ class TemplateViewModel(
             val recipeMap = recipes.filter { it.recipe_id != null }.associateBy { it.recipe_id!! }
 
             // 🌟 3. Efficiently map entities to domain models using the pre-fetched map
-            entityList.map { entity ->
+            val result = entityList.map { entity ->
                 WeeklyPlan(
                     planName = entity.planName,
                     planId = entity.planId,
@@ -92,6 +97,8 @@ class TemplateViewModel(
                     public = entity.public
                 )
             }
+            _isLoading.value = false
+            result
         }
         .flowOn(Dispatchers.IO)
         .stateIn(

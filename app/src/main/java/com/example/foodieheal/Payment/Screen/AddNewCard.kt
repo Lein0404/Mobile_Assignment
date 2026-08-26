@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -33,10 +37,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.Payment.ViewModel.NewCardFormState
 import com.example.foodieheal.Payment.ViewModel.PaymentMethod
 import com.example.foodieheal.R
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +53,10 @@ fun AddNewCardBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var formState by remember { mutableStateOf(NewCardFormState()) }
 
+    val expiryError = validateExpiryDate(formState.expiryDate)
+    val isExpiryComplete = formState.expiryDate.length == 5
+    val isExpiryInvalid = formState.expiryDate.isNotEmpty() && (isExpiryComplete && expiryError != null || (!isExpiryComplete && formState.expiryDate.length >= 2 && validateMonth(formState.expiryDate) != null))
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -55,7 +65,9 @@ fun AddNewCardBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .imePadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
@@ -66,8 +78,12 @@ fun AddNewCardBottomSheet(
 
             OutlinedTextField(
                 value = formState.cardNumber,
-                onValueChange = { if (it.length <= 16) formState = formState.copy(cardNumber = it) },
+                onValueChange = { input ->
+                    val clean = input.filter { it.isDigit() }.take(16)
+                    formState = formState.copy(cardNumber = clean)
+                },
                 label = { Text("Card Number") },
+                placeholder = { Text("16-digit card number") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -89,8 +105,16 @@ fun AddNewCardBottomSheet(
             ) {
                 OutlinedTextField(
                     value = formState.expiryDate,
-                    onValueChange = { if (it.length <= 5) formState = formState.copy(expiryDate = it) },
+                    onValueChange = { input ->
+                        val formatted = formatExpiryDateInput(input)
+                        formState = formState.copy(expiryDate = formatted)
+                    },
                     label = { Text("MM/YY") },
+                    placeholder = { Text("MM/YY") },
+                    isError = isExpiryInvalid,
+                    supportingText = if (isExpiryInvalid) {
+                        { Text(expiryError ?: validateMonth(formState.expiryDate) ?: "Invalid MM/YY", color = MaterialTheme.colorScheme.error) }
+                    } else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -99,8 +123,12 @@ fun AddNewCardBottomSheet(
 
                 OutlinedTextField(
                     value = formState.cvv,
-                    onValueChange = { if (it.length <= 4) formState = formState.copy(cvv = it) },
+                    onValueChange = { input ->
+                        val clean = input.filter { it.isDigit() }.take(4)
+                        formState = formState.copy(cvv = clean)
+                    },
                     label = { Text("CVV") },
+                    placeholder = { Text("3-4 digits") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -122,13 +150,19 @@ fun AddNewCardBottomSheet(
                 )
             }
 
+            val isFormValid = formState.cardNumber.length in 15..16 &&
+                    formState.cardHolderName.isNotBlank() &&
+                    formState.expiryDate.length == 5 &&
+                    expiryError == null &&
+                    formState.cvv.length in 3..4
+
             Button(
                 onClick = {
                     val last4 = if (formState.cardNumber.length >= 4) formState.cardNumber.takeLast(4) else "0000"
                     val brand = detectCardBrand(formState.cardNumber)
                     onCardAdded(last4, brand, formState.expiryDate)
                 },
-                enabled = formState.cardNumber.length >= 15 && formState.expiryDate.isNotEmpty() && formState.cvv.isNotEmpty(),
+                enabled = isFormValid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -139,6 +173,58 @@ fun AddNewCardBottomSheet(
             }
         }
     }
+}
+
+// Auto-format MM/YY input
+fun formatExpiryDateInput(input: String): String {
+    val digits = input.filter { it.isDigit() }.take(4)
+    return when {
+        digits.length <= 2 -> digits
+        else -> "${digits.take(2)}/${digits.drop(2)}"
+    }
+}
+
+// Validate month (01-12)
+fun validateMonth(expiry: String): String? {
+    if (expiry.length < 2) return null
+    val month = expiry.take(2).toIntOrNull()
+    if (month == null || month < 1 || month > 12) {
+        return "Month must be 01-12"
+    }
+    return null
+}
+
+// Validate complete MM/YY format & check if expired
+fun validateExpiryDate(expiry: String): String? {
+    if (expiry.isBlank()) return null
+    if (expiry.length < 5) {
+        return validateMonth(expiry)
+    }
+    val parts = expiry.split("/")
+    if (parts.size != 2 || parts[0].length != 2 || parts[1].length != 2) {
+        return "Format: MM/YY"
+    }
+    val month = parts[0].toIntOrNull()
+    val yearShort = parts[1].toIntOrNull()
+    if (month == null || month < 1 || month > 12) {
+        return "Month must be 01-12"
+    }
+    if (yearShort == null) {
+        return "Invalid year"
+    }
+
+    val calendar = Calendar.getInstance()
+    val currentYearShort = calendar.get(Calendar.YEAR) % 100 // 2-digit year (e.g. 26)
+    val currentMonth = calendar.get(Calendar.MONTH) + 1 // 1-12
+
+    if (yearShort < currentYearShort || (yearShort == currentYearShort && month < currentMonth)) {
+        return "Card has expired"
+    }
+    if (yearShort > currentYearShort + 25) {
+        return "Invalid expiry year"
+    }
+
+    return null
 }
 
 // Simple brand detection logic
@@ -157,37 +243,78 @@ fun PaymentMethodItem(
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
+    val isDefault = (method as? PaymentMethod.CreditCard)?.isDefault == true
+    val isWallet = method is PaymentMethod.InAppWallet
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable { onSelect() }
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = isSelected,
             onClick = onSelect
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Icon(
             painter = painterResource(R.drawable.dollar_symbol),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+            tint = if (isWallet) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = method.title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = method.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (isDefault) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "Default",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                } else if (isWallet) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = "Instant",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                }
+            }
             method.subtitle?.let { subtitleText ->
                 Text(
                     text = subtitleText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isWallet) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

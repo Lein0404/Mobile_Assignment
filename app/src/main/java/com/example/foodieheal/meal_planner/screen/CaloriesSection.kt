@@ -35,7 +35,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
-import com.example.foodieheal.model.User
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.ui.theme.Green
 import com.example.foodieheal.ui.theme.Orange
 import com.example.foodieheal.ui.theme.Red

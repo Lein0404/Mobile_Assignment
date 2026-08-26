@@ -9,7 +9,7 @@ data class payment(
     val paymentId: String,
 
     @SerialName("transactionId")
-    val transactionId : String,
+    val transactionId : String? = null,
 
     @SerialName("appointmentID")
     val appointmentId: String,
@@ -21,11 +21,17 @@ data class payment(
     val totalAmount: Double,
 
     @SerialName("paymentMethod")
-    val paymentMethod: String,
+    val paymentMethod: String? = null,
 
     @SerialName("paymentMethod_id")
     val paymentMethodId: String? = null,
 
     @SerialName("status")
-    val status: String
+    val status: String,
+
+    @SerialName("created_at")
+    val createdAt: String? = null,
+
+    @SerialName("pay_at")
+    val payAt: String? = null
 )

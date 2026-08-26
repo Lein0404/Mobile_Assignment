@@ -3,9 +3,13 @@ package com.example.foodieheal.ingredients.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.ingredients.shared.IngredientFormHelper
+import com.example.foodieheal.ingredients.shared.IngredientFormState
+import com.example.foodieheal.ingredients.shared.UnitRowState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import io.github.jan.supabase.auth.auth
@@ -15,6 +19,27 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+data class IngredientRequestUiState(
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val selectedStatus: Status? = null,
+    val tempSelectedStatus: Status? = null,
+    val requests: List<IngredientRequestItem> = emptyList(),
+    val filteredRequests: List<IngredientRequestItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val isStatusConflict: Boolean = false,
+    val isNetworkAvailable: Boolean = true,
+    val errorMessage: Int? = null,
+    val showDeleteDialog: Boolean = false,
+    val showStatusFilterDialog: Boolean = false,
+)
+
+data class IngredientRequestItem(
+    val request: IngredientRequest,
+    val calorieSummary: String = ""
+)
+
 class IngredientRequestViewModel(
     application: Application,
     private val repository: IngredientRequestRepository,
@@ -23,8 +48,8 @@ class IngredientRequestViewModel(
     private val _uiState = MutableStateFlow(IngredientRequestUiState())
     val uiState: StateFlow<IngredientRequestUiState> = _uiState.asStateFlow()
 
-    private val _formState = MutableStateFlow(IngredientRequestFormUiState())
-    val formState: StateFlow<IngredientRequestFormUiState> = _formState.asStateFlow()
+    private val _formState = MutableStateFlow(IngredientFormState())
+    val formState: StateFlow<IngredientFormState> = _formState.asStateFlow()
 
     private val _availableUnits = MutableStateFlow<List<Units>>(emptyList())
     val availableUnits: StateFlow<List<Units>> = _availableUnits.asStateFlow()
@@ -55,10 +80,14 @@ class IngredientRequestViewModel(
         }
     }
 
-    fun fetchRequests() {
+    fun fetchRequests(isRefreshing: Boolean = false) {
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            }
             try {
                 val requests = repository.getIngredientRequests(currentUserId)
                 val allUnits = repository.getUnits().associateBy { it.unitID }
@@ -74,13 +103,17 @@ class IngredientRequestViewModel(
                     }
                     IngredientRequestItem(request, summary)
                 }
-                _uiState.update { it.copy(requests = items, isLoading = false) }
+                _uiState.update { it.copy(requests = items, isLoading = false, isRefreshing = false) }
                 applyFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch requests") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_requests) }
             }
         }
+    }
+
+    fun refresh() {
+        fetchRequests(isRefreshing = true)
     }
     
     private fun fetchUnits() {
@@ -93,9 +126,16 @@ class IngredientRequestViewModel(
         }
     }
 
-    fun fetchRequestDetail(requestId: String) {
+    fun fetchRequestDetail(
+        requestId: String,
+        isRefreshing: Boolean = false
+    ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            if (isRefreshing) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true) }
+            }
             try {
                 val request = repository.getIngredientRequestById(requestId)
                 if (request != null) {
@@ -110,17 +150,40 @@ class IngredientRequestViewModel(
                     }
                     _requestDetail.value = IngredientRequestItem(request, summary)
                 }
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to fetch request detail") }
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_details) }
             }
         }
+    }
+
+    fun refreshRequestDetail(requestId: String) {
+        fetchRequestDetail(requestId, isRefreshing = true)
+    }
+
+    fun onShowDeleteDialog(show: Boolean) {
+        _uiState.update { it.copy(showDeleteDialog = show) }
+    }
+
+    fun onShowStatusFilterDialog(show: Boolean) {
+        _uiState.update { it.copy(showStatusFilterDialog = show, tempSelectedStatus = it.selectedStatus) }
+    }
+
+    fun updateTempStatus(status: Status?) {
+        _uiState.update { it.copy(tempSelectedStatus = status) }
     }
 
     fun deleteRequest(requestId: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
+                // Guard: Check status before deleting
+                val current = repository.getIngredientRequestById(requestId)
+                if (current != null && current.requestStatus != Status.PENDING) {
+                    _uiState.update { it.copy(isStatusConflict = true) }
+                    return@launch
+                }
+
                 repository.deleteIngredientRequest(requestId)
                 fetchRequests()
                 onComplete()
@@ -145,6 +208,7 @@ class IngredientRequestViewModel(
                             category = request.ingredientCategory,
                             description = request.ingredientDesc,
                             imageUrl = request.ingredientImage,
+                            isStatusConflict = false,
                             unitRows = unitRequests.map { ur ->
                                 UnitRowState(
                                     selectedUnit = allUnits[ur.unitID],
@@ -161,7 +225,12 @@ class IngredientRequestViewModel(
     }
 
     fun clearForm() {
-        _formState.value = IngredientRequestFormUiState()
+        _formState.value = IngredientFormState()
+    }
+
+    fun clearStatusConflict() {
+        _uiState.update { it.copy(isStatusConflict = false) }
+        _formState.update { it.copy(isStatusConflict = false) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -181,100 +250,38 @@ class IngredientRequestViewModel(
         applyFilters()
     }
 
+    fun onStatusFilterChange(status: Status?) {
+        _uiState.update { it.copy(selectedStatus = status) }
+        applyFilters()
+    }
+
     private fun applyFilters() {
         _uiState.update { state ->
             val filtered = state.requests.filter { item ->
                 (state.searchQuery.isEmpty() || item.request.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
-                (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory))
+                (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory)) &&
+                (state.selectedStatus == null || item.request.requestStatus == state.selectedStatus)
             }
             state.copy(filteredRequests = filtered)
         }
     }
 
-    fun updateFormName(name: String) = _formState.update { it.copy(ingredientName = name, nameError = null) }
-    fun updateFormCategory(category: IngredientCategory) = _formState.update { it.copy(category = category, categoryError = null) }
-    fun updateFormDescription(desc: String) = _formState.update { it.copy(description = desc, descriptionError = null) }
-    
-    fun addUnitRow() {
-        _formState.update { it.copy(unitRows = it.unitRows + UnitRowState(), unitRowsError = null) }
-    }
+    fun updateFormName(name: String) = _formState.update { IngredientFormHelper.updateName(it, name) }
+    fun updateFormCategory(category: IngredientCategory) = _formState.update { IngredientFormHelper.updateCategory(it, category) }
+    fun updateFormDescription(desc: String) = _formState.update { IngredientFormHelper.updateDescription(it, desc) }
+    fun addUnitRow() = _formState.update { IngredientFormHelper.addUnitRow(it) }
 
     fun updateUnitRow(index: Int, unit: Units?, calories: String) {
-        _formState.update { state ->
-            val newList = state.unitRows.toMutableList()
-            newList[index] = newList[index].copy(selectedUnit = unit, calories = calories, unitError = null, caloriesError = null)
-            state.copy(unitRows = newList, unitRowsError = null)
-        }
+        _formState.update { IngredientFormHelper.updateUnitRow(it, index, unit, calories) }
     }
 
     fun removeUnitRow(index: Int) {
-        _formState.update { state ->
-            if (state.unitRows.size > 1) {
-                val newList = state.unitRows.toMutableList()
-                newList.removeAt(index)
-                state.copy(unitRows = newList)
-            } else state
-        }
+        _formState.update { IngredientFormHelper.removeUnitRow(it, index) }
     }
 
-    /**
-     * Validates all form fields and returns true if the form is valid.
-     * Sets per-field error messages on the form state if invalid.
-     */
     private fun validateForm(): Boolean {
-        val state = _formState.value
-        var isValid = true
-
-        val nameError = if (state.ingredientName.isBlank()) {
-            isValid = false
-            "Ingredient name is required"
-        } else null
-
-        val categoryError = if (state.category == null) {
-            isValid = false
-            "Category is required"
-        } else null
-
-        val descriptionError = if (state.description.isBlank()) {
-            isValid = false
-            "Description is required"
-        } else null
-
-        // Validate unit rows: at least one must be fully filled
-        val hasAtLeastOneFilledRow = state.unitRows.any { it.selectedUnit != null && it.calories.isNotBlank() }
-        val unitRowsError = if (!hasAtLeastOneFilledRow) {
-            isValid = false
-            "At least one calorie information entry is required"
-        } else null
-
-        // Per-row validation for partially filled rows
-        val validatedRows = state.unitRows.map { row ->
-            val unitError = if (row.selectedUnit == null && row.calories.isNotBlank()) {
-                isValid = false
-                "Serving unit is required"
-            } else null
-
-            val caloriesError = if (row.selectedUnit != null && row.calories.isBlank()) {
-                isValid = false
-                "Calories value is required"
-            } else if (row.calories.isNotBlank() && row.calories.toDoubleOrNull() == null) {
-                isValid = false
-                "Must be a valid number"
-            } else null
-
-            row.copy(unitError = unitError, caloriesError = caloriesError)
-        }
-
-        _formState.update {
-            it.copy(
-                nameError = nameError,
-                categoryError = categoryError,
-                descriptionError = descriptionError,
-                unitRowsError = unitRowsError,
-                unitRows = validatedRows
-            )
-        }
-
+        val (isValid, updatedState) = IngredientFormHelper.validateForm(_formState.value)
+        _formState.value = updatedState
         return isValid
     }
 
@@ -289,6 +296,15 @@ class IngredientRequestViewModel(
         viewModelScope.launch {
             _formState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
+                // Check if request is still PENDING before updating
+                if (state.requestId != null) {
+                    val currentRequest = repository.getIngredientRequestById(state.requestId)
+                    if (currentRequest?.requestStatus != Status.PENDING) {
+                        _formState.update { it.copy(isSubmitting = false, isStatusConflict = true) }
+                        return@launch
+                    }
+                }
+
                 // Generate sequential IDs
                 val requestId = state.requestId ?: repository.getNextRequestId()
                 val filledRows = state.unitRows.filter { it.selectedUnit != null && it.calories.isNotBlank() }
@@ -322,14 +338,18 @@ class IngredientRequestViewModel(
                     repository.submitIngredientRequest(request, unitRequests)
                 }
 
-                _formState.value = IngredientRequestFormUiState() // Reset
+                _formState.value = IngredientFormState() // Reset
                 fetchRequests() // Refresh
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _formState.update { it.copy(isSubmitting = false, errorMessage = "Submission failed: ${e.message}") }
+                _formState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        errorMessage = R.string.error_unknown
+                    )
+                }
             }
         }
     }
 }
-

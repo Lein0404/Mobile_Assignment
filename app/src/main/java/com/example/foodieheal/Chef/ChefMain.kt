@@ -16,31 +16,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
+import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.foodieheal.Chef.Home.AppointmentDetailScreen
+import com.example.foodieheal.Chef.Home.ChefChangePasswordScreen
 import com.example.foodieheal.Chef.Home.EditChefProfileScreen
-import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
-import com.example.foodieheal.Chef.ViewModel.HomeUiState
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.viewmodel.AuthViewModel
 
 sealed class ChefNavigationItem(val route: String, val titleRes: Int, val iconRes: Int) {
     object Home : ChefNavigationItem("chef_home", R.string.nav_home, R.drawable.ic_home)
@@ -53,13 +54,20 @@ fun ChefMainScreen(
     parentNavController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val chefNavController = rememberNavController()
     val homeViewModel: ChefPortalViewModel = viewModel()
 
-    // Ensure chef data is loaded upon entry
+    // Ensure chef data is loaded and cleanup service is active upon entry
     LaunchedEffect(Unit) {
         if (authViewModel.currentChef == null) {
             authViewModel.fetchChefData()
+        }
+        try {
+            val cleanupIntent = android.content.Intent(context, com.example.foodieheal.Chef.local.ChefCacheCleanupService::class.java)
+            context.startService(cleanupIntent)
+        } catch (e: Exception) {
+            android.util.Log.e("ChefMainScreen", "Failed to start ChefCacheCleanupService", e)
         }
     }
 
@@ -166,9 +174,25 @@ fun ChefMainScreen(
 
                     val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
 
+                    val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
+                    val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()
+                    val isLoadingRecipes by homeViewModel.isLoadingRecipes.collectAsState()
+
+                    val apptId = appointment.AppointmentID.orEmpty()
+                    val attachedRecipes = attachedRecipesMap[apptId] ?: emptyList()
+
+                    LaunchedEffect(apptId) {
+                        if (apptId.isNotBlank() && !attachedRecipesMap.containsKey(apptId)) {
+                            homeViewModel.loadRecipesForAppointment(apptId)
+                        }
+                    }
+
                     AppointmentDetailScreen(
                         appointment = appointment,
                         userName = userName,
+                        isNetworkAvailable = isNetworkAvailable,
+                        attachedRecipes = attachedRecipes,
+                        isLoadingRecipes = isLoadingRecipes,
                         onBackClick = { chefNavController.popBackStack() },
                         onStatusChange = { newStatus, rejectionReason ->
                             val id = appointment.AppointmentID.orEmpty()
@@ -198,6 +222,7 @@ fun ChefMainScreen(
                     chef = currentChef,
                     viewModel = authViewModel,
                     onEditClick = { chefNavController.navigate(Screen.ChefEditProfile.route) },
+                    onChangePasswordClick = { chefNavController.navigate(Screen.ChefChangePassword.route) },
                     onLogoutSuccess = {
                         // Navigate using parent controller at the top level
                         parentNavController.navigate(Screen.Login.route) {
@@ -207,12 +232,19 @@ fun ChefMainScreen(
                 )
             }
 
-            composable("chefEditProfile") {
+            composable(Screen.ChefEditProfile.route) {
                 EditChefProfileScreen(
                     chef = authViewModel.currentChef,
                     onBack = { chefNavController.popBackStack() },
                     authViewModel = authViewModel,
                     navController = chefNavController
+                )
+            }
+
+            composable(Screen.ChefChangePassword.route) {
+                ChefChangePasswordScreen(
+                    navController = chefNavController,
+                    authViewModel = authViewModel
                 )
             }
         }

@@ -3,52 +3,36 @@ package com.example.foodieheal.meal_planner.screen
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
+import com.example.foodieheal.ui.components.formatToAmPm
 import java.time.LocalDate
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import com.example.foodieheal.R
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -60,9 +44,11 @@ fun MealPlannerContent(
     totalCalories: Int,
     maxCalories: Int,
     mealPlansCache: Map<LocalDate, DailyPlan?>,
-    monthConditions: Map<LocalDate, DayCondition> = emptyMap(), // 🌟 Added month conditions
+    monthConditions: Map<LocalDate, DayCondition> = emptyMap(),
     pagerState: PagerState,
     anchorDate: LocalDate,
+    appointments: List<Appointment> = emptyList(),
+    chefsMap: Map<String, User> = emptyMap(),
     onCalendarClick: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onDateShiftBackward: () -> Unit,
@@ -91,7 +77,7 @@ fun MealPlannerContent(
             onDateForward = onDateShiftForward,
             onCalendarClick = onCalendarClick,
             onDateSelected = onDateSelected,
-            monthConditions = monthConditions // 🌟 Pass conditions down
+            monthConditions = monthConditions
         )
 
         Spacer(Modifier.height(12.dp))
@@ -128,6 +114,8 @@ fun MealPlannerContent(
                 pageDate = pageDate,
                 isNetworkAvailable = isNetworkAvailable,
                 dailyPlan = dailyPlanForThisPage,
+                appointments = appointments,
+                chefsMap = chefsMap,
                 onAddMealRecipe = { type -> onAddMealRecipe(pageDate, type) },
                 onDeleteMealRecipe = { type, recipe -> onDeleteMealRecipe(pageDate, type, recipe) },
                 onRecipeDetails = onRecipeDetails,
@@ -152,7 +140,6 @@ fun MealPlannerHeader(
         modifier = modifier.fillMaxWidth()
     ) {
         Column {
-            // --- TOP ROW (Title + Actions) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,7 +155,7 @@ fun MealPlannerHeader(
                 )
                 Spacer(Modifier.weight(1f))
 
-                if (selectedTabIndex == 0) {//only shows in Planner Tab
+                if (selectedTabIndex == 0) {
                     Icon(
                         painter = painterResource(R.drawable.ic_repeat),
                         contentDescription = stringResource(R.string.desc_copy_daily_plan),
@@ -190,7 +177,6 @@ fun MealPlannerHeader(
                 }
             }
 
-            // --- BOTTOM ROW (Tabs) ---
             TabRow(
                 selectedTabIndex = selectedTabIndex,
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -222,6 +208,8 @@ fun MealPageContent(
     pageDate: LocalDate,
     isNetworkAvailable: Boolean,
     dailyPlan: DailyPlan?,
+    appointments: List<Appointment> = emptyList(),
+    chefsMap: Map<String, User> = emptyMap(),
     onAddMealRecipe: (MealType) -> Unit,
     onDeleteMealRecipe: (MealType, Recipe) -> Unit,
     onRecipeDetails: (String) -> Unit,
@@ -257,6 +245,10 @@ fun MealPageContent(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(top = 8.dp, start = 16.dp)
                 )
+
+                if (appointments.isNotEmpty()) {
+                    AppointmentSummarySection(appointments, chefsMap)
+                }
 
                 val sections = remember(breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes) {
                     listOf(
@@ -306,7 +298,90 @@ fun MealPageContent(
                             )
                         }
                     }
-                    Spacer(Modifier.height(90.dp))
+                }
+                Spacer(Modifier.height(90.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun AppointmentSummarySection(
+    appointments: List<Appointment>,
+    chefsMap: Map<String, User>
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_planner),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "Scheduled Hiring Appointments",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiary
+                )
+            }
+            
+            Spacer(Modifier.height(12.dp))
+
+            appointments.forEach { appointment ->
+                val chefName = chefsMap[appointment.chefId]?.name ?: "Chef"
+                val timeSlot = "${formatToAmPm(appointment.Start_Time)} - ${formatToAmPm(appointment.End_Time)}"
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = chefName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onTertiary
+                        )
+                        Text(
+                            text = timeSlot,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+                    
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = when (appointment.Status.lowercase()) {
+                            "confirmed" -> Color(0xFFE8F5E9)
+                            "pending" -> Color(0xFFFFF3E0)
+                            "completed" -> Color(0xFFE3F2FD)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    ) {
+                        AppointmentStatusBadge(appointment.Status)
+                    }
+                }
+                
+                if (appointment != appointments.last()) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f)
+                    )
                 }
             }
         }

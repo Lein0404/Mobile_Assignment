@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,10 +36,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
-import com.example.foodieheal.model.Recipe
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.ui.theme.CaloriesColor
-import com.example.foodieheal.viewmodel.AuthViewModel
-import com.example.foodieheal.viewmodel.RecipeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,6 +102,7 @@ fun RecipesSelectingScreen(
     Scaffold(
         modifier = Modifier.navigationBarsPadding(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
@@ -217,6 +219,8 @@ fun RecipeGridContent(
     var filterSkill by remember { mutableStateOf<String?>(null) }
     var filterBudget by remember { mutableStateOf<String?>(null) }
 
+    val focusManager = LocalFocusManager.current
+
     val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
         derivedStateOf {
             currentDataList.filter { recipe ->
@@ -251,7 +255,7 @@ fun RecipeGridContent(
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                             height = 3.dp,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -266,7 +270,7 @@ fun RecipeGridContent(
                                 text = title,
                                 fontSize = 15.sp,
                                 fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                color = if (selectedTab == index) Color.White else Color.White.copy(alpha = 0.8f)
+                                color = if (selectedTab == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
                         }
                     )
@@ -285,33 +289,35 @@ fun RecipeGridContent(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text(stringResource(R.string.placeholder_search_recipes), fontSize = 14.sp, color = Color.Gray) },
+                    placeholder = { Text(stringResource(R.string.placeholder_search_recipes), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = Color.LightGray,
-                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                     ),
                     trailingIcon = {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
-                            Image(
+                            Icon(
                                 painter = painterResource(id = R.drawable.filter),
                                 contentDescription = "Filter",
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .clickable { showFilterDialog = true }
+                                    .clickable { showFilterDialog = true },
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Image(
+                            Icon(
                                 painter = painterResource(id = R.drawable.search),
                                 contentDescription = "Search",
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .clickable { /* Handle search */ }
+                                    .clickable { focusManager.clearFocus() },
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -319,7 +325,7 @@ fun RecipeGridContent(
             }
 
             item(span = { GridItemSpan(2) }) {
-                Text(text = stringResource(R.string.label_course), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(top = 8.dp))
+                Text(text = stringResource(R.string.label_course), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 8.dp))
             }
 
             item(span = { GridItemSpan(2) }) {
@@ -332,12 +338,12 @@ fun RecipeGridContent(
                         Surface(
                             onClick = { selectedCourse = course },
                             shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFFE0E0E0),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
                         ) {
                             Text(
                                 text = course,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                color = if (isSelected) Color.White else Color.Black,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                 fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
@@ -351,7 +357,7 @@ fun RecipeGridContent(
                     text = selectedCourse,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -373,7 +379,7 @@ fun RecipeGridContent(
                             text = if (searchQuery.isNotEmpty() || filterMaxTime < 120f || filterMaxCalories < 2000f || filterSkill != null || filterBudget != null)
                                 "No recipes match your filters."
                             else "No recipes found for '$selectedCourse'.",
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -411,7 +417,7 @@ fun RecipeGridContent(
                     filterSkill = null
                     filterBudget = null
                     showFilterDialog = false
-                }) { Text(stringResource(R.string.btn_clear_all), color = Color.Red) }
+                }) { Text(stringResource(R.string.btn_clear_all), color = MaterialTheme.colorScheme.error) }
             },
             title = {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -506,8 +512,9 @@ fun RecipeCardItem(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiary),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        // 🌟 Sets dynamic border layout indicating selected state
         border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
@@ -518,7 +525,7 @@ fun RecipeCardItem(
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp)
-                .background(Color(0xFFEEEEEE))) {
+                .background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
                     AsyncImage(
                         model = recipe.recipeImageUrl,
@@ -550,7 +557,7 @@ fun RecipeCardItem(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_check),
                             contentDescription = stringResource(R.string.desc_checkbox_checked),
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(4.dp)
                         )
                     }
@@ -566,7 +573,7 @@ fun RecipeCardItem(
                         text = recipe.recipeName,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         modifier = Modifier.weight(1f)
                     )
@@ -574,10 +581,10 @@ fun RecipeCardItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(painterResource(id = R.drawable.ic_fire), null, modifier = Modifier.size(12.dp), tint = CaloriesColor)
-                    Text(text = " ${recipe.calories} kcal", fontSize = 11.sp, color = MaterialTheme.colorScheme.onTertiary)
+                    Text(text = " ${recipe.calories} kcal", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onTertiary)
-                    Text(text = " ${recipe.time} mins", fontSize = 11.sp, color = MaterialTheme.colorScheme.onTertiary)
+                    Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = " ${recipe.time} mins", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

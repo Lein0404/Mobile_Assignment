@@ -24,12 +24,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
-import com.example.foodieheal.viewmodel.AuthViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
+import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -44,6 +47,7 @@ import java.time.YearMonth
 @Composable
 fun MealPlannerScreen(
     mealPlannerViewModel: MealPlannerViewModel,
+    userAppointmentViewModel: UserAppointmentViewModel,
     authViewModel: AuthViewModel,
     onNavigateToProfile: () -> Unit,
     onRecipeDetails: (String) -> Unit,
@@ -64,6 +68,26 @@ fun MealPlannerScreen(
     ) {
         // 🌟 Initial state: Prefer deep link date if available, otherwise today
         mutableStateOf(mealPlannerViewModel.deepLinkSourceDays?.firstOrNull() ?: LocalDate.now())
+    }
+
+    val appointmentsState by userAppointmentViewModel.userAppointmentsState.collectAsStateWithLifecycle()
+
+    // 🌟 Filter appointments for the currently selected date
+    val appointmentsForSelectedDate = remember(appointmentsState, selectedDate) {
+        if (appointmentsState is UserAppointmentsUiState.Success) {
+            val success = appointmentsState as UserAppointmentsUiState.Success
+            success.appointments.filter { it.Date == selectedDate.toString() }
+        } else {
+            emptyList()
+        }
+    }
+
+    val chefsMap = remember(appointmentsState) {
+        if (appointmentsState is UserAppointmentsUiState.Success) {
+            (appointmentsState as UserAppointmentsUiState.Success).usersMap
+        } else {
+            emptyMap()
+        }
     }
 
     // 🌟 Derive week start from selected date automatically
@@ -293,6 +317,8 @@ fun MealPlannerScreen(
                     monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Pass conditions
                     pagerState = pagerState,
                     anchorDate = anchorDate,
+                    appointments = appointmentsForSelectedDate, // 🌟 Pass appointments
+                    chefsMap = chefsMap, // 🌟 Pass chefs map
                     onCalendarClick = { showDatePicker = true },
                     onDateSelected = { newDate ->
                         selectedDate = newDate
