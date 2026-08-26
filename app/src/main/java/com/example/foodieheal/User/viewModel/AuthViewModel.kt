@@ -349,6 +349,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 "Connection timeout. Please try again."
             msg.contains("Invalid login credentials", ignoreCase = true) ->
                 "Invalid email or password"
+            msg.contains("user_already_exists", ignoreCase = true) || msg.contains("User already registered", ignoreCase = true) || msg.contains("already registered", ignoreCase = true) ->
+                "Email already registered"
             else -> msg.split("\n").firstOrNull() ?: "An error occurred"
         }
     }

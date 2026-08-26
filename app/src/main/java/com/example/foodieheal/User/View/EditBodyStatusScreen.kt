@@ -62,6 +62,15 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
         onDispose { }
     }
 
+    // 🌟 Handle navigation after successful registration
+    LaunchedEffect(authViewModel.loginSuccess) {
+        if (authViewModel.loginSuccess && fromRegister) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.imePadding().navigationBarsPadding(), // 🌟 Added IME and Navigation padding
         topBar = {

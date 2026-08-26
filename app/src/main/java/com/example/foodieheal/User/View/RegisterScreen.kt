@@ -145,7 +145,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 // 🌟 Email Specific Errors (Local Validation + Server Check)
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailValid && email.isNotEmpty() -> "Invalid email"
-                    viewModel.errorMessage.contains("already registered", ignoreCase = true) -> "Email already registered"
+                    viewModel.errorMessage.contains("already registered", ignoreCase = true) || 
+                    viewModel.errorMessage.contains("already exists", ignoreCase = true) -> "Email already registered"
                     else -> null
                 }
 
@@ -173,8 +174,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 TextField(
                     value = password,
                     onValueChange = {
-                        password = it
-                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (it.length <= 20) {
+                            password = it
+                            if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        }
                     },
                     placeholder = {
                         Text(
@@ -197,6 +200,11 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
+                    supportingText = {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            Text("${password.length}/20", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
@@ -230,8 +238,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 TextField(
                     value = confirmPassword,
                     onValueChange = {
-                        confirmPassword = it
-                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (it.length <= 20) {
+                            confirmPassword = it
+                            if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        }
                     },
                     placeholder = {
                         Text(
@@ -255,6 +265,11 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
+                    supportingText = {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            Text("${confirmPassword.length}/20", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
