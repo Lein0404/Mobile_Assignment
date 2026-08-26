@@ -109,7 +109,7 @@ fun EditRecipeScreen(
         }
     }
 
-    val totalCalories = remember {
+    val totalCalories by remember {
         derivedStateOf {
             ingredients.sumOf { input ->
                 val qty = input.quantity.toDoubleOrNull() ?: 0.0
@@ -126,7 +126,7 @@ fun EditRecipeScreen(
                 qty * caloriePerUnitValue / unitValue
             }.toInt()
         }
-    }.value
+    }
 
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
