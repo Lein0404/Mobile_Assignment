@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,15 +65,25 @@ fun ChangePasswordScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState()) 
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        if (!authViewModel.isNetworkAvailable) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                OfflinePlaceholder(message = stringResource(R.string.desc_connect_internet_password))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState()) 
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Text(
                 text = "Secure Your Account",
                 fontSize = 24.sp,
@@ -139,9 +151,11 @@ fun ChangePasswordScreen(navController: NavController) {
             Button(
                 onClick = { 
                     hasAttemptedSubmit = true 
-                    // 🌟 Use the callback to navigate ONLY when the server confirms success
-                    authViewModel.changePassword(oldPassword, newPassword) {
-                        navController.popBackStack()
+                    if (isLengthValid && passwordsMatch) {
+                        // 🌟 Use the callback to navigate ONLY when the server confirms success
+                        authViewModel.changePassword(oldPassword, newPassword) {
+                            navController.popBackStack()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -161,6 +175,7 @@ fun ChangePasswordScreen(navController: NavController) {
             }
         }
     }
+}
 }
 
 @Composable

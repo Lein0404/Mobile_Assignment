@@ -18,14 +18,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
+import com.example.foodieheal.User.Model.User
 import androidx.compose.ui.platform.LocalView
 import android.app.Activity
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
-import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
-import com.example.foodieheal.hiring.viewmodel.HiringViewModel
+
 import coil.compose.AsyncImage
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.mobileassignmentloginpart.Model.Chef
@@ -35,19 +35,16 @@ import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.hiring.viewmodel.HiringViewModel
 
 @Composable
 fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeViewModel: RecipeViewModel, onChefClick : (Chef) -> Unit) {
 
-    val bookmarkViewModel: BookmarkViewModel = viewModel()
     val chefViewModel : HiringViewModel = viewModel()
     val user = viewModel.currentUser
     
-    var selectedCategory by remember { mutableStateOf("Breakfast") }
-
-    val randomRecipes = remember(recipeViewModel.recipeList, selectedCategory) {
+    val randomRecipes = remember(recipeViewModel.recipeList) {
         recipeViewModel.recipeList
-            .filter { it.recipeCourse.equals(selectedCategory, ignoreCase = true) }
             .shuffled()
             .take(5)
     }
@@ -63,6 +60,8 @@ fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeVi
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
         recipeViewModel.fetchAllRecipes()
+        // 🌟 FIX: Fetch bookmark IDs on start so Home Screen icons are in sync
+        user?.customId?.let { recipeViewModel.fetchBookmarkIds(it) }
     }
 
     LaunchedEffect(Unit) {
@@ -131,7 +130,6 @@ fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeVi
                         chefs = chefList,
                         isLoading = isChefLoading,
                         errorMessage = chefErrorMessage,
-                        bookmarkViewModel = bookmarkViewModel,
                         onChefClick = onChefClick
                     )
 
@@ -180,11 +178,12 @@ fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeVi
                         }
                     }
 
-                    CategoryChips(selectedCategory) { selectedCategory = it }
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     RecipeListSection(
                         recipes = randomRecipes,
                         isLoading = recipeViewModel.isLoading,
+                        currentUser = user, // 🌟 Pass current user for card name sync
                         bookmarkedIds = recipeViewModel.bookmarkedRecipeIds,
                         onRecipeClick = { recipe ->
                             recipe.recipe_id?.let { id ->
@@ -217,8 +216,7 @@ fun ChefListSection(
     chefs: List<Chef>,
     isLoading: Boolean,
     errorMessage: String?,
-    onChefClick: (Chef) -> Unit,
-    bookmarkViewModel: BookmarkViewModel = viewModel()
+    onChefClick: (Chef) -> Unit
 ) {
     when {
         // 1. Loading State (Replaced Skeleton with Progress Indicator)
@@ -406,35 +404,12 @@ fun PromoBanner() {
     }
 }
 
-@Composable
-fun CategoryChips(selectedCategory: String, onSelected: (String) -> Unit) {
-    val categories = listOf("Breakfast", "Lunch", "Dinner", "Snack")
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.padding(vertical = 16.dp)
-    ) {
-        items(categories) { category ->
-            val isSelected = selectedCategory == category
-            Surface(
-                onClick = { onSelected(category) },
-                shape = RoundedCornerShape(20.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
-                modifier = Modifier.height(36.dp)
-            ) {
-                Box(modifier = Modifier.padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
-                    Text(text = category, color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp) // 🌟 Themed Text
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun RecipeListSection(
     recipes: List<Recipe>,
     isLoading: Boolean,
+    currentUser: User? = null, // 🌟 Added for card name sync
     bookmarkedIds: Set<String>,
     onRecipeClick: (Recipe) -> Unit,
     onBookmarkClick: (Recipe) -> Unit,
@@ -464,7 +439,8 @@ fun RecipeListSection(
             items(recipes) { recipe ->
                 RecipeCardItem(
                     recipe = recipe,
-                    modifier = Modifier.width(180.dp),
+                    modifier = Modifier.width(165.dp),
+                    currentUser = currentUser, // 🌟 FIX: Pass current user for live sync
                     isBookmarked = bookmarkedIds.contains(recipe.recipe_id),
                     onBookmarkClick = { onBookmarkClick(recipe) },
                     onAddClick = { onAddClick(recipe) },

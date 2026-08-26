@@ -49,8 +49,8 @@ fun RecipesScreen(
     val selectedTab = viewModel.activeTab
     val tabs = listOf("Popular", "My Recipes", "Bookmarks")
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCourse by remember { mutableStateOf("Breakfast") }
-    val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+    var selectedCourse by remember { mutableStateOf("All") }
+    val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
     
     // Filter State
     var showFilterDialog by remember { mutableStateOf(false) }
@@ -59,13 +59,23 @@ fun RecipesScreen(
     var filterSkill by remember { mutableStateOf<String?>(null) }
     var filterBudget by remember { mutableStateOf<String?>(null) }
 
+    // 🌟 FIX: Reset all filters when switching tabs
+    LaunchedEffect(selectedTab) {
+        searchQuery = ""
+        selectedCourse = "All"
+        filterMaxTime = 120f
+        filterMaxCalories = 2000f
+        filterSkill = null
+        filterBudget = null
+    }
+
     // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent
     val currentUserId = authViewModel.currentUser?.customId
 
     // 🌟 LOGIC: Filtering based on your instructions
     val currentDataList = when (selectedTab) {
-        // Tab 0: Popular -> Share by OTHER people (Exclude mine)
-        0 -> viewModel.recipeList.filter { it.author_id != currentUserId }
+        // Tab 0: Popular -> Show ALL recipes for testing sync (Include mine)
+        0 -> viewModel.recipeList
         // Tab 1: My Recipes -> Created by ME
         1 -> viewModel.myRecipes
         // Tab 2: Bookmarks -> Saved by ME
@@ -78,16 +88,11 @@ fun RecipesScreen(
     val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
         derivedStateOf {
             currentDataList.filter { recipe ->
-                val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true)
+                val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true) ||
+                                    (recipe.authorName?.contains(searchQuery, ignoreCase = true) == true) ||
+                                    (recipe.authorInfo?.name?.contains(searchQuery, ignoreCase = true) == true)
 
-                // 🌟 FIX: For "My Recipes" and "Bookmarks", show all courses by default
-                // Only filter by course if we are in the "Popular" tab
-                val matchesCourse = if (selectedTab == 0) {
-                    recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
-                } else {
-                    // In My Recipes/Bookmarks, only filter if the course is explicitly matching (optional, showing all is better)
-                    recipe.recipeCourse.equals(selectedCourse, ignoreCase = true) || searchQuery.isNotEmpty()
-                }
+                val matchesCourse = selectedCourse == "All" || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
 
                 val matchesTime = recipe.time <= filterMaxTime.toInt()
                 val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
@@ -120,16 +125,29 @@ fun RecipesScreen(
 
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
+        
+        // 🌟 FIX: Always fetch Popular recipes even if not logged in yet
+        if (selectedTab == 0 && viewModel.recipeList.isEmpty()) {
+            viewModel.fetchAllRecipes()
+        }
+
         if (cid != null) {
-            // 🌟 Smart Sync: Only fetch if memory is empty using short ID
-            if (viewModel.bookmarkedRecipeIds.isEmpty()) {
-                viewModel.fetchBookmarkIds(cid)
-            }
+            // 🌟 FIX: Always refresh bookmarks if the owner has changed (Leon vs KK)
+            // We check if the current IDs in memory actually belong to the current user
+            viewModel.fetchBookmarkIds(cid)
             
             when (selectedTab) {
-                0 -> if (viewModel.recipeList.isEmpty()) viewModel.fetchAllRecipes()
-                1 -> if (viewModel.myRecipes.isEmpty()) viewModel.fetchMyRecipes(cid)
-                2 -> if (viewModel.bookmarkedRecipes.isEmpty()) viewModel.fetchBookmarkedRecipes(cid)
+                1 -> {
+                    // 🌟 FIX: Force fetch if current list belongs to someone else ( Leon vs KK bug)
+                    val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != cid }
+                    if (viewModel.myRecipes.isEmpty() || belongsToSomeoneElse) {
+                        viewModel.fetchMyRecipes(cid)
+                    }
+                }
+                2 -> {
+                    // 🌟 FIX: Force refresh from server whenever Bookmarks tab is selected
+                    viewModel.fetchBookmarkedRecipes(cid)
+                }
             }
         }
     }
@@ -151,13 +169,6 @@ fun RecipesScreen(
                             .padding(top = 16.dp, start = 20.dp, end = 16.dp, bottom = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_hamburger_menu),
-                            contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Icon
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "Recipe",
                             color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
@@ -234,6 +245,7 @@ fun RecipesScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                    singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -351,6 +363,8 @@ fun RecipesScreen(
                 gridItems(filteredRecipes) { recipe: Recipe ->
                     RecipeCardItem(
                         recipe = recipe, 
+                        // 🌟 FIX: Pass current user to ensure live name sync
+                        currentUser = authViewModel.currentUser,
                         // 🌟 ONLY show menu for Tab 1 (My Recipes)
                         showMenu = selectedTab == 1,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
@@ -492,31 +506,55 @@ fun RecipesScreen(
     }
 
     if (recipeToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { recipeToDelete = null },
-            title = { Text("Delete Recipe") },
-            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val rid = recipeToDelete?.recipe_id
-                        // 🌟 Ensure we use the short customId for deletion
-                        val uid = authViewModel.currentUser?.customId
-                        if (rid != null && uid != null) {
-                            viewModel.deleteRecipe(rid, uid)
-                        }
-                        recipeToDelete = null
+        if (!viewModel.isNetworkAvailable) {
+            AlertDialog(
+                onDismissRequest = { recipeToDelete = null },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.wifi_off),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("No Internet Connection")
                     }
-                ) {
-                    Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                },
+                text = { Text("You cannot delete recipes while offline. Please check your network settings.") },
+                confirmButton = {
+                    TextButton(onClick = { recipeToDelete = null }) {
+                        Text("OK", fontWeight = FontWeight.Bold)
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { recipeToDelete = null }) {
-                    Text("Cancel", color = Color.Gray)
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { recipeToDelete = null },
+                title = { Text("Delete Recipe") },
+                text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val rid = recipeToDelete?.recipe_id
+                            // 🌟 Ensure we use the short customId for deletion
+                            val uid = authViewModel.currentUser?.customId
+                            if (rid != null && uid != null) {
+                                viewModel.deleteRecipe(rid, uid)
+                            }
+                            recipeToDelete = null
+                        }
+                    ) {
+                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { recipeToDelete = null }) {
+                        Text("Cancel", color = Color.Gray)
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -524,6 +562,7 @@ fun RecipesScreen(
 fun RecipeCardItem(
     recipe: Recipe,
     modifier: Modifier = Modifier,
+    currentUser: User? = null, // 🌟 Added for live name sync
     showMenu: Boolean = false,
     isBookmarked: Boolean = false,
     onBookmarkClick: () -> Unit = {},
@@ -538,7 +577,7 @@ fun RecipeCardItem(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.height(280.dp).clickable { onClick() } // 🌟 Increased height to prevent clipping
+        modifier = modifier.height(310.dp).clickable { onClick() } // 🌟 Increased height for 2-line names + Author
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(MaterialTheme.colorScheme.surfaceVariant)) { // 🌟 Optimized image height
@@ -695,6 +734,36 @@ fun RecipeCardItem(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(start = 4.dp)
                         )
+                    }
+
+                    // 🌟 Use the live name from currentUser if this is the user's own recipe
+                    val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
+                        currentUser.name
+                    } else {
+                        recipe.authorInfo?.name ?: recipe.authorName
+                    }
+                    
+                    if (!authorToDisplay.isNullOrEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.author),
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = authorToDisplay,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 4.dp).weight(1f, fill = false)
+                            )
+                        }
                     }
                 }
 

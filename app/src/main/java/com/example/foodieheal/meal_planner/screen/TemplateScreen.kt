@@ -80,8 +80,9 @@ fun TemplatesContent(
     )
     val coroutineScope = rememberCoroutineScope()
 
+    val context = LocalContext.current
     val planRepository = remember { PlanRepository() }
-    val recipeRepository = remember { RecipeRepository(SupabaseClient.client) }
+    val recipeRepository = remember { RecipeRepository(com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context).recipeDao()) }
 
     val currentUserIdFlow = remember(authViewModel) {
         snapshotFlow { authViewModel.currentUser?.id }

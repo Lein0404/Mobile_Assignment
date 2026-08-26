@@ -1,16 +1,23 @@
 package com.example.foodieheal.Recipe.Repo
 
+import android.util.Log
 import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.local.RecipeEntity
+import com.example.foodieheal.Recipe.local.toDomain
+import com.example.foodieheal.Recipe.local.toEntity
+import com.example.foodieheal.Recipe.Model.IngredientItem
+import com.example.foodieheal.SupabaseClient.client
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -19,35 +26,73 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class RecipeRepository(
-    private val supabaseClient: SupabaseClient
+    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null
 ) {
+    private val json = Json { ignoreUnknownKeys = true }
+
     suspend fun getAllRecipes(): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            val response = supabaseClient.postgrest.from("recipes").select()
-            response.decodeList<Recipe>()
+            try {
+                val recipes = try {
+                    // Try to fetch with Join first (Requires RLS permission on 'users' table)
+                    client.from("recipes")
+                        .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)"))
+                        .decodeList<Recipe>()
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "Join Query Failed (likely RLS on users table): ${e.localizedMessage}")
+                    // SAFETY FALLBACK: Fetch only recipes without join
+                    client.from("recipes").select().decodeList<Recipe>()
+                }
+
+                recipeDao?.let { dao ->
+                    dao.clearRecipes()
+                    dao.insertRecipes(recipes.map { it.toEntity(json) })
+                }
+                recipes
+            } catch (e: Exception) {
+                Log.e("RecipeRepository", "Error fetching all recipes", e)
+                recipeDao?.getAllRecipes()?.map { it.toDomain(json) } ?: emptyList()
+            }
         }
     }
 
     suspend fun getMyRecipes(authorId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            val response = supabaseClient.postgrest.from("recipes")
-                .select { filter { eq("recipe_author", authorId) } }
-            response.decodeList<Recipe>()
+            try {
+                val response = client.from("recipes")
+                    .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                        filter { eq("recipe_author", authorId) }
+                    }
+                val recipes = try {
+                    response.decodeList<Recipe>()
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "MyRecipes Join Error: ${e.localizedMessage}")
+                    // FALLBACK: Fetch without join
+                    client.from("recipes").select { filter { eq("recipe_author", authorId) } }.decodeList<Recipe>()
+                }
+                recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+                recipes
+            } catch (e: Exception) {
+                Log.e("RecipeRepository", "Error fetching my recipes", e)
+                recipeDao?.getMyRecipes(authorId)?.map { it.toDomain(json) } ?: emptyList()
+            }
         }
     }
 
     suspend fun insertRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            supabaseClient.postgrest.from("recipes").insert(recipe)
+            client.from("recipes").insert(recipe)
+            recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
             Unit
         }
     }
 
     suspend fun updateRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            supabaseClient.postgrest.from("recipes").update(recipe) {
+            client.from("recipes").update(recipe) {
                 filter { eq("recipe_id", recipe.recipe_id ?: "") }
             }
+            recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
             Unit
         }
     }
@@ -56,11 +101,15 @@ class RecipeRepository(
 
     suspend fun uploadImage(fileName: String, imageBytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val client = OkHttpClient()
+            val okClient = OkHttpClient()
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("upload_preset", CloudinaryConfig.UPLOAD_PRESET)
-                .addFormDataPart("file", "$fileName.jpg", imageBytes.toRequestBody("image/*".toMediaType()))
+                .addFormDataPart(
+                    "file",
+                    "$fileName.jpg",
+                    imageBytes.toRequestBody("image/*".toMediaType())
+                )
                 .build()
 
             val request = Request.Builder()
@@ -68,30 +117,26 @@ class RecipeRepository(
                 .post(requestBody)
                 .build()
 
-            client.newCall(request).execute().use { response ->
+            okClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw Exception("Cloudinary failed: ${response.message}")
                 val responseBody = response.body?.string() ?: ""
-                val json = JSONObject(responseBody)
-                json.getString("secure_url")
+                val jsonRes = JSONObject(responseBody)
+                jsonRes.getString("secure_url")
             }
         }
     }
 
     suspend fun getAvailableIngredients(): Result<List<Ingredient>> = withContext(Dispatchers.IO) {
         runCatching {
-            // 🌟 Perform join to get default_quantity from units table
-            supabaseClient.postgrest
-                .from("ingredient_units")
+            client.from("ingredient_units")
                 .select(Columns.raw("*, units(default_quantity)"))
                 .decodeList<Ingredient>()
         }
     }
 
-    // --- Bookmark Functions ---
-
     suspend fun toggleBookmark(userId: String, recipeId: String, isBookmarked: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val table = supabaseClient.postgrest.from("recipe_bookmarks")
+            val table = client.from("recipe_bookmarks")
             if (isBookmarked) {
                 table.delete {
                     filter {
@@ -99,12 +144,10 @@ class RecipeRepository(
                         eq("recipe_id", recipeId)
                     }
                 }
+                recipeDao?.deleteBookmark(userId, recipeId)
             } else {
-                val data = mapOf(
-                    "user_id" to userId,
-                    "recipe_id" to recipeId
-                )
-                table.insert(data)
+                table.insert(mapOf("user_id" to userId, "recipe_id" to recipeId))
+                recipeDao?.insertBookmarks(listOf(com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, recipeId)))
             }
             Unit
         }
@@ -112,90 +155,103 @@ class RecipeRepository(
 
     suspend fun getBookmarkedRecipes(userId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            val idResponse = supabaseClient.postgrest.from("recipe_bookmarks")
-                .select(Columns.list("recipe_id")) {
-                    filter { eq("user_id", userId) }
-                }
-            val bookmarkedIds = idResponse.decodeList<BookmarkId>().map { it.recipe_id }
+            try {
+                val response = client.from("recipe_bookmarks")
+                    .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
+                val bookmarkedIds = response.decodeList<BookmarkId>().map { it.recipe_id }
 
-            if (bookmarkedIds.isEmpty()) return@runCatching emptyList<Recipe>()
+                if (bookmarkedIds.isEmpty()) return@runCatching emptyList<Recipe>()
 
-            val recipeResponse = supabaseClient.postgrest.from("recipes")
-                .select {
-                    filter {
-                        isIn("recipe_id", bookmarkedIds)
-                    }
+                val recipes = try {
+                    client.from("recipes")
+                        .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                            filter { isIn("recipe_id", bookmarkedIds) }
+                        }.decodeList<Recipe>()
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "Bookmarks Join Error: ${e.localizedMessage}")
+                    // FALLBACK: Fetch without join
+                    client.from("recipes").select { filter { isIn("recipe_id", bookmarkedIds) } }.decodeList<Recipe>()
                 }
-            recipeResponse.decodeList<Recipe>()
+                
+                recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+                recipes
+            } catch (e: Exception) {
+                Log.e("RecipeRepository", "Error fetching bookmarks", e)
+                recipeDao?.getBookmarkedRecipes(userId)?.map { it.toDomain(json) } ?: emptyList()
+            }
         }
     }
 
     suspend fun getUserBookmarkIds(userId: String): Result<List<String>> = withContext(Dispatchers.IO) {
         runCatching {
-            val response = supabaseClient.postgrest.from("recipe_bookmarks")
-                .select(Columns.list("recipe_id")) {
-                    filter { eq("user_id", userId) }
-                }
+            val response = client.from("recipe_bookmarks")
+                .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
             response.decodeList<BookmarkId>().map { it.recipe_id }
         }
     }
 
+    fun getCurrentUserId(): String? {
+        return client.auth.currentUserOrNull()?.id
+    }
+
     suspend fun deleteRecipe(recipeId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            supabaseClient.postgrest.from("recipes").delete {
-                filter { eq("recipe_id", recipeId) }
-            }
+            client.from("recipes").delete { filter { eq("recipe_id", recipeId) } }
             Unit
         }
     }
 
-    suspend fun getRecipeById(recipeId: String): Result<Recipe> = withContext(Dispatchers.IO) {
+    suspend fun getRecipeById(recipeId: String): Result<Recipe?> = withContext(Dispatchers.IO) {
         runCatching {
-            val response = supabaseClient.postgrest.from("recipes")
-                .select {
-                    filter { eq("recipe_id", recipeId) }
+            try {
+                val recipe = try {
+                    client.from("recipes")
+                        .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                            filter { eq("recipe_id", recipeId) }
+                        }.decodeSingle<Recipe>()
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "RecipeById Join Error: ${e.localizedMessage}")
+                    // FALLBACK: Fetch without join
+                    client.from("recipes").select { filter { eq("recipe_id", recipeId) } }.decodeSingle<Recipe>()
                 }
-            response.decodeSingle<Recipe>()
+                recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
+                recipe
+            } catch (e: Exception) {
+                recipeDao?.getRecipeById(recipeId)?.toDomain(json)
+            }
         }
     }
 
     suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             if (recipeIds.isEmpty()) return@runCatching emptyList<Recipe>()
-            val response = supabaseClient.postgrest.from("recipes")
-                .select {
-                    filter {
-                        isIn("recipe_id", recipeIds)
-                    }
+            try {
+                try {
+                    client.from("recipes")
+                        .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                            filter { isIn("recipe_id", recipeIds) }
+                        }.decodeList<Recipe>()
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "RecipesByIds Join Error: ${e.localizedMessage}")
+                    // FALLBACK: Fetch without join
+                    client.from("recipes").select { filter { isIn("recipe_id", recipeIds) } }.decodeList<Recipe>()
                 }
-            response.decodeList<Recipe>()
+            } catch (e: Exception) {
+                val local = recipeDao?.getAllRecipes() ?: emptyList()
+                local.filter { entity -> recipeIds.contains(entity.recipe_id) }
+                    .map { it.toDomain(json) }
+            }
         }
     }
 
     suspend fun getUserByCustomId(customId: String): Result<User?> = withContext(Dispatchers.IO) {
         runCatching {
-            val response = supabaseClient.postgrest.from("users")
-                .select {
-                    filter { eq("custom_id", customId) }
-                }
-            response.decodeSingleOrNull<User>()
+            client.from("users")
+                .select { filter { eq("custom_id", customId) } }
+                .decodeSingleOrNull<User>()
         }
-    }
-
-    fun getCurrentUserId(): String? {
-        return supabaseClient.auth.currentUserOrNull()?.id
     }
 }
 
-
 @Serializable
-data class BookmarkJoin(val recipes: Recipe)
-
-@Serializable
-data class BookmarkId(val recipe_id: String)
-
-@Serializable
-data class RecipeBookmark(
-    val user_id: String,
-    val recipe_id: String
-)
+data class BookmarkId(@SerialName("recipe_id") val recipe_id: String)

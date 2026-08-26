@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,9 +37,11 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Model.IngredientItem
+import kotlinx.serialization.json.*
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -156,16 +159,26 @@ fun AddRecipeScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .navigationBarsPadding() 
-                .imePadding() 
-                .verticalScroll(scrollState)
-                .padding(20.dp)
-        ) {
+        if (!viewModel.isNetworkAvailable) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                OfflinePlaceholder(message = stringResource(R.string.desc_connect_internet_recipe))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+                    .navigationBarsPadding() 
+                    .imePadding() 
+                    .verticalScroll(scrollState)
+                    .padding(20.dp)
+            ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -383,9 +396,9 @@ fun AddRecipeScreen(
                         recipeImageUrl = null,
                         ingredients = ingredients.map {
                             IngredientItem(
-                                it.name,
-                                it.quantity,
-                                it.unit
+                                name = it.name,
+                                quantity = JsonPrimitive(it.quantity),
+                                unit = it.unit
                             )
                         }
                     )
@@ -412,6 +425,7 @@ fun AddRecipeScreen(
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
+}
 
     if (showResetDialog) {
         AlertDialog(

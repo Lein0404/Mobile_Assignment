@@ -4,6 +4,8 @@ import android.app.Activity
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -84,11 +88,11 @@ fun ProfileScreen(
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
-    var selectedBookmarkType by remember { mutableIntStateOf(0) } 
+    var showChefBookmarks by remember { mutableStateOf(false) } // 🌟 Toggle between Recipes and Chefs
     
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCourse by remember { mutableStateOf("Breakfast") }
-    val courses = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+    var selectedCourse by remember { mutableStateOf("All") }
+    val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
 
     val myRecipes = viewModel.myRecipes
     val bookmarkedRecipes = viewModel.bookmarkedRecipes
@@ -100,16 +104,14 @@ fun ProfileScreen(
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
-    LaunchedEffect(selectedMainTab, selectedBookmarkType, user) {
-        // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent with Recipes screen
+    LaunchedEffect(selectedMainTab, showChefBookmarks, user) {
         val cid = user?.customId ?: return@LaunchedEffect
         if (selectedMainTab == 0) {
             viewModel.fetchMyRecipes(cid)
         } else {
-            if (selectedBookmarkType == 0) {
+            if (!showChefBookmarks) {
                 viewModel.fetchBookmarkedRecipes(cid)
             } else {
-                // For chefs, we still use the regular ID as per the Hiring module logic
                 user.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
             }
         }
@@ -169,8 +171,11 @@ fun ProfileScreen(
                     
                     TextButton(
                         onClick = {
-                            // 🌟 FIX: Just call logout. MainActivity will swap screens automatically.
-                            authViewModel.logout { }
+                            // 🌟 FIX: Clear user-specific memory data on logout to prevent "Leon vs KK" data pollution
+                            authViewModel.logout { 
+                                viewModel.clearUserData()
+                                // Optionally clear bookmarkViewModel too if needed
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -182,7 +187,6 @@ fun ProfileScreen(
     ) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
-            // 🌟 FIX: Zero insets prevents the inner Scaffold from adding extra bottom space
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
@@ -334,19 +338,88 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        if (selectedMainTab == 0 || (selectedMainTab == 1 && selectedBookmarkType == 0)) {
+                        // 🌟 Beautiful Pill Toggle (Only for Bookmarks)
+                        if (selectedMainTab == 1) {
+                            item(span = { GridItemSpan(2) }) {
+                                val recipeBgColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
+                                val chefBgColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
+                                val recipeTextColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
+                                val chefTextColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
+
+                                Surface(
+                                    shape = RoundedCornerShape(24.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Recipes Option
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(recipeBgColor)
+                                                .clickable { showChefBookmarks = false },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.ic_recipe),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = recipeTextColor
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Recipes", color = recipeTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                            }
+                                        }
+
+                                        // Chefs Option
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(chefBgColor)
+                                                .clickable { showChefBookmarks = true },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.ic_hiring),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = chefTextColor
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Chefs", color = chefTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 🌟 Search & Course Section (Hide course filter if showing Chefs)
+                        if (selectedMainTab == 0 || (selectedMainTab == 1 && !showChefBookmarks)) {
                             item(span = { GridItemSpan(2) }) {
                                 Column {
                                     OutlinedTextField(
                                         value = searchQuery,
                                         onValueChange = { searchQuery = it },
-                                        placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }, // 🌟 Themed Text
+                                        placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                         modifier = Modifier.fillMaxWidth().height(52.dp),
                                         singleLine = true,
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
+                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                                             focusedBorderColor = Color.Transparent,
                                             unfocusedBorderColor = Color.Transparent
                                         ),
@@ -355,14 +428,14 @@ fun ProfileScreen(
                                                 painter = painterResource(id = R.drawable.search),
                                                 contentDescription = "Search",
                                                 modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Icon
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     )
                                     
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground) // 🌟 Themed Text
+                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         lazyItems(courses) { course ->
@@ -370,12 +443,12 @@ fun ProfileScreen(
                                             Surface(
                                                 onClick = { selectedCourse = course },
                                                 shape = RoundedCornerShape(20.dp),
-                                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant // 🌟 Themed Background
+                                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Text(
                                                     text = course,
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -384,114 +457,117 @@ fun ProfileScreen(
                                     }
                                     
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground) // 🌟 Themed Text
-                                }
-                            }
-                        } else if (selectedMainTab == 1) {
-                            item(span = { GridItemSpan(2) }) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    FilterChip(
-                                        selected = selectedBookmarkType == 0,
-                                        onClick = { selectedBookmarkType = 0 },
-                                        label = { Text("Recipes") },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = primaryColor,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    FilterChip(
-                                        selected = selectedBookmarkType == 1,
-                                        onClick = { selectedBookmarkType = 1 },
-                                        label = { Text("Chefs") },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = primaryColor,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    )
+                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                                 }
                             }
                         }
 
+                        // 🌟 Content Display
                         if (selectedMainTab == 0) {
-                            val filtered = myRecipes.filter { it.recipeName.contains(searchQuery, true) && it.recipeCourse == selectedCourse }
-                            gridItems(filtered) { recipe ->
-                                RecipeCardItem(
-                                    recipe = recipe,
-                                    showMenu = true,
-                                    isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
-                                    onBookmarkClick = {
-                                        user?.customId?.let { cid ->
-                                            recipe.recipe_id?.let { rid ->
-                                                viewModel.toggleBookmark(
-                                                    cid,
-                                                    rid,
-                                                    recipe.recipeName
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onDeleteClick = {
-                                        recipeToDelete = recipe
-                                    }, // 🌟 FIX: Pass the delete trigger
-                                    onEditClick = {
-                                        recipe.recipe_id?.let { id ->
-                                            navController.navigate(Screen.EditRecipe.createRoute(id))
-                                        }
-                                    },
-                                    onClick = {
-                                        recipe.recipe_id?.let { id ->
-                                            navController.navigate(
-                                                Screen.RecipeDetails.createRoute(
-                                                    id
-                                                )
-                                            )
-                                        }
-                                    }
-                                )
+                            val filtered = myRecipes.filter { 
+                                it.recipeName.contains(searchQuery, true) && 
+                                (selectedCourse == "All" || it.recipeCourse == selectedCourse) 
                             }
-                        } else if (selectedMainTab == 1) {
-                            if (selectedBookmarkType == 0) {
-                                val filtered = bookmarkedRecipes.filter { it.recipeName.contains(searchQuery, true) && it.recipeCourse == selectedCourse }
+                            
+                            if (filtered.isEmpty()) {
+                                item(span = { GridItemSpan(2) }) {
+                                    EmptyState(
+                                        iconRes = R.drawable.ic_recipe,
+                                        title = stringResource(R.string.empty_no_my_recipes),
+                                        subtitle = stringResource(R.string.empty_my_recipes_sub)
+                                    )
+                                }
+                            } else {
                                 gridItems(filtered) { recipe ->
-                                    // 🌟 Enable bookmark click to allow removing from bookmarks
                                     RecipeCardItem(
                                         recipe = recipe,
-                                        isBookmarked = true,
+                                        currentUser = user, // 🌟 Pass current user for card name sync
+                                        showMenu = true,
+                                        isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                         onBookmarkClick = {
-                                            // 🌟 FIX: Send short customId instead of long UUID
                                             user?.customId?.let { cid ->
                                                 recipe.recipe_id?.let { rid ->
-                                                    viewModel.toggleBookmark(
-                                                        cid,
-                                                        rid,
-                                                        recipe.recipeName
-                                                    )
+                                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
                                                 }
+                                            }
+                                        },
+                                        onDeleteClick = { recipeToDelete = recipe },
+                                        onEditClick = {
+                                            recipe.recipe_id?.let { id ->
+                                                navController.navigate(Screen.EditRecipe.createRoute(id))
                                             }
                                         },
                                         onClick = {
                                             recipe.recipe_id?.let { id ->
-                                                navController.navigate(
-                                                    Screen.RecipeDetails.createRoute(
-                                                        id
-                                                    )
-                                                )
+                                                navController.navigate(Screen.RecipeDetails.createRoute(id))
                                             }
                                         }
                                     )
                                 }
+                            }
+                        } else if (selectedMainTab == 1) {
+                            if (!showChefBookmarks) {
+                                val filtered = bookmarkedRecipes.filter { 
+                                    it.recipeName.contains(searchQuery, true) && 
+                                    (selectedCourse == "All" || it.recipeCourse == selectedCourse) 
+                                }
+                                
+                                if (filtered.isEmpty()) {
+                                    item(span = { GridItemSpan(2) }) {
+                                        EmptyState(
+                                            iconRes = R.drawable.bookmark,
+                                            title = stringResource(R.string.empty_no_bookmarked_recipes),
+                                            subtitle = stringResource(R.string.empty_bookmarked_recipes_sub)
+                                        )
+                                    }
+                                } else {
+                                    gridItems(filtered) { recipe ->
+                                        RecipeCardItem(
+                                            recipe = recipe,
+                                            currentUser = user, // 🌟 Pass current user for card name sync
+                                            isBookmarked = true,
+                                            onBookmarkClick = {
+                                                user?.customId?.let { cid ->
+                                                    recipe.recipe_id?.let { rid ->
+                                                        viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                    }
+                                                }
+                                            },
+                                            onClick = {
+                                                recipe.recipe_id?.let { id ->
+                                                    navController.navigate(Screen.RecipeDetails.createRoute(id))
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
                             } else {
-                                gridItems(bookmarkedChefs) { chef ->
-                                    ChefCardItem(chef = chef)
+                                // Search Chefs by name
+                                val filteredChefs = bookmarkedChefs.filter { 
+                                    it.name.contains(searchQuery, true) 
+                                }
+                                
+                                if (filteredChefs.isEmpty()) {
+                                    item(span = { GridItemSpan(2) }) {
+                                        EmptyState(
+                                            iconRes = R.drawable.ic_hiring,
+                                            title = stringResource(R.string.empty_no_bookmarked_chefs),
+                                            subtitle = stringResource(R.string.empty_bookmarked_chefs_sub)
+                                        )
+                                    }
+                                } else {
+                                    gridItems(filteredChefs) { chef ->
+                                        ChefCardItem(
+                                            chef = chef,
+                                            onClick = {
+                                                val chefId = chef.chefId.ifEmpty { chef.id }
+                                                navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
-                        
-                        // 🌟 Removed the extra 80dp spacer to fix the empty space issue at the bottom
                     }
                 }
             }
@@ -599,8 +675,46 @@ fun DrawerItem(
 }
 
 @Composable
-fun ChefCardItem(chef: Chef) {
+fun EmptyState(
+    @DrawableRes iconRes: Int,
+    title: String,
+    subtitle: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 80.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.padding(horizontal = 32.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
     Card(
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().height(200.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
