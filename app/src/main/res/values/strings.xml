@@ -603,6 +603,7 @@
     <string name="shopping_list_clear_all_dialog_title">Clear All Items</string>
     <string name="shopping_list_clear_all_dialog_text">All items will be cleared from your Shopping List. Are you sure?</string>
     <string name="shopping_list_clear_all_toast">All items cleared from your Shopping List</string>
+    <string name="select_shopping_list_placeholder">Select a shopping list</string>
     <string name="shopping_list_error_local_data">Using local data only.</string>
 
     <!-- Add Shopping List Item -->

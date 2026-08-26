@@ -33,6 +33,24 @@ interface ShoppingListDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertShoppingList(shoppingList: ShoppingListEntity)
 
+    @Query("SELECT * FROM shopping_lists WHERE user_id = :userId AND is_default = 1 LIMIT 1")
+    suspend fun getDefaultShoppingList(userId: String): ShoppingListEntity?
+
+    @Query("UPDATE shopping_lists SET is_default = 0 WHERE user_id = :userId")
+    suspend fun clearAllDefaults(userId: String)
+
+    @Query("UPDATE shopping_lists SET is_default = 1, last_updated = :lastUpdated WHERE shopping_list_id = :shoppingListId AND user_id = :userId")
+    suspend fun setListAsDefault(shoppingListId: String, userId: String, lastUpdated: Long = System.currentTimeMillis())
+
+    @Query("UPDATE shopping_lists SET is_default = 0, last_updated = :lastUpdated WHERE shopping_list_id = :shoppingListId AND user_id = :userId")
+    suspend fun deselectListAsDefault(shoppingListId: String, userId: String, lastUpdated: Long = System.currentTimeMillis())
+
+    @Transaction
+    suspend fun setDefaultShoppingList(shoppingListId: String, userId: String) {
+        clearAllDefaults(userId)
+        setListAsDefault(shoppingListId, userId)
+    }
+
     @Query("UPDATE shopping_lists SET last_updated = :lastUpdated WHERE shopping_list_id = :shoppingListId AND user_id = :userId")
     suspend fun updateLastUpdated(shoppingListId: String, userId: String, lastUpdated: Long = System.currentTimeMillis())
 

@@ -94,6 +94,7 @@ fun ShoppingListScreen(
         editableTitle.trim() != currentSavedTitle
 
     var showUnsavedChangesDialog by remember { mutableStateOf(false) }
+    var showChangeDefaultDialog by remember { mutableStateOf(false) }
 
     fun saveTitleIfChanged() {
         val trimmed = editableTitle.trim()
@@ -199,7 +200,7 @@ fun ShoppingListScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Set as default",
+                                        text = if (activeList?.isDefault == true) "Deselect as default" else "Set as default",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -209,12 +210,25 @@ fun ShoppingListScreen(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
                                         modifier = Modifier.size(20.dp),
-                                        tint = MaterialTheme.colorScheme.onSurface
+                                        tint = if (activeList?.isDefault == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 },
                                 onClick = {
                                     showTopMenu = false
-                                    // Empty for now (will be implemented later)
+                                    activeList?.let { currentList ->
+                                        if (currentList.isDefault) {
+                                            viewModel.deselectDefaultShoppingList(currentList.shoppingListId)
+                                            Toast.makeText(context, "Shopping list deselected as default", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            val currentDefault = uiState.shoppingLists.find { it.isDefault }
+                                            if (currentDefault != null && currentDefault.shoppingListId != currentList.shoppingListId) {
+                                                showChangeDefaultDialog = true
+                                            } else {
+                                                viewModel.setDefaultShoppingList(currentList.shoppingListId)
+                                                Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
                                 }
                             )
                             DropdownMenuItem(
@@ -452,6 +466,31 @@ fun ShoppingListScreen(
                     navController.popBackStack()
                 }) {
                     Text("Discard", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    // ──────────────── Change Default Confirmation Dialog ────────────────
+    if (showChangeDefaultDialog && activeList != null) {
+        val currentDefault = uiState.shoppingLists.find { it.isDefault }
+        val currentDefaultName = currentDefault?.title?.ifEmpty { currentDefault.shoppingListId } ?: ""
+        AlertDialog(
+            onDismissRequest = { showChangeDefaultDialog = false },
+            title = { Text("Change Default Shopping List") },
+            text = { Text("A shopping list ($currentDefaultName) has already been set as default. Change to this shopping list instead?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setDefaultShoppingList(activeList.shoppingListId)
+                    Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                    showChangeDefaultDialog = false
+                }) {
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showChangeDefaultDialog = false }) {
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )

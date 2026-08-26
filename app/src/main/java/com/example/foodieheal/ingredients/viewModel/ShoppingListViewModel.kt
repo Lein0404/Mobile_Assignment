@@ -138,6 +138,20 @@ class ShoppingListViewModel(
         }
     }
 
+    fun setDefaultShoppingList(shoppingListId: String) {
+        if (currentUserId.isEmpty()) return
+        viewModelScope.launch {
+            shoppingRepo.setDefaultShoppingList(shoppingListId, currentUserId)
+        }
+    }
+
+    fun deselectDefaultShoppingList(shoppingListId: String) {
+        if (currentUserId.isEmpty()) return
+        viewModelScope.launch {
+            shoppingRepo.deselectDefaultShoppingList(shoppingListId, currentUserId)
+        }
+    }
+
     fun onShowCreateListDialog(show: Boolean) {
         _uiState.update { it.copy(showCreateListDialog = show) }
     }

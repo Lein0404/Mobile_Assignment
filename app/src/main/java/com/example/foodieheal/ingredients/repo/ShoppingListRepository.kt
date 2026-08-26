@@ -60,6 +60,22 @@ class ShoppingListRepository(private val dao: ShoppingListDao) {
         dao.updateShoppingListTitle(shoppingListId, userId, title)
     }
 
+    suspend fun getDefaultShoppingList(userId: String): ShoppingListEntity? = withContext(Dispatchers.IO) {
+        dao.getDefaultShoppingList(userId)
+    }
+
+    suspend fun setDefaultShoppingList(shoppingListId: String, userId: String) = withContext(Dispatchers.IO) {
+        dao.setDefaultShoppingList(shoppingListId, userId)
+    }
+
+    suspend fun deselectDefaultShoppingList(shoppingListId: String, userId: String) = withContext(Dispatchers.IO) {
+        dao.deselectListAsDefault(shoppingListId, userId)
+    }
+
+    suspend fun getShoppingListsForUser(userId: String): List<ShoppingListEntity> = withContext(Dispatchers.IO) {
+        dao.getShoppingListsForUser(userId)
+    }
+
     suspend fun insertItem(item: ShoppingListItemEntity) = withContext(Dispatchers.IO) {
         dao.insertItem(item)
         dao.updateLastUpdated(item.shoppingListId, item.userId)

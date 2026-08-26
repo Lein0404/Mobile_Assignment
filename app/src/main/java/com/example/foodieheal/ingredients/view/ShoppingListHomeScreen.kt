@@ -52,12 +52,15 @@ fun ShoppingListHomeScreen(
     val context = LocalContext.current
     var newListNameInput by remember { mutableStateOf("") }
 
+    var targetListForDefault by remember { mutableStateOf<ShoppingList?>(null) }
+    var showChangeDefaultDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "My Shopping Lists",
+                        text = "Shopping Lists",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -90,9 +93,9 @@ fun ShoppingListHomeScreen(
                     .offset(y = (-dimensionResource(id = R.dimen.padding_xxl)))
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_outline_add),
+                    imageVector = Icons.Default.Add,
                     contentDescription = "New Shopping List",
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.padding_xxl))
+                    modifier = Modifier.size(32.dp)
                 )
             }
         },
@@ -187,6 +190,20 @@ fun ShoppingListHomeScreen(
                                 viewModel.selectShoppingList(list.shoppingListId)
                                 navController.navigate(Screen.ShoppingList.createRoute(list.shoppingListId))
                             },
+                            onSetDefault = {
+                                val currentDefault = uiState.shoppingLists.find { it.isDefault }
+                                if (currentDefault != null && currentDefault.shoppingListId != list.shoppingListId) {
+                                    targetListForDefault = list
+                                    showChangeDefaultDialog = true
+                                } else {
+                                    viewModel.setDefaultShoppingList(list.shoppingListId)
+                                    Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onDeselectDefault = {
+                                viewModel.deselectDefaultShoppingList(list.shoppingListId)
+                                Toast.makeText(context, "Shopping list deselected as default", Toast.LENGTH_SHORT).show()
+                            },
                             onDelete = {
                                 viewModel.onShowDeleteListDialog(true, list.shoppingListId)
                             }
@@ -269,6 +286,40 @@ fun ShoppingListHomeScreen(
         )
     }
 
+    // ──────────────── Change Default Confirmation Dialog ────────────────
+    if (showChangeDefaultDialog && targetListForDefault != null) {
+        val currentDefault = uiState.shoppingLists.find { it.isDefault }
+        val currentDefaultName = currentDefault?.title?.ifEmpty { currentDefault.shoppingListId } ?: ""
+        AlertDialog(
+            onDismissRequest = {
+                showChangeDefaultDialog = false
+                targetListForDefault = null
+            },
+            title = { Text("Change Default Shopping List") },
+            text = { Text("A shopping list ($currentDefaultName) has already been set as default. Change to this shopping list instead?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    targetListForDefault?.let {
+                        viewModel.setDefaultShoppingList(it.shoppingListId)
+                        Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                    }
+                    showChangeDefaultDialog = false
+                    targetListForDefault = null
+                }) {
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showChangeDefaultDialog = false
+                    targetListForDefault = null
+                }) {
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
     // ──────────────── Delete Confirmation Dialog ────────────────
     if (uiState.showDeleteListDialog) {
         val targetId = uiState.listToDeleteId ?: ""
@@ -298,11 +349,13 @@ fun ShoppingListHomeScreen(
 fun ShoppingListCard(
     shoppingList: ShoppingList,
     onClick: () -> Unit,
+    onSetDefault: () -> Unit,
+    onDeselectDefault: () -> Unit,
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
-    val formattedDate = remember(shoppingList.createdAt) { dateFormat.format(Date(shoppingList.createdAt)) }
+    val formattedDate = remember(shoppingList.lastUpdated) { dateFormat.format(Date(shoppingList.lastUpdated)) }
 
     Card(
         modifier = Modifier
@@ -323,12 +376,31 @@ fun ShoppingListCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = shoppingList.title.ifEmpty { shoppingList.shoppingListId },
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = shoppingList.title.ifEmpty { shoppingList.shoppingListId },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (shoppingList.isDefault) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "Default",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
 
                 // Date Pill Tag
                 Box(
@@ -387,7 +459,7 @@ fun ShoppingListCard(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "Set as default",
+                                text = if (shoppingList.isDefault) "Deselect as default" else "Set as default",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -397,12 +469,16 @@ fun ShoppingListCard(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = if (shoppingList.isDefault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
                         },
                         onClick = {
                             showMenu = false
-                            // Empty for now (will be implemented later)
+                            if (shoppingList.isDefault) {
+                                onDeselectDefault()
+                            } else {
+                                onSetDefault()
+                            }
                         }
                     )
                     DropdownMenuItem(

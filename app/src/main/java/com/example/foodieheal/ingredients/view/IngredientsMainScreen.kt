@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
+import com.example.foodieheal.ingredients.shared.SelectShoppingListDialog
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
@@ -196,12 +197,13 @@ fun IngredientsMainScreen(
                     navController = navController,
                     categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
-                        viewModel.addToShoppingList(ingredient)
-                        Toast.makeText(
-                            context,
-                            application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        viewModel.requestAddToShoppingList(ingredient) {
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 )
             } else {
@@ -210,6 +212,22 @@ fun IngredientsMainScreen(
                     uiState = requestUiState,
                     navController = navController,
                     categoryScrollState = requestsCategoryScrollState
+                )
+            }
+
+            if (uiState.showSelectShoppingListDialog) {
+                SelectShoppingListDialog(
+                    shoppingLists = uiState.availableShoppingLists,
+                    onDismissRequest = { viewModel.onDismissSelectShoppingListDialog() },
+                    onConfirm = { chosenList ->
+                        viewModel.confirmAddPendingIngredientToShoppingList(chosenList) { addedName ->
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, addedName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 )
             }
         }

@@ -9,6 +9,7 @@ data class ShoppingList(
     val shoppingListId: String = "",
     val userId: String = "",
     val title: String = "",
+    val isDefault: Boolean = false,
     val items: List<ShoppingListItem> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val lastUpdated: Long = System.currentTimeMillis(),

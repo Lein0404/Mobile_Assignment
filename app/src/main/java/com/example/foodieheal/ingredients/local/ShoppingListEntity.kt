@@ -23,6 +23,7 @@ data class ShoppingListEntity(
     @ColumnInfo(name = "shopping_list_id") val shoppingListId: String,
     @ColumnInfo(name = "user_id") val userId: String,
     @ColumnInfo(name = "title") val title: String = "",
+    @ColumnInfo(name = "is_default") val isDefault: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "last_updated") val lastUpdated: Long = System.currentTimeMillis(),
 )
@@ -66,7 +67,11 @@ fun ShoppingListItemEntity.toDomain() = ShoppingListItem(
     ingredientId = ingredientId,
     ingredientName = ingredientName,
     category = ingredientCategory?.let {
-        try { IngredientCategory.valueOf(it) } catch (_: Exception) { null }
+        try {
+            IngredientCategory.valueOf(it)
+        } catch (_: Exception) {
+            IngredientCategory.OTHERS
+        }
     },
     isChecked = isChecked
 )
@@ -85,6 +90,7 @@ fun ShoppingListWithItemsEntity.toDomain() = ShoppingList(
     shoppingListId = shoppingList.shoppingListId,
     userId = shoppingList.userId,
     title = shoppingList.title,
+    isDefault = shoppingList.isDefault,
     items = items.map { it.toDomain() },
     createdAt = shoppingList.createdAt,
     lastUpdated = shoppingList.lastUpdated
@@ -94,6 +100,7 @@ fun ShoppingListEntity.toDomain(items: List<ShoppingListItem> = emptyList()) = S
     shoppingListId = shoppingListId,
     userId = userId,
     title = title,
+    isDefault = isDefault,
     items = items,
     createdAt = createdAt,
     lastUpdated = lastUpdated
