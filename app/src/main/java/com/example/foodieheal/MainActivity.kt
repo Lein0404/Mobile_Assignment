@@ -1016,9 +1016,15 @@ class MainActivity : ComponentActivity() {
     private fun processDeepLink(uri: Uri) {
         Log.d("DeepLink", "Processing URI: $uri")
         val isHttpsLink = uri.scheme == "https" && uri.host == "tzh652.github.io" && uri.path?.startsWith("/share") == true
-        val isCustomScheme = uri.scheme == "foodieheal" && uri.host == "share"
+        val isCustomScheme = uri.scheme == "foodieheal" && (uri.host == "share" || uri.host == "reset")
 
-        if (isHttpsLink || isCustomScheme) {
+        if (isCustomScheme && uri.host == "reset") {
+            Log.d("DeepLink", "App opened via Password Reset link")
+            // No specific navigation needed, Login is the default start destination
+            return
+        }
+
+        if (isHttpsLink || (isCustomScheme && uri.host == "share")) {
             uri.getQueryParameter("sourceStart")?.let { dateStr ->
                 runCatching {
                     LocalDate.parse(dateStr)
