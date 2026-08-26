@@ -274,7 +274,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         // 🌟 contentWindowInsets=0 ensures the orange header reaches the top without gaps
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                        containerColor = Color(0xFFF8F8F8), // 🌟 FIX: Stop the "black gap" during transitions
+                        containerColor = MaterialTheme.colorScheme.background, // 🌟 FIX: Stop the "black gap" during transitions
                         bottomBar = {
                             // 🌟 FIX: Animate the bar visibility to prevent sudden layout jumps/flickering
                             AnimatedVisibility(
@@ -1145,7 +1145,7 @@ class MainActivity : ComponentActivity() {
                                 Screen.EditBodyStatus.route // "editBodyStatus"
                             )
 
-                            // Only kick to Login if we are NOT on an auth screen
+                            // Only kick to log in if we are NOT on an auth screen
                             // 🌟 FIX: Use startsWith to handle routes with query parameters like ?fromRegister=true
                             val isAuthRoute = authRoutes.any { currentRoute?.startsWith(it) == true }
 
@@ -1208,23 +1208,26 @@ class MainActivity : ComponentActivity() {
 
 data class NavigationItem(val route: String, val label: String, val icon: Int)
 
+
+// PLEASE DON'T DELETE IT, IT CAN PREVENT THE SCREEN FLASH YOUR EYE
 @Composable
 fun SplashLogoOverlay() {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val backgroundColor = Color(0xFFF8F8F8)
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val darkTheme = androidx.compose.foundation.isSystemInDarkTheme()
     val view = LocalView.current
 
     // 🌟 Sync Status Bar to background color
     SideEffect {
         val window = (view.context as Activity).window
         window.statusBarColor = backgroundColor.toArgb()
-        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+        androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8)) // 🌟 Sync Background
+            .background(backgroundColor) // 🌟 Sync Background
     ) {
         // 🌟 Seamless Background Spacer
         Box(
