@@ -1,6 +1,7 @@
 package com.example.foodieheal.Recipe.View
 
 import android.app.Activity
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,6 +12,8 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -53,20 +56,22 @@ fun RecipesScreen(
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
     
     // Filter State
-    var showFilterDialog by remember { mutableStateOf(false) }
-    var filterMaxTime by remember { mutableFloatStateOf(120f) }
-    var filterMaxCalories by remember { mutableFloatStateOf(2000f) }
+    var showFilterSheet by remember { mutableStateOf(false) }
+    var filterMaxTime by remember { mutableFloatStateOf(240f) }
+    var filterMaxCalories by remember { mutableFloatStateOf(5000f) }
     var filterSkill by remember { mutableStateOf<String?>(null) }
     var filterBudget by remember { mutableStateOf<String?>(null) }
+    var filterIngredients by remember { mutableStateOf(setOf<String>()) }
 
     // 🌟 FIX: Reset all filters when switching tabs
     LaunchedEffect(selectedTab) {
         searchQuery = ""
         selectedCourse = "All"
-        filterMaxTime = 120f
-        filterMaxCalories = 2000f
+        filterMaxTime = 240f
+        filterMaxCalories = 5000f
         filterSkill = null
         filterBudget = null
+        filterIngredients = emptySet()
     }
 
     // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent
@@ -98,8 +103,9 @@ fun RecipesScreen(
                 val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
                 val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
                 val matchesBudget = filterBudget == null || recipe.estimatedBudget == filterBudget
+                val matchesIngredients = filterIngredients.isEmpty() || recipe.ingredients.any { it.name in filterIngredients }
                 
-                matchesSearch && matchesCourse && matchesTime && matchesCalories && matchesSkill && matchesBudget
+                matchesSearch && matchesCourse && (filterMaxTime == 240f || matchesTime) && (filterMaxCalories == 5000f || matchesCalories) && matchesSkill && matchesBudget && matchesIngredients
             }
         }
     }
@@ -111,7 +117,9 @@ fun RecipesScreen(
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            // 🌟 Use currentSnackbarData?.dismiss() to show new messages instantly
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
 
@@ -243,8 +251,8 @@ fun RecipesScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search recipes here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -258,7 +266,7 @@ fun RecipesScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.filter),
                                 contentDescription = "Filter",
-                                modifier = Modifier.size(20.dp).clickable { showFilterDialog = true },
+                                modifier = Modifier.size(20.dp).clickable { showFilterSheet = true },
                                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) // 🌟 Themed Icon
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -351,8 +359,9 @@ fun RecipesScreen(
             } else if (filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        val isFilterActive = filterMaxTime < 240f || filterMaxCalories < 5000f || filterSkill != null || filterBudget != null || filterIngredients.isNotEmpty()
                         Text(
-                            text = if (searchQuery.isNotEmpty() || filterMaxTime < 120f || filterMaxCalories < 2000f || filterSkill != null || filterBudget != null)
+                            text = if (searchQuery.isNotEmpty() || isFilterActive)
                                 "No recipes match your filters."
                             else "No recipes found for '$selectedCourse'.",
                             color = Color.Gray
@@ -409,100 +418,231 @@ fun RecipesScreen(
     )
 }
 
-    if (showFilterDialog) {
-        AlertDialog(
-            onDismissRequest = { showFilterDialog = false },
-            confirmButton = {
-                Button(
-                    onClick = { showFilterDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) { Text("Apply Filters") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    filterMaxTime = 120f
-                    filterMaxCalories = 2000f
-                    filterSkill = null
-                    filterBudget = null
-                    showFilterDialog = false
-                }) { Text("Clear All", color = Color.Red) }
-            },
-            title = {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Filter Recipes", fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { showFilterDialog = false }) {
-                        Icon(painterResource(id = R.drawable.cancel), "Close", modifier = Modifier.size(20.dp))
-                    }
-                }
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    Text("Max Prep Time (mins)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Slider(
-                            value = filterMaxTime,
-                            onValueChange = { filterMaxTime = it },
-                            valueRange = 0f..120f,
-                            modifier = Modifier.weight(1f),
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary)
-                        )
-                        OutlinedTextField(
-                            value = filterMaxTime.toInt().toString(),
-                            onValueChange = {
-                                val newVal = it.toFloatOrNull() ?: 0f
-                                if (newVal in 0f..120f) filterMaxTime = newVal
-                            },
-                            modifier = Modifier.width(70.dp).padding(start = 8.dp),
-                            singleLine = true,
-                            textStyle = TextStyle(fontSize = 12.sp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text("Max Calories (kcal)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Slider(
-                            value = filterMaxCalories,
-                            onValueChange = { filterMaxCalories = it },
-                            valueRange = 0f..2000f,
-                            modifier = Modifier.weight(1f),
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary)
-                        )
-                        OutlinedTextField(
-                            value = filterMaxCalories.toInt().toString(),
-                            onValueChange = {
-                                val newVal = it.toFloatOrNull() ?: 0f
-                                if (newVal in 0f..2000f) filterMaxCalories = newVal
-                            },
-                            modifier = Modifier.width(80.dp).padding(start = 8.dp),
-                            singleLine = true,
-                            textStyle = TextStyle(fontSize = 12.sp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text("Cooking Skill", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        listOf("Beginner", "Intermediate", "Master/Expert").forEach { skill ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(selected = filterSkill == skill, onClick = { filterSkill = if (filterSkill == skill) null else skill })
-                                Text(skill, fontSize = 14.sp)
-                            }
-                        }
-                    }
-
-                    Text("Budget (RM)", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        listOf("0 - 20", "20 - 40", "40 - 60", "60 - 80", "80 - 100").forEach { budget ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(selected = filterBudget == budget, onClick = { filterBudget = if (filterBudget == budget) null else budget })
-                                Text(budget, fontSize = 14.sp)
-                            }
-                        }
-                    }
-                }
+    if (showFilterSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFilterSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            var ingredientSearchQuery by remember { mutableStateOf("") }
+            val availableIngredients = remember(viewModel.availableIngredients) {
+                viewModel.availableIngredients.mapNotNull { it.name }.distinct().sorted()
             }
-        )
+            val filteredIngredientList = remember(ingredientSearchQuery, availableIngredients) {
+                if (ingredientSearchQuery.isEmpty()) availableIngredients
+                else availableIngredients.filter { it.contains(ingredientSearchQuery, ignoreCase = true) }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Filter Recipes",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = {
+                        filterMaxTime = 240f
+                        filterMaxCalories = 5000f
+                        filterSkill = null
+                        filterBudget = null
+                        filterIngredients = emptySet()
+                        ingredientSearchQuery = ""
+                    }) {
+                        Text("Reset All", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 1. Max Prep Time
+                FilterSectionHeader(icon = R.drawable.ic_clock, title = "Max Prep Time")
+                val timeDisplay = if (filterMaxTime >= 240f) "Any Time" else "${filterMaxTime.toInt()} mins"
+                Text(timeDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Slider(
+                    value = filterMaxTime,
+                    onValueChange = { filterMaxTime = it },
+                    valueRange = 10f..240f,
+                    steps = 22,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 2. Max Calories
+                FilterSectionHeader(icon = R.drawable.ic_fire, title = "Max Calories")
+                val calDisplay = if (filterMaxCalories >= 5000f) "Any Calories" else "${filterMaxCalories.toInt()} kcal"
+                Text(calDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Slider(
+                    value = filterMaxCalories,
+                    onValueChange = { filterMaxCalories = it },
+                    valueRange = 100f..5000f,
+                    steps = 48,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 3. Ingredients
+                FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = "Ingredients")
+                
+                // 🌟 ENLARGED: Ingredient Search Bar
+                OutlinedTextField(
+                    value = ingredientSearchQuery,
+                    onValueChange = { ingredientSearchQuery = it },
+                    placeholder = { Text("Search ingredients...", fontSize = 14.sp) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp), // Increased height
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(24.dp)) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        unfocusedBorderColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (availableIngredients.isNotEmpty()) {
+                    // 🌟 FIXED: Use LazyRow to prevent lag when there are many ingredients
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp)
+                    ) {
+                        lazyItems(filteredIngredientList) { ingredient ->
+                            FilterChip(
+                                selected = ingredient in filterIngredients,
+                                onClick = {
+                                    filterIngredients = if (ingredient in filterIngredients) {
+                                        filterIngredients - ingredient
+                                    } else {
+                                        filterIngredients + ingredient
+                                    }
+                                },
+                                label = { Text(ingredient) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    }
+
+                    // 🌟 NEW: Show Selected Ingredients List
+                    if (filterIngredients.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Selected (${filterIngredients.size}):",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            filterIngredients.forEach { selected ->
+                                InputChip(
+                                    selected = true,
+                                    onClick = { filterIngredients = filterIngredients - selected },
+                                    label = { Text(selected, fontSize = 11.sp) },
+                                    trailingIcon = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.cancel),
+                                            contentDescription = "Remove",
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    },
+                                    colors = InputChipDefaults.inputChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Text("Loading ingredients...", fontSize = 12.sp, color = Color.Gray)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 4. Cooking Skill
+                FilterSectionHeader(icon = R.drawable.skill, title = "Cooking Skill")
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Beginner", "Intermediate", "Master/Expert").forEach { skill ->
+                        FilterChip(
+                            selected = filterSkill == skill,
+                            onClick = { filterSkill = if (filterSkill == skill) null else skill },
+                            label = { Text(skill) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 4. Budget
+                FilterSectionHeader(icon = R.drawable.dollar_symbol, title = "Budget (RM)")
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("0 - 20", "20 - 40", "40 - 60", "60 - 80", "80 - 100").forEach { budget ->
+                        FilterChip(
+                            selected = filterBudget == budget,
+                            onClick = { filterBudget = if (filterBudget == budget) null else budget },
+                            label = { Text(budget) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Apply Button
+                Button(
+                    onClick = { showFilterSheet = false },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Apply Filters", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
     }
 
     if (recipeToDelete != null) {
@@ -769,5 +909,27 @@ fun RecipeCardItem(
 
             }
         }
+    }
+}
+
+@Composable
+fun FilterSectionHeader(@DrawableRes icon: Int, title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(bottom = 8.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

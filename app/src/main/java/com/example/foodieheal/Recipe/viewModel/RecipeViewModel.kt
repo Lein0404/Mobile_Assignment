@@ -57,6 +57,9 @@ class RecipeViewModel(
     private var isFetchingMyRecipes = false
     private var isFetchingBookmarks = false
     private var isFetchingIngredients = false
+    
+    // 🌟 Track active toggle jobs to allow cancellation/restarts
+    private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     init {
         observeNetworkStatus()
@@ -224,14 +227,37 @@ class RecipeViewModel(
     }
 
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
+        // 🌟 1. Cancel any existing job for this specific recipe to prevent race conditions
+        bookmarkJobs[recipeId]?.cancel()
+        
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
-        viewModelScope.launch {
-            // 🌟 Optimistic Update: Immediate UI feedback
-            bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
-            
-            repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
-                _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
-                fetchBookmarkedRecipes(userId)
+        
+        // 🌟 2. Instant UI Update (Always happens regardless of network speed)
+        bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
+        
+        if (isBookmarked) {
+            bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+        } else {
+            recipeList.find { it.recipe_id == recipeId }?.let { 
+                bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
+            }
+        }
+
+        // 🌟 3. Launch the new request (This job can be cancelled by the next click)
+        bookmarkJobs[recipeId] = viewModelScope.launch {
+            try {
+                repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
+                    _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
+                    fetchBookmarkedRecipes(userId)
+                }.onFailure {
+                    // Revert UI only if this specific job wasn't cancelled
+                    bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
+                }
+            } finally {
+                // Cleanup job map when done
+                if (bookmarkJobs[recipeId]?.isActive == false) {
+                    bookmarkJobs.remove(recipeId)
+                }
             }
         }
     }
