@@ -52,8 +52,16 @@ fun HiringScreen(
         stringResource(R.string.tab_bookmarks)
     )
 
-    // Fetch all chefs on initial screen launch
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Fetch all chefs on initial screen launch & ensure cleanup service is active
     LaunchedEffect(Unit) {
+        try {
+            val cleanupIntent = android.content.Intent(context, com.example.foodieheal.hiring.local.HiringCacheCleanupService::class.java)
+            context.startService(cleanupIntent)
+        } catch (e: Exception) {
+            android.util.Log.e("HiringScreen", "Failed to start HiringCacheCleanupService", e)
+        }
         chefListViewModel.fetchAllChefs()
     }
 

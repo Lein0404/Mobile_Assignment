@@ -66,6 +66,17 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Multipurpose cache cleanup service when user swipes away app from App Switcher -->
+        <service
+            android:name=".ui.components.AppCacheCleanupService"
+            android:stopWithTask="false" />
+        <service
+            android:name=".Chef.local.ChefCacheCleanupService"
+            android:stopWithTask="false" />
+        <service
+            android:name=".hiring.local.HiringCacheCleanupService"
+            android:stopWithTask="false" />
     </application>
 
 </manifest>

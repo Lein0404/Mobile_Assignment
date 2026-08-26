@@ -43,11 +43,6 @@ sealed interface AppointmentsUiState {
     ) : AppointmentsUiState
 }
 
-/**
- * ViewModel for the Chef Portal (Home & Appointments).
- * Integrates NetworkMonitor to observe network status, trigger auto-refresh on reconnection,
- * and provide offline awareness.
- */
 class ChefPortalViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = ChefDatabase.getInstance(application)

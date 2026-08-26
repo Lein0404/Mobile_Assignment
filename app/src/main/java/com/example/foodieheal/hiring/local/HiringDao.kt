@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChefDao {
 
-    @Query("SELECT * FROM hiring_chefs WHERE status = 'approved' ORDER BY averagerating DESC")
+    @Query("SELECT * FROM hiring_chefs ORDER BY averagerating DESC")
     fun getAllChefsFlow(): Flow<List<ChefEntity>>
 
-    @Query("SELECT * FROM hiring_chefs WHERE status = 'approved' ORDER BY averagerating DESC")
+    @Query("SELECT * FROM hiring_chefs ORDER BY averagerating DESC")
     suspend fun getAllChefs(): List<ChefEntity>
 
     @Query("SELECT * FROM hiring_chefs WHERE chefId = :chefId OR id = :chefId LIMIT 1")
@@ -85,6 +85,9 @@ interface ChefBookmarkDao {
 
     @Query("DELETE FROM hiring_chef_bookmarks WHERE userId = :userId")
     suspend fun clearBookmarksForUser(userId: String)
+
+    @Query("DELETE FROM hiring_chef_bookmarks")
+    suspend fun clearAllBookmarks()
 }
 
 @Dao
@@ -104,4 +107,7 @@ interface ChefReviewDao {
 
     @Query("DELETE FROM hiring_reviews WHERE chefId = :chefId")
     suspend fun clearReviewsForChef(chefId: String)
+
+    @Query("DELETE FROM hiring_reviews")
+    suspend fun clearAllReviews()
 }

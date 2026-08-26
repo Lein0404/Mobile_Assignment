@@ -12,7 +12,6 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
-import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +27,7 @@ import java.util.Locale
 class AppointmentBookingViewModel(
     private val repository: HiringRepository = HiringRepository(),
     private val networkMonitor: NetworkMonitor? = null,
-    private val recipeRepository: RecipeRepository = RecipeRepository(SupabaseClient.client)
+    private val recipeRepository: RecipeRepository = RecipeRepository()
 ) : ViewModel() {
 
     private val _selectedChef = MutableStateFlow<Chef?>(null)

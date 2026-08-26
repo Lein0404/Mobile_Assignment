@@ -13,14 +13,34 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class BookmarkRepository(
-    private val bookmarkDao: ChefBookmarkDao? = null,
-    private val chefDao: ChefDao? = null
+    private var bookmarkDao: ChefBookmarkDao? = null,
+    private var chefDao: ChefDao? = null
 ) {
+
+    private fun getBookmarkDao(): ChefBookmarkDao? {
+        if (bookmarkDao == null) {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                bookmarkDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).chefBookmarkDao()
+            }
+        }
+        return bookmarkDao
+    }
+
+    private fun getChefDao(): ChefDao? {
+        if (chefDao == null) {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                chefDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).chefDao()
+            }
+        }
+        return chefDao
+    }
 
     private val client = SupabaseClient.client
 
     suspend fun getBookmarkedChefs(userId: String): List<Chef> = withContext(Dispatchers.IO) {
         if (userId.isBlank()) return@withContext emptyList()
+        val bDao = getBookmarkDao()
+        val cDao = getChefDao()
 
         try {
             // Fetch bookmark records for this user
@@ -34,7 +54,7 @@ class BookmarkRepository(
                 .decodeList<ChefBookmark>()
 
             // Cache bookmarks locally
-            bookmarkDao?.let { dao ->
+            bDao?.let { dao ->
                 dao.clearBookmarksForUser(userId)
                 dao.insertBookmarks(bookmarks.map { it.toEntity() })
             }
@@ -86,9 +106,9 @@ class BookmarkRepository(
             }
         } catch (e: Exception) {
             Log.e("BookmarkRepository", "Error fetching bookmarked chefs, falling back to local database", e)
-            val cachedBookmarks = bookmarkDao?.getBookmarksForUser(userId) ?: emptyList()
+            val cachedBookmarks = bDao?.getBookmarksForUser(userId) ?: emptyList()
             val cachedChefs = cachedBookmarks.mapNotNull { b ->
-                chefDao?.getChefById(b.chefId)?.toDomain()
+                cDao?.getChefById(b.chefId)?.toDomain()
             }
             cachedChefs
         }
@@ -100,7 +120,7 @@ class BookmarkRepository(
             "chefId" to chefId
         )
         client.from("Chef_Bookmark").insert(bookmarkData)
-        bookmarkDao?.insertBookmark(
+        getBookmarkDao()?.insertBookmark(
             ChefBookmark(
                 id = "${userId}_${chefId}",
                 userId = userId,
@@ -117,6 +137,6 @@ class BookmarkRepository(
                     eq("chefId", chefId)
                 }
             }
-        bookmarkDao?.deleteBookmark(userId, chefId)
+        getBookmarkDao()?.deleteBookmark(userId, chefId)
     }
 }

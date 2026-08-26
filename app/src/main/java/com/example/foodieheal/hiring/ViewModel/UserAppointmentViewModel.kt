@@ -53,8 +53,17 @@ class UserAppointmentViewModel(
     }
 
     init {
+        checkPhoneCacheStatus()
         fetchAppointmentsForCurrentUser()
         observeNetworkStatus()
+    }
+
+    private fun checkPhoneCacheStatus() {
+        viewModelScope.launch {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                repository.checkAndClearCacheIfPhoneCacheCleared(ctx)
+            }
+        }
     }
 
     private fun observeNetworkStatus() {
@@ -101,6 +110,15 @@ class UserAppointmentViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun clearCache() {
+        viewModelScope.launch {
+            repository.clearAppointmentCache()
+            _userAppointmentsState.value = UserAppointmentsUiState.Loading
+            hasLoadedSuccessfully = false
+            fetchAppointmentsForCurrentUser(forceRefresh = true)
         }
     }
 

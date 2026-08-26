@@ -26,17 +26,45 @@ import java.util.Locale
 import java.util.UUID
 
 class HiringRepository(
-    private val chefDao: ChefDao? = null,
-    private val appointmentDao: AppointmentDao? = null,
-    private val reviewDao: ChefReviewDao? = null,
-    private val recipeRepository: RecipeRepository = RecipeRepository(client)
+    private var chefDao: ChefDao? = null,
+    private var appointmentDao: AppointmentDao? = null,
+    private var reviewDao: ChefReviewDao? = null,
+    private val recipeRepository: RecipeRepository = RecipeRepository()
 ) {
+
+    private fun getChefDao(): ChefDao? {
+        if (chefDao == null) {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                chefDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).chefDao()
+            }
+        }
+        return chefDao
+    }
+
+    private fun getAppointmentDao(): AppointmentDao? {
+        if (appointmentDao == null) {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                appointmentDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).appointmentDao()
+            }
+        }
+        return appointmentDao
+    }
+
+    private fun getReviewDao(): ChefReviewDao? {
+        if (reviewDao == null) {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                reviewDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).chefReviewDao()
+            }
+        }
+        return reviewDao
+    }
 
     fun getCurrentUserId(): String? {
         return client.auth.currentUserOrNull()?.id
     }
 
     suspend fun fetchAllChefs(): List<Chef> = withContext(Dispatchers.IO) {
+        val dao = getChefDao()
         try {
             val chefs = client.from("Chef")
                 .select { filter { ilike("Status", "approved") } }
@@ -72,31 +100,35 @@ class HiringRepository(
                 .sortedByDescending { it.averagerating ?: 0.0 }
 
             // Cache into Room
-            chefDao?.let { dao ->
-                dao.clearChefs()
-                dao.insertChefs(processedChefs.map { it.toEntity() })
+            dao?.let { d ->
+                d.clearChefs()
+                d.insertChefs(processedChefs.map { it.toEntity() })
+                Log.d("HiringRepository", "Successfully cached ${processedChefs.size} chefs into Room")
             }
 
             processedChefs
         } catch (e: Exception) {
             Log.e("HiringRepository", "Network error fetching chefs, falling back to local database", e)
-            chefDao?.getAllChefs()?.map { it.toDomain() } ?: emptyList()
+            val cachedChefs = dao?.getAllChefs()?.map { it.toDomain() } ?: emptyList()
+            Log.d("HiringRepository", "Offline fallback: retrieved ${cachedChefs.size} cached chefs from Room")
+            cachedChefs
         }
     }
 
     suspend fun fetchAppointmentsForUser(userId: String): List<Appointment> = withContext(Dispatchers.IO) {
+        val dao = getAppointmentDao()
         try {
             val appointments = client.from("Appointment")
                 .select { filter { eq("userId", userId) } }
                 .decodeList<Appointment>()
 
             // Cache into Room
-            appointmentDao?.insertAppointments(appointments.map { it.toEntity() })
+            dao?.insertAppointments(appointments.map { it.toEntity() })
 
             appointments
         } catch (e: Exception) {
             Log.e("HiringRepository", "Network error fetching user appointments, falling back to local database", e)
-            appointmentDao?.getAppointmentsForUser(userId)?.map { it.toDomain() } ?: emptyList()
+            dao?.getAppointmentsForUser(userId)?.map { it.toDomain() } ?: emptyList()
         }
     }
 
@@ -124,6 +156,7 @@ class HiringRepository(
     }
 
     suspend fun fetchChefAppointments(chefId: String): Pair<List<Appointment>, User?> = withContext(Dispatchers.IO) {
+        val dao = getAppointmentDao()
         try {
             val appointments = client.from("Appointment")
                 .select { filter { eq("chefId", chefId) } }
@@ -134,12 +167,12 @@ class HiringRepository(
                 .decodeSingleOrNull<User>()
 
             // Cache appointments in Room
-            appointmentDao?.insertAppointments(appointments.map { it.toEntity() })
+            dao?.insertAppointments(appointments.map { it.toEntity() })
 
             Pair(appointments, user)
         } catch (e: Exception) {
             Log.e("HiringRepository", "Network error fetching chef appointments, falling back to local database", e)
-            val cachedAppointments = appointmentDao?.getAppointmentsForChef(chefId)?.map { it.toDomain() } ?: emptyList()
+            val cachedAppointments = dao?.getAppointmentsForChef(chefId)?.map { it.toDomain() } ?: emptyList()
             Pair(cachedAppointments, null)
         }
     }
@@ -510,6 +543,47 @@ class HiringRepository(
             }
         } catch (e: Exception) {
             Log.e("HiringRepository", "Error updating chef average rating: ${e.localizedMessage}", e)
+        }
+    }
+
+    suspend fun clearAllCache(context: android.content.Context? = null) = withContext(Dispatchers.IO) {
+        try {
+            getChefDao()?.clearChefs()
+            getAppointmentDao()?.clearAppointments()
+            getReviewDao()?.clearAllReviews()
+            context?.let { ctx ->
+                val sentinelFile = java.io.File(ctx.cacheDir, com.example.foodieheal.hiring.local.HiringDatabase.SENTINEL_FILE_NAME)
+                if (!sentinelFile.exists()) {
+                    sentinelFile.createNewFile()
+                }
+            }
+            Log.d("HiringRepository", "Hiring cache successfully cleared.")
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error clearing hiring cache", e)
+        }
+    }
+
+    suspend fun clearAppointmentCache() = withContext(Dispatchers.IO) {
+        try {
+            getAppointmentDao()?.clearAppointments()
+            Log.d("HiringRepository", "Hiring appointment cache successfully cleared.")
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error clearing appointment cache", e)
+        }
+    }
+
+    suspend fun checkAndClearCacheIfPhoneCacheCleared(context: android.content.Context) = withContext(Dispatchers.IO) {
+        val sentinelFile = java.io.File(context.cacheDir, com.example.foodieheal.hiring.local.HiringDatabase.SENTINEL_FILE_NAME)
+        if (!sentinelFile.exists()) {
+            Log.d("HiringRepository", "Phone cache was wiped. Purging local hiring cache.")
+            getChefDao()?.clearChefs()
+            getAppointmentDao()?.clearAppointments()
+            getReviewDao()?.clearAllReviews()
+            try {
+                sentinelFile.createNewFile()
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Error creating sentinel file in cacheDir", e)
+            }
         }
     }
 }

@@ -5,6 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
+import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 @Database(
     entities = [
         ChefPortalAppointmentEntity::class,
@@ -21,12 +26,14 @@ abstract class ChefDatabase : RoomDatabase() {
     abstract fun chefProfileDao(): ChefProfileDao
 
     companion object {
+        const val SENTINEL_FILE_NAME = "chef_cache_sentinel.marker"
+
         @Volatile
         private var INSTANCE: ChefDatabase? = null
 
         fun getInstance(context: Context): ChefDatabase {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
+                val db = INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     ChefDatabase::class.java,
                     "chef_database"
@@ -34,6 +41,29 @@ abstract class ChefDatabase : RoomDatabase() {
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }
+
+                // Check if user cleared the phone cache memory
+                checkAndPurgeCacheIfCleared(context.applicationContext, db)
+
+                db
+            }
+        }
+
+        fun checkAndPurgeCacheIfCleared(context: Context, database: ChefDatabase? = null) {
+            val sentinelFile = File(context.cacheDir, SENTINEL_FILE_NAME)
+            if (!sentinelFile.exists()) {
+                val db = database ?: INSTANCE
+                if (db != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            db.chefPortalAppointmentDao().clearAllAppointments()
+                            db.chefPortalUserDao().clearAllUsers()
+                            sentinelFile.createNewFile()
+                        } catch (e: Exception) {
+                            android.util.Log.e("ChefDatabase", "Failed to clear appointment cache after phone cache wipe", e)
+                        }
+                    }
+                }
             }
         }
     }

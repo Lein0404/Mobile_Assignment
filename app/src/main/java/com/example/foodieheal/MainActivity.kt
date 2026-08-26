@@ -104,6 +104,7 @@ import com.example.foodieheal.User.View.RegisterScreen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Payment.Screen.PaymentMethodScreen
+import com.example.foodieheal.ui.components.AppCacheCleanupService
 import com.example.foodieheal.wallet.screen.WalletScreen
 import com.example.foodieheal.wallet.screen.WalletTransactionDetailScreen
 import kotlinx.datetime.DayOfWeek
@@ -131,6 +132,15 @@ class MainActivity : ComponentActivity() {
 
         // 1. Process deep link on initial cold start
         handleDeepLink(intent)
+
+        // 2. Start cache cleanup services to listen for app removal on App Switcher
+        try {
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.hiring.local.HiringCacheCleanupService::class.java))
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.Chef.local.ChefCacheCleanupService::class.java))
+            startService(android.content.Intent(applicationContext, com.example.foodieheal.ui.components.AppCacheCleanupService::class.java))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start cleanup services in MainActivity", e)
+        }
 
         setContent {
             FoodieHealTheme(dynamicColor = false) {
@@ -323,9 +333,10 @@ class MainActivity : ComponentActivity() {
                                 // --- TABS ---
                                 composable(Screen.Home.route) {
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) { HomeScreen(
-                                        navController,
-                                        sharedAuthViewModel,
-                                        sharedRecipeViewModel,
+                                        navController = navController,
+                                        viewModel = sharedAuthViewModel,
+                                        recipeViewModel = sharedRecipeViewModel,
+                                        chefViewModel = chefListViewModel,
                                         onChefClick = { chef ->
                                             chefListViewModel.selectChef(chef)
                                             bookingViewModel.selectChef(chef)

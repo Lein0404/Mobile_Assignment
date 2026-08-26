@@ -33,7 +33,16 @@ class ChefListViewModel(
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
     init {
+        checkPhoneCacheStatus()
         observeNetworkStatus()
+    }
+
+    private fun checkPhoneCacheStatus() {
+        viewModelScope.launch {
+            com.example.foodieheal.MainActivity.appContext?.let { ctx ->
+                repository.checkAndClearCacheIfPhoneCacheCleared(ctx)
+            }
+        }
     }
 
     private fun observeNetworkStatus() {

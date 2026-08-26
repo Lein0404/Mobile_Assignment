@@ -54,13 +54,20 @@ fun ChefMainScreen(
     parentNavController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val chefNavController = rememberNavController()
     val homeViewModel: ChefPortalViewModel = viewModel()
 
-    // Ensure chef data is loaded upon entry
+    // Ensure chef data is loaded and cleanup service is active upon entry
     LaunchedEffect(Unit) {
         if (authViewModel.currentChef == null) {
             authViewModel.fetchChefData()
+        }
+        try {
+            val cleanupIntent = android.content.Intent(context, com.example.foodieheal.Chef.local.ChefCacheCleanupService::class.java)
+            context.startService(cleanupIntent)
+        } catch (e: Exception) {
+            android.util.Log.e("ChefMainScreen", "Failed to start ChefCacheCleanupService", e)
         }
     }
 

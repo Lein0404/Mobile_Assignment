@@ -38,9 +38,13 @@ import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.hiring.viewmodel.HiringViewModel
 
 @Composable
-fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeViewModel: RecipeViewModel, onChefClick : (Chef) -> Unit) {
-
-    val chefViewModel : HiringViewModel = viewModel()
+fun  HomeScreen(
+    navController: NavController,
+    viewModel: AuthViewModel,
+    recipeViewModel: RecipeViewModel,
+    chefViewModel: HiringViewModel = viewModel(),
+    onChefClick: (Chef) -> Unit
+) {
     val user = viewModel.currentUser
     
     val randomRecipes = remember(recipeViewModel.recipeList) {
@@ -56,12 +60,21 @@ fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeVi
     val chefList by chefViewModel.chefList.collectAsState()
     val isChefLoading by chefViewModel.isProcessing.collectAsState()
     val chefErrorMessage by chefViewModel.errorMessage.collectAsState()
+    val isNetworkAvailable by chefViewModel.isNetworkAvailable.collectAsState()
 
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
         recipeViewModel.fetchAllRecipes()
         // 🌟 FIX: Fetch bookmark IDs on start so Home Screen icons are in sync
         user?.customId?.let { recipeViewModel.fetchBookmarkIds(it) }
+    }
+
+    // Auto-reload when network reconnects
+    LaunchedEffect(isNetworkAvailable) {
+        if (isNetworkAvailable) {
+            chefViewModel.fetchAllChefs(forceRefresh = false)
+            recipeViewModel.fetchAllRecipes()
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -130,6 +143,8 @@ fun  HomeScreen(navController: NavController, viewModel: AuthViewModel, recipeVi
                         chefs = chefList,
                         isLoading = isChefLoading,
                         errorMessage = chefErrorMessage,
+                        isNetworkAvailable = isNetworkAvailable,
+                        onRetry = { chefViewModel.fetchAllChefs(forceRefresh = true) },
                         onChefClick = onChefClick
                     )
 
@@ -216,43 +231,13 @@ fun ChefListSection(
     chefs: List<Chef>,
     isLoading: Boolean,
     errorMessage: String?,
+    isNetworkAvailable: Boolean = true,
+    onRetry: () -> Unit = {},
     onChefClick: (Chef) -> Unit
 ) {
     when {
-        // 1. Loading State (Replaced Skeleton with Progress Indicator)
-        isLoading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        }
-
-        // 2. Error State
-        errorMessage != null -> {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error, // 🌟 Themed Error
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
-        }
-
-        // 3. Empty State
-        chefs.isEmpty() -> {
-            Text(
-                text = "No chefs available",
-                color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
-                fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
-        }
-
-        // 4. Data State
-        else -> {
+        // Data State (Prioritize displaying cached or fetched chefs immediately)
+        chefs.isNotEmpty() -> {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -267,6 +252,55 @@ fun ChefListSection(
                     )
                 }
             }
+        }
+
+        // Loading State (Only when list is empty)
+        isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        // Error State with Retry Button
+        errorMessage != null -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error, // 🌟 Themed Error
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TextButton(
+                    onClick = onRetry,
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        text = "Tap to retry",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        // Empty State
+        else -> {
+            Text(
+                text = if (!isNetworkAvailable) "No cached chefs available offline" else "No chefs available",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                fontSize = 13.sp,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
         }
     }
 }

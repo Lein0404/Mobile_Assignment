@@ -11,10 +11,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ChefRegisterViewModel(
-    private val repository: ChefRegisterRepository = ChefRegisterRepository()
+    private val repository: ChefRegisterRepository = ChefRegisterRepository(),
+    private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
 
     var name by mutableStateOf("")

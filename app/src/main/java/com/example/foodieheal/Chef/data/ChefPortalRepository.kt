@@ -22,7 +22,7 @@ class ChefPortalRepository(
     private val appointmentDao: ChefPortalAppointmentDao,
     private val userDao: ChefPortalUserDao,
     private val profileDao: ChefProfileDao,
-    private val recipeRepository: RecipeRepository = RecipeRepository(client)
+    private val recipeRepository: RecipeRepository = RecipeRepository()
 ) {
 
     fun getCurrentUserId(): String? {
@@ -140,6 +140,45 @@ class ChefPortalRepository(
 
     suspend fun getCachedChefProfile(chefId: String): Chef? = withContext(Dispatchers.IO) {
         profileDao.getChefProfile(chefId)?.toDomain()
+    }
+
+    suspend fun clearAppointmentCache(context: android.content.Context? = null) = withContext(Dispatchers.IO) {
+        try {
+            appointmentDao.clearAllAppointments()
+            userDao.clearAllUsers()
+            context?.let { ctx ->
+                val sentinelFile = java.io.File(ctx.cacheDir, com.example.foodieheal.Chef.local.ChefDatabase.SENTINEL_FILE_NAME)
+                if (!sentinelFile.exists()) {
+                    sentinelFile.createNewFile()
+                }
+            }
+            Log.d(TAG, "Appointment cache successfully cleared.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing appointment cache", e)
+        }
+    }
+
+    suspend fun clearAppointmentsForChef(chefId: String) = withContext(Dispatchers.IO) {
+        try {
+            appointmentDao.clearAppointmentsForChef(chefId)
+            Log.d(TAG, "Appointment cache for chef $chefId successfully cleared.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing appointments for chef $chefId", e)
+        }
+    }
+
+    suspend fun checkAndClearCacheIfPhoneCacheCleared(context: android.content.Context) = withContext(Dispatchers.IO) {
+        val sentinelFile = java.io.File(context.cacheDir, com.example.foodieheal.Chef.local.ChefDatabase.SENTINEL_FILE_NAME)
+        if (!sentinelFile.exists()) {
+            Log.d(TAG, "Phone cache was wiped. Purging local appointment cache.")
+            appointmentDao.clearAllAppointments()
+            userDao.clearAllUsers()
+            try {
+                sentinelFile.createNewFile()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating sentinel file in cacheDir", e)
+            }
+        }
     }
 
     companion object {
