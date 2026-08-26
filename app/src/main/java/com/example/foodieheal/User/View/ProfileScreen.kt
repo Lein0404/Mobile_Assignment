@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
@@ -26,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
@@ -42,8 +40,8 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
-import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -51,6 +49,10 @@ import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
+import com.example.foodieheal.hiring.components.ActiveFiltersRow
+import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
+import com.example.foodieheal.hiring.components.ChefFilterState
+import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
 import kotlinx.coroutines.launch
 
@@ -105,7 +107,7 @@ fun ProfileScreen(
     var bookmarksSearchQuery by remember { mutableStateOf("") }
     
     // 🌟 Chef Filter State (matching hiring screen)
-    var chefFilterState by remember { mutableStateOf(com.example.foodieheal.ui.components.ChefFilterState()) }
+    var chefFilterState by remember { mutableStateOf(ChefFilterState()) }
     var showChefFilterSheet by remember { mutableStateOf(false) }
     
     // 🌟 Recipe Filter State (matching recipes screen)
@@ -125,7 +127,7 @@ fun ProfileScreen(
 
     // 🌟 Search & Filter Chefs Logic (Hiring Screen Style)
     val filteredChefs = remember(bookmarkedChefs, chefFilterState) {
-        com.example.foodieheal.ui.components.filterAndSortChefs(bookmarkedChefs, chefFilterState)
+        filterAndSortChefs(bookmarkedChefs, chefFilterState)
     }
 
     SideEffect {
@@ -539,10 +541,13 @@ fun ProfileScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     // Active filter chips row
-                                    com.example.foodieheal.ui.components.ActiveFiltersRow(
+                                    ActiveFiltersRow(
                                         filterState = chefFilterState,
                                         onFilterChange = { chefFilterState = it },
-                                        onResetAll = { chefFilterState = com.example.foodieheal.ui.components.ChefFilterState(searchQuery = chefFilterState.searchQuery) }
+                                        onResetAll = {
+                                            chefFilterState =
+                                                ChefFilterState(searchQuery = chefFilterState.searchQuery)
+                                        }
                                     )
                                 } else {
                                     // 🌟 Recipe Search Bar (Standard Style)
@@ -892,9 +897,9 @@ fun ProfileScreen(
             onDismissRequest = { showChefFilterSheet = false },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ) {
-            com.example.foodieheal.ui.components.ChefFilterBottomSheet(
+            ChefFilterBottomSheet(
                 filterState = chefFilterState,
-                availableStates = com.example.foodieheal.Chef.States,
+                availableStates = States,
                 onApply = { updated ->
                     chefFilterState = updated
                     showChefFilterSheet = false

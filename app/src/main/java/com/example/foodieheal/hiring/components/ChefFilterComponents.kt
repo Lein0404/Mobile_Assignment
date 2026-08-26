@@ -1,4 +1,4 @@
-package com.example.foodieheal.ui.components
+package com.example.foodieheal.hiring.components
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
