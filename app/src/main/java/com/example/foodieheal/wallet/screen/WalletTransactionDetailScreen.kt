@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -140,42 +142,73 @@ fun WalletTransactionDetailScreen(
                         }
                     )
 
-                    // Action Buttons (Share & Done)
+                    // Action Buttons: Share Image & Export PDF row + Full-width Done button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        // Share as PNG image
                         OutlinedButton(
-                            onClick = {
-                                ReceiptShareUtil.shareReceiptImage(context, txn)
-                            },
+                            onClick = { ReceiptShareUtil.shareReceiptImage(context, txn) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_share),
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.share), fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Share Image",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                softWrap = false,
+                                maxLines = 1
+                            )
                         }
 
-                        Button(
-                            onClick = onBackClick,
+                        // Export as PDF
+                        OutlinedButton(
+                            onClick = { ReceiptShareUtil.sharePdfReceipt(context, txn) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                         ) {
+                            Icon(
+                                painter = painterResource(R.drawable.pdf),
+                                contentDescription = "Export PDF",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = stringResource(R.string.done),
+                                text = "Export PDF",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontSize = 13.sp,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
+                    }
+
+                    // Done Button
+                    Button(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.done),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

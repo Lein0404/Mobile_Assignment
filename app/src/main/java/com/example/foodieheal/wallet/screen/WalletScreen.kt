@@ -40,6 +40,7 @@ import com.example.foodieheal.wallet.model.WalletTransactionType
 import com.example.foodieheal.wallet.viewmodel.TransactionFilterOption
 import com.example.foodieheal.wallet.viewmodel.WalletUiState
 import com.example.foodieheal.wallet.viewmodel.WalletViewModel
+import com.example.foodieheal.wallet.component.SpendingAnalyticsCard
 import com.example.foodieheal.ui.components.WalletScreenSkeleton
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -60,6 +61,7 @@ fun WalletScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showTopUpSheet by remember { mutableStateOf(false) }
+    var selectedMainTab by remember { mutableIntStateOf(0) } // 0 = History, 1 = Analytics
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
@@ -174,50 +176,90 @@ fun WalletScreen(
                     }
 
                     item {
-                        FilterChipsRow(
-                            selectedFilter = uiState.selectedFilter,
-                            onFilterSelect = { viewModel.setFilter(it) }
-                        )
-                    }
-
-                    item {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.transaction_history),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = stringResource(R.string.wallet_records_count, uiState.filteredTransactions.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            val tabs = listOf("Transaction History", "Spending Analytics")
+                            tabs.forEachIndexed { index, title ->
+                                val isSelected = selectedMainTab == index
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(11.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent)
+                                        .clickable { selectedMainTab = index }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    val transactions = uiState.filteredTransactions
-                    if (transactions.isEmpty()) {
+                    if (selectedMainTab == 1) {
                         item {
-                            EmptyTransactionsView(
-                                filter = uiState.selectedFilter,
-                                onTopUpClick = { showTopUpSheet = true }
+                            SpendingAnalyticsCard(
+                                transactions = uiState.transactions
                             )
                         }
                     } else {
-                        items(
-                            items = transactions,
-                            key = { it.id.ifBlank { "${it.createdAt}_${it.amount}_${it.transactionType}" } }
-                        ) { txn ->
-                            WalletTransactionItem(
-                                transaction = txn,
-                                isBalanceHidden = uiState.isBalanceHidden,
-                                onClick = { onTransactionClick(txn.id) }
+                        item {
+                            FilterChipsRow(
+                                selectedFilter = uiState.selectedFilter,
+                                onFilterSelect = { viewModel.setFilter(it) }
                             )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.transaction_history),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.wallet_records_count, uiState.filteredTransactions.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        val transactions = uiState.filteredTransactions
+                        if (transactions.isEmpty()) {
+                            item {
+                                EmptyTransactionsView(
+                                    filter = uiState.selectedFilter,
+                                    onTopUpClick = { showTopUpSheet = true }
+                                )
+                            }
+                        } else {
+                            items(
+                                items = transactions,
+                                key = { it.id.ifBlank { "${it.createdAt}_${it.amount}_${it.transactionType}" } }
+                            ) { txn ->
+                                WalletTransactionItem(
+                                    transaction = txn,
+                                    isBalanceHidden = uiState.isBalanceHidden,
+                                    onClick = { onTransactionClick(txn.id) }
+                                )
+                            }
                         }
                     }
                 }

@@ -369,17 +369,12 @@ fun PaymentScreen(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.label_total_price), fontWeight = FontWeight.Bold)
-                        Text(
-                            String.format(Locale.US, "RM %.2f", totalPrice),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    AnimatedPriceBreakdownBar(
+                        totalPrice  = totalPrice,
+                        startTime   = appointment.Start_Time,
+                        endTime     = appointment.End_Time,
+                        servingSize = appointment.Serving_Size
+                    )
                 }
             }
 
