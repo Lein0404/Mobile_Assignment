@@ -69,6 +69,7 @@ import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.Payment.local.PayMethodDatabase
 import com.example.foodieheal.Payment.repo.PaymentRepository
+import com.example.foodieheal.ingredients.view.ShoppingListAddFromScreen
 import com.example.foodieheal.ingredients.view.ShoppingListAddItemScreen
 import com.example.foodieheal.ingredients.view.ShoppingListHomeScreen
 import com.example.foodieheal.ingredients.view.IngredientDetailScreen
@@ -974,6 +975,17 @@ class MainActivity : ComponentActivity() {
                                 ) { backStackEntry ->
                                     val shoppingListId = backStackEntry.arguments?.getString("shoppingListId")
                                     ShoppingListAddItemScreen(navController, targetShoppingListId = shoppingListId)
+                                }
+                                composable(
+                                    route = Screen.ShoppingListAddFrom.route,
+                                    arguments = listOf(navArgument("shoppingListId") {
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    })
+                                ) { backStackEntry ->
+                                    val shoppingListId = backStackEntry.arguments?.getString("shoppingListId")
+                                    ShoppingListAddFromScreen(navController, targetShoppingListId = shoppingListId)
                                 }
                             }
                         }

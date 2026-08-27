@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.ingredients.local.IngredientsEntity
 import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
@@ -162,6 +163,28 @@ class ShoppingListViewModel(
                 showDeleteListDialog = show,
                 listToDeleteId = listId ?: it.selectedShoppingListId
             )
+        }
+    }
+
+    fun addIngredientsToShoppingList(
+        shoppingListId: String,
+        ingredients: List<IngredientsEntity>,
+        onSuccess: ((Int) -> Unit)? = null
+    ) {
+        if (currentUserId.isEmpty() || ingredients.isEmpty()) return
+        viewModelScope.launch {
+            val items = ingredients.map { ing ->
+                ShoppingListItemEntity(
+                    shoppingListId = shoppingListId,
+                    userId = currentUserId,
+                    ingredientId = ing.ingredientId,
+                    ingredientName = ing.ingredientName,
+                    ingredientCategory = ing.ingredientCategory,
+                    isChecked = false
+                )
+            }
+            shoppingRepo.insertItems(items)
+            onSuccess?.invoke(items.size)
         }
     }
 

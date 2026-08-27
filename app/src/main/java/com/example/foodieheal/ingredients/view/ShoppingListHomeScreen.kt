@@ -302,7 +302,7 @@ fun ShoppingListHomeScreen(
                 TextButton(onClick = {
                     targetListForDefault?.let {
                         viewModel.setDefaultShoppingList(it.shoppingListId)
-                        Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Shopping list set as default", Toast.LENGTH_SHORT).show()
                     }
                     showChangeDefaultDialog = false
                     targetListForDefault = null

@@ -207,6 +207,56 @@ fun ShoppingListScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(
+                                        text = "Copy to clipboard",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_content_copy),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    showTopMenu = false
+                                    activeList?.let {
+                                        val currentShoppingList = it.copy(
+                                            title = editableTitle.trim().ifEmpty { it.title },
+                                            items = uiState.items
+                                        )
+                                        ShoppingListShareHelper.copyShoppingListToClipboard(context, currentShoppingList)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Paste from clipboard",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_content_paste),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    showTopMenu = false
+                                    navController.navigate(
+                                        Screen.ShoppingListAddFrom.createRoute(activeList?.shoppingListId)
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
                                         text = if (activeList?.isDefault == true) "Deselect as default" else "Set as default",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface
