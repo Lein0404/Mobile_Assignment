@@ -1,49 +1,32 @@
 package com.example.foodieheal.Chef
 
 import android.app.Activity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -52,8 +35,12 @@ import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentsScreen(
     viewModel: ChefPortalViewModel = viewModel(),
@@ -64,7 +51,9 @@ fun AppointmentsScreen(
     val uiState by viewModel.appointmentsUiState.collectAsState()
     val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
 
+    var searchQuery by remember { mutableStateOf("") }
     var selectedStatusFilter by remember { mutableStateOf("All") }
+    val focusManager = LocalFocusManager.current
 
     SideEffect {
         val window = (view.context as Activity).window
@@ -82,20 +71,42 @@ fun AppointmentsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(top = 16.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
+                .padding(top = 16.dp, bottom = 20.dp, start = 20.dp, end = 20.dp)
         ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.bookings_and_events),
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = stringResource(R.string.your_appointments),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.bookings_and_events),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = stringResource(R.string.your_appointments),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Refresh Button
+                IconButton(
+                    onClick = { viewModel.fetchAppointmentsForCurrentChef() },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.refresh),
+                        contentDescription = stringResource(R.string.btn_retry),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
@@ -137,26 +148,49 @@ fun AppointmentsScreen(
                 }
 
                 is AppointmentsUiState.Success -> {
-                    val statusOptions = listOf("All", "Pending", "Unpaid", "Confirmed", "Rejected", "Completed", "Cancelled")
+                    val allAppointments = state.appointments
+                    val statusList = listOf("All", "Pending", "Unpaid", "Confirmed", "Rejected", "Completed", "Cancelled")
 
-                    // Apply status filter
-                    val filteredAppointments = state.appointments.filter { appointment ->
-                        selectedStatusFilter == "All" ||
-                                appointment.Status.equals(selectedStatusFilter, ignoreCase = true)
-                    }.sortedByDescending { it.created_at }
+                    // Status counts map
+                    val statusCounts = remember(allAppointments) {
+                        val counts = mutableMapOf("All" to allAppointments.size)
+                        statusList.drop(1).forEach { status ->
+                            counts[status] = allAppointments.count { it.Status.equals(status, ignoreCase = true) }
+                        }
+                        counts
+                    }
+
+                    // Filtered and searched appointments
+                    val filteredAppointments = remember(allAppointments, selectedStatusFilter, searchQuery, state.usersMap) {
+                        allAppointments.filter { appointment ->
+                            val matchesStatus = selectedStatusFilter == "All" ||
+                                    appointment.Status.equals(selectedStatusFilter, ignoreCase = true)
+
+                            val clientName = state.usersMap[appointment.userId]?.name.orEmpty()
+                            val matchesSearch = searchQuery.isBlank() ||
+                                    clientName.contains(searchQuery, ignoreCase = true) ||
+                                    appointment.Address.contains(searchQuery, ignoreCase = true) ||
+                                    appointment.State.contains(searchQuery, ignoreCase = true) ||
+                                    appointment.Health_Preference.contains(searchQuery, ignoreCase = true) ||
+                                    appointment.Note.contains(searchQuery, ignoreCase = true)
+
+                            matchesStatus && matchesSearch
+                        }.sortedByDescending { it.created_at }
+                    }
 
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
+                        item { Spacer(modifier = Modifier.height(12.dp)) }
 
+                        // Offline Banner
                         if (!isNetworkAvailable) {
                             item {
                                 Card(
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)),
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -172,7 +206,7 @@ fun AppointmentsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Text(
-                                            text = "Offline: Showing cached appointments",
+                                            text = "Offline: Showing cached bookings",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onErrorContainer
                                         )
@@ -181,17 +215,92 @@ fun AppointmentsScreen(
                             }
                         }
 
-                        // Filter Chips Row
+                        // Search Bar
+                        item {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        text = "Search client, location, diet…",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_search),
+                                        contentDescription = "Search",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.cancel),
+                                                contentDescription = "Clear",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                ),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        // Status Filter Chips with Dynamic Badges
                         item {
                             LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                items(statusOptions) { status ->
+                                items(statusList) { status ->
                                     val isSelected = selectedStatusFilter.equals(status, ignoreCase = true)
+                                    val count = statusCounts[status] ?: 0
+
                                     FilterChip(
                                         selected = isSelected,
                                         onClick = { selectedStatusFilter = status },
-                                        label = { Text(text = status) },
+                                        label = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = status,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                                if (count > 0) {
+                                                    Surface(
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f)
+                                                        else MaterialTheme.colorScheme.surfaceVariant
+                                                    ) {
+                                                        Text(
+                                                            text = "$count",
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        },
                                         shape = RoundedCornerShape(12.dp),
                                         colors = FilterChipDefaults.filterChipColors(
                                             selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -210,22 +319,42 @@ fun AppointmentsScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 40.dp),
+                                        .padding(vertical = 48.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = if (state.appointments.isEmpty()) {
-                                            stringResource(R.string.no_appointments_found)
-                                        } else {
-                                            stringResource(R.string.no_matching_appointments)
-                                        },
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_planner),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                        Text(
+                                            text = if (allAppointments.isEmpty()) {
+                                                stringResource(R.string.no_appointments_found)
+                                            } else {
+                                                stringResource(R.string.no_matching_appointments)
+                                            },
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        if (searchQuery.isNotEmpty() || selectedStatusFilter != "All") {
+                                            TextButton(onClick = {
+                                                searchQuery = ""
+                                                selectedStatusFilter = "All"
+                                            }) {
+                                                Text("Reset Filters")
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         } else {
-                            items(filteredAppointments) { appointment ->
+                            items(filteredAppointments, key = { it.AppointmentID ?: it.created_at.orEmpty() }) { appointment ->
                                 val clientUser = state.usersMap[appointment.userId]
                                 val userName = clientUser?.name ?: stringResource(R.string.unknown_client)
 
@@ -251,6 +380,10 @@ fun AppointmentCard(
     userName: String,
     onCardClick: () -> Unit
 ) {
+    val feeRate = AppointmentPricingBreakdown.PLATFORM_FEE_RATE
+    val grossPrice = appointment.Total_Price
+    val netPayout = if (grossPrice > 0.0) grossPrice / (1.0 + feeRate) else 0.0
+
     Card(
         onClick = onCardClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -258,124 +391,180 @@ fun AppointmentCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header Row: Client Name & Status Badge
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Header Row: Client Avatar, Name & Standardized Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                // Status Badge
-                val (badgeContainerColor, badgeContentColor) = when (appointment.Status.lowercase()) {
-                    "completed" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
-                    "confirmed" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
-                    "cancelled" -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
-                    "rejected"  -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
-                    "unpaid"    -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
-                    "pending"   -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
-                    else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = badgeContainerColor
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Text(
-                        text = appointment.Status,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = badgeContentColor
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_outline_account_circle),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = userName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Client Booking",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
+
+                // Standardized Status Badge
+                AppointmentStatusBadge(status = appointment.Status)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Serving Size & Diet Preference
-            val dietText = appointment.Health_Preference.ifBlank { stringResource(R.string.none) }
-            Text(
-                text = stringResource(
-                    R.string.appointment_serving_and_diet_format,
-                    appointment.Serving_Size,
-                    dietText
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Optional Note
-            if (appointment.Note.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.appointment_note_format, appointment.Note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             // Date & Time Stacked Row
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_clock),
                     contentDescription = stringResource(R.string.time),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 val startTimeAmPm = formatToAmPm(appointment.Start_Time)
                 val endTimeAmPm = formatToAmPm(appointment.End_Time)
                 Text(
-                    text = stringResource(
-                        R.string.appointment_datetime_format,
-                        appointment.Date,
-                        startTimeAmPm,
-                        endTimeAmPm
-                    ),
+                    text = "${appointment.Date} • $startTimeAmPm - $endTimeAmPm",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Location Stacked Row
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Location Row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.location),
                     contentDescription = stringResource(R.string.location),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(
-                        R.string.appointment_address_format,
-                        appointment.Address,
-                        appointment.State
-                    ),
+                    text = "${appointment.Address}, ${appointment.State}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+            }
+
+            // Serving Size & Diet Pill Tags
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ) {
+                    Text(
+                        text = "${appointment.Serving_Size} ${if (appointment.Serving_Size > 1) "Servings" else "Serving"}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+
+                if (appointment.Health_Preference.isNotBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    ) {
+                        Text(
+                            text = appointment.Health_Preference,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+            }
+
+            // Optional Note
+            if (appointment.Note.isNotBlank()) {
+                Text(
+                    text = "Note: ${appointment.Note}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+            // Payout
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Net Payout",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = String.format(Locale.US, "RM %.2f", netPayout),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Total Charged",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = String.format(Locale.US, "RM %.2f", grossPrice),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
 }
-
-data class AppointmentItem(
-    val clientName: String,
-    val event: String,
-    val time: String,
-    val location: String
-)
