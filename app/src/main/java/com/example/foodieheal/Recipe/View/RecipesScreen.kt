@@ -40,6 +40,7 @@ import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlin.collections.filter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +125,8 @@ fun RecipesScreen(
     }
 
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
+    var recipeToShare by remember { mutableStateOf<Recipe?>(null) }
+    
 
     SideEffect {
         val window = (view.context as Activity).window
@@ -391,6 +394,7 @@ fun RecipesScreen(
                                 parentNavController.navigate(Screen.EditRecipe.createRoute(id))
                             }
                         },
+                        onShareClick = { recipeToShare = it },
                         onAddClick = {
                             recipe.recipe_id?.let { id ->
                                 parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
@@ -645,6 +649,15 @@ fun RecipesScreen(
         }
     }
 
+    // 🌟 Share Dialog
+    recipeToShare?.let { recipe ->
+        ShareRecipeDialog(
+            recipe = recipe,
+            authorName = if (recipe.author_id == authViewModel.currentUser?.customId) authViewModel.currentUser?.name else recipe.authorName,
+            onDismiss = { recipeToShare = null }
+        )
+    }
+
     if (recipeToDelete != null) {
         if (!viewModel.isNetworkAvailable) {
             AlertDialog(
@@ -708,6 +721,7 @@ fun RecipeCardItem(
     onBookmarkClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
+    onShareClick: (Recipe) -> Unit = {}, // 🌟 Added share callback
     onAddClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
@@ -766,7 +780,7 @@ fun RecipeCardItem(
                                 contentDescription = "Bookmark",
                                 modifier = Modifier.size(14.dp),
                                 colorFilter = ColorFilter.tint(
-                                    if (isBookmarked) MaterialTheme.colorScheme.primary 
+                                    if (isBookmarked) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             )
@@ -786,7 +800,7 @@ fun RecipeCardItem(
                         )
                     }
                 }
-                
+
                 Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -814,6 +828,11 @@ fun RecipeCardItem(
                                         text = { Text("Edit Recipe", fontSize = 12.sp) },
                                         onClick = { expanded = false; onEditClick() },
                                         leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(16.dp)) }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Share Recipe", fontSize = 12.sp) },
+                                        onClick = { expanded = false; onShareClick(recipe) },
+                                        leadingIcon = { Icon(painterResource(id = R.drawable.ic_share), null, modifier = Modifier.size(16.dp)) }
                                     )
                                     DropdownMenuItem(
                                         text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error, fontSize = 12.sp) },
@@ -847,7 +866,7 @@ fun RecipeCardItem(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(10.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {

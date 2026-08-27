@@ -24,8 +24,11 @@ import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.navigation.Screen
-import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.draw.drawWithContent
+import androidx.annotation.DrawableRes
+import com.example.foodieheal.ui.components.ShareRecipeDialog
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +59,10 @@ fun RecipeDetailsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var expanded by remember { mutableStateOf(false) }
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
+    
+    // 🌟 Share logic
+    var showSharePreview by remember { mutableStateOf(false) }
+    var showOfflineShareDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
@@ -118,25 +125,11 @@ fun RecipeDetailsScreen(
                                     text = { Text("Share Recipe") },
                                     onClick = {
                                         expanded = false
-                                        val shareIntent = android.content.Intent().apply {
-                                            action = android.content.Intent.ACTION_SEND
-                                            val shareCard = buildString {
-                                                append("🥘 RECIPE: ${recipe?.recipeName?.uppercase()}\n")
-                                                append("━━━━━━━━━━━━━━━━━━━━\n")
-                                                append("⏱️ Time: ${recipe?.time} mins\n")
-                                                append("🔥 Calories: ${recipe?.calories} kcal\n")
-                                                append("👤 Author: ${recipe?.authorName ?: recipe?.authorInfo?.name ?: "Unknown"}\n")
-                                                append("━━━━━━━━━━━━━━━━━━━━\n")
-                                                if (!recipe?.recipeDescription.isNullOrBlank()) {
-                                                    append("📖 Description:\n${recipe?.recipeDescription}\n")
-                                                    append("━━━━━━━━━━━━━━━━━━━━\n")
-                                                }
-                                                append("\nShared from Foodie Heal")
-                                            }
-                                            putExtra(android.content.Intent.EXTRA_TEXT, shareCard)
-                                            type = "text/plain"
+                                        if (viewModel.isNetworkAvailable) {
+                                            showSharePreview = true
+                                        } else {
+                                            showOfflineShareDialog = true
                                         }
-                                        navController.context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Recipe"))
                                     },
                                     leadingIcon = { Icon(painterResource(id = R.drawable.ic_share), null, modifier = Modifier.size(18.dp)) }
                                 )
@@ -144,27 +137,13 @@ fun RecipeDetailsScreen(
                         }
                     } else {
                         IconButton(onClick = { 
-                            val shareIntent = android.content.Intent().apply {
-                                action = android.content.Intent.ACTION_SEND
-                                val shareCard = buildString {
-                                    append("🥘 RECIPE: ${recipe?.recipeName?.uppercase()}\n")
-                                    append("━━━━━━━━━━━━━━━━━━━━\n")
-                                    append("⏱️ Time: ${recipe?.time} mins\n")
-                                    append("🔥 Calories: ${recipe?.calories} kcal\n")
-                                    append("👤 Author: ${recipe?.authorName ?: recipe?.authorInfo?.name ?: "Unknown"}\n")
-                                    append("━━━━━━━━━━━━━━━━━━━━\n")
-                                    if (!recipe?.recipeDescription.isNullOrBlank()) {
-                                        append("📖 Description:\n${recipe?.recipeDescription}\n")
-                                        append("━━━━━━━━━━━━━━━━━━━━\n")
-                                    }
-                                    append("\nShared from Foodie Heal")
-                                }
-                                putExtra(android.content.Intent.EXTRA_TEXT, shareCard)
-                                type = "text/plain"
+                            if (viewModel.isNetworkAvailable) {
+                                showSharePreview = true
+                            } else {
+                                showOfflineShareDialog = true
                             }
-                            navController.context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Recipe"))
                         }) {
-                            Icon(painterResource(id = R.drawable.ic_share), "Share", tint = Color.White)
+                            Icon(painterResource(id = R.drawable.ic_share), "Share Recipe", tint = Color.White)
                         }
                     }
                 },
@@ -369,6 +348,31 @@ fun RecipeDetailsScreen(
         }
     }
 
+    // 🌟 Offline Share Dialog
+    if (showOfflineShareDialog) {
+        AlertDialog(
+            onDismissRequest = { showOfflineShareDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.wifi_off),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("No Internet Connection")
+                }
+            },
+            text = { Text("You cannot share recipes while offline. Please check your network settings.") },
+            confirmButton = {
+                TextButton(onClick = { showOfflineShareDialog = false }) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
     if (recipeToDelete != null) {
         if (!viewModel.isNetworkAvailable) {
             AlertDialog(
@@ -419,6 +423,18 @@ fun RecipeDetailsScreen(
                 }
             )
         }
+    }
+
+    // 🌟 Share Preview Dialog
+    if (showSharePreview && recipe != null) {
+        val author = viewModel.recipeAuthor
+        val displayAuthorName = (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorName ?: recipe.authorInfo?.name)) ?: "Unknown Author"
+
+        ShareRecipeDialog(
+            recipe = recipe,
+            authorName = displayAuthorName,
+            onDismiss = { showSharePreview = false }
+        )
     }
 }
 
