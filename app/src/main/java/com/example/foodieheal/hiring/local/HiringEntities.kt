@@ -25,7 +25,9 @@ data class ChefEntity(
     val profilePictureUrl: String?,
     val averagerating: Double?,
     val pricing: Double?,
-    val status: String
+    val status: String,
+    val createdAt: String? = null,
+    val availabilityHours: String? = null
 ) {
     fun toDomain(): Chef {
         return Chef(
@@ -44,7 +46,15 @@ data class ChefEntity(
             profilePictureUrl = profilePictureUrl,
             averagerating = averagerating,
             Pricing = pricing,
-            status = status
+            status = status,
+            created_at = createdAt,
+            availability_hours = availabilityHours?.let {
+                try {
+                    kotlinx.serialization.json.Json.parseToJsonElement(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
         )
     }
 }
@@ -66,7 +76,9 @@ fun Chef.toEntity(): ChefEntity {
         profilePictureUrl = this.profilePictureUrl,
         averagerating = this.averagerating,
         pricing = this.Pricing,
-        status = this.status
+        status = this.status,
+        createdAt = this.created_at,
+        availabilityHours = this.availability_hours?.toString()
     )
 }
 

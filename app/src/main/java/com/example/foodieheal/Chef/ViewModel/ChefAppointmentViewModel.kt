@@ -27,7 +27,8 @@ sealed interface HomeUiState {
     data class Success(
         val totalCount: Int,
         val nextAppointment: Appointment?,
-        val usersMap: Map<String, User> = emptyMap()
+        val usersMap: Map<String, User> = emptyMap(),
+        val allAppointments: List<Appointment> = emptyList()
     ) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
@@ -180,7 +181,8 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 _homeUiState.value = HomeUiState.Success(
                     totalCount = activeAppointments.size,
                     nextAppointment = nextApp,
-                    usersMap = usersMap
+                    usersMap = usersMap,
+                    allAppointments = appointments
                 )
 
             } catch (e: Exception) {
