@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -117,7 +117,7 @@ import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val mealPlannerViewModel: MealPlannerViewModel by viewModels {
         MealPlannerViewModelFactory(application)

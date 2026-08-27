@@ -192,6 +192,9 @@
     <string name="time_range_format">%1$s - %2$s</string>
     <string name="price_currency_format">RM %.2f</string>
     <string name="status_confirmed">Confirmed</string>
+    <string name="chef_available_today">Available Today</string>
+    <string name="chef_off_today">Off Today</string>
+    <string name="chef_new_rating">New</string>
 
     <string name="empty_no_chefs_found">No chef profiles found.</string>
     <string name="empty_no_appointments_found">No Appointments Found</string>
@@ -1086,7 +1089,9 @@
     <string name="pay_amount_format">Pay %1$s</string>
     <string name="title_order_summary">Order Summary</string>
     <string name="title_select_payment_method">Select Payment Method</string>
-    <string name="btn_add_new_card">+ Add New Credit / Debit Card</string>
+    <string name="add_new_card">+ Add New Credit / Debit Card</string>
     <string name="toast_chef_register_success">Chef registered successfully!</string>
     <string name="toast_chef_upgrade_success">Upgraded to Chef successfully!</string>
+    <string name="biometric_prompt_title">Confirm Payment</string>
+    <string name="biometric_prompt_subtitle">Authenticate to authorize payment of %1$s via %2$s</string>
 </resources>

@@ -80,4 +80,5 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation("com.github.Breens-Mbaka:Searchable-Dropdown-Menu-Jetpack-Compose:1.1.0")
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 }

@@ -57,7 +57,20 @@ import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailRow
 import com.example.foodieheal.ui.components.PaymentScreenSkeleton
 import com.example.foodieheal.ui.components.formatToAmPm
+import android.content.ContextWrapper
+import androidx.fragment.app.FragmentActivity
+import com.example.foodieheal.Payment.util.BiometricAuthManager
+import com.example.foodieheal.Payment.util.BiometricStatus
 import java.util.Locale
+
+private fun android.content.Context.findFragmentActivity(): FragmentActivity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is FragmentActivity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +83,8 @@ fun PaymentScreen(
     onPaymentError: (errorMessage: String) -> Unit
 ) {
     val context = LocalContext.current
+    val activity = remember(context) { context.findFragmentActivity() }
+    val biometricStatus = remember(context) { BiometricAuthManager.checkBiometricAvailability(context) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val paymentState by paymentViewModel.uiState.collectAsStateWithLifecycle()
@@ -182,6 +197,8 @@ fun PaymentScreen(
     val isInsufficientWalletBalance = isSelectedWallet && isWalletActive && ((walletBalance ?: 0.0) < totalPrice)
     val isPayButtonEnabled = !paymentState.isLoading && methodState.selectedMethod != null && !isWalletInactiveSelected && !isInsufficientWalletBalance && isOnline
 
+    val biometricPromptTitle = stringResource(R.string.biometric_prompt_title)
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -283,18 +300,52 @@ fun PaymentScreen(
                         )
                     }
 
+                    val executePayment = {
+                        paymentViewModel.processPayment(
+                            selectedMethod = methodState.selectedMethod,
+                            onSuccess = { transactionId ->
+                                Toast.makeText(context, R.string.toast_payment_success, Toast.LENGTH_SHORT).show()
+                                onPaymentSuccess(transactionId)
+                            },
+                            onError = { error ->
+                                onPaymentError(error)
+                            }
+                        )
+                    }
+
+                    val formattedPrice = String.format(Locale.US, "RM %.2f", totalPrice)
+                    val methodDescription = when (val m = methodState.selectedMethod) {
+                        is PaymentMethod.InAppWallet -> "In-App Wallet"
+                        is PaymentMethod.CreditCard -> "Card (•••• ${m.last4Digits})"
+                        else -> "Selected Payment Method"
+                    }
+                    val biometricPromptSubtitle = stringResource(
+                        R.string.biometric_prompt_subtitle,
+                        formattedPrice,
+                        methodDescription
+                    )
+
                     Button(
                         onClick = {
-                            paymentViewModel.processPayment(
-                                selectedMethod = methodState.selectedMethod,
-                                onSuccess = { transactionId ->
-                                    Toast.makeText(context, R.string.toast_payment_success, Toast.LENGTH_SHORT).show()
-                                    onPaymentSuccess(transactionId)
-                                },
-                                onError = { error ->
-                                    onPaymentError(error)
-                                }
-                            )
+                            if (biometricStatus == BiometricStatus.AVAILABLE && activity != null) {
+                                BiometricAuthManager.promptBiometricAuth(
+                                    activity = activity,
+                                    title = biometricPromptTitle,
+                                    subtitle = biometricPromptSubtitle,
+                                    onSuccess = {
+                                        executePayment()
+                                    },
+                                    onError = { errorMsg ->
+                                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                    },
+                                    onCancel = {
+                                        // User cancelled biometric prompt - do nothing and remain on screen safely
+                                    }
+                                )
+                            } else {
+                                // Biometrics not enrolled or unavailable -> fallback to direct payment execution
+                                executePayment()
+                            }
                         },
                         enabled = isPayButtonEnabled,
                         modifier = Modifier
@@ -316,11 +367,16 @@ fun PaymentScreen(
                             } else {
                                 stringResource(R.string.pay_amount_format, formattedPrice)
                             }
-                            Text(
-                                text = buttonLabel,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = buttonLabel,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -426,7 +482,7 @@ fun PaymentScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_add_new_card))
+                        Text(stringResource(R.string.add_new_card))
                     }
                 }
             }
