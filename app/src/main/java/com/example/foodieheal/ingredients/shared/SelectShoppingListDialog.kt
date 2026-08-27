@@ -22,16 +22,16 @@ import com.example.foodieheal.ui.components.DropDownList
 @Composable
 fun SelectShoppingListDialog(
     shoppingLists: List<ShoppingListEntity>,
+    isNewList: Boolean,
+    newListNameInput: String,
+    selectedIndex: Int,
+    onIsNewListChange: (Boolean) -> Unit,
+    onNewListNameChange: (String) -> Unit,
+    onSelectedIndexChange: (Int) -> Unit,
     onDismissRequest: () -> Unit,
-    onConfirm: (ShoppingListEntity) -> Unit,
-    onConfirmNewList: ((String) -> Unit)? = null
+    onConfirm: () -> Unit,
+    onConfirmNewList: () -> Unit
 ) {
-    if (shoppingLists.isEmpty() && onConfirmNewList == null) return
-
-    var isNewList by remember { mutableStateOf(false) }
-    var newListNameInput by remember { mutableStateOf("") }
-
-    var selectedIndex by remember { mutableIntStateOf(0) }
     val options = remember(shoppingLists) {
         shoppingLists.map { it.title.ifEmpty { it.shoppingListId } }
     }
@@ -60,11 +60,11 @@ fun SelectShoppingListDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { isNewList = false }
+                            .clickable { onIsNewListChange(false) }
                     ) {
                         RadioButton(
                             selected = !isNewList,
-                            onClick = { isNewList = false },
+                            onClick = { onIsNewListChange(false) },
                             colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -90,7 +90,7 @@ fun SelectShoppingListDialog(
                                 onOptionSelected = { chosenTitle ->
                                     val index = options.indexOf(chosenTitle)
                                     if (index >= 0) {
-                                        selectedIndex = index
+                                        onSelectedIndexChange(index)
                                     }
                                 }
                             )
@@ -103,11 +103,11 @@ fun SelectShoppingListDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { isNewList = true }
+                        .clickable { onIsNewListChange(true) }
                 ) {
                     RadioButton(
                         selected = isNewList,
-                        onClick = { isNewList = true },
+                        onClick = { onIsNewListChange(true) },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -134,7 +134,7 @@ fun SelectShoppingListDialog(
                         )
                         OutlinedTextField(
                             value = newListNameInput,
-                            onValueChange = { newListNameInput = it },
+                            onValueChange = onNewListNameChange,
                             placeholder = {
                                 Text(
                                     text = "Name",
@@ -160,10 +160,9 @@ fun SelectShoppingListDialog(
             TextButton(
                 onClick = {
                     if (isNewList) {
-                        onConfirmNewList?.invoke(newListNameInput.trim())
+                        onConfirmNewList()
                     } else {
-                        val chosen = shoppingLists.getOrElse(selectedIndex) { shoppingLists.first() }
-                        onConfirm(chosen)
+                        onConfirm()
                     }
                 }
             ) {

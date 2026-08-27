@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.*
@@ -16,11 +15,6 @@ import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class AddToShoppingListTarget(
-    val ingredientId: String,
-    val ingredientName: String,
-    val category: IngredientCategory? = null
-)
 
 data class IngredientsUiState(
     val selectedTab: Int = 0,
@@ -34,9 +28,20 @@ data class IngredientsUiState(
     val errorMessage: Int? = null,
     val isNetworkAvailable: Boolean = true,
     val isCategoriesExpanded: Boolean = false,
-    val showSelectShoppingListDialog: Boolean = false,
-    val pendingIngredientToAdd: AddToShoppingListTarget? = null,
-    val availableShoppingLists: List<ShoppingListEntity> = emptyList(),
+    val addShoppingListState: AddIngredientToShoppingListUiState = AddIngredientToShoppingListUiState()
+)
+
+/**
+ * `AddIngredientToShoppingListUiState` is split (modularized) from `IngredientsUiState`
+ * to enhance the readability and maintainability of the code
+ */
+data class AddIngredientToShoppingListUiState(
+    val showDialog: Boolean = false,
+    val isNewListOptionSelected: Boolean = false,
+    val newListNameInput: String = "",
+    val selectedListIndex: Int = 0,
+    val pendingIngredient: AddToShoppingListTarget? = null,
+    val availableLists: List<ShoppingListEntity> = emptyList()
 )
 
 data class IngredientItem(
@@ -54,6 +59,12 @@ data class CalorieEntry(
     val calories: Double,
     val quantity: Double,
     val unitName: String
+)
+
+data class AddToShoppingListTarget(
+    val ingredientId: String,
+    val ingredientName: String,
+    val category: IngredientCategory? = null
 )
 
 class IngredientsViewModel(
@@ -286,9 +297,11 @@ class IngredientsViewModel(
                 // > 1 lists and no default -> prompt selection dialog!
                 _uiState.update {
                     it.copy(
-                        showSelectShoppingListDialog = true,
-                        pendingIngredientToAdd = AddToShoppingListTarget(ingredientId, ingredientName, category),
-                        availableShoppingLists = allLists
+                        addShoppingListState = it.addShoppingListState.copy(
+                            showDialog = true,
+                            pendingIngredient = AddToShoppingListTarget(ingredientId, ingredientName, category),
+                            availableLists = allLists
+                        )
                     )
                 }
             }
@@ -298,19 +311,37 @@ class IngredientsViewModel(
     fun onDismissSelectShoppingListDialog() {
         _uiState.update {
             it.copy(
-                showSelectShoppingListDialog = false,
-                pendingIngredientToAdd = null,
-                availableShoppingLists = emptyList()
+                addShoppingListState = it.addShoppingListState.copy(
+                    showDialog = false,
+                    pendingIngredient = null,
+                    availableLists = emptyList(),
+                    isNewListOptionSelected = false,
+                    newListNameInput = "",
+                    selectedListIndex = 0
+                )
             )
         }
     }
 
+    fun updateIsNewListOption(isSelected: Boolean) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(isNewListOptionSelected = isSelected)) }
+    }
+
+    fun updateNewShoppingListName(name: String) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(newListNameInput = name)) }
+    }
+
+    fun updateSelectedShoppingListIndex(index: Int) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(selectedListIndex = index)) }
+    }
+
     fun confirmAddPendingIngredientToShoppingList(
-        targetList: ShoppingListEntity,
         onSuccess: (String) -> Unit
     ) {
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
-        val pending = _uiState.value.pendingIngredientToAdd ?: return
+        val state = _uiState.value.addShoppingListState
+        val pending = state.pendingIngredient ?: return
+        val targetList = state.availableLists.getOrNull(state.selectedListIndex) ?: return
 
         viewModelScope.launch {
             val item = ShoppingListItemEntity(
@@ -329,11 +360,12 @@ class IngredientsViewModel(
     }
 
     fun confirmAddPendingIngredientToNewShoppingList(
-        newListName: String,
         onSuccess: (String) -> Unit
     ) {
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
-        val pending = _uiState.value.pendingIngredientToAdd ?: return
+        val state = _uiState.value.addShoppingListState
+        val pending = state.pendingIngredient ?: return
+        val newListName = state.newListNameInput
 
         viewModelScope.launch {
             val newList = shoppingRepo.createShoppingList(userId, newListName.trim().ifEmpty { null })

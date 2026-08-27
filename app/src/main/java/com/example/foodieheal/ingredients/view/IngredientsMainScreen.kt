@@ -215,12 +215,19 @@ fun IngredientsMainScreen(
                 )
             }
 
-            if (uiState.showSelectShoppingListDialog) {
+            val addShoppingState = uiState.addShoppingListState
+            if (addShoppingState.showDialog) {
                 SelectShoppingListDialog(
-                    shoppingLists = uiState.availableShoppingLists,
+                    shoppingLists = addShoppingState.availableLists,
+                    isNewList = addShoppingState.isNewListOptionSelected,
+                    newListNameInput = addShoppingState.newListNameInput,
+                    selectedIndex = addShoppingState.selectedListIndex,
+                    onIsNewListChange = { viewModel.updateIsNewListOption(it) },
+                    onNewListNameChange = { viewModel.updateNewShoppingListName(it) },
+                    onSelectedIndexChange = { viewModel.updateSelectedShoppingListIndex(it) },
                     onDismissRequest = { viewModel.onDismissSelectShoppingListDialog() },
-                    onConfirm = { chosenList ->
-                        viewModel.confirmAddPendingIngredientToShoppingList(chosenList) { addedName ->
+                    onConfirm = {
+                        viewModel.confirmAddPendingIngredientToShoppingList { addedName ->
                             Toast.makeText(
                                 context,
                                 application.getString(R.string.ingredients_toast_added, addedName),
@@ -228,8 +235,8 @@ fun IngredientsMainScreen(
                             ).show()
                         }
                     },
-                    onConfirmNewList = { newListName ->
-                        viewModel.confirmAddPendingIngredientToNewShoppingList(newListName) { addedName ->
+                    onConfirmNewList = {
+                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
                             Toast.makeText(
                                 context,
                                 application.getString(R.string.ingredients_toast_added, addedName),

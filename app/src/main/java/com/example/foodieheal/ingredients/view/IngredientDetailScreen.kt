@@ -378,12 +378,19 @@ fun IngredientDetailScreen(
         )
     }
 
-    if (ingredientsUiState.showSelectShoppingListDialog) {
+    val addShoppingState = ingredientsUiState.addShoppingListState
+    if (addShoppingState.showDialog) {
         SelectShoppingListDialog(
-            shoppingLists = ingredientsUiState.availableShoppingLists,
+            shoppingLists = addShoppingState.availableLists,
+            isNewList = addShoppingState.isNewListOptionSelected,
+            newListNameInput = addShoppingState.newListNameInput,
+            selectedIndex = addShoppingState.selectedListIndex,
+            onIsNewListChange = { ingredientsViewModel.updateIsNewListOption(it) },
+            onNewListNameChange = { ingredientsViewModel.updateNewShoppingListName(it) },
+            onSelectedIndexChange = { ingredientsViewModel.updateSelectedShoppingListIndex(it) },
             onDismissRequest = { ingredientsViewModel.onDismissSelectShoppingListDialog() },
-            onConfirm = { chosenList ->
-                ingredientsViewModel.confirmAddPendingIngredientToShoppingList(chosenList) { addedName ->
+            onConfirm = {
+                ingredientsViewModel.confirmAddPendingIngredientToShoppingList { addedName ->
                     Toast.makeText(
                         context,
                         application.getString(R.string.ingredients_toast_added, addedName),
@@ -391,8 +398,8 @@ fun IngredientDetailScreen(
                     ).show()
                 }
             },
-            onConfirmNewList = { newListName ->
-                ingredientsViewModel.confirmAddPendingIngredientToNewShoppingList(newListName) { addedName ->
+            onConfirmNewList = {
+                ingredientsViewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
                     Toast.makeText(
                         context,
                         application.getString(R.string.ingredients_toast_added, addedName),
