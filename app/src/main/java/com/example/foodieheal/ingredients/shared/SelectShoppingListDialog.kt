@@ -7,10 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
 import com.example.foodieheal.ui.components.DropDownList
@@ -41,9 +40,7 @@ fun SelectShoppingListDialog(
         onDismissRequest = onDismissRequest,
         title = {
             Text(
-                text = "Select shopping list to add",
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
+                text = stringResource(R.string.select_shopping_list_dialog_title),
                 color = MaterialTheme.colorScheme.onSurface
             )
         },
@@ -51,10 +48,10 @@ fun SelectShoppingListDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(top = dimensionResource(R.dimen.padding_xsm)),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_md))
             ) {
-                // ── Option 1: Existing Shopping List ──
+                // Option 1: Existing Shopping List
                 if (shoppingLists.isNotEmpty()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -67,9 +64,9 @@ fun SelectShoppingListDialog(
                             onClick = { onIsNewListChange(false) },
                             colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
                         Text(
-                            text = "Existing shopping list",
+                            text = stringResource(R.string.existing_shopping_list_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (!isNewList) FontWeight.SemiBold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface
@@ -80,7 +77,7 @@ fun SelectShoppingListDialog(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 12.dp)
+                                .padding(start = dimensionResource(R.dimen.padding_md))
                         ) {
                             DropDownList(
                                 labelId = R.string.shopping_list_title,
@@ -98,7 +95,7 @@ fun SelectShoppingListDialog(
                     }
                 }
 
-                // ── Option 2: New Shopping List ──
+                // Option 2: New Shopping List
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -110,9 +107,9 @@ fun SelectShoppingListDialog(
                         onClick = { onIsNewListChange(true) },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
                     Text(
-                        text = "New shopping list",
+                        text = stringResource(R.string.shopping_list_new_title_small),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (isNewList) FontWeight.SemiBold else FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurface
@@ -123,11 +120,11 @@ fun SelectShoppingListDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(start = dimensionResource(R.dimen.padding_md)),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_xsm))
                     ) {
                         Text(
-                            text = "Shopping List Name",
+                            text = stringResource(R.string.shopping_list_name_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -137,20 +134,17 @@ fun SelectShoppingListDialog(
                             onValueChange = onNewListNameChange,
                             placeholder = {
                                 Text(
-                                    text = "Name",
-                                    color = Color.Gray,
-                                    fontSize = 14.sp
+                                    text = stringResource(R.string.label_name),
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             },
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             ),
-                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -167,23 +161,20 @@ fun SelectShoppingListDialog(
                 }
             ) {
                 Text(
-                    text = "Add",
+                    text = stringResource(R.string.btn_add),
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
                 Text(
-                    text = "Cancel",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 16.sp
+                    text = stringResource(R.string.dialog_cancel),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.padding_xl)),
         containerColor = MaterialTheme.colorScheme.surface
     )
 }

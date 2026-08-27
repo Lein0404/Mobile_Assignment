@@ -42,6 +42,7 @@ fun ShoppingListHomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val homeState = uiState.homeState
     val context = LocalContext.current
+    val application = context.applicationContext as Application
 
     Scaffold(
         topBar = {
@@ -183,12 +184,14 @@ fun ShoppingListHomeScreen(
                                     viewModel.onShowHomeChangeDefaultDialog(true, list)
                                 } else {
                                     viewModel.setDefaultShoppingList(list.shoppingListId)
-                                    Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
+                                    val title = list.title.ifEmpty { list.shoppingListId }
+                                    Toast.makeText(context, application.getString(R.string.shopping_list_set_default_toast, title), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onDeselectDefault = {
                                 viewModel.deselectDefaultShoppingList(list.shoppingListId)
-                                Toast.makeText(context, R.string.shopping_list_deselect_default_toast, Toast.LENGTH_SHORT).show()
+                                val title = list.title.ifEmpty { list.shoppingListId }
+                                Toast.makeText(context, application.getString(R.string.shopping_list_deselect_default_toast, title), Toast.LENGTH_SHORT).show()
                             },
                             onDelete = {
                                 viewModel.onShowHomeDeleteListDialog(true, list.shoppingListId)
@@ -274,7 +277,8 @@ fun ShoppingListHomeScreen(
                 TextButton(onClick = {
                     homeState.targetListForDefault?.let {
                         viewModel.setDefaultShoppingList(it.shoppingListId)
-                        Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
+                        val title = it.title.ifEmpty { it.shoppingListId }
+                        Toast.makeText(context, application.getString(R.string.shopping_list_set_default_toast, title), Toast.LENGTH_SHORT).show()
                     }
                     viewModel.onShowHomeChangeDefaultDialog(false)
                 }) {
@@ -303,7 +307,7 @@ fun ShoppingListHomeScreen(
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteShoppingList(targetId)
-                    Toast.makeText(context, R.string.shopping_list_deleted_toast, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, application.getString(R.string.shopping_list_deleted_toast, targetName), Toast.LENGTH_SHORT).show()
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
                 }

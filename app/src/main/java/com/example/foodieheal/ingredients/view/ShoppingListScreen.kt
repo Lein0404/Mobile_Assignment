@@ -55,6 +55,7 @@ fun ShoppingListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val detailState = uiState.detailState
     val context = LocalContext.current
+    val application = context.applicationContext as Application
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(shoppingListId) {
@@ -255,16 +256,17 @@ fun ShoppingListScreen(
                                 onClick = {
                                     showTopMenu = false
                                     activeList?.let { currentList ->
+                                        val title = currentList.title.ifEmpty { currentList.shoppingListId }
                                         if (currentList.isDefault) {
                                             viewModel.deselectDefaultShoppingList(currentList.shoppingListId)
-                                            Toast.makeText(context, R.string.shopping_list_deselect_default_toast, Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, application.getString(R.string.shopping_list_deselect_default_toast, title), Toast.LENGTH_SHORT).show()
                                         } else {
                                             val currentDefault = uiState.homeState.shoppingLists.find { it.isDefault }
                                             if (currentDefault != null && currentDefault.shoppingListId != currentList.shoppingListId) {
                                                 viewModel.onShowDetailChangeDefaultDialog(true)
                                             } else {
                                                 viewModel.setDefaultShoppingList(currentList.shoppingListId)
-                                                Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, application.getString(R.string.shopping_list_set_default_toast, title), Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     }
@@ -525,7 +527,8 @@ fun ShoppingListScreen(
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.setDefaultShoppingList(activeList.shoppingListId)
-                    Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
+                    val title = activeList.title.ifEmpty { activeList.shoppingListId }
+                    Toast.makeText(context, application.getString(R.string.shopping_list_set_default_toast, title), Toast.LENGTH_SHORT).show()
                     viewModel.onShowDetailChangeDefaultDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
@@ -551,7 +554,7 @@ fun ShoppingListScreen(
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteShoppingList(targetId)
-                    Toast.makeText(context, R.string.shopping_list_deleted_toast, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, application.getString(R.string.shopping_list_deleted_toast, targetName), Toast.LENGTH_SHORT).show()
                     viewModel.onShowDetailDeleteDialog(false)
                     navController.popBackStack()
                 }) {
