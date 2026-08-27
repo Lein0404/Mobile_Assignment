@@ -9,26 +9,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
@@ -58,7 +48,7 @@ fun ShoppingListHomeScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Shopping Lists",
+                        text = stringResource(R.string.shopping_list_home_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -67,8 +57,8 @@ fun ShoppingListHomeScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.shopping_list_back),
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -91,9 +81,9 @@ fun ShoppingListHomeScreen(
                     .offset(y = (-dimensionResource(id = R.dimen.padding_xxl)))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "New Shopping List",
-                    modifier = Modifier.size(32.dp)
+                    painter = painterResource(R.drawable.ic_outline_add),
+                    contentDescription = stringResource(R.string.shopping_list_new_title),
+                    modifier = Modifier.size(dimensionResource(id = R.dimen.padding_xxl))
                 )
             }
         },
@@ -103,40 +93,36 @@ fun ShoppingListHomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_l))
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
-            // ──────────────── Search Bar ────────────────
+            // Search Bar
             OutlinedTextField(
                 value = homeState.searchQuery,
                 onValueChange = { viewModel.onListSearchQueryChange(it) },
                 placeholder = {
                     Text(
-                        text = "Search shopping lists here",
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
-                },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Black
+                        text = stringResource(R.string.shopping_list_home_search_placeholder),
+                        style = MaterialTheme.typography.labelLarge
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = stringResource(R.string.search),
+                    )
+                },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 ),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
             // ──────────────── Content ────────────────
             if (uiState.isLoading) {
@@ -148,36 +134,39 @@ fun ShoppingListHomeScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(32.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
+                        modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_xxl))
                     ) {
                         Text(
-                            text = "No shopping list is created.",
+                            text = stringResource(R.string.shopping_list_home_empty_state),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Button(
                             onClick = { viewModel.onShowCreateListDialog(true) },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
                         ) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Create Shopping List")
+                            Icon(
+                                painter = painterResource(R.drawable.ic_outline_add),
+                                contentDescription = stringResource(R.string.shopping_list_new_title)
+                            )
+                            Spacer(Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
+                            Text(stringResource(R.string.shopping_list_create_button))
                         }
                     }
                 }
             } else if (homeState.filteredShoppingLists.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No shopping lists match your search.",
+                        text = stringResource(R.string.shopping_list_home_no_match),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_md)),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
@@ -194,12 +183,12 @@ fun ShoppingListHomeScreen(
                                     viewModel.onShowHomeChangeDefaultDialog(true, list)
                                 } else {
                                     viewModel.setDefaultShoppingList(list.shoppingListId)
-                                    Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onDeselectDefault = {
                                 viewModel.deselectDefaultShoppingList(list.shoppingListId)
-                                Toast.makeText(context, "Shopping list deselected as default", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.shopping_list_deselect_default_toast, Toast.LENGTH_SHORT).show()
                             },
                             onDelete = {
                                 viewModel.onShowHomeDeleteListDialog(true, list.shoppingListId)
@@ -211,7 +200,7 @@ fun ShoppingListHomeScreen(
         }
     }
 
-    // ──────────────── New Shopping List Dialog (Image 1) ────────────────
+    // New Shopping List Dialog
     if (homeState.showCreateDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -219,9 +208,7 @@ fun ShoppingListHomeScreen(
             },
             title = {
                 Text(
-                    text = "New Shopping List",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
+                    text = stringResource(R.string.shopping_list_new_title),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
@@ -232,20 +219,17 @@ fun ShoppingListHomeScreen(
                         onValueChange = { viewModel.updateNewListName(it) },
                         placeholder = {
                             Text(
-                                text = "Name",
-                                color = Color.Gray,
-                                fontSize = 14.sp
+                                text = stringResource(R.string.label_name),
+                                style = MaterialTheme.typography.labelLarge
                             )
                         },
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         ),
-                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
@@ -256,10 +240,8 @@ fun ShoppingListHomeScreen(
                     }
                 }) {
                     Text(
-                        text = "Add",
+                        text = stringResource(R.string.btn_add),
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
                     )
                 }
             },
@@ -268,18 +250,17 @@ fun ShoppingListHomeScreen(
                     viewModel.onShowCreateListDialog(false)
                 }) {
                     Text(
-                        text = "Cancel",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 16.sp
+                        text = stringResource(R.string.dialog_cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             },
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(dimensionResource(id = R.dimen.padding_xl)),
             containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
-    // ──────────────── Change Default Confirmation Dialog ────────────────
+    // Change Default Confirmation Dialog
     if (homeState.showChangeDefaultDialog && homeState.targetListForDefault != null) {
         val currentDefault = homeState.shoppingLists.find { it.isDefault }
         val currentDefaultName = currentDefault?.title?.ifEmpty { currentDefault.shoppingListId } ?: ""
@@ -287,13 +268,13 @@ fun ShoppingListHomeScreen(
             onDismissRequest = {
                 viewModel.onShowHomeChangeDefaultDialog(false)
             },
-            title = { Text("Change Default Shopping List") },
-            text = { Text("A shopping list ($currentDefaultName) has already been set as default. Change to this shopping list instead?") },
+            title = { Text(stringResource(R.string.shopping_list_change_default_title)) },
+            text = { Text(stringResource(R.string.shopping_list_change_default_message, currentDefaultName)) },
             confirmButton = {
                 TextButton(onClick = {
                     homeState.targetListForDefault?.let {
                         viewModel.setDefaultShoppingList(it.shoppingListId)
-                        Toast.makeText(context, "Shopping list set as default", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.shopping_list_set_default_toast, Toast.LENGTH_SHORT).show()
                     }
                     viewModel.onShowHomeChangeDefaultDialog(false)
                 }) {
@@ -310,18 +291,19 @@ fun ShoppingListHomeScreen(
         )
     }
 
-    // ──────────────── Delete Confirmation Dialog ────────────────
+    // Delete Confirmation Dialog
     if (homeState.showDeleteDialog) {
         val targetId = homeState.listToDeleteId ?: ""
         val targetList = homeState.shoppingLists.find { it.shoppingListId == targetId }
+        val targetName = targetList?.title?.ifEmpty { targetId } ?: targetId
         AlertDialog(
             onDismissRequest = { viewModel.onShowHomeDeleteListDialog(false) },
-            title = { Text("Delete Shopping List") },
-            text = { Text("Are you sure you want to delete \"${targetList?.title?.ifEmpty { targetId } ?: targetId}\"?") },
+            title = { Text(stringResource(R.string.shopping_list_delete_title)) },
+            text = { Text(stringResource(R.string.shopping_list_delete_message, targetName)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteShoppingList(targetId)
-                    Toast.makeText(context, "Shopping list deleted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.shopping_list_deleted_toast, Toast.LENGTH_SHORT).show()
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
                 }
@@ -352,42 +334,45 @@ fun ShoppingListCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(id = R.dimen.padding_xsm)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(dimensionResource(id = R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_md))
                 ) {
                     Text(
                         text = shoppingList.title.ifEmpty { shoppingList.shoppingListId },
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (shoppingList.isDefault) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(4.dp)
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.padding_xsm))
                         ) {
                             Text(
-                                text = "Default",
-                                fontSize = 11.sp,
+                                text = stringResource(R.string.label_default),
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(
+                                    horizontal = dimensionResource(id = R.dimen.padding_sm),
+                                    vertical = dimensionResource(id = R.dimen.padding_xxsm)
+                                )
                             )
                         }
                     }
@@ -398,13 +383,16 @@ fun ShoppingListCard(
                     modifier = Modifier
                         .background(
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            shape = RoundedCornerShape(4.dp)
+                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.padding_xsm))
                         )
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .padding(
+                            horizontal = dimensionResource(id = R.dimen.padding_sm),
+                            vertical = dimensionResource(id = R.dimen.padding_xxsm)
+                        )
                 ) {
                     Text(
                         text = formattedDate,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Normal
                     )
@@ -415,7 +403,7 @@ fun ShoppingListCard(
             Box {
                 IconButton(onClick = { showMenu = !showMenu }) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        painter = painterResource(R.drawable.ic_vertical_more),
                         contentDescription = "Options",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
@@ -429,16 +417,16 @@ fun ShoppingListCard(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "Share shopping list",
+                                text = stringResource(R.string.shopping_list_share),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Share,
+                                painter = painterResource(R.drawable.ic_share),
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size)),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         },
@@ -450,17 +438,21 @@ fun ShoppingListCard(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = if (shoppingList.isDefault) "Deselect as default" else "Set as default",
+                                text =
+                                    if (shoppingList.isDefault) stringResource(R.string.shopping_list_deselect_default)
+                                    else stringResource(R.string.shopping_list_set_default),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.CheckCircle,
+                                painter = painterResource(R.drawable.ic_check_circle),
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = if (shoppingList.isDefault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size)),
+                                tint =
+                                    if (shoppingList.isDefault) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface
                             )
                         },
                         onClick = {
@@ -475,16 +467,16 @@ fun ShoppingListCard(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "Delete shopping list",
+                                text = stringResource(R.string.shopping_list_delete),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                painter = painterResource(R.drawable.ic_delete),
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size)),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         },

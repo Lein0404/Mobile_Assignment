@@ -7,20 +7,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
@@ -47,6 +43,7 @@ fun ShoppingListAddFromScreen(
     )
 ) {
     val context = LocalContext.current
+    val application = context.applicationContext as Application
     val shoppingUiState by shoppingListViewModel.uiState.collectAsState()
     val addFromState = shoppingUiState.addFromState
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
@@ -87,7 +84,7 @@ fun ShoppingListAddFromScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Paste from clipboard",
+                        text = stringResource(R.string.shopping_list_paste_clipboard),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -96,8 +93,8 @@ fun ShoppingListAddFromScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.shopping_list_back),
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -115,9 +112,9 @@ fun ShoppingListAddFromScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = dimensionResource(R.dimen.padding_l))
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
 
             // ── Target Shopping List Selector ──
             if (shoppingUiState.homeState.shoppingLists.isNotEmpty()) {
@@ -137,7 +134,7 @@ fun ShoppingListAddFromScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_md)))
 
             // ── Content ──
             if (ingredientsUiState.isLoading && !addFromState.isParsed) {
@@ -153,13 +150,13 @@ fun ShoppingListAddFromScreen(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(32.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_l)),
+                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_l))
                     ) {
                         Text(
-                            text = "No valid ingredients found on clipboard.",
+                            text = stringResource(R.string.shopping_list_no_ingredients_clipboard),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Button(
@@ -168,15 +165,15 @@ fun ShoppingListAddFromScreen(
                                 shoppingListViewModel.refreshFromClipboard(context, allEntities) 
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm))
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_content_paste),
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Refresh from Clipboard")
+                            Spacer(Modifier.width(dimensionResource(R.dimen.padding_smd)))
+                            Text(stringResource(R.string.shopping_list_refresh_clipboard))
                         }
                     }
                 }
@@ -185,8 +182,8 @@ fun ShoppingListAddFromScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_xsm)),
+                    contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_smd))
                 ) {
                     items(
                         items = addFromState.parsedIngredients,
@@ -199,7 +196,7 @@ fun ShoppingListAddFromScreen(
                                 .clickable {
                                     shoppingListViewModel.toggleAddFromIngredientSelection(ingredient.ingredientId)
                                 }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = dimensionResource(R.dimen.padding_smd)),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
@@ -209,7 +206,7 @@ fun ShoppingListAddFromScreen(
                                 },
                                 colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = ingredient.ingredientName,
@@ -219,7 +216,7 @@ fun ShoppingListAddFromScreen(
                                 )
                                 if (!ingredient.ingredientCategory.isNullOrBlank()) {
                                     Text(
-                                        text = ingredient.ingredientCategory ?: "",
+                                        text = ingredient.ingredientCategory,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -234,7 +231,7 @@ fun ShoppingListAddFromScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = dimensionResource(R.dimen.padding_l)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -244,9 +241,9 @@ fun ShoppingListAddFromScreen(
                         }
                     ) {
                         Text(
-                            text = if (allSelected) "Unselect all" else "Select all",
+                            text = if (allSelected) stringResource(R.string.shopping_list_unselect_all) else stringResource(R.string.shopping_list_select_all),
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -265,7 +262,7 @@ fun ShoppingListAddFromScreen(
                                     ingredients = ingredientsToAdd
                                 ) { count ->
                                     val targetListName = selectedShoppingList?.title?.ifEmpty { targetId } ?: targetId
-                                    Toast.makeText(context, "$count items added to $targetListName", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, application.getString(R.string.shopping_list_items_added_to_list, count, targetListName), Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
                                 }
                             }
@@ -275,12 +272,12 @@ fun ShoppingListAddFromScreen(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm))
                     ) {
                         Text(
-                            text = "Add selected items",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            text = stringResource(R.string.shopping_list_add_selected),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

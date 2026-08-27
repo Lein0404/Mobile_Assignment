@@ -10,8 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -113,8 +111,9 @@ fun IngredientsMainScreen(
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.shopping_list_back)
+                                    painter = painterResource(R.drawable.ic_arrowback),
+                                    contentDescription = stringResource(R.string.back),
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         },
