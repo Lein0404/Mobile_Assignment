@@ -1027,4 +1027,6 @@
     <string name="title_order_summary">Order Summary</string>
     <string name="title_select_payment_method">Select Payment Method</string>
     <string name="btn_add_new_card">+ Add New Credit / Debit Card</string>
+    <string name="toast_chef_register_success">Chef registered successfully!</string>
+    <string name="toast_chef_upgrade_success">Upgraded to Chef successfully!</string>
 </resources>
