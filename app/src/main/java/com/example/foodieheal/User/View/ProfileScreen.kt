@@ -47,6 +47,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Recipe.View.RecipeCardItem
+import com.example.foodieheal.Recipe.View.FilterSectionHeader
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.hiring.components.ActiveFiltersRow
@@ -1148,27 +1149,7 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-fun FilterSectionHeader(@DrawableRes icon: Int, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(bottom = 8.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
+
 
 @Composable
 fun DrawerItem(
