@@ -187,7 +187,10 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     height = localUser.height,
                     age = localUser.age,
                     gender = localUser.gender,
-                    bmi = localUser.bmi
+                    bmi = localUser.bmi,
+                    isPrivate = localUser.isPrivate,
+                    followerCount = localUser.followerCount,
+                    followingCount = localUser.followingCount
                 )
             }
 
@@ -232,7 +235,10 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                         height = user.height ?: 0.0,
                         age = user.age ?: 0,
                         gender = user.gender,
-                        bmi = user.bmi ?: 0.0
+                        bmi = user.bmi ?: 0.0,
+                        isPrivate = user.isPrivate,
+                        followerCount = user.followerCount,
+                        followingCount = user.followingCount
                     )
                 )
             } catch (e: Exception) { }

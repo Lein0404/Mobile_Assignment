@@ -25,6 +25,8 @@ class RecipeViewModel(
     var activeTab by mutableIntStateOf(0)
     var recipeList by mutableStateOf<List<Recipe>>(emptyList())
         private set
+    var followingRecipes by mutableStateOf<List<Recipe>>(emptyList())
+        private set
     var myRecipes by mutableStateOf<List<Recipe>>(emptyList())
         private set
     var bookmarkedRecipes by mutableStateOf<List<Recipe>>(emptyList())
@@ -54,10 +56,11 @@ class RecipeViewModel(
 
     // 🌟 Fetching Guards (Prevent duplicate calls)
     private var isFetchingAll = false
+    private var isFetchingFollowing = false
     private var isFetchingMyRecipes = false
     private var isFetchingBookmarks = false
     private var isFetchingIngredients = false
-    
+
     // 🌟 Track active toggle jobs to allow cancellation/restarts
     private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
@@ -70,7 +73,13 @@ class RecipeViewModel(
         viewModelScope.launch {
             networkMonitor?.isConnected?.collect { connected ->
                 isNetworkAvailable = connected
-                if (connected) refreshAll()
+                if (connected) {
+                    refreshAll()
+                    // 🌟 Sync bookmarks when network returns
+                    repository.getCurrentUserId()?.let { uid ->
+                        repository.syncBookmarks(uid)
+                    }
+                }
             }
         }
     }
@@ -107,6 +116,7 @@ class RecipeViewModel(
         viewModelScope.launch {
             fetchAllRecipes(force = true)
             fetchAvailableIngredients()
+            // We'll fetch following recipes if a user is logged in
         }
     }
 
@@ -173,9 +183,42 @@ class RecipeViewModel(
         }
     }
 
+    fun fetchFollowingRecipes(followerId: String) {
+        if (isFetchingFollowing) return
+        viewModelScope.launch {
+            try {
+                isFetchingFollowing = true
+                isLoading = true
+
+                // 1. Get list of followed users from FollowRepository (or similar)
+                // For now, let's assume we have a way to get followed IDs.
+                // In a real app, you might want to inject FollowRepository here or pass the IDs.
+                // Since I just created FollowRepository, I'll use it if I can,
+                // but RecipeRepository doesn't know about it.
+
+                // Let's use FollowRepository to get the IDs first.
+                val followRepo = com.example.foodieheal.User.Repo.FollowRepository()
+                val following = followRepo.getFollowing(followerId)
+                val followedIds = following.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
+                
+                if (followedIds.isNotEmpty()) {
+                    repository.getFollowingRecipes(followedIds).onSuccess { recipes ->
+                        followingRecipes = recipes.sortedByDescending { it.lastUpdated ?: "" }
+                        fetchMissingAuthorInfo(recipes)
+                    }
+                } else {
+                    followingRecipes = emptyList()
+                }
+            } finally {
+                isLoading = false
+                isFetchingFollowing = false
+            }
+        }
+    }
+
     fun fetchMyRecipes(authorId: String, force: Boolean = false) {
         if (isFetchingMyRecipes) return
-        
+
         // 🌟 SAFETY: Clear stale data if switching accounts
         val belongsToSomeoneElse = myRecipes.isNotEmpty() && myRecipes.any { it.author_id != authorId }
         if (belongsToSomeoneElse || force) {
@@ -228,6 +271,13 @@ class RecipeViewModel(
     }
 
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
+        if (!isNetworkAvailable) {
+            viewModelScope.launch {
+                _bookmarkMessage.emit("Wifi connection required to bookmark recipes.")
+            }
+            return
+        }
+
         // 🌟 1. Cancel any existing job for this specific recipe to prevent race conditions
         bookmarkJobs[recipeId]?.cancel()
 
@@ -248,12 +298,32 @@ class RecipeViewModel(
         bookmarkJobs[recipeId] = viewModelScope.launch {
             try {
                 repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
-                    _bookmarkMessage.emit(if (isBookmarked) "Removed '$recipeName' from favorites" else "Added to favorites: $recipeName")
+                    val message = if (isBookmarked) {
+                        if (isNetworkAvailable) "Removed '$recipeName' from favorites" 
+                        else "Removed locally: $recipeName"
+                    } else {
+                        if (isNetworkAvailable) "Added to favorites: $recipeName"
+                        else "Bookmarked locally: $recipeName"
+                    }
+                    _bookmarkMessage.emit(message)
                     fetchBookmarkedRecipes(userId)
-                }.onFailure {
-                    // Revert UI only if this specific job wasn't cancelled
-                    bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
+                }.onFailure { e ->
+                    // Revert UI only if it's NOT a network error
+                    val msg = e.localizedMessage ?: ""
+                    val isNetworkError = msg.contains("Unable to resolve host", true) ||
+                                       msg.contains("Failed to connect", true) ||
+                                       msg.contains("connection", true)
+
+                    if (!isNetworkError) {
+                        bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
+                        _bookmarkMessage.emit("Bookmark failed: ${msg.split("\n").firstOrNull() ?: "Unknown error"}")
+                    } else {
+                        _bookmarkMessage.emit("Saved locally: $recipeName")
+                    }
+                    Log.e("RecipeViewModel", "Bookmark error for $recipeId", e)
                 }
+            } catch (e: Exception) {
+                _bookmarkMessage.emit("Error: ${e.localizedMessage}")
             } finally {
                 // Cleanup job map when done
                 if (bookmarkJobs[recipeId]?.isActive == false) {
@@ -268,7 +338,7 @@ class RecipeViewModel(
             // 🌟 1. Clear previous recipe instantly so the loader shows for the new one
             selectedRecipe = null
             recipeAuthor = null
-            
+
             isLoading = true
             repository.getRecipeById(recipeId)
                 .onSuccess { recipe ->
@@ -280,7 +350,7 @@ class RecipeViewModel(
     }
 
     /**
-     * 🌟 Clears the selected recipe data. 
+     * 🌟 Clears the selected recipe data.
      * Useful when exiting the details screen to prevent "stale data" flicker next time.
      */
     fun clearSelectedRecipe() {
@@ -318,7 +388,7 @@ class RecipeViewModel(
 
             isLoading = true
             var finalRecipe = recipe
-            
+
             try {
                 if (imageBytes != null && recipe.recipe_id != null) {
                     val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
@@ -359,7 +429,7 @@ class RecipeViewModel(
                 _bookmarkMessage.emit("No internet connection. Cannot update recipe.")
                 return@launch
             }
-            
+
             // 🌟 1. Instant Memory Update (Optimistic): Fixes the "delay"
             // We find the old recipe to preserve authorInfo, so the card name changes but pic/author stays
             val oldRecipe = recipeList.find { it.recipe_id == recipe.recipe_id }
@@ -377,7 +447,7 @@ class RecipeViewModel(
 
             isLoading = true
             var finalRecipe = recipe
-            
+
             try {
                 if (imageBytes != null && recipe.recipe_id != null) {
                     val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
@@ -394,7 +464,7 @@ class RecipeViewModel(
                     .onSuccess {
                         _updateRecipeSuccess.emit(true)
                         _bookmarkMessage.emit("Successfully updated: ${finalRecipe.recipeName}")
-                        
+
                         // 2. Background Refresh to sync with DB exactly
                         refreshAll()
                     }
@@ -421,7 +491,7 @@ class RecipeViewModel(
             isLoading = true
             repository.deleteRecipe(recipeId).onSuccess {
                 Log.d("RecipeViewModel", "Delete successful for rid: $recipeId. Filtering locally...")
-                
+
                 // 🌟 Immediate Local Update: Use a copy to ensure state change triggers UI
                 val updatedMyRecipes = myRecipes.filter { it.recipe_id != recipeId }
                 val updatedRecipeList = recipeList.filter { it.recipe_id != recipeId }
@@ -437,7 +507,7 @@ class RecipeViewModel(
                 }
 
                 _bookmarkMessage.emit("Recipe deleted successfully.")
-                
+
                 // 🌟 Delay the background refresh slightly to give Supabase DB time to propagate the deletion
                 // and to prevent a race condition where the fetch returns the old data.
                 viewModelScope.launch {
@@ -465,6 +535,7 @@ class RecipeViewModel(
 
     fun clearUserData() {
         myRecipes = emptyList()
+        followingRecipes = emptyList()
         bookmarkedRecipes = emptyList()
         bookmarkedRecipeIds = emptySet()
         selectedRecipe = null

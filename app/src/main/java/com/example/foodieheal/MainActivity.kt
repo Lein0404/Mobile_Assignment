@@ -102,6 +102,8 @@ import com.example.foodieheal.User.View.EditProfileScreen
 import com.example.foodieheal.User.View.HomeScreen
 import com.example.foodieheal.User.View.LoginScreen
 import com.example.foodieheal.User.View.ProfileScreen
+import com.example.foodieheal.User.View.FollowRequestsScreen
+import com.example.foodieheal.User.View.FollowListScreen
 import com.example.foodieheal.User.View.RegisterScreen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.screen.AppointmentHistoryScreen
@@ -677,15 +679,48 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                composable(Screen.Profile.route) {
+                                composable(
+                                    route = Screen.Profile.route,
+                                    arguments = listOf(navArgument("customId") { 
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    })
+                                ) { backStackEntry ->
+                                    val customId = backStackEntry.arguments?.getString("customId")
                                     Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                                         ProfileScreen(
                                             navController,
                                             sharedRecipeViewModel,
                                             sharedAuthViewModel,
-                                            chefViewModel
+                                            chefViewModel,
+                                            targetCustomId = customId
                                         )
                                     }
+                                }
+
+                                composable(Screen.FollowRequests.route) {
+                                    FollowRequestsScreen(
+                                        navController,
+                                        sharedAuthViewModel
+                                    )
+                                }
+
+                                composable(
+                                    route = Screen.FollowList.route,
+                                    arguments = listOf(
+                                        navArgument("userId") { type = NavType.StringType },
+                                        navArgument("type") { type = NavType.StringType }
+                                    )
+                                ) { backStackEntry ->
+                                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                                    val type = backStackEntry.arguments?.getString("type") ?: ""
+                                    FollowListScreen(
+                                        navController = navController,
+                                        userId = userId,
+                                        type = type,
+                                        recipeViewModel = sharedRecipeViewModel
+                                    )
                                 }
 
                                 // --- FEATURES (Full screen, instant swap) ---

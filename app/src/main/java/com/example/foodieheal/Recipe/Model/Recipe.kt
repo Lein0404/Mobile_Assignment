@@ -19,12 +19,14 @@ data class Recipe(
     @SerialName("recipe_image") val recipeImageUrl: String? = null,
     @SerialName("recipe_ingredients") val ingredients: List<IngredientItem> = emptyList(),
     @SerialName("last_updated") val lastUpdated: String? = null,
-    
-    // 🌟 Join result field: catches the author name/pic during decoding.
+    @SerialName("visibility") val visibility: String = "public",
+
+    // 🌟 Join result field: catches the author name/pic during decoding if columns are missing.
     @SerialName("users") var authorInfo: AuthorInfo? = null,
 
-    @kotlinx.serialization.Transient var authorName: String? = null,
-    @kotlinx.serialization.Transient var authorImageUrl: String? = null
+    // 🌟 Denormalized fields: Stored directly in 'recipes' table for speed and offline reliability.
+    @SerialName("author_name") var authorName: String? = null,
+    @SerialName("author_image_url") var authorImageUrl: String? = null
 )
 
 @Serializable
