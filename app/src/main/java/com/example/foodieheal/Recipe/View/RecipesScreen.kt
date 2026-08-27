@@ -268,108 +268,134 @@ fun RecipesScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(2) }) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = MaterialTheme.colorScheme.outline,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    ),
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
-                            Image(
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search recipes/authors", fontSize = 14.sp) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.search),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Surface(
+                        onClick = { showFilterSheet = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
                                 painter = painterResource(id = R.drawable.filter),
                                 contentDescription = "Filter",
-                                modifier = Modifier.size(20.dp).clickable { showFilterSheet = true },
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) // 🌟 Themed Icon
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Image(
-                                painter = painterResource(id = R.drawable.search),
-                                contentDescription = "Search",
-                                modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) // 🌟 Themed Icon
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
-                )
+                }
             }
 
             item(span = { GridItemSpan(2) }) {
-                Text(text = "Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 8.dp))
-            }
-
-            item(span = { GridItemSpan(2) }) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    lazyItems(courses) { course: String ->
-                        val isSelected = selectedCourse == course
-                        Surface(
-                            onClick = { selectedCourse = course },
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFFE0E0E0),
+                Column {
+                    // 🌟 Compact Followed/Bookmarks Toggle (Connected Pill style)
+                    if (selectedTab == 2) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = course,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                color = if (isSelected) Color.White else Color.Black,
-                                fontSize = 12.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            val subTabModifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(20.dp))
+
+                            Box(
+                                modifier = subTabModifier
+                                    .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                    .clickable { showFollowingFeed = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "Followed",
+                                    color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Box(
+                                modifier = subTabModifier
+                                    .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                    .clickable { showFollowingFeed = false },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "Bookmarks",
+                                    color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        lazyItems(courses) { course: String ->
+                            val isSelected = selectedCourse == course
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedCourse = course },
+                                label = { 
+                                    Text(
+                                        text = course, 
+                                        fontSize = 15.sp, 
+                                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
+                                    ) 
+                                },
+                                shape = RoundedCornerShape(20.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = Color.White,
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                border = null
                             )
                         }
                     }
                 }
             }
 
-            item(span = { GridItemSpan(2) }) {
-                Text(
-                    text = if (selectedTab == 2) (if (showFollowingFeed) "Followed" else "Bookmarks") else selectedCourse,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            // 🌟 PILL TOGGLE for Social Tab
-            if (selectedTab == 2) {
-                item(span = { GridItemSpan(2) }) {
-                    val followingBgColor by animateColorAsState(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                    val savedBgColor by animateColorAsState(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                    val followingTextColor by animateColorAsState(if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-                    val savedTextColor by animateColorAsState(if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-
-                    Surface(
-                        shape = RoundedCornerShape(24.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    ) {
-                        Row(modifier = Modifier.fillMaxSize().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(20.dp)).background(followingBgColor).clickable { showFollowingFeed = true },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Followed", color = followingTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
-                            Box(
-                                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(20.dp)).background(savedBgColor).clickable { showFollowingFeed = false },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Bookmarks", color = savedTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
-                        }
-                    }
-                }
-            }
+            // Vertical space cleanup
 
             if (isLoading && filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
