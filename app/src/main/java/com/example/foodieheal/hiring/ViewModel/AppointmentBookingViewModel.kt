@@ -314,6 +314,23 @@ class AppointmentBookingViewModel(
                         errors.add(AppointmentValidationError.InvalidTime)
                     } else if (isSlotOverlapping(startCal, endCal, targetDate, currentAppointmentId)) {
                         errors.add(AppointmentValidationError.TimeSlotOccupied)
+                    } else {
+                        val chef = selectedChef.value
+                        if (chef?.availability_hours != null) {
+                            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+                            val parsedDate = try {
+                                java.time.LocalDate.parse(targetDate)
+                            } catch (_: Exception) {
+                                selectedDate.value
+                            }
+                            val startHour = startCal.get(Calendar.HOUR_OF_DAY)
+                            val endHour = endCal.get(Calendar.HOUR_OF_DAY)
+                            val (isAvail, reason) = weeklyAvail.validateTimeSlotForDate(parsedDate, startHour, endHour)
+                            if (!isAvail) {
+                                errors.add(AppointmentValidationError.ChefUnavailableSlot)
+                                _uiState.update { it.copy(chefUnavailableReason = reason) }
+                            }
+                        }
                     }
                 }
             } else {
@@ -345,6 +362,25 @@ class AppointmentBookingViewModel(
         val targetDate = selectedDate.value.toString()
         val isOccupied = isSlotOverlapping(startCal, endCal, targetDate)
 
+        var isUnavailable = false
+        var unavailableReason: String? = null
+        val chef = selectedChef.value
+        if (chef?.availability_hours != null) {
+            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+            val parsedDate = try {
+                java.time.LocalDate.parse(targetDate)
+            } catch (_: Exception) {
+                selectedDate.value
+            }
+            val startHour = startCal.get(Calendar.HOUR_OF_DAY)
+            val endHour = endCal.get(Calendar.HOUR_OF_DAY)
+            val (isAvail, reason) = weeklyAvail.validateTimeSlotForDate(parsedDate, startHour, endHour)
+            if (!isAvail) {
+                isUnavailable = true
+                unavailableReason = reason
+            }
+        }
+
         _uiState.update { currentState ->
             val updatedErrors = currentState.errors.toMutableSet()
             if (isOccupied) {
@@ -352,7 +388,18 @@ class AppointmentBookingViewModel(
             } else {
                 updatedErrors.remove(AppointmentValidationError.TimeSlotOccupied)
             }
-            currentState.copy(errors = updatedErrors, isTimeSlotOccupied = isOccupied)
+
+            if (isUnavailable) {
+                updatedErrors.add(AppointmentValidationError.ChefUnavailableSlot)
+            } else {
+                updatedErrors.remove(AppointmentValidationError.ChefUnavailableSlot)
+            }
+
+            currentState.copy(
+                errors = updatedErrors,
+                isTimeSlotOccupied = isOccupied,
+                chefUnavailableReason = unavailableReason
+            )
         }
     }
 

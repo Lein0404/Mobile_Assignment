@@ -117,7 +117,7 @@ fun AddAppointmentFormScreen(
         } else null
     }
 
-    val timeError = uiState.timeErrorRes?.let { stringResource(it) }
+    val timeError = uiState.customTimeError ?: uiState.timeErrorRes?.let { stringResource(it) }
     val addressError = uiState.addressErrorRes?.let { stringResource(it) }
     val postcodeError = uiState.postcodeErrorRes?.let { stringResource(it) }
     val stateError = uiState.stateErrorRes?.let { stringResource(it) }

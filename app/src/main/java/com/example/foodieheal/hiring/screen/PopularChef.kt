@@ -268,7 +268,36 @@ fun ChefHireItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Availability Badge
+            val isAvailableToday = remember(chef.availability_hours) {
+                com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours).isAvailableToday()
+            }
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = if (isAvailableToday) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(if (isAvailableToday) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    )
+                    Text(
+                        text = if (isAvailableToday) "Available Today" else "Off Today",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isAvailableToday) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             // Chef Name
             Text(

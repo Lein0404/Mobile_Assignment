@@ -5,6 +5,7 @@ import com.example.foodieheal.R
 sealed interface AppointmentValidationError {
     data object InvalidTime : AppointmentValidationError
     data object TimeSlotOccupied : AppointmentValidationError
+    data object ChefUnavailableSlot : AppointmentValidationError
     data object InvalidAddress : AppointmentValidationError
     data object InvalidPostcode : AppointmentValidationError
     data object InvalidState : AppointmentValidationError
@@ -17,6 +18,7 @@ data class AppointmentUiState(
     val startTime: String = "09:00 AM",
     val endTime: String = "11:00 AM",
     val isTimeSlotOccupied: Boolean = false,
+    val chefUnavailableReason: String? = null,
     val address: String = "",
     val postcode: String = "",
     val state: String = "",
@@ -27,7 +29,7 @@ data class AppointmentUiState(
     val hasAttemptedSubmit: Boolean = false,
     val isSubmitting: Boolean = false
 ) {
-    val isTimeValid: Boolean get() = appointmentTime.isNotBlank() && !isTimeSlotOccupied
+    val isTimeValid: Boolean get() = appointmentTime.isNotBlank() && !isTimeSlotOccupied && !errors.contains(AppointmentValidationError.ChefUnavailableSlot)
     val isAddressValid: Boolean get() = address.trim().isNotBlank()
     val isPostcodeValid: Boolean get() = postcode.matches(Regex("^[0-9]{5}$"))
     val isStateValid: Boolean get() = state.isNotBlank()
@@ -41,6 +43,13 @@ data class AppointmentUiState(
                 isStateValid &&
                 isServingSizeValid &&
                 isDescriptionValid
+
+    val customTimeError: String?
+        get() = when {
+            !hasAttemptedSubmit -> null
+            errors.contains(AppointmentValidationError.ChefUnavailableSlot) -> chefUnavailableReason ?: "Chef is not available during this time slot"
+            else -> null
+        }
 
     val timeErrorRes: Int?
         get() = when {

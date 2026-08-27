@@ -194,6 +194,7 @@ fun HiringAppointment(
             DayScheduleSection(
                 selectedDate = selectedDate,
                 appointments = chefAppointmentsForSelectedDate,
+                chef = chef,
                 onAddAppointmentClick = {
                     if (!selectedDate.isBefore(LocalDate.now())) {
                         onAddAppointmentClick(selectedDate)
@@ -221,6 +222,7 @@ fun HiringAppointment(
 private fun DayScheduleSection(
     selectedDate: LocalDate,
     appointments: List<Appointment>,
+    chef: Chef,
     onAddAppointmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -229,6 +231,14 @@ private fun DayScheduleSection(
     }
     val isPastDate = remember(selectedDate) {
         selectedDate.isBefore(LocalDate.now())
+    }
+
+    val weeklyAvail = remember(chef.availability_hours) {
+        com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+    }
+    val isChefAvailableOnDate = remember(weeklyAvail, selectedDate, chef.availability_hours) {
+        if (chef.availability_hours == null) true
+        else weeklyAvail.isDateAvailable(selectedDate)
     }
 
     Surface(
@@ -249,14 +259,24 @@ private fun DayScheduleSection(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = formattedTitle,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = formattedTitle,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (!isChefAvailableOnDate) {
+                            Text(
+                                text = "Chef Off Duty on this day",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
 
-                    if (!isPastDate) {
+                    if (!isPastDate && isChefAvailableOnDate) {
                         IconButton(onClick = onAddAppointmentClick) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_add_circle_outline),
@@ -278,9 +298,14 @@ private fun DayScheduleSection(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.empty_no_appointments_for_date),
+                            text = if (!isChefAvailableOnDate) {
+                                "Chef is off duty on this day. Please select another date on the calendar."
+                            } else {
+                                stringResource(R.string.empty_no_appointments_for_date)
+                            },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 16.sp
+                            fontSize = 15.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }

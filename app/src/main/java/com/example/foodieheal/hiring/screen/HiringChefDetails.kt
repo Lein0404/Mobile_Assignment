@@ -42,6 +42,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -327,6 +328,78 @@ fun HiringChefDetails(
                         label = stringResource(R.string.label_address),
                         value = fullAddress.ifBlank { stringResource(R.string.not_available) }
                     )
+                }
+            }
+
+            // Working Hour and Availability Section
+            val weeklyAvail = remember(chef.availability_hours) {
+                com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+            }
+            DetailSectionCard(title = "Weekly Working Schedule") {
+                val todayKey = remember {
+                    com.example.foodieheal.Chef.model.DayOfWeekKey.fromCalendarDay(java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    com.example.foodieheal.Chef.model.DayOfWeekKey.values().forEach { day ->
+                        val isToday = day == todayKey
+                        val daySlots = weeklyAvail.getDay(day)
+                        val activeSlots = buildList {
+                            if (daySlots.morning) add("Morning")
+                            if (daySlots.afternoon) add("Afternoon")
+                            if (daySlots.evening) add("Evening")
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent)
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = day.shortName,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
+                                    color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (isToday) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    ) {
+                                        Text(
+                                            text = "Today",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (activeSlots.isEmpty()) {
+                                Text(
+                                    text = "Off Duty",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            } else {
+                                Text(
+                                    text = activeSlots.joinToString(" • "),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
