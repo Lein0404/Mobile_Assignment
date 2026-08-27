@@ -50,6 +50,7 @@ import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Recipe.View.FilterSectionHeader
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.hiring.components.ActiveFiltersRow
 import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
 import com.example.foodieheal.hiring.components.ChefFilterState
@@ -245,10 +246,10 @@ fun ProfileScreen(
                             navController.navigate(Screen.Ingredients.route)
                         }
                     }
-                    DrawerItem("Shopping List", R.drawable.ic_shopping_cart) {
+                    DrawerItem("My Shopping Lists", R.drawable.ic_shopping_cart) {
                         scope.launch {
                             drawerState.close()
-                            navController.navigate(Screen.ShoppingList.route)
+                            navController.navigate(Screen.ShoppingListHome.route)
                         }
                     }
                     DrawerItem("Become a Chef", R.drawable.ic_hiring) {

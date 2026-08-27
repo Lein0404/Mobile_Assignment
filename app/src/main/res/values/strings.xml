@@ -40,6 +40,8 @@
     <string name="error_logout_failed">Logout failed. Please try again.</string>
     <string name="error_invalid_credentials">Invalid email and/or password. Please try again.</string>
     <string name="nav_logout">Logout</string>
+    <string name="logout_confirm_title">Logout Confirmation</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
 
     <!-- Image related -->
     <string name="image">Image</string>
@@ -654,7 +656,7 @@
     <string name="dialog_discard_draft_title">Discard Draft?</string>
     <string name="dialog_discard_changes_msg">Are you sure you want to discard your edits? Changes will not be saved.</string>
     <string name="dialog_discard_draft_msg">Are you sure you want to discard this template? Unsaved changes will be lost.</string>
-    <string name="btn_discard">Discard</string>
+    <string name="button_discard">Discard</string>
     <string name="btn_continue_editing">Continue Editing</string>
     <string name="dialog_edit_template_name_title">Edit Template Name</string>
     <string name="dialog_set_template_name_title">Set Template Name</string>
@@ -736,19 +738,45 @@
     <string name="section_professional_bg">Professional Background</string>
     <string name="years_format">%1$s Years</string>
 
-    <!-- INGREDIENTS MODULE -->
-    <!-- Shopping List -->
+    <!-- SHOPPING LIST MODULE -->
+    <!-- Shopping List Home Screen -->
+    <string name="shopping_list_home_title">My Shopping Lists</string>
+    <string name="shopping_list_new_title">New Shopping List</string>
+    <string name="shopping_list_new_title_small">New shopping list</string>
+    <string name="shopping_list_home_search_placeholder">Search shopping lists here</string>
+    <string name="shopping_list_home_empty_state">No shopping list is created.</string>
+    <string name="shopping_list_create_button">Create Shopping List</string>
+    <string name="shopping_list_home_no_match">No shopping lists match your search.</string>
+    <string name="shopping_list_set_default_toast">\"%1$s\" set as default shopping list</string>
+    <string name="shopping_list_deselect_default_toast">\"%1$s\" deselected as default</string>
+    <string name="shopping_list_change_default_title">Change Default Shopping List</string>
+    <string name="shopping_list_change_default_message">A shopping list (%1$s) has already been set as default. Change to this shopping list instead?</string>
+    <string name="shopping_list_delete_title">Delete Shopping List</string>
+    <string name="shopping_list_delete_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="shopping_list_deleted_toast">\"%1$s\" deleted from your Shopping Lists</string>
+    <string name="shopping_list_share">Share shopping list</string>
+    <string name="shopping_list_deselect_default">Deselect as default</string>
+    <string name="shopping_list_set_default">Set as default</string>
+    <string name="shopping_list_delete">Delete shopping list</string>
+    <string name="label_default">Default</string>
+    <string name="label_name">Name</string>
+    <string name="btn_add">Add</string>
+
+    <!-- SelectShoppingListDialog.kt -->
+    <string name="select_shopping_list_dialog_title">Select shopping list to add</string>
+    <string name="shopping_list_name_title">Shopping list name</string>
+    <string name="existing_shopping_list_title">Existing shopping list</string>
+
+    <!-- Shopping List Detail Screen -->
     <string name="shopping_list_title">Shopping List</string>
-    <string name="shopping_list_back">Back</string>
     <string name="shopping_list_options">Options</string>
     <string name="shopping_list_add_items">Add items</string>
     <string name="shopping_list_clear_checked">Clear checked items</string>
     <string name="shopping_list_no_checked_items">No checked items to clear.</string>
     <string name="shopping_list_clear_all">Clear all items</string>
-    <string name="shopping_list_already_empty">Shopping List is already empty.</string>
+    <string name="shopping_list_already_empty">Your shopping list is already empty.</string>
     <string name="shopping_list_search_placeholder">Search ingredients here</string>
-    <string name="shopping_list_categories">Categories</string>
-    <string name="shopping_list_empty_state">Your shopping list is empty. Add new item now!</string>
+    <string name="shopping_list_empty_state">Your shopping list is empty.</string>
     <string name="shopping_list_no_match">No items match your search.</string>
     <string name="shopping_list_clear_checked_dialog_title">Clear Checked Items</string>
     <string name="shopping_list_clear_checked_dialog_text">There are %1$d checked item(s) to be clear from your Shopping List. Are you sure?</string>
@@ -756,20 +784,40 @@
     <string name="shopping_list_clear_all_dialog_title">Clear All Items</string>
     <string name="shopping_list_clear_all_dialog_text">All items will be cleared from your Shopping List. Are you sure?</string>
     <string name="shopping_list_clear_all_toast">All items cleared from your Shopping List</string>
+    <string name="select_shopping_list_placeholder">Select a shopping list</string>
     <string name="shopping_list_error_local_data">Using local data only.</string>
 
-    <!-- Add Shopping List Item -->
+    <string name="shopping_list_last_updated">Last updated: %1$s</string>
+    <string name="shopping_list_copy_clipboard">Copy to clipboard</string>
+    <string name="shopping_list_paste_clipboard">Paste from clipboard</string>
+    <string name="shopping_list_add_item">Add item</string>
+    <string name="shopping_list_search_items_placeholder">Search items here</string>
+    <string name="shopping_list_add_items_button">Add Items</string>
+    <string name="shopping_list_save_changes_title">Save Changes?</string>
+    <string name="shopping_list_save_changes_message">Do you want to save changes to the shopping list title before leaving?</string>
+    <string name="button_save">Save</string>
+
+    <!-- Add from Clipboard / Recipes to Shopping List (ShoppingListAddFromScreen.kt) -->
+    <string name="shopping_list_no_ingredients_clipboard">No valid ingredients found on clipboard.</string>
+    <string name="shopping_list_refresh_clipboard">Refresh from Clipboard</string>
+    <string name="shopping_list_unselect_all">Unselect all</string>
+    <string name="shopping_list_select_all">Select all</string>
+    <string name="shopping_list_add_selected">Add selected items</string>
+    <string name="shopping_list_items_added_to_list">%1$d items added to %2$s</string>
+
+    <!-- Add items to Shopping List (ShoppingListAddItemScreen.kt) -->
     <string name="add_shopping_item_title">Add to Shopping List</string>
     <string name="add_shopping_item_no_ingredients">No ingredients found.</string>
-    <string name="add_shopping_item_toast_added">%1$d item(s) added to Shopping List</string>
+    <string name="add_shopping_item_toast_added">%1$d item(s) added to this shopping list</string>
     <string name="add_shopping_item_button">Add %1$d Item(s) to Shopping List</string>
 
-    <!-- Ingredients -->
+    <!-- INGREDIENTS MODULE -->
+    <!-- Ingredients Main Screen -->
     <string name="ingredients_title">Ingredients</string>
     <string name="ingredients_tab_existing">Existing</string>
     <string name="ingredients_tab_requests">Requests</string>
     <string name="ingredients_fab_new_request">New Request</string>
-    <string name="ingredients_toast_added">%1$s added to Shopping List</string>
+    <string name="ingredients_toast_added">%1$s added to the shopping list.</string>
     <string name="ingredients_requests_empty">No requests found.</string>
     <string name="ingredients_requests_filter_title">Filter by Status</string>
     <string name="ingredients_requests_filter_all">All</string>
@@ -779,11 +827,14 @@
     <string name="ingredients_requests_apply_filter">Apply Filter</string>
     <string name="ingredients_existing_search_placeholder">Search ingredients here</string>
     <string name="ingredients_requests_search_placeholder">Search ingredient requests here</string>
+    <string name="categories_filter_header">Categories Filter</string>
     <string name="ingredients_existing_empty">No ingredients match your search.</string>
     <string name="ingredients_error_fetch_ingredients">Failed to fetch ingredients</string>
     <string name="ingredients_error_fetch_requests">Failed to fetch requests</string>
     <string name="ingredients_error_fetch_details">Failed to fetch ingredient details</string>
     <string name="ingredients_no_internet_requests">Please connect to the internet to view ingredient requests</string>
+    <string name="ingredients_expand_categories">Expand categories filter</string>
+    <string name="ingredients_collapse_categories">Collapse categories filter</string>
 
     <!-- Ingredient Detail -->
     <string name="ingredient_detail_request_processed_title">Request Processed</string>
@@ -834,6 +885,8 @@
 
     <!-- Ingredients Module Validation Errors -->
     <string name="ingredients_error_name_required">Ingredient name is required</string>
+    <string name="ingredients_error_name_exists">An ingredient (%1$s) already exists.</string>
+    <string name="ingredients_error_request_exists">An ingredient request (%1$s) already exists.</string>
     <string name="error_category_required">Category is required</string>
     <string name="ingredients_error_description_required">Description is required</string>
     <string name="error_at_least_one_unit_required">At least one calorie information entry is required</string>

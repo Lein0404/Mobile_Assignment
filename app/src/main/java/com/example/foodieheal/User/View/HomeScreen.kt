@@ -433,7 +433,7 @@ fun ChefCard(
 @Composable
 fun PromoBanner(navController: NavController) {
     Card(
-        onClick = { navController.navigate(Screen.IngredientRequestForm.createRoute()) },
+        onClick = { navController.navigate(Screen.Ingredients.createRoute(1)) },
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(165.dp), // 🌟 Increased height to prevent clipping
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)

@@ -7,6 +7,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.shared.IngredientFormHelper
 import com.example.foodieheal.ingredients.shared.IngredientFormState
 import com.example.foodieheal.ingredients.shared.UnitRowState
@@ -33,6 +34,7 @@ data class IngredientRequestUiState(
     val errorMessage: Int? = null,
     val showDeleteDialog: Boolean = false,
     val showStatusFilterDialog: Boolean = false,
+    val isCategoriesExpanded: Boolean = false
 )
 
 data class IngredientRequestItem(
@@ -43,6 +45,7 @@ data class IngredientRequestItem(
 class IngredientRequestViewModel(
     application: Application,
     private val repository: IngredientRequestRepository,
+    private val ingredientsRepository: IngredientsRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(IngredientRequestUiState())
@@ -114,6 +117,10 @@ class IngredientRequestViewModel(
 
     fun refresh() {
         fetchRequests(isRefreshing = true)
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
     
     private fun fetchUnits() {
@@ -296,6 +303,32 @@ class IngredientRequestViewModel(
         viewModelScope.launch {
             _formState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
+                // Check if name already exists in master catalog
+                val existingCatalogName = ingredientsRepository.findExistingIngredientName(state.ingredientName)
+                if (existingCatalogName != null) {
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            nameError = R.string.ingredients_error_name_exists,
+                            nameErrorArg = existingCatalogName
+                        )
+                    }
+                    return@launch
+                }
+
+                // Check if name already exists in pending/approved ingredient requests
+                val existingRequestName = repository.findExistingRequestName(state.ingredientName, excludeRequestId = state.requestId)
+                if (existingRequestName != null) {
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            nameError = R.string.ingredients_error_request_exists,
+                            nameErrorArg = existingRequestName
+                        )
+                    }
+                    return@launch
+                }
+
                 // Check if request is still PENDING before updating
                 if (state.requestId != null) {
                     val currentRequest = repository.getIngredientRequestById(state.requestId)

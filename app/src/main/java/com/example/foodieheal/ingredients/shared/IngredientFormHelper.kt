@@ -33,10 +33,53 @@ data class IngredientFormState(
 
     // Per-field validation errors
     val nameError: Int? = null,
+    val nameErrorArg: String? = null,
     val categoryError: Int? = null,
     val descriptionError: Int? = null,
     val unitRowsError: Int? = null,
 )
+
+/**
+ * Normalizes ingredient names for duplicate validation.
+ * Supports singular/plural matching.
+ */
+object IngredientNameNormalizer {
+    fun getStems(name: String): Set<String> {
+        val clean = name.trim().lowercase().replace(Regex("""\s+"""), " ")
+        if (clean.isEmpty()) return emptySet()
+
+        val stems = mutableSetOf(clean)
+        val words = clean.split(" ")
+        val lastWord = words.last()
+        val prefix = if (words.size > 1) words.dropLast(1).joinToString(" ") + " " else ""
+
+        val lastWordStems = mutableSetOf(lastWord)
+
+        if (lastWord.endsWith("ies") && lastWord.length > 4) {
+            lastWordStems.add(lastWord.removeSuffix("ies") + "y")
+        }
+        if (lastWord.endsWith("es") && lastWord.length > 4) {
+            lastWordStems.add(lastWord.removeSuffix("es"))
+            lastWordStems.add(lastWord.removeSuffix("s"))
+        }
+        if (lastWord.endsWith("s") && !lastWord.endsWith("ss") && !lastWord.endsWith("us") && lastWord.length > 3) {
+            lastWordStems.add(lastWord.removeSuffix("s"))
+        }
+
+        for (lw in lastWordStems) {
+            stems.add(prefix + lw)
+        }
+
+        return stems
+    }
+
+    fun isMatch(nameA: String, nameB: String): Boolean {
+        val stemsA = getStems(nameA)
+        val stemsB = getStems(nameB)
+        if (stemsA.isEmpty() || stemsB.isEmpty()) return false
+        return stemsA.intersect(stemsB).isNotEmpty()
+    }
+}
 
 /**
  * Stateless helper that provides shared form manipulation and validation logic
@@ -50,7 +93,7 @@ object IngredientFormHelper {
     // ──────────────────────────────────────────────
 
     fun updateName(state: IngredientFormState, name: String): IngredientFormState =
-        state.copy(ingredientName = name, nameError = null)
+        state.copy(ingredientName = name, nameError = null, nameErrorArg = null)
 
     fun updateCategory(state: IngredientFormState, category: IngredientCategory): IngredientFormState =
         state.copy(category = category, categoryError = null)
@@ -142,6 +185,7 @@ object IngredientFormHelper {
 
         val updatedState = state.copy(
             nameError = nameError,
+            nameErrorArg = if (nameError != null) null else state.nameErrorArg,
             categoryError = categoryError,
             descriptionError = descriptionError,
             unitRowsError = unitRowsError,

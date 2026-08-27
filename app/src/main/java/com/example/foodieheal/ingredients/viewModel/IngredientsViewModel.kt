@@ -5,8 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.local.ShoppingListEntity
+import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
@@ -14,6 +14,7 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
 
 data class IngredientsUiState(
     val selectedTab: Int = 0,
@@ -25,7 +26,22 @@ data class IngredientsUiState(
     val isRefreshing: Boolean = false,
     val ingredientDetail: IngredientDetailInfo? = null,
     val errorMessage: Int? = null,
-    val isNetworkAvailable: Boolean = true
+    val isNetworkAvailable: Boolean = true,
+    val isCategoriesExpanded: Boolean = false,
+    val addShoppingListState: AddIngredientToShoppingListUiState = AddIngredientToShoppingListUiState()
+)
+
+/**
+ * `AddIngredientToShoppingListUiState` is split (modularized) from `IngredientsUiState`
+ * to enhance the readability and maintainability of the code
+ */
+data class AddIngredientToShoppingListUiState(
+    val showDialog: Boolean = false,
+    val isNewListOptionSelected: Boolean = false,
+    val newListNameInput: String = "",
+    val selectedListIndex: Int = 0,
+    val pendingIngredient: AddToShoppingListTarget? = null,
+    val availableLists: List<ShoppingListEntity> = emptyList()
 )
 
 data class IngredientItem(
@@ -43,6 +59,12 @@ data class CalorieEntry(
     val calories: Double,
     val quantity: Double,
     val unitName: String
+)
+
+data class AddToShoppingListTarget(
+    val ingredientId: String,
+    val ingredientName: String,
+    val category: IngredientCategory? = null
 )
 
 class IngredientsViewModel(
@@ -113,6 +135,10 @@ class IngredientsViewModel(
 
     fun onTabChange(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -191,21 +217,170 @@ class IngredientsViewModel(
     }
 
     fun addToShoppingList(ingredient: Ingredients) {
-        addToShoppingList(ingredient.ingredientId, ingredient.ingredientName)
+        addToShoppingList(ingredient.ingredientId, ingredient.ingredientName, ingredient.ingredientCategory)
     }
 
-    fun addToShoppingList(ingredientId: String, ingredientName: String) {
+    fun addToShoppingList(ingredientId: String, ingredientName: String, category: IngredientCategory? = null) {
         viewModelScope.launch {
             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
             if (userId.isEmpty()) return@launch
 
-            val entity = ShoppingListEntity(
+            shoppingRepo.addItemToActiveOrCreateShoppingList(
                 userId = userId,
                 ingredientId = ingredientId,
                 ingredientName = ingredientName,
+                category = category
+            )
+        }
+    }
+
+    fun requestAddToShoppingList(
+        ingredient: Ingredients,
+        onAddedDirectly: (() -> Unit)? = null
+    ) {
+        requestAddToShoppingList(ingredient.ingredientId, ingredient.ingredientName, ingredient.ingredientCategory, onAddedDirectly)
+    }
+
+    fun requestAddToShoppingList(
+        ingredientId: String,
+        ingredientName: String,
+        category: IngredientCategory? = null,
+        onAddedDirectly: (() -> Unit)? = null
+    ) {
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+        if (userId.isEmpty()) return
+
+        viewModelScope.launch {
+            val defaultList = shoppingRepo.getDefaultShoppingList(userId)
+            if (defaultList != null) {
+                // Add directly to default list
+                val item = ShoppingListItemEntity(
+                    shoppingListId = defaultList.shoppingListId,
+                    userId = userId,
+                    ingredientId = ingredientId,
+                    ingredientName = ingredientName,
+                    ingredientCategory = category?.name,
+                    isChecked = false
+                )
+                shoppingRepo.insertItem(item)
+                onAddedDirectly?.invoke()
+                return@launch
+            }
+
+            // No default list: fetch existing lists
+            val allLists = shoppingRepo.getShoppingListsForUser(userId)
+            if (allLists.isEmpty()) {
+                val newList = shoppingRepo.createShoppingList(userId)
+                val item = ShoppingListItemEntity(
+                    shoppingListId = newList.shoppingListId,
+                    userId = userId,
+                    ingredientId = ingredientId,
+                    ingredientName = ingredientName,
+                    ingredientCategory = category?.name,
+                    isChecked = false
+                )
+                shoppingRepo.insertItem(item)
+                onAddedDirectly?.invoke()
+            } else if (allLists.size == 1) {
+                val singleList = allLists.first()
+                val item = ShoppingListItemEntity(
+                    shoppingListId = singleList.shoppingListId,
+                    userId = userId,
+                    ingredientId = ingredientId,
+                    ingredientName = ingredientName,
+                    ingredientCategory = category?.name,
+                    isChecked = false
+                )
+                shoppingRepo.insertItem(item)
+                onAddedDirectly?.invoke()
+            } else {
+                // > 1 lists and no default -> prompt selection dialog!
+                _uiState.update {
+                    it.copy(
+                        addShoppingListState = it.addShoppingListState.copy(
+                            showDialog = true,
+                            pendingIngredient = AddToShoppingListTarget(ingredientId, ingredientName, category),
+                            availableLists = allLists
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun onDismissSelectShoppingListDialog() {
+        _uiState.update {
+            it.copy(
+                addShoppingListState = it.addShoppingListState.copy(
+                    showDialog = false,
+                    pendingIngredient = null,
+                    availableLists = emptyList(),
+                    isNewListOptionSelected = false,
+                    newListNameInput = "",
+                    selectedListIndex = 0
+                )
+            )
+        }
+    }
+
+    fun updateIsNewListOption(isSelected: Boolean) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(isNewListOptionSelected = isSelected)) }
+    }
+
+    fun updateNewShoppingListName(name: String) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(newListNameInput = name)) }
+    }
+
+    fun updateSelectedShoppingListIndex(index: Int) {
+        _uiState.update { it.copy(addShoppingListState = it.addShoppingListState.copy(selectedListIndex = index)) }
+    }
+
+    fun confirmAddPendingIngredientToShoppingList(
+        onSuccess: (String) -> Unit
+    ) {
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+        val state = _uiState.value.addShoppingListState
+        val pending = state.pendingIngredient ?: return
+        val targetList = state.availableLists.getOrNull(state.selectedListIndex) ?: return
+
+        viewModelScope.launch {
+            val item = ShoppingListItemEntity(
+                shoppingListId = targetList.shoppingListId,
+                userId = userId,
+                ingredientId = pending.ingredientId,
+                ingredientName = pending.ingredientName,
+                ingredientCategory = pending.category?.name,
                 isChecked = false
             )
-            shoppingRepo.insertItem(entity)
+            shoppingRepo.insertItem(item)
+            val name = pending.ingredientName
+            onDismissSelectShoppingListDialog()
+            onSuccess(name)
+        }
+    }
+
+    fun confirmAddPendingIngredientToNewShoppingList(
+        onSuccess: (String) -> Unit
+    ) {
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+        val state = _uiState.value.addShoppingListState
+        val pending = state.pendingIngredient ?: return
+        val newListName = state.newListNameInput
+
+        viewModelScope.launch {
+            val newList = shoppingRepo.createShoppingList(userId, newListName.trim().ifEmpty { null })
+            val item = ShoppingListItemEntity(
+                shoppingListId = newList.shoppingListId,
+                userId = userId,
+                ingredientId = pending.ingredientId,
+                ingredientName = pending.ingredientName,
+                ingredientCategory = pending.category?.name,
+                isChecked = false
+            )
+            shoppingRepo.insertItem(item)
+            val name = pending.ingredientName
+            onDismissSelectShoppingListDialog()
+            onSuccess(name)
         }
     }
 }

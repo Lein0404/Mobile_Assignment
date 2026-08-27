@@ -2,6 +2,7 @@ package com.example.foodieheal.ingredients.repo
 
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.shared.IngredientNameNormalizer
 import com.example.foodieheal.model.Status
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
@@ -148,6 +149,17 @@ class IngredientRequestRepository {
                 eq("ingredient_request_id", requestId)
             }
         }
+    }
+
+    suspend fun findExistingRequestName(name: String, excludeRequestId: String? = null): String? = withContext(Dispatchers.IO) {
+        if (name.isBlank()) return@withContext null
+        
+        val requests = getAllIngredientRequests()
+        requests.firstOrNull { req ->
+            req.ingredientRequestId != excludeRequestId &&
+            (req.requestStatus == Status.PENDING || req.requestStatus == Status.APPROVED) &&
+            IngredientNameNormalizer.isMatch(req.ingredientName, name)
+        }?.ingredientName
     }
 }
 

@@ -19,6 +19,12 @@ class AdminApprovalViewModel : ViewModel() {
     var selectedChef by mutableStateOf<Chef?>(null)
         private set
 
+    var showLogoutDialog by mutableStateOf(false)
+
+    fun onShowLogoutDialog(show: Boolean) {
+        showLogoutDialog = show
+    }
+
     fun loadPendingChefs() {
         viewModelScope.launch {
 

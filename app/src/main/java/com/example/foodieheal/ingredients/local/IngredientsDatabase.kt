@@ -23,8 +23,9 @@ import androidx.room.RoomDatabase
         IngredientUnitsEntity::class,
         UnitsEntity::class,
         ShoppingListEntity::class,
+        ShoppingListItemEntity::class,
     ],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class IngredientsDatabase : RoomDatabase() {

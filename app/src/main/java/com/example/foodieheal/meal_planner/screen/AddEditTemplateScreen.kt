@@ -19,7 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.PlanCategory
@@ -143,7 +142,7 @@ fun AddEditTemplateScreen(
                         onBackClick()
                     }
                 ) {
-                    Text(stringResource(R.string.btn_discard), color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.button_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
