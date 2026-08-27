@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.ShoppingList
+import com.example.foodieheal.ingredients.shared.ShoppingListShareHelper
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.navigation.Screen
@@ -354,6 +355,7 @@ fun ShoppingListCard(
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
     val formattedDate = remember(shoppingList.lastUpdated) { dateFormat.format(Date(shoppingList.lastUpdated)) }
 
@@ -453,7 +455,7 @@ fun ShoppingListCard(
                         },
                         onClick = {
                             showMenu = false
-                            // Empty for now (will be implemented later)
+                            ShoppingListShareHelper.shareShoppingList(context, shoppingList)
                         }
                     )
                     DropdownMenuItem(

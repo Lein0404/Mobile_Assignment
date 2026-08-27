@@ -45,6 +45,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.ShoppingListItem
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
+import com.example.foodieheal.ingredients.shared.ShoppingListShareHelper
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.navigation.Screen
@@ -194,7 +195,13 @@ fun ShoppingListScreen(
                                 },
                                 onClick = {
                                     showTopMenu = false
-                                    // Empty for now (will be implemented later)
+                                    activeList?.let {
+                                        val currentShoppingList = it.copy(
+                                            title = editableTitle.trim().ifEmpty { it.title },
+                                            items = uiState.items
+                                        )
+                                        ShoppingListShareHelper.shareShoppingList(context, currentShoppingList)
+                                    }
                                 }
                             )
                             DropdownMenuItem(
