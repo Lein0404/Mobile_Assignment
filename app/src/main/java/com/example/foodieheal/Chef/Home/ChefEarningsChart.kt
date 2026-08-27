@@ -25,9 +25,9 @@ import java.util.Calendar
 import java.util.Locale
 
 data class MonthEarnings(
-    val monthKey: String,   // "yyyy-MM"
-    val monthLabel: String, // "Jan"
-    val fullLabel: String,  // "January 2026"
+    val monthKey: String,
+    val monthLabel: String,
+    val fullLabel: String,
     val earnings: Double,
     val appointmentCount: Int
 )
@@ -41,20 +41,19 @@ fun aggregateChefEarnings(
     val fullFmt  = SimpleDateFormat("MMMM yyyy",     Locale.US)
     val dateFmt  = SimpleDateFormat("yyyy-MM-dd",    Locale.US)
 
-    // Build the ordered month buckets (oldest → newest)
+    // Build the ordered month buckets
     val monthKeys = (monthCount - 1 downTo 0).map { offset ->
         Calendar.getInstance().apply { add(Calendar.MONTH, -offset) }
     }.map { cal ->
         Triple(keyFmt.format(cal.time), shortFmt.format(cal.time), fullFmt.format(cal.time))
     }
 
-    // Only count completed / confirmed appointments (not cancelled/rejected)
+    // Only count completed / confirmed appointments
     val relevant = appointments.filter {
         val s = it.Status.lowercase()
         s == "completed" || s == "confirmed"
     }
 
-    // Group by "yyyy-MM" derived from the appointment Date field
     val grouped = relevant.groupBy { appt ->
         try {
             val parsed = dateFmt.parse(appt.Date)
@@ -73,10 +72,6 @@ fun aggregateChefEarnings(
         )
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Chart composable
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun ChefEarningsChart(

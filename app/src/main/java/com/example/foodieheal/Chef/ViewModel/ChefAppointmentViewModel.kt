@@ -205,19 +205,65 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 return@launch
             }
 
+            //Snapshot current state for rollback
+            val previousAppointmentsState = _appointmentsUiState.value
+            val previousHomeState = _homeUiState.value
+
+            fun applyOptimisticUpdate(appointments: List<Appointment>): List<Appointment> =
+                appointments.map { appt ->
+                    if (appt.AppointmentID == appointmentId) {
+                        appt.copy(
+                            Status = newStatus,
+                            Reject_Reason = if (newStatus == "Rejected") rejectionReason else appt.Reject_Reason
+                        )
+                    } else appt
+                }
+
+            // Update Appointments screen state
+            if (previousAppointmentsState is AppointmentsUiState.Success) {
+                _appointmentsUiState.update { current ->
+                    if (current is AppointmentsUiState.Success) {
+                        current.copy(appointments = applyOptimisticUpdate(current.appointments))
+                    } else current
+                }
+            }
+
+            // Update Home dashboard state (active count + allAppointments)
+            if (previousHomeState is HomeUiState.Success) {
+                _homeUiState.update { current ->
+                    if (current is HomeUiState.Success) {
+                        val updatedAll = applyOptimisticUpdate(current.allAppointments)
+                        val updatedActive = updatedAll.filter {
+                            val s = it.Status.lowercase()
+                            s != "cancelled" && s != "completed" && s != "rejected"
+                        }
+                        current.copy(
+                            allAppointments  = updatedAll,
+                            totalCount       = updatedActive.size,
+                            nextAppointment  = updatedActive.firstOrNull()
+                        )
+                    } else current
+                }
+            }
+
             try {
                 repository.updateAppointmentStatus(
-                    appointmentId = appointmentId,
-                    newStatus = newStatus,
+                    appointmentId  = appointmentId,
+                    newStatus      = newStatus,
                     rejectionReason = rejectionReason
                 )
 
-                // Refresh UI state
+                // sync fresh data from server no loading show
                 fetchAppointmentsForCurrentChef()
                 loadDashboardData()
 
             } catch (e: Exception) {
                 Log.e("ChefPortalVM", "Error updating appointment: ${e.message}", e)
+
+                // Rollback both states to pre-optimistic snapshot
+                _appointmentsUiState.value = previousAppointmentsState
+                _homeUiState.value         = previousHomeState
+
                 _uiEvent.emit("Failed to update appointment: ${e.localizedMessage}")
             }
         }
