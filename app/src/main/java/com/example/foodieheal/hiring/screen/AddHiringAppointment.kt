@@ -93,26 +93,9 @@ fun AddAppointmentFormScreen(
     val pricingBreakdown by viewModel.pricingBreakdown.collectAsStateWithLifecycle()
     val totalPrice = pricingBreakdown.finalTotalPrice
 
-    val durationText = remember(uiState.appointmentTime) {
-        if (uiState.appointmentTime.contains("-")) {
-            val parts = uiState.appointmentTime.split("-").map { it.trim() }
-            if (parts.size == 2) {
-                val format = SimpleDateFormat("hh:mm a", Locale.US)
-                try {
-                    val start = format.parse(parts[0])
-                    val end = format.parse(parts[1])
-                    if (start != null && end != null) {
-                        val diffMillis = end.time - start.time
-                        val diffHours = diffMillis.toDouble() / (1000 * 60 * 60)
-                        if (diffHours > 0) {
-                            if (diffHours % 1.0 == 0.0) "${diffHours.toInt()} hr" else String.format(Locale.US, "%.1f hrs", diffHours)
-                        } else null
-                    } else null
-                } catch (e: Exception) {
-                    null
-                }
-            } else null
-        } else null
+    val durationText = remember(pricingBreakdown.hours) {
+        val h = pricingBreakdown.hours
+        if (h % 1.0 == 0.0) "${h.toInt()} hr" else String.format(Locale.US, "%.1f hrs", h)
     }
 
     val timeError = uiState.customTimeError ?: uiState.timeErrorRes?.let { stringResource(it) }

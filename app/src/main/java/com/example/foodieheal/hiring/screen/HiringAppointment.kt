@@ -339,20 +339,14 @@ private fun AppointmentCard(
     showAddIcon: Boolean = false,
     onAddClick: (() -> Unit)? = null
 ) {
-    val statusBgColor = when (statusText.lowercase()) {
-        "completed", "finished" -> Color(0xFFE3F2FD)
-        "confirmed", "accepted" -> Color(0xFFE8F5E9)
-        "rejected", "cancelled" -> Color(0xFFFFEBEE)
-        "pending" -> Color(0xFFFFF8E1)
-        else -> MaterialTheme.colorScheme.surface
-    }
-
-    val statusTextColor = when (statusText.lowercase()) {
-        "completed", "finished" -> Color(0xFF1565C0)
-        "confirmed", "accepted" -> Color(0xFF2E7D32)
-        "rejected", "cancelled" -> Color(0xFFC62828)
-        "pending" -> Color(0xFFF57F17)
-        else -> MaterialTheme.colorScheme.onSurface
+    val (statusBgColor, statusTextColor) = when (statusText.lowercase(java.util.Locale.ROOT).trim()) {
+        "completed", "finished" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
+        "confirmed", "accepted" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
+        "cancelled"             -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
+        "rejected"              -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
+        "unpaid"                -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
+        "pending"               -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
+        else                    -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Column(
