@@ -327,4 +327,28 @@ class IngredientsViewModel(
             onSuccess(name)
         }
     }
+
+    fun confirmAddPendingIngredientToNewShoppingList(
+        newListName: String,
+        onSuccess: (String) -> Unit
+    ) {
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
+        val pending = _uiState.value.pendingIngredientToAdd ?: return
+
+        viewModelScope.launch {
+            val newList = shoppingRepo.createShoppingList(userId, newListName.trim().ifEmpty { null })
+            val item = ShoppingListItemEntity(
+                shoppingListId = newList.shoppingListId,
+                userId = userId,
+                ingredientId = pending.ingredientId,
+                ingredientName = pending.ingredientName,
+                ingredientCategory = pending.category?.name,
+                isChecked = false
+            )
+            shoppingRepo.insertItem(item)
+            val name = pending.ingredientName
+            onDismissSelectShoppingListDialog()
+            onSuccess(name)
+        }
+    }
 }

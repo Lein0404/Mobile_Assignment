@@ -1,10 +1,13 @@
 package com.example.foodieheal.ingredients.shared
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -14,15 +17,19 @@ import com.example.foodieheal.ui.components.DropDownList
 
 /**
  * Dialog prompting user to select which shopping list to add an ingredient to
- * when multiple shopping lists exist and no default list is set.
+ * or create a new shopping list for the ingredient.
  */
 @Composable
 fun SelectShoppingListDialog(
     shoppingLists: List<ShoppingListEntity>,
     onDismissRequest: () -> Unit,
-    onConfirm: (ShoppingListEntity) -> Unit
+    onConfirm: (ShoppingListEntity) -> Unit,
+    onConfirmNewList: ((String) -> Unit)? = null
 ) {
-    if (shoppingLists.isEmpty()) return
+    if (shoppingLists.isEmpty() && onConfirmNewList == null) return
+
+    var isNewList by remember { mutableStateOf(false) }
+    var newListNameInput by remember { mutableStateOf("") }
 
     var selectedIndex by remember { mutableIntStateOf(0) }
     val options = remember(shoppingLists) {
@@ -44,27 +51,120 @@ fun SelectShoppingListDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
+                    .padding(top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                DropDownList(
-                    labelId = R.string.shopping_list_title,
-                    placeholderId = R.string.select_shopping_list_placeholder,
-                    selectedValue = currentSelectedTitle,
-                    options = options,
-                    onOptionSelected = { chosenTitle ->
-                        val idx = options.indexOf(chosenTitle)
-                        if (idx >= 0) {
-                            selectedIndex = idx
+                // ── Option 1: Existing Shopping List ──
+                if (shoppingLists.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { isNewList = false }
+                    ) {
+                        RadioButton(
+                            selected = !isNewList,
+                            onClick = { isNewList = false },
+                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Existing shopping list",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (!isNewList) FontWeight.SemiBold else FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    if (!isNewList) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 12.dp)
+                        ) {
+                            DropDownList(
+                                labelId = R.string.shopping_list_title,
+                                placeholderId = R.string.select_shopping_list_placeholder,
+                                selectedValue = currentSelectedTitle,
+                                options = options,
+                                onOptionSelected = { chosenTitle ->
+                                    val index = options.indexOf(chosenTitle)
+                                    if (index >= 0) {
+                                        selectedIndex = index
+                                    }
+                                }
+                            )
                         }
                     }
-                )
+                }
+
+                // ── Option 2: New Shopping List ──
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isNewList = true }
+                ) {
+                    RadioButton(
+                        selected = isNewList,
+                        onClick = { isNewList = true },
+                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "New shopping list",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (isNewList) FontWeight.SemiBold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                if (isNewList) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Shopping List Name",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        OutlinedTextField(
+                            value = newListNameInput,
+                            onValueChange = { newListNameInput = it },
+                            placeholder = {
+                                Text(
+                                    text = "Name",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val chosen = shoppingLists.getOrElse(selectedIndex) { shoppingLists.first() }
-                    onConfirm(chosen)
+                    if (isNewList) {
+                        onConfirmNewList?.invoke(newListNameInput.trim())
+                    } else {
+                        val chosen = shoppingLists.getOrElse(selectedIndex) { shoppingLists.first() }
+                        onConfirm(chosen)
+                    }
                 }
             ) {
                 Text(

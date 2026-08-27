@@ -227,6 +227,15 @@ fun IngredientsMainScreen(
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+                    },
+                    onConfirmNewList = { newListName ->
+                        viewModel.confirmAddPendingIngredientToNewShoppingList(newListName) { addedName ->
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, addedName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 )
             }

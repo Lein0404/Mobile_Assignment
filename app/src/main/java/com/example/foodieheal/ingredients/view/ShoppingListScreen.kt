@@ -256,11 +256,7 @@ fun ShoppingListScreen(
                                 },
                                 onClick = {
                                     showTopMenu = false
-                                    activeList?.let {
-                                        viewModel.deleteShoppingList(it.shoppingListId)
-                                        Toast.makeText(context, "Shopping list deleted", Toast.LENGTH_SHORT).show()
-                                        navController.popBackStack()
-                                    }
+                                    viewModel.onShowDeleteListDialog(true, activeList?.shoppingListId)
                                 }
                             )
                         }
@@ -497,6 +493,32 @@ fun ShoppingListScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showChangeDefaultDialog = false }) {
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
+    // ──────────────── Delete Confirmation Dialog ────────────────
+    if (uiState.showDeleteListDialog) {
+        val targetId = uiState.listToDeleteId ?: activeList?.shoppingListId ?: ""
+        val targetList = uiState.shoppingLists.find { it.shoppingListId == targetId } ?: activeList
+        AlertDialog(
+            onDismissRequest = { viewModel.onShowDeleteListDialog(false) },
+            title = { Text("Delete Shopping List") },
+            text = { Text("Are you sure you want to delete \"${targetList?.title?.ifEmpty { targetId } ?: targetId}\"?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteShoppingList(targetId)
+                    Toast.makeText(context, "Shopping list deleted", Toast.LENGTH_SHORT).show()
+                    viewModel.onShowDeleteListDialog(false)
+                    navController.popBackStack()
+                }) {
+                    Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onShowDeleteListDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
