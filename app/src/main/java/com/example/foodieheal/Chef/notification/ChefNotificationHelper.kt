@@ -92,7 +92,7 @@ object ChefNotificationHelper {
             }
 
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_planner)
+                .setSmallIcon(R.drawable.foodieheallogo_removebg_preview)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(message))

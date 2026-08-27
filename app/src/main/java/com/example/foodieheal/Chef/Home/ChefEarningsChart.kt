@@ -24,10 +24,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
+
 data class MonthEarnings(
     val monthKey: String,
     val monthLabel: String,
     val fullLabel: String,
+    val grossEarnings: Double,
+    val platformFee: Double,
     val earnings: Double,
     val appointmentCount: Int
 )
@@ -61,13 +65,22 @@ fun aggregateChefEarnings(
         } catch (_: Exception) { "" }
     }
 
+    val feeRate = AppointmentPricingBreakdown.PLATFORM_FEE_RATE
+
     return monthKeys.map { (key, short, full) ->
         val bucket = grouped[key] ?: emptyList()
+        val grossTotal = bucket.sumOf { it.Total_Price }
+        // Net payout after deducting 5% platform fee
+        val netEarnings = if (grossTotal > 0.0) grossTotal / (1.0 + feeRate) else 0.0
+        val totalFee = grossTotal - netEarnings
+
         MonthEarnings(
             monthKey         = key,
             monthLabel       = short,
             fullLabel        = full,
-            earnings         = bucket.sumOf { it.Total_Price },
+            grossEarnings    = grossTotal,
+            platformFee      = totalFee,
+            earnings         = netEarnings,
             appointmentCount = bucket.size
         )
     }
@@ -126,7 +139,7 @@ fun ChefEarningsChart(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Last 6 months • Confirmed & Completed",
+                        text = "Last 6 months • Net Payout (excl. 5% platform fee)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -144,7 +157,7 @@ fun ChefEarningsChart(
                         horizontalAlignment = Alignment.End
                     ) {
                         Text(
-                            text = "Total",
+                            text = "Net Total",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -305,14 +318,15 @@ private fun EarningsDetailCard(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "${month.appointmentCount} appointment${if (month.appointmentCount != 1) "s" else ""}",
+                    text = "${month.appointmentCount} appointment${if (month.appointmentCount != 1) "s" else ""}" +
+                            if (month.grossEarnings > 0) " • Fee: -RM %.2f".format(Locale.US, month.platformFee) else "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Revenue",
+                    text = "Net Payout",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 10.sp

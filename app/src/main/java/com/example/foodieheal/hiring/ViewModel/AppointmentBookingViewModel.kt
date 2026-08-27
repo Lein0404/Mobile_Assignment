@@ -13,10 +13,14 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -56,6 +60,24 @@ class AppointmentBookingViewModel(
     // Attached recipes to appointment
     private val _selectedRecipes = MutableStateFlow<List<SelectedAppointmentRecipe>>(emptyList())
     val selectedRecipes: StateFlow<List<SelectedAppointmentRecipe>> = _selectedRecipes.asStateFlow()
+
+    val pricingBreakdown: StateFlow<AppointmentPricingBreakdown> = combine(
+        _selectedChef,
+        _uiState,
+        _selectedRecipes
+    ) { chef, state, recipes ->
+        AppointmentPricingBreakdown.calculate(
+            chefHourlyRate = chef?.Pricing ?: 0.0,
+            appointmentTime = state.appointmentTime,
+            selectedRecipes = recipes,
+            userState = state.state,
+            chefState = chef?.state.orEmpty()
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AppointmentPricingBreakdown()
+    )
 
     val currentChefId: String
         get() = selectedChef.value?.let { it.chefId.ifEmpty { it.id } }.orEmpty()
@@ -461,25 +483,36 @@ class AppointmentBookingViewModel(
         return false
     }
 
-    fun calculateTotalPrice(hourlyRate: Double, appointmentTime: String): Double {
-        if (!appointmentTime.contains("-")) return hourlyRate
-        val parts = appointmentTime.split("-").map { it.trim() }
-        if (parts.size != 2) return hourlyRate
+    fun calculateTotalPrice(
+        hourlyRate: Double = _selectedChef.value?.Pricing ?: 0.0,
+        appointmentTime: String = _uiState.value.appointmentTime,
+        selectedRecipes: List<SelectedAppointmentRecipe> = _selectedRecipes.value,
+        userState: String = _uiState.value.state,
+        chefState: String = _selectedChef.value?.state.orEmpty()
+    ): Double {
+        return AppointmentPricingBreakdown.calculate(
+            chefHourlyRate = hourlyRate,
+            appointmentTime = appointmentTime,
+            selectedRecipes = selectedRecipes,
+            userState = userState,
+            chefState = chefState
+        ).finalTotalPrice
+    }
 
-        return try {
-            val start = parseTime(parts[0])
-            val end = parseTime(parts[1])
-            if (start != null && end != null) {
-                val diffMillis = end.time - start.time
-                val diffHours = diffMillis.toDouble() / (1000 * 60 * 60)
-                val actualHours = if (diffHours > 0) diffHours else 1.0
-                hourlyRate * actualHours
-            } else {
-                hourlyRate
-            }
-        } catch (e: Exception) {
-            hourlyRate
-        }
+    fun getPricingBreakdown(
+        hourlyRate: Double = _selectedChef.value?.Pricing ?: 0.0,
+        appointmentTime: String = _uiState.value.appointmentTime,
+        selectedRecipes: List<SelectedAppointmentRecipe> = _selectedRecipes.value,
+        userState: String = _uiState.value.state,
+        chefState: String = _selectedChef.value?.state.orEmpty()
+    ): AppointmentPricingBreakdown {
+        return AppointmentPricingBreakdown.calculate(
+            chefHourlyRate = hourlyRate,
+            appointmentTime = appointmentTime,
+            selectedRecipes = selectedRecipes,
+            userState = userState,
+            chefState = chefState
+        )
     }
 
     fun createAppointment(

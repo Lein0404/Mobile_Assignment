@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -98,7 +99,8 @@ fun AppointmentReviewScreen(
     val startTime = timeRange.getOrNull(0).orEmpty()
     val endTime = timeRange.getOrNull(1).orEmpty()
 
-    val totalPrice = viewModel.calculateTotalPrice(hourlyRate, uiState.appointmentTime)
+    val pricingBreakdown by viewModel.pricingBreakdown.collectAsStateWithLifecycle()
+    val totalPrice = pricingBreakdown.finalTotalPrice
 
     val processingToastMsg = stringResource(R.string.toast_processing_booking)
     val successToastMsg = stringResource(R.string.toast_booking_success)
@@ -376,18 +378,121 @@ fun AppointmentReviewScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.section_payment_breakdown),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.section_payment_breakdown),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                        ) {
+                            Text(
+                                text = "Itemized Receipt",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // 1. Chef Labor
+                    PriceSummaryRow(
+                        label = "Chef Labor (RM ${String.format(Locale.US, "%.2f", pricingBreakdown.hourlyRate)}/hr × ${String.format(Locale.US, "%.1f", pricingBreakdown.hours)} hrs)",
+                        value = String.format(Locale.US, "RM %.2f", pricingBreakdown.laborCost)
                     )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    // 2. Ingredients Cost (Itemized dishes)
+                    if (pricingBreakdown.recipeCostItems.isNotEmpty()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Ingredients Cost (${pricingBreakdown.recipeCostItems.size} dishes)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "RM %.2f", pricingBreakdown.ingredientsCost),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            pricingBreakdown.recipeCostItems.forEach { dish ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "• ${dish.recipeName} (${dish.portions} ${if (dish.portions > 1) "servings" else "serving"})",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = String.format(Locale.US, "RM %.2f", dish.totalCost),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
 
+                    // 3. Interstate Travel Surcharge
+                    if (pricingBreakdown.travelSurcharge > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Interstate Travel Surcharge",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "${pricingBreakdown.userState} → ${pricingBreakdown.chefState}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Text(
+                                text = String.format(Locale.US, "RM %.2f", pricingBreakdown.travelSurcharge),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    // Subtotal
                     PriceSummaryRow(
-                        label = stringResource(R.string.label_hourly_rate),
-                        value = stringResource(R.string.currency_rm_format, hourlyRate)
+                        label = "Subtotal",
+                        value = String.format(Locale.US, "RM %.2f", pricingBreakdown.subtotal)
+                    )
+
+                    // 4. Platform Service Fee (5%)
+                    PriceSummaryRow(
+                        label = "Platform Service Fee (5%)",
+                        value = String.format(Locale.US, "RM %.2f", pricingBreakdown.platformFee)
                     )
 
                     HorizontalDivider(
@@ -407,7 +512,7 @@ fun AppointmentReviewScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = stringResource(R.string.currency_rm_format, totalPrice),
+                            text = String.format(Locale.US, "RM %.2f", pricingBreakdown.finalTotalPrice),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
