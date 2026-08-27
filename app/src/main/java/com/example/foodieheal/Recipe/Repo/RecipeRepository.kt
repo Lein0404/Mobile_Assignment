@@ -217,6 +217,7 @@ class RecipeRepository(
     suspend fun deleteRecipe(recipeId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             client.from("recipes").delete { filter { eq("recipe_id", recipeId) } }
+            recipeDao?.deleteRecipe(recipeId)
             Unit
         }
     }

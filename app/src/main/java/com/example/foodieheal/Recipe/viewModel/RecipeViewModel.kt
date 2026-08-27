@@ -419,9 +419,31 @@ class RecipeViewModel(
             }
             isLoading = true
             repository.deleteRecipe(recipeId).onSuccess {
+                Log.d("RecipeViewModel", "Delete successful for rid: $recipeId. Filtering locally...")
+                
+                // 🌟 Immediate Local Update: Use a copy to ensure state change triggers UI
+                val updatedMyRecipes = myRecipes.filter { it.recipe_id != recipeId }
+                val updatedRecipeList = recipeList.filter { it.recipe_id != recipeId }
+                val updatedBookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+
+                myRecipes = updatedMyRecipes
+                recipeList = updatedRecipeList
+                bookmarkedRecipes = updatedBookmarkedRecipes
+                
+                // Update bookmark IDs set
+                if (bookmarkedRecipeIds.contains(recipeId)) {
+                    bookmarkedRecipeIds = bookmarkedRecipeIds.toMutableSet().apply { remove(recipeId) }
+                }
+
                 _bookmarkMessage.emit("Recipe deleted successfully.")
-                refreshAll()
-                fetchMyRecipes(userId, force = true)
+                
+                // 🌟 Delay the background refresh slightly to give Supabase DB time to propagate the deletion
+                // and to prevent a race condition where the fetch returns the old data.
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(1000)
+                    refreshAll()
+                    fetchMyRecipes(userId, force = false) // Don't force clear again, we already filtered
+                }
             }
             isLoading = false
         }
