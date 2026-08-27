@@ -561,97 +561,47 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 🌟 Beautiful Pill Toggle (Only for Bookmarks)
-                        if (selectedMainTab == 1) {
-                            item(span = { GridItemSpan(2) }) {
-                                val recipeBgColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                                val chefBgColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                                val recipeTextColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-                                val chefTextColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-
-                                Surface(
-                                    shape = RoundedCornerShape(24.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // Recipes Option
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(recipeBgColor)
-                                                .clickable { showChefBookmarks = false },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_recipe),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = recipeTextColor
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Recipes", color = recipeTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                            }
-                                        }
-
-                                        // Chefs Option
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(chefBgColor)
-                                                .clickable { showChefBookmarks = true },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_hiring),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = chefTextColor
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Chefs", color = chefTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
                         // 🌟 Search & Course Section
                         item(span = { GridItemSpan(2) }) {
                             Column {
                                 if (selectedMainTab == 1 && showChefBookmarks) {
-                                    // 🌟 Chef Search Bar (Redesigned for Consistency)
-                                    OutlinedTextField(
-                                        value = chefFilterState.searchQuery,
-                                        onValueChange = { chefFilterState = chefFilterState.copy(searchQuery = it) },
-                                        placeholder = { Text("Search chefs here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            focusedBorderColor = Color.Transparent,
-                                            unfocusedBorderColor = Color.Transparent
-                                        ),
-                                        trailingIcon = {
-                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
-                                                // Filter Icon with active color if filters are applied
-                                                val filterIconTint = if (chefFilterState.activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant
-                                                
+                                    // 🌟 Compact Search Bar (matching RecipesScreen style)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = chefFilterState.searchQuery,
+                                            onValueChange = { chefFilterState = chefFilterState.copy(searchQuery = it) },
+                                            placeholder = { Text("Search chefs here", fontSize = 14.sp) },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(52.dp),
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(12.dp),
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.search),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            },
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Surface(
+                                            onClick = { showChefFilterSheet = true },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(52.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
                                                 BadgedBox(
                                                     badge = {
                                                         if (chefFilterState.activeFilterCount > 0) {
@@ -664,22 +614,78 @@ fun ProfileScreen(
                                                     Icon(
                                                         painter = painterResource(id = R.drawable.filter),
                                                         contentDescription = "Filter",
-                                                        modifier = Modifier.size(20.dp).clickable { showChefFilterSheet = true },
-                                                        tint = filterIconTint
+                                                        modifier = Modifier.size(20.dp),
+                                                        tint = if (chefFilterState.activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
-                                                
-                                                Spacer(modifier = Modifier.width(12.dp))
+                                            }
+                                        }
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // 🌟 Compact Recipes/Chefs Toggle (Now under search bar)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp)
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                            .padding(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val subTabModifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(20.dp))
+
+                                        Box(
+                                            modifier = subTabModifier
+                                                .background(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                .clickable { showChefBookmarks = false },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
-                                                    painter = painterResource(id = R.drawable.search),
-                                                    contentDescription = "Search",
-                                                    modifier = Modifier.size(20.dp),
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    painter = painterResource(id = R.drawable.ic_recipe),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    "Recipes",
+                                                    color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
-                                    )
-                                    
+
+                                        Box(
+                                            modifier = subTabModifier
+                                                .background(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                .clickable { showChefBookmarks = true },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.ic_hiring),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    "Chefs",
+                                                    color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     // Active filter chips row
@@ -689,73 +695,154 @@ fun ProfileScreen(
                                         onResetAll = { chefFilterState = com.example.foodieheal.ui.components.ChefFilterState(searchQuery = chefFilterState.searchQuery) }
                                     )
                                 } else {
-                                    // 🌟 Recipe Search Bar (Standard Style)
+                                    // 🌟 Compact Recipe Search Bar (matching RecipesScreen style)
                                     val currentQuery = if (selectedMainTab == 0) userRecipesSearchQuery else bookmarksSearchQuery
-                                    OutlinedTextField(
-                                        value = currentQuery,
-                                        onValueChange = { 
-                                            if (selectedMainTab == 0) userRecipesSearchQuery = it else bookmarksSearchQuery = it
-                                        },
-                                        placeholder = { 
-                                            Text(
-                                                if (selectedMainTab == 0) "Search recipe here" else "Search recipes/authors", 
-                                                fontSize = 14.sp, 
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            ) 
-                                        },
-                                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            focusedBorderColor = Color.Transparent,
-                                            unfocusedBorderColor = Color.Transparent
-                                        ),
-                                        trailingIcon = {
-                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = currentQuery,
+                                            onValueChange = { 
+                                                if (selectedMainTab == 0) userRecipesSearchQuery = it else bookmarksSearchQuery = it
+                                            },
+                                            placeholder = { 
+                                                Text(
+                                                    if (selectedMainTab == 0) "Search recipes here" else "Search recipes/authors", 
+                                                    fontSize = 14.sp
+                                                ) 
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(52.dp),
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(12.dp),
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.search),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            },
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Surface(
+                                            onClick = { showRecipeFilterSheet = true },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(52.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.filter),
                                                     contentDescription = "Filter",
-                                                    modifier = Modifier.size(20.dp).clickable { showRecipeFilterSheet = true },
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.search),
-                                                    contentDescription = "Search",
-                                                    modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    
-                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        lazyItems(courses) { course ->
-                                            val isSelected = selectedCourse == course
-                                            Surface(
-                                                onClick = { selectedCourse = course },
-                                                shape = RoundedCornerShape(20.dp),
-                                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant
-                                            ) {
-                                                Text(
-                                                    text = course,
-                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurface
                                                 )
                                             }
                                         }
                                     }
                                     
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // 🌟 Compact Recipes/Chefs Toggle (Now under search bar for Bookmarks tab)
+                                    if (selectedMainTab == 1) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 12.dp)
+                                                .height(48.dp)
+                                                .clip(RoundedCornerShape(24.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                                .padding(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val subTabModifier = Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(20.dp))
+
+                                            Box(
+                                                modifier = subTabModifier
+                                                    .background(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                    .clickable { showChefBookmarks = false },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.ic_recipe),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp),
+                                                        tint = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        "Recipes",
+                                                        color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 15.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+
+                                            Box(
+                                                modifier = subTabModifier
+                                                    .background(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                    .clickable { showChefBookmarks = true },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.ic_hiring),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp),
+                                                        tint = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        "Chefs",
+                                                        color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 15.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        lazyItems(courses) { course ->
+                                            val isSelected = selectedCourse == course
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { selectedCourse = course },
+                                                label = { 
+                                                    Text(
+                                                        text = course, 
+                                                        fontSize = 15.sp, 
+                                                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
+                                                    ) 
+                                                },
+                                                shape = RoundedCornerShape(20.dp),
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = primaryColor,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                                ),
+                                                border = null
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Removed selectedCourse header text
                                 }
                             }
                         }
