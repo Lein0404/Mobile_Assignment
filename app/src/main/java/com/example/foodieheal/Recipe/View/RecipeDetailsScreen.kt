@@ -23,6 +23,7 @@ import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.FollowViewModel
 import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.draw.drawWithContent
@@ -36,7 +37,8 @@ fun RecipeDetailsScreen(
     navController: NavController,
     recipeId: String,
     viewModel: RecipeViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    followViewModel: FollowViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     // 1. Fetch data if needed (Smart fetching)
     LaunchedEffect(recipeId) {
@@ -52,9 +54,18 @@ fun RecipeDetailsScreen(
 
     val recipe = viewModel.selectedRecipe
     val user = authViewModel.currentUser
+    val view = androidx.compose.ui.platform.LocalView.current
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
     // 🌟 FIX: Use customId for ownership check to match database logic
     val isMyRecipe = recipe?.author_id == user?.customId
+
+    LaunchedEffect(recipe?.author_id, user?.customId) {
+        val aid = recipe?.author_id
+        val uid = user?.customId
+        if (aid != null && uid != null && aid != uid) {
+            followViewModel.fetchFollowStatus(uid, aid)
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     var expanded by remember { mutableStateOf(false) }
@@ -66,6 +77,20 @@ fun RecipeDetailsScreen(
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        followViewModel.followEvents.collect { event ->
+            val message = when(event) {
+                FollowViewModel.FollowEvent.RequestSent -> view.context.getString(R.string.follow_request_sent)
+                FollowViewModel.FollowEvent.RequestCancelled -> view.context.getString(R.string.follow_request_cancelled)
+                FollowViewModel.FollowEvent.Unfollowed -> view.context.getString(R.string.unfollowed_user)
+                FollowViewModel.FollowEvent.RequestAccepted -> view.context.getString(R.string.follow_request_accepted)
+                FollowViewModel.FollowEvent.RequestRejected -> view.context.getString(R.string.follow_request_rejected)
+                FollowViewModel.FollowEvent.NoInternet -> view.context.getString(R.string.desc_connect_internet_follow)
+            }
             snackbarHostState.showSnackbar(message)
         }
     }
@@ -233,13 +258,20 @@ fun RecipeDetailsScreen(
 
                     // 🌟 Author Section
                     val author = viewModel.recipeAuthor
-                    // 🌟 FIX: Prioritize live session name for instant profile sync
-                    val displayAuthorName = (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorName ?: recipe.authorInfo?.name)) ?: "Unknown Author"
-                    val displayAuthorImage = if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorImageUrl ?: recipe.authorInfo?.profile_pic_url)
+                    // 🌟 FIX: Prioritize recipe's own cached info, then live session, then join result
+                    val displayAuthorName = (recipe.authorName ?: (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorInfo?.name))) ?: "Unknown Author"
+                    val displayAuthorImage = (recipe.authorImageUrl ?: (if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorInfo?.profile_pic_url)))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                recipe.author_id?.let { aid ->
+                                    navController.navigate(Screen.Profile.createRoute(aid))
+                                }
+                            }
+                            .padding(vertical = 4.dp)
                     ) {
                         if (!displayAuthorImage.isNullOrBlank()) {
                             AsyncImage(
@@ -272,6 +304,33 @@ fun RecipeDetailsScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                        }
+
+                        if (!isMyRecipe && user != null) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            val status = followViewModel.followStatus
+                            val buttonText = when (status) {
+                                null -> "Follow"
+                                "PENDING" -> "Request Sent"
+                                "ACCEPTED" -> "Unfollow"
+                                else -> "Follow"
+                            }
+                            val buttonColor = if (status == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                            
+                            Button(
+                                onClick = {
+                                    recipe.author_id?.let { aid ->
+                                        user.customId?.let { uid ->
+                                            followViewModel.toggleFollow(uid, aid)
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
 

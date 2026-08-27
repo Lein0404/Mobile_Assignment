@@ -18,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
@@ -203,18 +206,36 @@ fun RecipeCardItem(
                 val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
                     currentUser.name
                 } else {
-                    recipe.authorInfo?.name ?: recipe.authorName ?: "Chef"
+                    recipe.authorName ?: recipe.authorInfo?.name ?: "Chef"
+                }
+
+                val authorImageToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
+                    currentUser.profilePicUrl
+                } else {
+                    recipe.authorImageUrl ?: recipe.authorInfo?.profile_pic_url
                 }
 
                 if (!authorToDisplay.isNullOrEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.author),
-                            contentDescription = null,
-                            modifier = Modifier.size(10.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
+                        if (!authorImageToDisplay.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = authorImageToDisplay,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clip(CircleShape)
+                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.author),
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = authorToDisplay,
                             fontSize = 10.sp,

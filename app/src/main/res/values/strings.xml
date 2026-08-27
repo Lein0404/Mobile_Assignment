@@ -139,6 +139,13 @@
     <string name="desc_connect_internet_recipe">Please connect to the internet to view and update your recipes.</string>
     <string name="desc_connect_internet_profile">Please connect to the internet to update your profile.</string>
     <string name="desc_connect_internet_password">Please connect to the internet to change your password.</string>
+    <string name="desc_connect_internet_follow">No internet connection. Please check your network to follow/unfollow.</string>
+    <string name="desc_connect_internet_follow_request">Please connect to the internet to manage follow requests.</string>
+    <string name="follow_request_sent">Follow request sent!</string>
+    <string name="follow_request_cancelled">Follow request cancelled!</string>
+    <string name="unfollowed_user">Unfollowed user!</string>
+    <string name="follow_request_accepted">Follow request accepted!</string>
+    <string name="follow_request_rejected">Follow request rejected!</string>
     <string name="label_loading_plans">Loading plans…</string>
 
     <!-- Meal Sections Categories -->

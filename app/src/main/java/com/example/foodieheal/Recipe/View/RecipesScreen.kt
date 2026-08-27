@@ -19,6 +19,8 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
@@ -51,7 +53,10 @@ fun RecipesScreen(
     authViewModel: AuthViewModel
 ) {
     val selectedTab = viewModel.activeTab
-    val tabs = listOf("Popular", "My Recipes", "Bookmarks")
+    // 🌟 3 Main Tabs to keep it from looking "scratchy"
+    val tabs = listOf("Popular", "My Recipes", "Favorites")
+    var showFollowingFeed by remember { mutableStateOf(true) } // Toggle between Following and Saved
+    
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
@@ -80,20 +85,29 @@ fun RecipesScreen(
 
     // 🌟 LOGIC: Filtering based on your instructions
     val currentDataList = when (selectedTab) {
-        // Tab 0: Popular -> Show ALL recipes for testing sync (Include mine)
+        // Tab 0: Popular -> Show ALL (Filtered later for Public only)
         0 -> viewModel.recipeList
         // Tab 1: My Recipes -> Created by ME
         1 -> viewModel.myRecipes
-        // Tab 2: Bookmarks -> Saved by ME
-        2 -> viewModel.bookmarkedRecipes
+        // Tab 2: Social -> Toggle between Following and Bookmarks
+        2 -> if (showFollowingFeed) viewModel.followingRecipes else viewModel.bookmarkedRecipes
         else -> emptyList()
     }
     
     val isLoading = viewModel.isLoading
     
-    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
+    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget, currentUserId) {
         derivedStateOf {
             currentDataList.filter { recipe ->
+                // 🌟 Visibility check for Popular tab
+                val isVisible = when {
+                    selectedTab != 0 -> true // Other tabs already represent filtered sets (My, Following, Bookmarks)
+                    recipe.author_id == currentUserId -> true // My recipes in popular are visible to me
+                    recipe.visibility == "public" -> true // Public is visible to everyone
+                    else -> false // Private/Followers only not shown in Popular to non-owners
+                }
+                if (!isVisible) return@filter false
+
                 val matchesSearch = recipe.recipeName.contains(searchQuery, ignoreCase = true) ||
                                     (recipe.authorName?.contains(searchQuery, ignoreCase = true) == true) ||
                                     (recipe.authorInfo?.name?.contains(searchQuery, ignoreCase = true) == true)
@@ -136,28 +150,31 @@ fun RecipesScreen(
 
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
+        val uid = authViewModel.currentUser?.id
         
         // 🌟 FIX: Always fetch Popular recipes even if not logged in yet
         if (selectedTab == 0 && viewModel.recipeList.isEmpty()) {
             viewModel.fetchAllRecipes()
         }
 
-        if (cid != null) {
-            // 🌟 FIX: Always refresh bookmarks if the owner has changed (Leon vs KK)
-            // We check if the current IDs in memory actually belong to the current user
-            viewModel.fetchBookmarkIds(cid)
+        if (cid != null && uid != null) {
+            // 🌟 FIX: Use UUID for bookmark sync to match Supabase schema
+            viewModel.fetchBookmarkIds(cid) 
             
             when (selectedTab) {
                 1 -> {
-                    // 🌟 FIX: Force fetch if current list belongs to someone else ( Leon vs KK bug)
-                    val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != cid }
-                    if (viewModel.myRecipes.isEmpty() || belongsToSomeoneElse) {
-                        viewModel.fetchMyRecipes(cid)
-                    }
+                     val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != cid }
+                        if (viewModel.myRecipes.isEmpty() || belongsToSomeoneElse) {
+                            viewModel.fetchMyRecipes(cid)
+                        }
                 }
                 2 -> {
-                    // 🌟 FIX: Force refresh from server whenever Bookmarks tab is selected
-                    viewModel.fetchBookmarkedRecipes(cid)
+                    if (showFollowingFeed) {
+                        viewModel.fetchFollowingRecipes(cid)
+                    } else {
+                        // 🌟 FIX: Use customId (cid) to match the Supabase table and local Room DB
+                        viewModel.fetchBookmarkedRecipes(cid)
+                    }
                 }
             }
         }
@@ -314,12 +331,44 @@ fun RecipesScreen(
 
             item(span = { GridItemSpan(2) }) {
                 Text(
-                    text = selectedCourse,
+                    text = if (selectedTab == 2) (if (showFollowingFeed) "Followed" else "Bookmarks") else selectedCourse,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+            }
+
+            // 🌟 PILL TOGGLE for Social Tab
+            if (selectedTab == 2) {
+                item(span = { GridItemSpan(2) }) {
+                    val followingBgColor by animateColorAsState(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
+                    val savedBgColor by animateColorAsState(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
+                    val followingTextColor by animateColorAsState(if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
+                    val savedTextColor by animateColorAsState(if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
+
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    ) {
+                        Row(modifier = Modifier.fillMaxSize().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(20.dp)).background(followingBgColor).clickable { showFollowingFeed = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Followed", color = followingTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                            Box(
+                                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(20.dp)).background(savedBgColor).clickable { showFollowingFeed = false },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Bookmarks", color = savedTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                        }
+                    }
+                }
             }
 
             if (isLoading && filteredRecipes.isEmpty()) {
@@ -328,8 +377,8 @@ fun RecipesScreen(
                         CircularProgressIndicator()
                     }
                 }
-            } else if (selectedTab == 2 && currentDataList.isEmpty()) {
-                // 🌟 Bookmarks Empty State (Matches Hiring Screen Style)
+            } else if (selectedTab == 2 && !showFollowingFeed && currentDataList.isEmpty()) {
+                // 🌟 Saved Empty State
                 item(span = { GridItemSpan(2) }) {
                     Column(
                         modifier = Modifier
@@ -381,7 +430,7 @@ fun RecipesScreen(
                         showMenu = selectedTab == 1,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                         onBookmarkClick = {
-                            // 🌟 FIX: Send the short customId instead of the long UUID
+                            // 🌟 FIX: Revert to customId (U001) as per Supabase table screenshot
                             authViewModel.currentUser?.customId?.let { cid ->
                                 recipe.recipe_id?.let { rid ->
                                     viewModel.toggleBookmark(cid, rid, recipe.recipeName)

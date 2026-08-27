@@ -20,6 +20,7 @@ data class RecipeEntity(
     val recipeImageUrl: String?,
     val ingredientsJson: String,
     val lastUpdated: String?, // 🌟 New column
+    val visibility: String = "public", // 🌟 New column
     val authorName: String? = null, // 🌟 Cache author info for offline
     val authorImageUrl: String? = null
 )
@@ -43,6 +44,7 @@ fun RecipeEntity.toDomain(json: kotlinx.serialization.json.Json): com.example.fo
             emptyList()
         },
         lastUpdated = this.lastUpdated,
+        visibility = this.visibility,
         authorName = this.authorName,
         authorImageUrl = this.authorImageUrl
     )
@@ -63,6 +65,9 @@ fun com.example.foodieheal.Recipe.Model.Recipe.toEntity(json: kotlinx.serializat
         recipeImageUrl = this.recipeImageUrl,
         ingredientsJson = json.encodeToString(this.ingredients),
         lastUpdated = this.lastUpdated,
+        visibility = this.visibility,
+        // 🌟 SAFETY: Prioritizes the direct authorName field (Supabase column), 
+        // falling back to authorInfo (Join result) to ensure offline visibility.
         authorName = this.authorInfo?.name ?: this.authorName,
         authorImageUrl = this.authorInfo?.profile_pic_url ?: this.authorImageUrl
     )

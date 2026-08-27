@@ -55,6 +55,7 @@ import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
 import com.example.foodieheal.hiring.components.ChefFilterState
 import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.User.viewModel.FollowViewModel
 import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlinx.coroutines.launch
 
@@ -65,9 +66,22 @@ fun ProfileScreen(
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
     chefRegisterViewModel: ChefRegisterViewModel,
-    bookmarkViewModel: BookmarkViewModel = viewModel()
+    bookmarkViewModel: BookmarkViewModel = viewModel(),
+    followViewModel: FollowViewModel = viewModel(),
+    targetCustomId: String? = null
 ) {
     val user = authViewModel.currentUser
+    
+    // 🌟 isVisitor Check: True only if we have a valid target ID that isn't ours or the nav placeholder
+    val isVisitor = targetCustomId != null && 
+                    targetCustomId != user?.customId && 
+                    targetCustomId != "{customId}"
+
+    val isMyProfile = !isVisitor
+    
+    // Use targetCustomId if visiting someone else, else use current user
+    val effectiveCustomId = if (isVisitor) targetCustomId else user?.customId
+    
     val primaryColor = MaterialTheme.colorScheme.primary
     val view = LocalView.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -97,6 +111,20 @@ fun ProfileScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        followViewModel.followEvents.collect { event ->
+            val message = when(event) {
+                FollowViewModel.FollowEvent.RequestSent -> view.context.getString(R.string.follow_request_sent)
+                FollowViewModel.FollowEvent.RequestCancelled -> view.context.getString(R.string.follow_request_cancelled)
+                FollowViewModel.FollowEvent.Unfollowed -> view.context.getString(R.string.unfollowed_user)
+                FollowViewModel.FollowEvent.RequestAccepted -> view.context.getString(R.string.follow_request_accepted)
+                FollowViewModel.FollowEvent.RequestRejected -> view.context.getString(R.string.follow_request_rejected)
+                FollowViewModel.FollowEvent.NoInternet -> view.context.getString(R.string.desc_connect_internet_follow)
+            }
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var showBigImage by remember { mutableStateOf(false) }
     
     // 🌟 State for the Delete Confirmation Dialog
@@ -105,6 +133,27 @@ fun ProfileScreen(
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
     var showChefBookmarks by remember { mutableStateOf(false) } // 🌟 Toggle between Recipes and Chefs
+    
+    val visitorProfile = remember { mutableStateOf<User?>(null) }
+
+    LaunchedEffect(targetCustomId) {
+        if (!isMyProfile && targetCustomId != null) {
+            val repo = com.example.foodieheal.User.Repo.UserRepository()
+            visitorProfile.value = repo.getUserByCustomId(targetCustomId)
+            
+            user?.customId?.let { myId ->
+                followViewModel.fetchFollowStatus(myId, targetCustomId)
+            }
+        }
+    }
+
+    LaunchedEffect(effectiveCustomId) {
+        effectiveCustomId?.let { cid ->
+            followViewModel.fetchFollowCounts(cid)
+        }
+    }
+
+    val displayUser = if (isMyProfile) user else visitorProfile.value
     
     var userRecipesSearchQuery by remember { mutableStateOf("") }
     var bookmarksSearchQuery by remember { mutableStateOf("") }
@@ -124,7 +173,9 @@ fun ProfileScreen(
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
 
-    val myRecipes = viewModel.myRecipes
+    val myRecipes = if (isMyProfile) viewModel.myRecipes else viewModel.myRecipes.filter { 
+        it.visibility == "public" || (it.visibility == "followers" && followViewModel.followStatus == "ACCEPTED")
+    }
     val bookmarkedRecipes = viewModel.bookmarkedRecipes
     val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
 
@@ -139,8 +190,8 @@ fun ProfileScreen(
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
-    LaunchedEffect(selectedMainTab, showChefBookmarks, user) {
-        val cid = user?.customId ?: return@LaunchedEffect
+    LaunchedEffect(selectedMainTab, showChefBookmarks, effectiveCustomId) {
+        val cid = effectiveCustomId ?: return@LaunchedEffect
         
         // Reset filters when switching tabs
         userRecipesSearchQuery = ""
@@ -157,13 +208,14 @@ fun ProfileScreen(
             if (!showChefBookmarks) {
                 viewModel.fetchBookmarkedRecipes(cid)
             } else {
-                user.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
+                displayUser?.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
             }
         }
     }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = isMyProfile,
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(300.dp),
@@ -232,6 +284,12 @@ fun ProfileScreen(
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
                     }
+                    DrawerItem("Follow Requests", R.drawable.ic_hiring) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.FollowRequests.route)
+                        }
+                    }
                     DrawerItem("My Wallet", R.drawable.wallet) {
                         scope.launch {
                             drawerState.close()
@@ -288,12 +346,16 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_hamburger_menu),
-                            contentDescription = "Menu",
+                            painter = painterResource(id = if (isMyProfile) R.drawable.ic_hamburger_menu else R.drawable.ic_arrowback),
+                            contentDescription = if (isMyProfile) "Menu" else "Back",
                             tint = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Icon
                             modifier = Modifier.size(24.dp).clickable {
-                                scope.launch {
-                                    drawerState.open()
+                                if (isMyProfile) {
+                                    scope.launch {
+                                        drawerState.open()
+                                    }
+                                } else {
+                                    navController.popBackStack()
                                 }
                             }
                         )
@@ -320,7 +382,7 @@ fun ProfileScreen(
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) // 🌟 Themed Color
                         ) {
-                            val profilePicUrl = user?.profilePicUrl ?: ""
+                            val profilePicUrl = displayUser?.profilePicUrl ?: ""
                             val bitmap = remember(profilePicUrl) {
                                 if (profilePicUrl.isNotEmpty() && !profilePicUrl.startsWith("http")) {
                                     try {
@@ -347,7 +409,7 @@ fun ProfileScreen(
                             } else {
                                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                     Text(
-                                        text = user?.name?.take(1)?.uppercase() ?: "?",
+                                        text = if (displayUser == null && isVisitor) "?" else (displayUser?.name?.take(1)?.uppercase() ?: "?"),
                                         color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold
@@ -358,21 +420,96 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.width(20.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = user?.name ?: "",
+                                text = if (displayUser == null && isVisitor) "Offline User" else (displayUser?.name ?: ""),
                                 color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            if (!user?.description.isNullOrEmpty()) {
+                            if (displayUser != null && !displayUser.description.isNullOrEmpty()) {
                                 Text(
-                                    text = user?.description!!,
+                                    text = displayUser.description!!,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f), // 🌟 Themed Text
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
+                            } else if (displayUser == null && isVisitor) {
+                                Text(
+                                    text = "Cannot load profile while offline.",
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                            
+                            Row(modifier = Modifier.padding(top = 12.dp)) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.clickable { 
+                                        effectiveCustomId?.let { cid ->
+                                            navController.navigate(Screen.FollowList.createRoute(cid, "followers"))
+                                        }
+                                    }
+                                ) {
+                                    Text(
+                                        text = "${followViewModel.followerCount}",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Followers",
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(24.dp))
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.clickable { 
+                                        effectiveCustomId?.let { cid ->
+                                            navController.navigate(Screen.FollowList.createRoute(cid, "following"))
+                                        }
+                                    }
+                                ) {
+                                    Text(
+                                        text = "${followViewModel.followingCount}",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Following",
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+
+                            if (isVisitor && user != null && targetCustomId != null) {
+                                val status = followViewModel.followStatus
+                                val buttonText = when (status) {
+                                    null -> "Follow"
+                                    "PENDING" -> "Request Sent"
+                                    "ACCEPTED" -> "Unfollow"
+                                    else -> "Follow"
+                                }
+                                Button(
+                                    onClick = {
+                                        user.customId?.let { myId ->
+                                            followViewModel.toggleFollow(myId, targetCustomId)
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                                    modifier = Modifier.padding(top = 12.dp).height(32.dp)
+                                ) {
+                                    Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -396,23 +533,27 @@ fun ProfileScreen(
                         containerColor = MaterialTheme.colorScheme.surface, // 🌟 Themed Background
                         contentColor = MaterialTheme.colorScheme.primary,
                         indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedMainTab]),
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            if (selectedMainTab < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier.tabIndicatorOffset(tabPositions[selectedMainTab]),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         },
                         divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) } // 🌟 Themed Divider
                     ) {
                         Tab(
                             selected = selectedMainTab == 0,
                             onClick = { selectedMainTab = 0 },
-                            text = { Text("User Recipes", fontWeight = FontWeight.Bold) }
+                            text = { Text(if (isMyProfile) "User Recipes" else "Recipes", fontWeight = FontWeight.Bold) }
                         )
-                        Tab(
-                            selected = selectedMainTab == 1,
-                            onClick = { selectedMainTab = 1 },
-                            text = { Text("Bookmarks", fontWeight = FontWeight.Bold) }
-                        )
+                        if (isMyProfile) {
+                            Tab(
+                                selected = selectedMainTab == 1,
+                                onClick = { selectedMainTab = 1 },
+                                text = { Text("Bookmarks", fontWeight = FontWeight.Bold) }
+                            )
+                        }
                     }
 
                     LazyVerticalGrid(
@@ -661,7 +802,7 @@ fun ProfileScreen(
                                         RecipeCardItem(
                                             recipe = recipe,
                                             currentUser = user, // 🌟 Pass current user for card name sync
-                                            showMenu = true,
+                                            showMenu = isMyProfile,
                                             isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                             onBookmarkClick = {
                                                 user?.customId?.let { cid ->
@@ -726,12 +867,12 @@ fun ProfileScreen(
                                                 currentUser = user, // 🌟 Pass current user for card name sync
                                                 isBookmarked = true,
                                                 onBookmarkClick = {
-                                                    user?.customId?.let { cid ->
-                                                        recipe.recipe_id?.let { rid ->
-                                                            viewModel.toggleBookmark(cid, rid, recipe.recipeName)
-                                                        }
+                                                user?.customId?.let { cid ->
+                                                    recipe.recipe_id?.let { rid ->
+                                                        viewModel.toggleBookmark(cid, rid, recipe.recipeName)
                                                     }
-                                                },
+                                                }
+                                            },
                                                 onClick = {
                                                     recipe.recipe_id?.let { id ->
                                                         navController.navigate(Screen.RecipeDetails.createRoute(id))

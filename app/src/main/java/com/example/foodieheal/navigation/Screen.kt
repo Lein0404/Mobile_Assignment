@@ -37,7 +37,15 @@ sealed class Screen(val route: String) {
     }
 
     object Hiring : Screen("hiring")
-    object Profile : Screen("profile")
+    object Profile : Screen("profile?customId={customId}") {
+        fun createRoute(customId: String? = null): String {
+            return if (customId != null) "profile?customId=$customId" else "profile"
+        }
+    }
+    object FollowRequests : Screen("follow_requests")
+    object FollowList : Screen("follow_list/{userId}/{type}") {
+        fun createRoute(userId: String, type: String) = "follow_list/$userId/$type"
+    }
     object AddRecipe : Screen("add_recipe")
     object EditRecipe : Screen("edit_recipe/{recipeId}") {
         fun createRoute(recipeId: String): String = "edit_recipe/$recipeId"

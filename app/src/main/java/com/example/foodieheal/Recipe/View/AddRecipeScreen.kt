@@ -60,6 +60,8 @@ fun AddRecipeScreen(
     var recipeName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("Breakfast") }
+    var visibility by remember { mutableStateOf("public") }
+    val visibilityOptions = listOf("public", "followers", "private")
     var totalTime by remember { mutableStateOf("") }
     var cookingSkill by remember { mutableStateOf("Beginner") }
     var budget by remember { mutableStateOf("0 - 10") }
@@ -350,6 +352,32 @@ fun AddRecipeScreen(
                     .bringIntoViewRequester(bringIntoViewRequester)
             )
 
+            LabelText("Visibility")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                visibilityOptions.forEach { option ->
+                    FilterChip(
+                        selected = visibility == option,
+                        onClick = { visibility = option },
+                        label = { 
+                            Text(
+                                text = option.replaceFirstChar { it.uppercase() },
+                                modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding for bigger chip
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            ) 
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp), // 🌟 Set height explicitly
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             if (viewModel.errorMessage != null) {
@@ -395,9 +423,12 @@ fun AddRecipeScreen(
                         recipe_id = nextId,
                         // 🌟 FIX: Use the short customId (U001) to match your search logic
                         author_id = authViewModel.currentUser?.customId,
+                        authorName = authViewModel.currentUser?.name, // 🌟 Save author info for offline
+                        authorImageUrl = authViewModel.currentUser?.profilePicUrl,
                         recipeName = recipeName,
                         recipeDescription = description,
                         recipeCourse = course,
+                        visibility = visibility,
                         time = totalTime.toIntOrNull() ?: 0,
                         calories = totalCalories,
                         cookingSkill = cookingSkill,

@@ -15,5 +15,8 @@ data class User(
     @SerialName("height") val height: Double? = 0.0,
     @SerialName("age") val age: Int? = 0,
     @SerialName("gender") val gender: String? = "",
-    @SerialName("bmi") val bmi: Double? = 0.0
+    @SerialName("bmi") val bmi: Double? = 0.0,
+    @SerialName("is_private") val isPrivate: Boolean? = false,
+    @SerialName("follower_count") val followerCount: Int? = 0,
+    @SerialName("following_count") val followingCount: Int? = 0
 )
