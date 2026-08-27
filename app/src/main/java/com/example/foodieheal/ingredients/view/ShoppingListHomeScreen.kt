@@ -50,11 +50,8 @@ fun ShoppingListHomeScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val homeState = uiState.homeState
     val context = LocalContext.current
-    var newListNameInput by remember { mutableStateOf("") }
-
-    var targetListForDefault by remember { mutableStateOf<ShoppingList?>(null) }
-    var showChangeDefaultDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -112,7 +109,7 @@ fun ShoppingListHomeScreen(
 
             // ──────────────── Search Bar ────────────────
             OutlinedTextField(
-                value = uiState.listSearchQuery,
+                value = homeState.searchQuery,
                 onValueChange = { viewModel.onListSearchQueryChange(it) },
                 placeholder = {
                     Text(
@@ -146,7 +143,7 @@ fun ShoppingListHomeScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.shoppingLists.isEmpty()) {
+            } else if (homeState.shoppingLists.isEmpty()) {
                 // Empty state
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
@@ -170,7 +167,7 @@ fun ShoppingListHomeScreen(
                         }
                     }
                 }
-            } else if (uiState.filteredShoppingLists.isEmpty()) {
+            } else if (homeState.filteredShoppingLists.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = "No shopping lists match your search.",
@@ -184,7 +181,7 @@ fun ShoppingListHomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
-                    items(uiState.filteredShoppingLists, key = { it.shoppingListId }) { list ->
+                    items(homeState.filteredShoppingLists, key = { it.shoppingListId }) { list ->
                         ShoppingListCard(
                             shoppingList = list,
                             onClick = {
@@ -192,10 +189,9 @@ fun ShoppingListHomeScreen(
                                 navController.navigate(Screen.ShoppingList.createRoute(list.shoppingListId))
                             },
                             onSetDefault = {
-                                val currentDefault = uiState.shoppingLists.find { it.isDefault }
+                                val currentDefault = homeState.shoppingLists.find { it.isDefault }
                                 if (currentDefault != null && currentDefault.shoppingListId != list.shoppingListId) {
-                                    targetListForDefault = list
-                                    showChangeDefaultDialog = true
+                                    viewModel.onShowHomeChangeDefaultDialog(true, list)
                                 } else {
                                     viewModel.setDefaultShoppingList(list.shoppingListId)
                                     Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
@@ -206,7 +202,7 @@ fun ShoppingListHomeScreen(
                                 Toast.makeText(context, "Shopping list deselected as default", Toast.LENGTH_SHORT).show()
                             },
                             onDelete = {
-                                viewModel.onShowDeleteListDialog(true, list.shoppingListId)
+                                viewModel.onShowHomeDeleteListDialog(true, list.shoppingListId)
                             }
                         )
                     }
@@ -216,11 +212,10 @@ fun ShoppingListHomeScreen(
     }
 
     // ──────────────── New Shopping List Dialog (Image 1) ────────────────
-    if (uiState.showCreateListDialog) {
+    if (homeState.showCreateDialog) {
         AlertDialog(
             onDismissRequest = {
                 viewModel.onShowCreateListDialog(false)
-                newListNameInput = ""
             },
             title = {
                 Text(
@@ -233,8 +228,8 @@ fun ShoppingListHomeScreen(
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = newListNameInput,
-                        onValueChange = { newListNameInput = it },
+                        value = homeState.newListNameInput,
+                        onValueChange = { viewModel.updateNewListName(it) },
                         placeholder = {
                             Text(
                                 text = "Name",
@@ -256,11 +251,9 @@ fun ShoppingListHomeScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    val name = newListNameInput.trim()
-                    viewModel.createNewShoppingList(name) { newListId ->
+                    viewModel.createNewShoppingList(homeState.newListNameInput) { newListId ->
                         navController.navigate(Screen.ShoppingList.createRoute(newListId))
                     }
-                    newListNameInput = ""
                 }) {
                     Text(
                         text = "Add",
@@ -273,7 +266,6 @@ fun ShoppingListHomeScreen(
             dismissButton = {
                 TextButton(onClick = {
                     viewModel.onShowCreateListDialog(false)
-                    newListNameInput = ""
                 }) {
                     Text(
                         text = "Cancel",
@@ -288,32 +280,29 @@ fun ShoppingListHomeScreen(
     }
 
     // ──────────────── Change Default Confirmation Dialog ────────────────
-    if (showChangeDefaultDialog && targetListForDefault != null) {
-        val currentDefault = uiState.shoppingLists.find { it.isDefault }
+    if (homeState.showChangeDefaultDialog && homeState.targetListForDefault != null) {
+        val currentDefault = homeState.shoppingLists.find { it.isDefault }
         val currentDefaultName = currentDefault?.title?.ifEmpty { currentDefault.shoppingListId } ?: ""
         AlertDialog(
             onDismissRequest = {
-                showChangeDefaultDialog = false
-                targetListForDefault = null
+                viewModel.onShowHomeChangeDefaultDialog(false)
             },
             title = { Text("Change Default Shopping List") },
             text = { Text("A shopping list ($currentDefaultName) has already been set as default. Change to this shopping list instead?") },
             confirmButton = {
                 TextButton(onClick = {
-                    targetListForDefault?.let {
+                    homeState.targetListForDefault?.let {
                         viewModel.setDefaultShoppingList(it.shoppingListId)
                         Toast.makeText(context, "Shopping list set as default", Toast.LENGTH_SHORT).show()
                     }
-                    showChangeDefaultDialog = false
-                    targetListForDefault = null
+                    viewModel.onShowHomeChangeDefaultDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showChangeDefaultDialog = false
-                    targetListForDefault = null
+                    viewModel.onShowHomeChangeDefaultDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -322,11 +311,11 @@ fun ShoppingListHomeScreen(
     }
 
     // ──────────────── Delete Confirmation Dialog ────────────────
-    if (uiState.showDeleteListDialog) {
-        val targetId = uiState.listToDeleteId ?: ""
-        val targetList = uiState.shoppingLists.find { it.shoppingListId == targetId }
+    if (homeState.showDeleteDialog) {
+        val targetId = homeState.listToDeleteId ?: ""
+        val targetList = homeState.shoppingLists.find { it.shoppingListId == targetId }
         AlertDialog(
-            onDismissRequest = { viewModel.onShowDeleteListDialog(false) },
+            onDismissRequest = { viewModel.onShowHomeDeleteListDialog(false) },
             title = { Text("Delete Shopping List") },
             text = { Text("Are you sure you want to delete \"${targetList?.title?.ifEmpty { targetId } ?: targetId}\"?") },
             confirmButton = {
@@ -338,7 +327,7 @@ fun ShoppingListHomeScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.onShowDeleteListDialog(false) }) {
+                TextButton(onClick = { viewModel.onShowHomeDeleteListDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

@@ -63,6 +63,7 @@ fun ShoppingListScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val detailState = uiState.detailState
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
@@ -75,30 +76,21 @@ fun ShoppingListScreen(
     var showTopMenu by remember { mutableStateOf(false) }
     var showFabMenu by remember { mutableStateOf(false) }
 
-    val activeList = uiState.activeShoppingList
-    val checkedCount = uiState.items.count { it.isChecked }
-    val totalCount = uiState.items.size
+    val activeList = detailState.activeShoppingList
+    val checkedCount = detailState.items.count { it.isChecked }
 
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
     val formattedUpdated = remember(activeList?.lastUpdated) {
         if (activeList != null) dateFormat.format(Date(activeList.lastUpdated)) else ""
     }
 
-    // ──────────────── Editable Title State ────────────────
     val currentSavedTitle = activeList?.title?.ifEmpty { activeList.shoppingListId } ?: ""
-    var editableTitle by remember(activeList?.shoppingListId, activeList?.title) {
-        mutableStateOf(currentSavedTitle)
-    }
-
     val hasUnsavedChanges = activeList != null &&
-        editableTitle.trim().isNotEmpty() &&
-        editableTitle.trim() != currentSavedTitle
-
-    var showUnsavedChangesDialog by remember { mutableStateOf(false) }
-    var showChangeDefaultDialog by remember { mutableStateOf(false) }
+        detailState.editableTitle.trim().isNotEmpty() &&
+        detailState.editableTitle.trim() != currentSavedTitle
 
     fun saveTitleIfChanged() {
-        val trimmed = editableTitle.trim()
+        val trimmed = detailState.editableTitle.trim()
         if (activeList != null && trimmed.isNotEmpty() && trimmed != currentSavedTitle) {
             viewModel.updateShoppingListTitle(activeList.shoppingListId, trimmed)
         }
@@ -106,7 +98,7 @@ fun ShoppingListScreen(
 
     fun handleBack() {
         if (hasUnsavedChanges) {
-            showUnsavedChangesDialog = true
+            viewModel.onShowUnsavedChangesDialog(true)
         } else {
             navController.popBackStack()
         }
@@ -123,8 +115,8 @@ fun ShoppingListScreen(
                 title = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         BasicTextField(
-                            value = editableTitle,
-                            onValueChange = { editableTitle = it },
+                            value = detailState.editableTitle,
+                            onValueChange = { viewModel.updateEditableTitle(it) },
                             singleLine = true,
                             textStyle = TextStyle(
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -197,8 +189,8 @@ fun ShoppingListScreen(
                                     showTopMenu = false
                                     activeList?.let {
                                         val currentShoppingList = it.copy(
-                                            title = editableTitle.trim().ifEmpty { it.title },
-                                            items = uiState.items
+                                            title = detailState.editableTitle.trim().ifEmpty { it.title },
+                                            items = detailState.items
                                         )
                                         ShoppingListShareHelper.shareShoppingList(context, currentShoppingList)
                                     }
@@ -224,8 +216,8 @@ fun ShoppingListScreen(
                                     showTopMenu = false
                                     activeList?.let {
                                         val currentShoppingList = it.copy(
-                                            title = editableTitle.trim().ifEmpty { it.title },
-                                            items = uiState.items
+                                            title = detailState.editableTitle.trim().ifEmpty { it.title },
+                                            items = detailState.items
                                         )
                                         ShoppingListShareHelper.copyShoppingListToClipboard(context, currentShoppingList)
                                     }
@@ -277,9 +269,9 @@ fun ShoppingListScreen(
                                             viewModel.deselectDefaultShoppingList(currentList.shoppingListId)
                                             Toast.makeText(context, "Shopping list deselected as default", Toast.LENGTH_SHORT).show()
                                         } else {
-                                            val currentDefault = uiState.shoppingLists.find { it.isDefault }
+                                            val currentDefault = uiState.homeState.shoppingLists.find { it.isDefault }
                                             if (currentDefault != null && currentDefault.shoppingListId != currentList.shoppingListId) {
-                                                showChangeDefaultDialog = true
+                                                viewModel.onShowDetailChangeDefaultDialog(true)
                                             } else {
                                                 viewModel.setDefaultShoppingList(currentList.shoppingListId)
                                                 Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
@@ -306,7 +298,7 @@ fun ShoppingListScreen(
                                 },
                                 onClick = {
                                     showTopMenu = false
-                                    viewModel.onShowDeleteListDialog(true, activeList?.shoppingListId)
+                                    viewModel.onShowDetailDeleteDialog(true)
                                 }
                             )
                         }
@@ -386,7 +378,7 @@ fun ShoppingListScreen(
                             },
                             onClick = {
                                 showFabMenu = false
-                                if (uiState.items.isNotEmpty()) {
+                                if (detailState.items.isNotEmpty()) {
                                     viewModel.onShowClearAllDialog(true)
                                 } else {
                                     Toast.makeText(context, R.string.shopping_list_already_empty, Toast.LENGTH_SHORT).show()
@@ -413,12 +405,12 @@ fun ShoppingListScreen(
         ) {
             // ──────────────── Search & Category Filters ────────────────
             IngredientSearchAndFilter(
-                searchQuery = uiState.itemSearchQuery,
+                searchQuery = detailState.searchQuery,
                 onSearchQueryChange = { viewModel.onItemSearchQueryChange(it) },
                 searchPlaceholder = "Search items here",
-                selectedCategories = uiState.selectedCategories,
+                selectedCategories = detailState.selectedCategories,
                 onToggleCategory = { viewModel.toggleCategory(it) },
-                isExpanded = uiState.isCategoriesExpanded,
+                isExpanded = detailState.isCategoriesExpanded,
                 onExpandedChange = { viewModel.toggleCategoriesExpanded() }
             )
 
@@ -427,7 +419,7 @@ fun ShoppingListScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.items.isEmpty()) {
+            } else if (detailState.items.isEmpty()) {
                 // Empty state for items
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
@@ -455,7 +447,7 @@ fun ShoppingListScreen(
                         }
                     }
                 }
-            } else if (uiState.filteredItems.isEmpty()) {
+            } else if (detailState.filteredItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.shopping_list_no_match),
@@ -464,7 +456,7 @@ fun ShoppingListScreen(
                     )
                 }
             } else {
-                val grouped = uiState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
+                val grouped = detailState.filteredItems.groupBy { it.category ?: IngredientCategory.OTHERS }
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize(),
@@ -498,15 +490,15 @@ fun ShoppingListScreen(
     }
 
     // ──────────────── Unsaved Changes Dialog ────────────────
-    if (showUnsavedChangesDialog) {
+    if (detailState.showUnsavedChangesDialog) {
         AlertDialog(
-            onDismissRequest = { showUnsavedChangesDialog = false },
+            onDismissRequest = { viewModel.onShowUnsavedChangesDialog(false) },
             title = { Text("Save Changes?") },
             text = { Text("Do you want to save changes to the shopping list title before leaving?") },
             confirmButton = {
                 TextButton(onClick = {
                     saveTitleIfChanged()
-                    showUnsavedChangesDialog = false
+                    viewModel.onShowUnsavedChangesDialog(false)
                     navController.popBackStack()
                 }) {
                     Text("Save", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
@@ -514,8 +506,8 @@ fun ShoppingListScreen(
             },
             dismissButton = {
                 TextButton(onClick = {
-                    editableTitle = currentSavedTitle
-                    showUnsavedChangesDialog = false
+                    viewModel.updateEditableTitle(currentSavedTitle)
+                    viewModel.onShowUnsavedChangesDialog(false)
                     navController.popBackStack()
                 }) {
                     Text("Discard", color = MaterialTheme.colorScheme.error)
@@ -525,24 +517,24 @@ fun ShoppingListScreen(
     }
 
     // ──────────────── Change Default Confirmation Dialog ────────────────
-    if (showChangeDefaultDialog && activeList != null) {
-        val currentDefault = uiState.shoppingLists.find { it.isDefault }
+    if (detailState.showChangeDefaultDialog && activeList != null) {
+        val currentDefault = uiState.homeState.shoppingLists.find { it.isDefault }
         val currentDefaultName = currentDefault?.title?.ifEmpty { currentDefault.shoppingListId } ?: ""
         AlertDialog(
-            onDismissRequest = { showChangeDefaultDialog = false },
+            onDismissRequest = { viewModel.onShowDetailChangeDefaultDialog(false) },
             title = { Text("Change Default Shopping List") },
             text = { Text("A shopping list ($currentDefaultName) has already been set as default. Change to this shopping list instead?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.setDefaultShoppingList(activeList.shoppingListId)
-                    Toast.makeText(context, "Set as default shopping list", Toast.LENGTH_SHORT).show()
-                    showChangeDefaultDialog = false
+                    Toast.makeText(context, "Shopping list set as default", Toast.LENGTH_SHORT).show()
+                    viewModel.onShowDetailChangeDefaultDialog(false)
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showChangeDefaultDialog = false }) {
+                TextButton(onClick = { viewModel.onShowDetailChangeDefaultDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -550,25 +542,25 @@ fun ShoppingListScreen(
     }
 
     // ──────────────── Delete Confirmation Dialog ────────────────
-    if (uiState.showDeleteListDialog) {
-        val targetId = uiState.listToDeleteId ?: activeList?.shoppingListId ?: ""
-        val targetList = uiState.shoppingLists.find { it.shoppingListId == targetId } ?: activeList
+    if (detailState.showDeleteDialog) {
+        val targetId = detailState.selectedShoppingListId ?: ""
+        val targetList = activeList
         AlertDialog(
-            onDismissRequest = { viewModel.onShowDeleteListDialog(false) },
+            onDismissRequest = { viewModel.onShowDetailDeleteDialog(false) },
             title = { Text("Delete Shopping List") },
             text = { Text("Are you sure you want to delete \"${targetList?.title?.ifEmpty { targetId } ?: targetId}\"?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteShoppingList(targetId)
                     Toast.makeText(context, "Shopping list deleted", Toast.LENGTH_SHORT).show()
-                    viewModel.onShowDeleteListDialog(false)
+                    viewModel.onShowDetailDeleteDialog(false)
                     navController.popBackStack()
                 }) {
                     Text(stringResource(R.string.dialog_yes), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.onShowDeleteListDialog(false) }) {
+                TextButton(onClick = { viewModel.onShowDetailDeleteDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -576,7 +568,7 @@ fun ShoppingListScreen(
     }
 
     // ──────────────── Clear Confirmation Dialogs ────────────────
-    if (uiState.showClearCheckedDialog) {
+    if (detailState.showClearCheckedDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.onShowClearCheckedDialog(false) },
             title = { Text(stringResource(R.string.shopping_list_clear_checked_dialog_title)) },
@@ -599,7 +591,7 @@ fun ShoppingListScreen(
         )
     }
 
-    if (uiState.showClearAllDialog) {
+    if (detailState.showClearAllDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.onShowClearAllDialog(false) },
             title = { Text(stringResource(R.string.shopping_list_clear_all_dialog_title)) },

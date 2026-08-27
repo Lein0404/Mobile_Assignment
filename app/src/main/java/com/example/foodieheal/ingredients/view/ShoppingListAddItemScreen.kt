@@ -46,10 +46,8 @@ fun ShoppingListAddItemScreen(
 ) {
     val uiState by ingredientsViewModel.uiState.collectAsState()
     val shoppingUiState by shoppingListViewModel.uiState.collectAsState()
+    val addItemState = shoppingUiState.addItemState
     val context = LocalContext.current
-    
-    // Track selected ingredients
-    val selectedIngredients = remember { mutableStateListOf<IngredientItem>() }
 
     Scaffold(
         topBar = {
@@ -125,16 +123,12 @@ fun ShoppingListAddItemScreen(
                                 )
                             }
                             items(items) { item ->
-                                val isSelected = selectedIngredients.any { it.ingredient.ingredientId == item.ingredient.ingredientId }
+                                val isSelected = addItemState.selectedIngredients.any { it.ingredient.ingredientId == item.ingredient.ingredientId }
                                 SelectableIngredientCard(
                                     item = item,
                                     isSelected = isSelected,
                                     onToggleSelection = {
-                                        if (isSelected) {
-                                            selectedIngredients.removeAll { it.ingredient.ingredientId == item.ingredient.ingredientId }
-                                        } else {
-                                            selectedIngredients.add(item)
-                                        }
+                                        shoppingListViewModel.toggleIngredientSelection(item)
                                     }
                                 )
                             }
@@ -151,19 +145,20 @@ fun ShoppingListAddItemScreen(
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedIngredients.size)
+                val selectedCount = addItemState.selectedIngredients.size
+                val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedCount)
                 Button(
                     onClick = {
-                        if (selectedIngredients.isNotEmpty()) {
+                        if (addItemState.selectedIngredients.isNotEmpty()) {
                             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
                             if (userId.isEmpty()) return@Button
 
                             val resolvedListId = targetShoppingListId
-                                ?: shoppingUiState.selectedShoppingListId
-                                ?: shoppingUiState.shoppingLists.firstOrNull()?.shoppingListId
+                                ?: shoppingUiState.detailState.selectedShoppingListId
+                                ?: shoppingUiState.homeState.shoppingLists.firstOrNull()?.shoppingListId
 
                             if (resolvedListId != null) {
-                                val entities = selectedIngredients.map { item ->
+                                val entities = addItemState.selectedIngredients.map { item ->
                                     ShoppingListItemEntity(
                                         shoppingListId = resolvedListId,
                                         userId = userId,
@@ -174,12 +169,13 @@ fun ShoppingListAddItemScreen(
                                     )
                                 }
                                 shoppingListViewModel.addItems(resolvedListId, entities)
+                                shoppingListViewModel.clearAddItemSelection()
                                 Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
                             } else {
                                 // Create new shopping list first, then add items
                                 shoppingListViewModel.createNewShoppingList { newListId ->
-                                    val entities = selectedIngredients.map { item ->
+                                    val entities = addItemState.selectedIngredients.map { item ->
                                         ShoppingListItemEntity(
                                             shoppingListId = newListId,
                                             userId = userId,
@@ -190,6 +186,7 @@ fun ShoppingListAddItemScreen(
                                         )
                                     }
                                     shoppingListViewModel.addItems(newListId, entities)
+                                    shoppingListViewModel.clearAddItemSelection()
                                     Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
                                 }
@@ -205,10 +202,10 @@ fun ShoppingListAddItemScreen(
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     ),
-                    enabled = selectedIngredients.isNotEmpty()
+                    enabled = addItemState.selectedIngredients.isNotEmpty()
                 ) {
                     Text(
-                        text = stringResource(R.string.add_shopping_item_button, selectedIngredients.size),
+                        text = stringResource(R.string.add_shopping_item_button, selectedCount),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }

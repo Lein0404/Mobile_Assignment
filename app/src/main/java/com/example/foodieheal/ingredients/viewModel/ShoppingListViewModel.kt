@@ -6,30 +6,64 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.local.IngredientsEntity
 import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
+import com.example.foodieheal.ingredients.local.toEntity
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.repo.ShoppingListRepository
+import com.example.foodieheal.ingredients.shared.ShoppingListShareHelper
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+/**
+ * `ShoppingListUiState` is split (modularized) from a single "God State"
+ * into 4 sub-data classes which handles the states for each of the 4 Shopping List screens
+ */
 data class ShoppingListUiState(
+    val isLoading: Boolean = false,
+    val homeState: ShoppingListHomeUiState = ShoppingListHomeUiState(),
+    val detailState: ShoppingListDetailUiState = ShoppingListDetailUiState(),
+    val addItemState: ShoppingListAddItemUiState = ShoppingListAddItemUiState(),
+    val addFromState: ShoppingListAddFromUiState = ShoppingListAddFromUiState()
+)
+
+data class ShoppingListHomeUiState(
     val shoppingLists: List<ShoppingList> = emptyList(),
     val filteredShoppingLists: List<ShoppingList> = emptyList(),
-    val listSearchQuery: String = "",
+    val searchQuery: String = "",
+    val showCreateDialog: Boolean = false,
+    val newListNameInput: String = "",
+    val showDeleteDialog: Boolean = false,
+    val listToDeleteId: String? = null,
+    val showChangeDefaultDialog: Boolean = false,
+    val targetListForDefault: ShoppingList? = null
+)
+
+data class ShoppingListDetailUiState(
     val selectedShoppingListId: String? = null,
     val activeShoppingList: ShoppingList? = null,
-    val itemSearchQuery: String = "",
-    val selectedCategories: Set<IngredientCategory> = emptySet(),
-    val isCategoriesExpanded: Boolean = false,
     val items: List<ShoppingListItem> = emptyList(),
     val filteredItems: List<ShoppingListItem> = emptyList(),
-    val isLoading: Boolean = false,
-    val showCreateListDialog: Boolean = false,
-    val showDeleteListDialog: Boolean = false,
-    val listToDeleteId: String? = null,
+    val searchQuery: String = "",
+    val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val isCategoriesExpanded: Boolean = false,
+    val editableTitle: String = "",
+    val showUnsavedChangesDialog: Boolean = false,
+    val showDeleteDialog: Boolean = false,
     val showClearCheckedDialog: Boolean = false,
     val showClearAllDialog: Boolean = false,
+    val showChangeDefaultDialog: Boolean = false
+)
+
+data class ShoppingListAddItemUiState(
+    val selectedIngredients: List<IngredientItem> = emptyList()
+)
+
+data class ShoppingListAddFromUiState(
+    val parsedIngredients: List<IngredientsEntity> = emptyList(),
+    val selectedIngredientIds: Set<String> = emptySet(),
+    val isParsed: Boolean = false,
+    val selectedListId: String = ""
 )
 
 class ShoppingListViewModel(
@@ -54,18 +88,23 @@ class ShoppingListViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             shoppingRepo.getShoppingLists(currentUserId).collectLatest { lists ->
-                val currentSelectedId = _uiState.value.selectedShoppingListId
+                val currentSelectedId = _uiState.value.detailState.selectedShoppingListId
                 val activeList = lists.find { it.shoppingListId == currentSelectedId }
                     ?: lists.firstOrNull()
                 val items = activeList?.items ?: emptyList()
 
                 _uiState.update { state ->
                     state.copy(
-                        shoppingLists = lists,
-                        selectedShoppingListId = activeList?.shoppingListId,
-                        activeShoppingList = activeList,
-                        items = items,
-                        isLoading = false
+                        isLoading = false,
+                        homeState = state.homeState.copy(
+                            shoppingLists = lists
+                        ),
+                        detailState = state.detailState.copy(
+                            selectedShoppingListId = activeList?.shoppingListId,
+                            activeShoppingList = activeList,
+                            items = items,
+                            editableTitle = activeList?.title?.ifEmpty { activeList.shoppingListId } ?: ""
+                        )
                     )
                 }
                 applyListFilters()
@@ -74,39 +113,42 @@ class ShoppingListViewModel(
         }
     }
 
-    // ──────────────── Shopping Lists Management ────────────────
+    // ──────────────── Shopping Lists Management (Home Screen) ────────────────
 
     fun onListSearchQueryChange(query: String) {
-        _uiState.update { it.copy(listSearchQuery = query) }
+        _uiState.update { it.copy(homeState = it.homeState.copy(searchQuery = query)) }
         applyListFilters()
     }
 
     private fun applyListFilters() {
         _uiState.update { state ->
-            val query = state.listSearchQuery.trim()
+            val query = state.homeState.searchQuery.trim()
             val filtered = if (query.isEmpty()) {
-                state.shoppingLists
+                state.homeState.shoppingLists
             } else {
-                state.shoppingLists.filter {
+                state.homeState.shoppingLists.filter {
                     it.title.contains(query, ignoreCase = true) ||
                     it.shoppingListId.contains(query, ignoreCase = true)
                 }
             }
-            state.copy(filteredShoppingLists = filtered)
+            state.copy(homeState = state.homeState.copy(filteredShoppingLists = filtered))
         }
     }
 
     fun selectShoppingList(shoppingListId: String) {
-        val activeList = _uiState.value.shoppingLists.find { it.shoppingListId == shoppingListId }
+        val activeList = _uiState.value.homeState.shoppingLists.find { it.shoppingListId == shoppingListId }
         val items = activeList?.items ?: emptyList()
 
         _uiState.update {
             it.copy(
-                selectedShoppingListId = shoppingListId,
-                activeShoppingList = activeList,
-                items = items,
-                itemSearchQuery = "",
-                selectedCategories = emptySet()
+                detailState = it.detailState.copy(
+                    selectedShoppingListId = shoppingListId,
+                    activeShoppingList = activeList,
+                    items = items,
+                    searchQuery = "",
+                    selectedCategories = emptySet(),
+                    editableTitle = activeList?.title?.ifEmpty { activeList.shoppingListId } ?: ""
+                )
             )
         }
         applyItemFilters()
@@ -117,7 +159,12 @@ class ShoppingListViewModel(
         viewModelScope.launch {
             val title = name.trim().ifEmpty { null }
             val created = shoppingRepo.createShoppingList(currentUserId, title)
-            _uiState.update { it.copy(selectedShoppingListId = created.shoppingListId, showCreateListDialog = false) }
+            _uiState.update { 
+                it.copy(
+                    detailState = it.detailState.copy(selectedShoppingListId = created.shoppingListId),
+                    homeState = it.homeState.copy(showCreateDialog = false, newListNameInput = "")
+                ) 
+            }
             onCreated?.invoke(created.shoppingListId)
         }
     }
@@ -126,7 +173,12 @@ class ShoppingListViewModel(
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
             shoppingRepo.deleteShoppingList(shoppingListId, currentUserId)
-            _uiState.update { it.copy(showDeleteListDialog = false, listToDeleteId = null) }
+            _uiState.update { 
+                it.copy(
+                    homeState = it.homeState.copy(showDeleteDialog = false, listToDeleteId = null),
+                    detailState = it.detailState.copy(showDeleteDialog = false)
+                ) 
+            }
         }
     }
 
@@ -154,14 +206,31 @@ class ShoppingListViewModel(
     }
 
     fun onShowCreateListDialog(show: Boolean) {
-        _uiState.update { it.copy(showCreateListDialog = show) }
+        _uiState.update { it.copy(homeState = it.homeState.copy(showCreateDialog = show)) }
     }
 
-    fun onShowDeleteListDialog(show: Boolean, listId: String? = null) {
+    fun updateNewListName(name: String) {
+        _uiState.update { it.copy(homeState = it.homeState.copy(newListNameInput = name)) }
+    }
+
+    fun onShowHomeDeleteListDialog(show: Boolean, listId: String? = null) {
         _uiState.update {
             it.copy(
-                showDeleteListDialog = show,
-                listToDeleteId = listId ?: it.selectedShoppingListId
+                homeState = it.homeState.copy(
+                    showDeleteDialog = show,
+                    listToDeleteId = listId ?: it.detailState.selectedShoppingListId
+                )
+            )
+        }
+    }
+
+    fun onShowHomeChangeDefaultDialog(show: Boolean, targetList: ShoppingList? = null) {
+        _uiState.update {
+            it.copy(
+                homeState = it.homeState.copy(
+                    showChangeDefaultDialog = show,
+                    targetListForDefault = targetList
+                )
             )
         }
     }
@@ -188,37 +257,37 @@ class ShoppingListViewModel(
         }
     }
 
-    // ──────────────── Active List Items Management ────────────────
+    // ──────────────── Active List Items Management (Detail Screen) ────────────────
 
     fun onItemSearchQueryChange(query: String) {
-        _uiState.update { it.copy(itemSearchQuery = query) }
+        _uiState.update { it.copy(detailState = it.detailState.copy(searchQuery = query)) }
         applyItemFilters()
     }
 
     fun toggleCategory(category: IngredientCategory) {
         _uiState.update { state ->
-            val newCategories = if (state.selectedCategories.contains(category)) {
-                state.selectedCategories - category
+            val newCategories = if (state.detailState.selectedCategories.contains(category)) {
+                state.detailState.selectedCategories - category
             } else {
-                state.selectedCategories + category
+                state.detailState.selectedCategories + category
             }
-            state.copy(selectedCategories = newCategories)
+            state.copy(detailState = state.detailState.copy(selectedCategories = newCategories))
         }
         applyItemFilters()
     }
 
     fun toggleCategoriesExpanded() {
-        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
+        _uiState.update { it.copy(detailState = it.detailState.copy(isCategoriesExpanded = !it.detailState.isCategoriesExpanded)) }
     }
 
     private fun applyItemFilters() {
         _uiState.update { state ->
-            val query = state.itemSearchQuery.trim()
-            val filtered = state.items.filter { item ->
+            val query = state.detailState.searchQuery.trim()
+            val filtered = state.detailState.items.filter { item ->
                 (query.isEmpty() || item.ingredientName.contains(query, ignoreCase = true)) &&
-                (state.selectedCategories.isEmpty() || item.category == null || state.selectedCategories.contains(item.category))
+                (state.detailState.selectedCategories.isEmpty() || item.category == null || state.detailState.selectedCategories.contains(item.category))
             }
-            state.copy(filteredItems = filtered)
+            state.copy(detailState = state.detailState.copy(filteredItems = filtered))
         }
     }
 
@@ -241,28 +310,107 @@ class ShoppingListViewModel(
     }
 
     fun onShowClearCheckedDialog(show: Boolean) {
-        _uiState.update { it.copy(showClearCheckedDialog = show) }
+        _uiState.update { it.copy(detailState = it.detailState.copy(showClearCheckedDialog = show)) }
     }
 
     fun onShowClearAllDialog(show: Boolean) {
-        _uiState.update { it.copy(showClearAllDialog = show) }
+        _uiState.update { it.copy(detailState = it.detailState.copy(showClearAllDialog = show)) }
+    }
+
+    fun onShowDetailDeleteDialog(show: Boolean) {
+        _uiState.update { it.copy(detailState = it.detailState.copy(showDeleteDialog = show)) }
+    }
+
+    fun onShowDetailChangeDefaultDialog(show: Boolean) {
+        _uiState.update { it.copy(detailState = it.detailState.copy(showChangeDefaultDialog = show)) }
+    }
+
+    fun onShowUnsavedChangesDialog(show: Boolean) {
+        _uiState.update { it.copy(detailState = it.detailState.copy(showUnsavedChangesDialog = show)) }
+    }
+
+    fun updateEditableTitle(title: String) {
+        _uiState.update { it.copy(detailState = it.detailState.copy(editableTitle = title)) }
     }
 
     fun clearChecked(shoppingListId: String? = null) {
-        val targetId = shoppingListId ?: _uiState.value.selectedShoppingListId ?: return
+        val targetId = shoppingListId ?: _uiState.value.detailState.selectedShoppingListId ?: return
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
             shoppingRepo.clearChecked(targetId, currentUserId)
-            _uiState.update { it.copy(showClearCheckedDialog = false) }
+            _uiState.update { it.copy(detailState = it.detailState.copy(showClearCheckedDialog = false)) }
         }
     }
 
     fun clearAll(shoppingListId: String? = null) {
-        val targetId = shoppingListId ?: _uiState.value.selectedShoppingListId ?: return
+        val targetId = shoppingListId ?: _uiState.value.detailState.selectedShoppingListId ?: return
         if (currentUserId.isEmpty()) return
         viewModelScope.launch {
             shoppingRepo.clearAll(targetId, currentUserId)
-            _uiState.update { it.copy(showClearAllDialog = false) }
+            _uiState.update { it.copy(detailState = it.detailState.copy(showClearAllDialog = false)) }
+        }
+    }
+
+    // ──────────────── Add Item Screen ────────────────
+
+    fun toggleIngredientSelection(item: IngredientItem) {
+        _uiState.update { state ->
+            val currentSelected = state.addItemState.selectedIngredients
+            val isSelected = currentSelected.any { it.ingredient.ingredientId == item.ingredient.ingredientId }
+            val newList = if (isSelected) {
+                currentSelected.filter { it.ingredient.ingredientId != item.ingredient.ingredientId }
+            } else {
+                currentSelected + item
+            }
+            state.copy(addItemState = state.addItemState.copy(selectedIngredients = newList))
+        }
+    }
+
+    fun clearAddItemSelection() {
+        _uiState.update { it.copy(addItemState = it.addItemState.copy(selectedIngredients = emptyList())) }
+    }
+
+    // ──────────────── Add From Clipboard Screen ────────────────
+
+    fun updateAddFromSelectedListId(listId: String) {
+        _uiState.update { it.copy(addFromState = it.addFromState.copy(selectedListId = listId)) }
+    }
+
+    fun refreshFromClipboard(context: android.content.Context, allIngredients: List<IngredientsEntity>) {
+        val rawText = ShoppingListShareHelper.getClipboardText(context)
+        val validMatched = ShoppingListShareHelper.parseAndValidateClipboardText(rawText, allIngredients)
+        _uiState.update {
+            it.copy(
+                addFromState = it.addFromState.copy(
+                    parsedIngredients = validMatched,
+                    selectedIngredientIds = validMatched.map { ing -> ing.ingredientId }.toSet(),
+                    isParsed = true
+                )
+            )
+        }
+    }
+
+    fun toggleAddFromIngredientSelection(ingredientId: String) {
+        _uiState.update { state ->
+            val currentSelected = state.addFromState.selectedIngredientIds
+            val isSelected = currentSelected.contains(ingredientId)
+            val newList = if (isSelected) {
+                currentSelected - ingredientId
+            } else {
+                currentSelected + ingredientId
+            }
+            state.copy(addFromState = state.addFromState.copy(selectedIngredientIds = newList))
+        }
+    }
+
+    fun setAddFromAllSelected(selectAll: Boolean) {
+        _uiState.update { state ->
+            val newList = if (selectAll) {
+                state.addFromState.parsedIngredients.map { it.ingredientId }.toSet()
+            } else {
+                emptySet()
+            }
+            state.copy(addFromState = state.addFromState.copy(selectedIngredientIds = newList))
         }
     }
 }
