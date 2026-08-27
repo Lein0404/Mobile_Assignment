@@ -145,17 +145,18 @@ class RecipeViewModel(
         if (missingIds.isEmpty()) return
 
         viewModelScope.launch {
-            missingIds.forEach { id ->
-                repository.getUserByCustomId(id).onSuccess { user ->
-                    if (user != null) {
-                        // Update all occurrences of this author in the lists
-                        val updater: (Recipe) -> Recipe = { r ->
-                            if (r.author_id == id) r.copy(authorName = user.name, authorImageUrl = user.profilePicUrl) else r
-                        }
-                        recipeList = recipeList.map(updater)
-                        myRecipes = myRecipes.map(updater)
-                        bookmarkedRecipes = bookmarkedRecipes.map(updater)
+            // 🌟 BATCH FETCH: Get all missing authors in ONE request instead of a slow loop
+            repository.getUsersByCustomIds(missingIds).onSuccess { users ->
+                if (users.isNotEmpty()) {
+                    val userMap = users.associateBy { it.customId }
+                    val updater: (Recipe) -> Recipe = { r ->
+                        userMap[r.author_id]?.let { u ->
+                            r.copy(authorName = u.name, authorImageUrl = u.profilePicUrl)
+                        } ?: r
                     }
+                    recipeList = recipeList.map(updater)
+                    myRecipes = myRecipes.map(updater)
+                    bookmarkedRecipes = bookmarkedRecipes.map(updater)
                 }
             }
         }
@@ -229,16 +230,16 @@ class RecipeViewModel(
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
         // 🌟 1. Cancel any existing job for this specific recipe to prevent race conditions
         bookmarkJobs[recipeId]?.cancel()
-        
+
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
-        
+
         // 🌟 2. Instant UI Update (Always happens regardless of network speed)
         bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
-        
+
         if (isBookmarked) {
             bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
         } else {
-            recipeList.find { it.recipe_id == recipeId }?.let { 
+            recipeList.find { it.recipe_id == recipeId }?.let {
                 bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
             }
         }

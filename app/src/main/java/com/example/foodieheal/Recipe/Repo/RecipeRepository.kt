@@ -283,6 +283,15 @@ class RecipeRepository(
                 .decodeSingleOrNull<User>()
         }
     }
+
+    suspend fun getUsersByCustomIds(customIds: List<String>): Result<List<User>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (customIds.isEmpty()) return@runCatching emptyList<User>()
+            client.from("users")
+                .select { filter { isIn("custom_id", customIds) } }
+                .decodeList<User>()
+        }
+    }
 }
 
 @Serializable

@@ -55,6 +55,17 @@ fun  HomeScreen(
 
     // Sync with the master list once data is available
     LaunchedEffect(recipeViewModel.recipeList) {
+        // 🌟 FIX: If names are fetched later, update our local random selection automatically
+        if (randomRecipes.isNotEmpty()) {
+            val updated = randomRecipes.map { old ->
+                recipeViewModel.recipeList.find { it.recipe_id == old.recipe_id } ?: old
+            }
+            // Only update state if something actually changed to avoid recomposition loops
+            if (updated != randomRecipes) {
+                randomRecipes = updated
+            }
+        }
+
         if (randomRecipes.isEmpty() && recipeViewModel.recipeList.isNotEmpty()) {
             randomRecipes = recipeViewModel.recipeList.shuffled().take(5)
         }
