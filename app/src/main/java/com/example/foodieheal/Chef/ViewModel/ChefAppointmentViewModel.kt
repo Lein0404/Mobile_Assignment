@@ -13,6 +13,7 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.Chef.notification.ChefNotificationHelper
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -61,6 +62,12 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     private val _uiEvent = MutableSharedFlow<String>()
     val uiEvent: SharedFlow<String> = _uiEvent.asSharedFlow()
 
+    // Pending appointments count StateFlow (for bottom navigation badge and notification triggers)
+    private val _pendingAppointmentsCount = MutableStateFlow(0)
+    val pendingAppointmentsCount: StateFlow<Int> = _pendingAppointmentsCount.asStateFlow()
+
+    private var hasNotifiedInitialPending = false
+
     // Appointments screen state flow
     private val _appointmentsUiState = MutableStateFlow<AppointmentsUiState>(AppointmentsUiState.Loading)
     val appointmentsUiState: StateFlow<AppointmentsUiState> = _appointmentsUiState.asStateFlow()
@@ -104,6 +111,8 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     init {
+        // Initialize notification channel
+        ChefNotificationHelper.createNotificationChannel(application)
         observeNetworkStatus()
         fetchAppointmentsForCurrentChef()
         loadDashboardData()
@@ -119,6 +128,31 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                     loadDashboardData()
                 }
             }
+        }
+    }
+
+    private fun updatePendingCountAndNotify(
+        appointments: List<Appointment>,
+        usersMap: Map<String, User> = emptyMap()
+    ) {
+        val pendingList = appointments.filter { it.Status.equals("Pending", ignoreCase = true) }
+        val newPendingCount = pendingList.size
+        val prevPendingCount = _pendingAppointmentsCount.value
+
+        _pendingAppointmentsCount.value = newPendingCount
+
+        // Fire notification if there are pending appointments and either new arrived or first launch
+        if (newPendingCount > 0 && (newPendingCount > prevPendingCount || !hasNotifiedInitialPending)) {
+            hasNotifiedInitialPending = true
+            val latestAppt = pendingList.firstOrNull()
+            val clientUser = latestAppt?.userId?.let { usersMap[it] }
+            ChefNotificationHelper.showPendingAppointmentNotification(
+                context = getApplication(),
+                pendingCount = newPendingCount,
+                clientName = clientUser?.name
+            )
+        } else if (newPendingCount == 0 && prevPendingCount > 0) {
+            ChefNotificationHelper.cancelNotification(getApplication())
         }
     }
 
@@ -138,6 +172,9 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
 
                 // Batch fetch associated users
                 val usersMap = repository.fetchUsersForAppointments(appointments)
+
+                // Update pending count & dispatch notification if new requests exist
+                updatePendingCountAndNotify(appointments, usersMap)
 
                 _appointmentsUiState.value = AppointmentsUiState.Success(
                     appointments = appointments,
@@ -178,6 +215,9 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 // Batch fetch user details (for the next appointment card)
                 val usersMap = repository.fetchUsersForAppointments(listOfNotNull(nextApp))
 
+                // Update pending count & badge
+                updatePendingCountAndNotify(appointments, usersMap)
+
                 _homeUiState.value = HomeUiState.Success(
                     totalCount = activeAppointments.size,
                     nextAppointment = nextApp,
@@ -205,9 +245,10 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 return@launch
             }
 
-            //Snapshot current state for rollback
+            // Snapshot current state for rollback
             val previousAppointmentsState = _appointmentsUiState.value
             val previousHomeState = _homeUiState.value
+            val previousPendingCount = _pendingAppointmentsCount.value
 
             fun applyOptimisticUpdate(appointments: List<Appointment>): List<Appointment> =
                 appointments.map { appt ->
@@ -221,14 +262,21 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
 
             // Update Appointments screen state
             if (previousAppointmentsState is AppointmentsUiState.Success) {
+                val updatedAppts = applyOptimisticUpdate(previousAppointmentsState.appointments)
+                val updatedPending = updatedAppts.count { it.Status.equals("Pending", ignoreCase = true) }
+                _pendingAppointmentsCount.value = updatedPending
+                if (updatedPending == 0) {
+                    ChefNotificationHelper.cancelNotification(getApplication())
+                }
+
                 _appointmentsUiState.update { current ->
                     if (current is AppointmentsUiState.Success) {
-                        current.copy(appointments = applyOptimisticUpdate(current.appointments))
+                        current.copy(appointments = updatedAppts)
                     } else current
                 }
             }
 
-            // Update Home dashboard state (active count + allAppointments)
+            // Update Home dashboard state
             if (previousHomeState is HomeUiState.Success) {
                 _homeUiState.update { current ->
                     if (current is HomeUiState.Success) {
@@ -263,6 +311,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 // Rollback both states to pre-optimistic snapshot
                 _appointmentsUiState.value = previousAppointmentsState
                 _homeUiState.value         = previousHomeState
+                _pendingAppointmentsCount.value = previousPendingCount
 
                 _uiEvent.emit("Failed to update appointment: ${e.localizedMessage}")
             }
