@@ -558,6 +558,36 @@
     <string name="confirm_accept">Confirm Accept</string>
     <string name="confirm_decline">Confirm Decline</string>
     <string name="open_maps">Open with Maps</string>
+    <string name="total_booking_value">Total Booking Value</string>
+    <string name="call_client">Call Client</string>
+    <string name="scan_client_qr_to_complete">Scan Client QR to Complete Booking</string>
+
+    <string name="price_format">RM %.2f</string>
+    <string name="rate_per_guest_label">Rate per Guest (%1$d guests):</string>
+    <string name="rate_per_guest_value_format">RM %.2f / person</string>
+
+    <string name="reason_for_declining">Reason for Declining</string>
+    <string name="client_review_and_rating">Client Review &amp; Rating</string>
+    <string name="quoted_text_format">“%1$s”</string>
+    <string name="rating_format">%1$d.0</string>
+    <string name="no_review_submitted">No review submitted by the client yet.</string>
+
+    <string name="section_attached_dishes">Attached Dishes / Meal Plan</string>
+    <string name="no_recipes_requested">No specific recipes requested by client</string>
+    <string name="default_recipe_name">Recipe #%1$d</string>
+    <string name="recipe_portions_format">%1$d portion(s)</string>
+    <string name="recipe_calories_format">%1$d kcal</string>
+    <string name="recipe_time_format">• %1$dm</string>
+    <string name="client_note_format">Client note: “%1$s”</string>
+    <string name="recipe_image_content_description">Recipe image</string>
+
+    <string name="service_verified_qr_completed">Service verified via QR! Booking marked as Completed.</string>
+
+    <string name="payment_status_paid">Paid</string>
+    <string name="payment_status_cancelled">Cancelled</string>
+    <string name="payment_status_na">N/A</string>
+    <string name="payment_status_awaiting_payment">Awaiting Payment</string>
+    <string name="payment_status_pending">Pending</string>
 
     <string name="accept_title">Accept Booking?</string>
     <string name="accept_body_format">Are you sure you want to accept this appointment for %1$s on %2$s?</string>

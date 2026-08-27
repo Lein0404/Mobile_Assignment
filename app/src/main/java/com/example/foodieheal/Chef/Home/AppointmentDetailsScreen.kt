@@ -169,7 +169,7 @@ fun AppointmentDetailScreen(
                                 )
                                 appointment.AppointmentID?.let { apptId ->
                                     Text(
-                                        text = "ID: #${apptId.take(8)}",
+                                        text = stringResource(R.string.appointment_id_format, apptId.take(8)),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -237,7 +237,7 @@ fun AppointmentDetailScreen(
                                 },
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Text("Call Client", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.call_client), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -277,7 +277,7 @@ fun AppointmentDetailScreen(
                             }
                             Column {
                                 Text(
-                                    text = "Total Booking Value",
+                                    text = stringResource(R.string.total_booking_value),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -331,12 +331,15 @@ fun AppointmentDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Rate per Guest (${appointment.Serving_Size} guests):",
+                                text = stringResource(R.string.rate_per_guest_label, appointment.Serving_Size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "RM %.2f / person".format(appointment.Total_Price / appointment.Serving_Size),
+                                text = stringResource(
+                                    R.string.rate_per_guest_value_format,
+                                    appointment.Total_Price / appointment.Serving_Size
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -365,7 +368,7 @@ fun AppointmentDetailScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "Reason for Declining",
+                                text = stringResource(R.string.reason_for_declining),
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFD84315),
                                 style = MaterialTheme.typography.titleSmall
@@ -396,7 +399,7 @@ fun AppointmentDetailScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Client Review & Rating",
+                                text = stringResource(R.string.client_review_and_rating),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -420,7 +423,7 @@ fun AppointmentDetailScreen(
                         if (!appointment.Comment.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "“${appointment.Comment}”",
+                                text = stringResource(R.string.quoted_text_format, appointment.Comment),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -474,7 +477,7 @@ fun AppointmentDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Open in Maps")
+                    Text(stringResource(R.string.open_in_maps))
                 }
             }
 
@@ -511,7 +514,7 @@ fun AppointmentDetailScreen(
             }
 
             // Attached Dishes / Meal Plan Section
-            DetailSectionCard(title = "Attached Dishes / Meal Plan") {
+            DetailSectionCard(title = stringResource(R.string.section_attached_dishes)) {
                 if (isLoadingRecipes) {
                     Box(
                         modifier = Modifier
@@ -536,7 +539,7 @@ fun AppointmentDetailScreen(
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            text = "No specific recipes requested by client",
+                            text = stringResource(R.string.no_recipes_requested),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -556,7 +559,7 @@ fun AppointmentDetailScreen(
                                     },
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     1.dp,
                                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                 )
@@ -580,7 +583,7 @@ fun AppointmentDetailScreen(
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = recipe?.recipeName ?: "Recipe #${item.recipeId}",
+                                            text = recipe?.recipeName ?: stringResource(R.string.default_recipe_name, item.recipeId),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
                                             maxLines = 1,
@@ -601,7 +604,7 @@ fun AppointmentDetailScreen(
                                                 color = MaterialTheme.colorScheme.primaryContainer
                                             ) {
                                                 Text(
-                                                    text = "${item.service_count.toInt()} portion(s)",
+                                                    text = stringResource(R.string.recipe_portions_format, item.service_count.toInt()),
                                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
@@ -614,7 +617,7 @@ fun AppointmentDetailScreen(
 
                                             if ((recipe?.calories ?: 0) > 0) {
                                                 Text(
-                                                    text = "${recipe?.calories} kcal",
+                                                    text = stringResource(R.string.recipe_calories_format, recipe?.calories ?: 0),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontSize = 11.sp,
@@ -625,7 +628,7 @@ fun AppointmentDetailScreen(
 
                                             if ((recipe?.time ?: 0) > 0) {
                                                 Text(
-                                                    text = "• ${recipe?.time}m",
+                                                    text = stringResource(R.string.recipe_time_format, recipe?.time ?: 0),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontSize = 11.sp,
@@ -638,7 +641,7 @@ fun AppointmentDetailScreen(
                                         if (!item.custom_note.isNullOrBlank()) {
                                             Spacer(modifier = Modifier.height(3.dp))
                                             Text(
-                                                text = "Client note: “${item.custom_note}”",
+                                                text = stringResource(R.string.client_note_format, item.custom_note),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.primary,
                                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -744,7 +747,7 @@ fun AppointmentDetailScreen(
                                                 modifier = Modifier.size(16.dp)
                                             )
                                             Text(
-                                                text = "${appointment.rating}.0",
+                                                text = stringResource(R.string.rating_format, appointment.rating ?: 0),
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color(0xFF795548)
@@ -755,7 +758,7 @@ fun AppointmentDetailScreen(
 
                                 if (!appointment.Comment.isNullOrBlank()) {
                                     Text(
-                                        text = "“${appointment.Comment}”",
+                                        text = stringResource(R.string.quoted_text_format, appointment.Comment),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -781,7 +784,7 @@ fun AppointmentDetailScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Text(
-                                    text = "No review submitted by the client yet.",
+                                    text = stringResource(R.string.no_review_submitted),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -870,7 +873,7 @@ fun AppointmentDetailScreen(
                         modifier = Modifier.padding(end = 8.dp).size(20.dp)
                     )
                     Text(
-                        text = "Scan Client QR to Complete Booking",
+                        text = stringResource(R.string.scan_client_qr_to_complete),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
