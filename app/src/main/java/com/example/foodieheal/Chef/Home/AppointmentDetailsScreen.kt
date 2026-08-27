@@ -3,6 +3,8 @@ package com.example.foodieheal.Chef.Home
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import java.util.Locale
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -63,6 +66,7 @@ import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
+import com.example.foodieheal.Chef.components.ChefQrScannerDialog
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
 
@@ -82,6 +86,7 @@ fun AppointmentDetailScreen(
 
     var showAcceptDialog by remember { mutableStateOf(false) }
     var showDeclineDialog by remember { mutableStateOf(false) }
+    var showQrScannerDialog by remember { mutableStateOf(false) }
     var rejectionReason by remember { mutableStateOf("") }
     var rejectionReasonError by remember { mutableStateOf(false) }
     var previewingRecipeItem by remember { mutableStateOf<AppointmentRecipeWithDetails?>(null) }
@@ -664,6 +669,128 @@ fun AppointmentDetailScreen(
                 }
             }
 
+            // Review Section
+            if (appointment.Status.equals("completed", ignoreCase = true)) {
+                DetailSectionCard(title = stringResource(R.string.review)) {
+                    val hasReviewed = (appointment.rating != null && appointment.rating > 0)
+                    if (hasReviewed) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = userName.take(1).uppercase(Locale.ROOT),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+
+                                        Column {
+                                            Text(
+                                                text = userName,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            if (!appointment.Date.isNullOrBlank()) {
+                                                Text(
+                                                    text = appointment.Date,
+                                                    fontSize = 10.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = Color(0xFFFFF8E1),
+                                        border = BorderStroke(1.dp, Color(0xFFFFE082))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_star),
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFB300),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = "${appointment.rating}.0",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF795548)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (!appointment.Comment.isNullOrBlank()) {
+                                    Text(
+                                        text = "“${appointment.Comment}”",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_star),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = "No review submitted by the client yet.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Action Buttons
             if (appointment.Status.equals("pending", ignoreCase = true)) {
                 if (!isNetworkAvailable) {
@@ -721,6 +848,32 @@ fun AppointmentDetailScreen(
                     ) {
                         Text(stringResource(R.string.accept_booking))
                     }
+                }
+            }
+
+            // Action Button: Scan QR to Complete (Confirmed Status)
+            if (appointment.Status.equals("confirmed", ignoreCase = true)) {
+                Button(
+                    onClick = { showQrScannerDialog = true },
+                    enabled = isNetworkAvailable,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_check),
+                        contentDescription = "Scan QR",
+                        modifier = Modifier.padding(end = 8.dp).size(20.dp)
+                    )
+                    Text(
+                        text = "Scan Client QR to Complete Booking",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
                 }
             }
         }
@@ -860,6 +1013,23 @@ fun AppointmentDetailScreen(
                 onDismiss = { previewingRecipeItem = null }
             )
         }
+    }
+
+    if (showQrScannerDialog) {
+        ChefQrScannerDialog(
+            expectedAppointmentId = appointment.AppointmentID.orEmpty(),
+            expectedChefId = appointment.chefId,
+            onVerified = {
+                showQrScannerDialog = false
+                onStatusChange("Completed", null)
+                Toast.makeText(
+                    context,
+                    "Service verified via QR! Booking marked as Completed.",
+                    Toast.LENGTH_LONG
+                ).show()
+            },
+            onDismiss = { showQrScannerDialog = false }
+        )
     }
 }
 

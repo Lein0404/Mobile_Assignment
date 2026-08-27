@@ -55,9 +55,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodieheal.hiring.components.AppointmentQrCodeDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -70,6 +72,7 @@ import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.DetailRow
+import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
 
@@ -105,7 +108,7 @@ fun UserAppointmentDetailScreen(
     val chefUser = appointment?.let { successState.usersMap[it.chefId] }
 
     var showCancelDialog by remember { mutableStateOf(false) }
-    var showCompleteDialog by remember { mutableStateOf(false) }
+    var showQrCodeDialog by remember { mutableStateOf(false) }
     var previewingRecipeItem by remember { mutableStateOf<AppointmentRecipeWithDetails?>(null) }
 
     if (appointment == null) {
@@ -123,6 +126,25 @@ fun UserAppointmentDetailScreen(
 
     val completedToast = stringResource(R.string.toast_booking_completed)
     val cancelledToast = stringResource(R.string.toast_appointment_cancelled)
+
+    // Auto-poll while user displays the completion QR code so UI flips immediately when Chef scans it
+    LaunchedEffect(showQrCodeDialog) {
+        if (showQrCodeDialog) {
+            while (showQrCodeDialog) {
+                kotlinx.coroutines.delay(2000L)
+                viewModel.fetchAppointmentsForCurrentUser(forceRefresh = false)
+            }
+        }
+    }
+
+    // React immediately when the appointment status updates to "Completed"
+    LaunchedEffect(appointment.Status) {
+        if (appointment.Status.equals("completed", ignoreCase = true) && showQrCodeDialog) {
+            showQrCodeDialog = false
+            Toast.makeText(context, completedToast, Toast.LENGTH_SHORT).show()
+            onRatingClick(appointment.AppointmentID.orEmpty())
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -678,6 +700,131 @@ fun UserAppointmentDetailScreen(
                 }
             }
 
+            // Review Section
+            if (isCompleted) {
+                val hasReviewed = (appointment.rating != null && appointment.rating > 0)
+                DetailSectionCard(title = stringResource(R.string.review)) {
+                    if (hasReviewed) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Your Rating",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = Color(0xFFFFF8E1),
+                                        border = BorderStroke(1.dp, Color(0xFFFFE082))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_star),
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFB300),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = "${appointment.rating}.0",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF795548)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (!appointment.Comment.isNullOrBlank()) {
+                                    Text(
+                                        text = "“${appointment.Comment}”",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontStyle = FontStyle.Italic,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                OutlinedButton(
+                                    onClick = { onRatingClick(appointment.AppointmentID.orEmpty()) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(40.dp),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Edit Review",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_star),
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFB300),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Text(
+                                    text = "How was your experience?",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Share your feedback and rate Chef ${chefUser?.name ?: "Chef"} to help others.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Button(
+                                    onClick = { onRatingClick(appointment.AppointmentID.orEmpty()) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Rate Chef Now",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Action Buttons Section
@@ -713,10 +860,10 @@ fun UserAppointmentDetailScreen(
                     }
                 }
 
-                // "Complete Booking" Button (Only for Confirmed Status)
+                // "Show Completion QR Code" Button (Only for Confirmed Status)
                 if (isConfirmed) {
                     Button(
-                        onClick = { showCompleteDialog = true },
+                        onClick = { showQrCodeDialog = true },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -728,13 +875,13 @@ fun UserAppointmentDetailScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_check),
-                            contentDescription = stringResource(R.string.complete),
-                            modifier = Modifier.padding(end = 8.dp)
+                            contentDescription = "Show Completion QR",
+                            modifier = Modifier.padding(end = 8.dp).size(20.dp)
                         )
                         Text(
-                            text = stringResource(R.string.complete_booking),
+                            text = "Show Completion QR Code",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 15.sp
                         )
                     }
                 }
@@ -791,39 +938,6 @@ fun UserAppointmentDetailScreen(
     }
 }
 
-    if (showCompleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showCompleteDialog = false },
-            title = { Text(stringResource(R.string.dialog_complete_title), fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.dialog_complete_message)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showCompleteDialog = false
-                        viewModel.updateAppointmentStatus(
-                            appointmentId = appointment.AppointmentID.orEmpty(),
-                            newStatus = "Completed",
-                            onSuccess = {
-                                Toast.makeText(context, completedToast, Toast.LENGTH_SHORT).show()
-                                onRatingClick(appointment.AppointmentID.orEmpty())
-                            },
-                            onError = { err ->
-                                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                            }
-                        )
-                    }
-                ) {
-                    Text(stringResource(R.string.yes_complete))
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showCompleteDialog = false }) {
-                    Text(stringResource(R.string.not_yet))
-                }
-            }
-        )
-    }
-
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
@@ -872,5 +986,13 @@ fun UserAppointmentDetailScreen(
                 onDismiss = { previewingRecipeItem = null }
             )
         }
+    }
+
+    if (showQrCodeDialog) {
+        AppointmentQrCodeDialog(
+            appointment = appointment,
+            chefName = chefUser?.name ?: "Chef",
+            onDismiss = { showQrCodeDialog = false }
+        )
     }
 }

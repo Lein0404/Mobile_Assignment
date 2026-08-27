@@ -81,4 +81,13 @@ dependencies {
 
     implementation("com.github.Breens-Mbaka:Searchable-Dropdown-Menu-Jetpack-Compose:1.1.0")
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
+    // QR Code Generation
+    implementation("com.google.zxing:core:3.5.3")
+
+    // QR Code Scanning (CameraX + ML Kit)
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }
