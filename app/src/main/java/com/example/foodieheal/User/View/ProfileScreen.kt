@@ -52,6 +52,7 @@ import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +98,7 @@ fun ProfileScreen(
     
     // 🌟 State for the Delete Confirmation Dialog
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
+    var recipeToShare by remember { mutableStateOf<Recipe?>(null) }
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
     var showChefBookmarks by remember { mutableStateOf(false) } // 🌟 Toggle between Recipes and Chefs
@@ -668,6 +670,7 @@ fun ProfileScreen(
                                                     navController.navigate(Screen.EditRecipe.createRoute(id))
                                                 }
                                             },
+                                            onShareClick = { recipeToShare = it },
                                             onClick = {
                                                 recipe.recipe_id?.let { id ->
                                                     navController.navigate(Screen.RecipeDetails.createRoute(id))
@@ -797,6 +800,15 @@ fun ProfileScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+        )
+    }
+
+    // 🌟 Share Dialog
+    recipeToShare?.let { recipe ->
+        ShareRecipeDialog(
+            recipe = recipe,
+            authorName = if (recipe.author_id == user?.customId) user?.name else recipe.authorName,
+            onDismiss = { recipeToShare = null }
         )
     }
 

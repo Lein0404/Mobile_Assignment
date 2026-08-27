@@ -47,10 +47,17 @@ fun  HomeScreen(
 ) {
     val user = viewModel.currentUser
     
-    val randomRecipes = remember(recipeViewModel.recipeList) {
-        recipeViewModel.recipeList
-            .shuffled()
-            .take(5)
+    // 🌟 FIX: Stable Random Selection
+    // We use a separate state to "latch" the random recipes once they are loaded.
+    // This prevents them from reshuffling every time the database refreshes
+    // or when you return from the Detail screen.
+    var randomRecipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
+
+    // Sync with the master list once data is available
+    LaunchedEffect(recipeViewModel.recipeList) {
+        if (randomRecipes.isEmpty() && recipeViewModel.recipeList.isNotEmpty()) {
+            randomRecipes = recipeViewModel.recipeList.shuffled().take(5)
+        }
     }
 
     val view = LocalView.current
