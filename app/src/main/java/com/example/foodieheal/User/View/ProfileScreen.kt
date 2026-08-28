@@ -328,7 +328,16 @@ fun ProfileScreen(
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
             topBar = {
                 Column(
                     modifier = Modifier
@@ -900,6 +909,15 @@ fun ProfileScreen(
                                                 }
                                             },
                                             onShareClick = { recipeToShare = it },
+                                            onAddClick = {
+                                                if (viewModel.isNetworkAvailable) {
+                                                    recipe.recipe_id?.let { rid ->
+                                                        navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
+                                                    }
+                                                } else {
+                                                    viewModel.showOfflinePlannerMessage()
+                                                }
+                                            },
                                             onClick = {
                                                 recipe.recipe_id?.let { id ->
                                                     navController.navigate(Screen.RecipeDetails.createRoute(id))
@@ -955,6 +973,15 @@ fun ProfileScreen(
                                                     }
                                                 }
                                             },
+                                                onAddClick = {
+                                                    if (viewModel.isNetworkAvailable) {
+                                                        recipe.recipe_id?.let { rid ->
+                                                            navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
+                                                        }
+                                                    } else {
+                                                        viewModel.showOfflinePlannerMessage()
+                                                    }
+                                                },
                                                 onClick = {
                                                     recipe.recipe_id?.let { id ->
                                                         navController.navigate(Screen.RecipeDetails.createRoute(id))
