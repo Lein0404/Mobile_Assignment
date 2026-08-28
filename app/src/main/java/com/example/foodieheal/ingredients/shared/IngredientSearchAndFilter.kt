@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -102,11 +103,33 @@ fun IngredientSearchAndFilter(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = categoriesLabel,
-            fontWeight = FontWeight.Bold,
-            color = headerColor
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
+        ) {
+            Text(
+                text = categoriesLabel,
+                fontWeight = FontWeight.Bold,
+                color = headerColor
+            )
+            if (selectedCategories.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape,
+                ) {
+                    Text(
+                        text = selectedCategories.size.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(
+                            horizontal = dimensionResource(R.dimen.padding_sm),
+                            vertical = dimensionResource(R.dimen.padding_xxsm)
+                        )
+                    )
+                }
+            }
+        }
         Icon(
             painter =
                 if (isExpanded) painterResource(R.drawable.ic_arrow_drop_up)
