@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
@@ -69,6 +72,7 @@ import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.Chef.components.ChefQrScannerDialog
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
+import com.example.foodieheal.hiring.util.CalendarSyncHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,7 +150,7 @@ fun AppointmentDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Surface(
-                                shape = androidx.compose.foundation.shape.CircleShape,
+                                shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(48.dp)
                             ) {
@@ -317,32 +321,6 @@ fun AppointmentDetailScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = payStatusColor
-                            )
-                        }
-                    }
-
-                    if (appointment.Serving_Size > 0) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = stringResource(R.string.rate_per_guest_label, appointment.Serving_Size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.rate_per_guest_value_format,
-                                    appointment.Total_Price / appointment.Serving_Size
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -833,52 +811,133 @@ fun AppointmentDetailScreen(
                             showDeclineDialog = true
                         },
                         enabled = isNetworkAvailable,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(stringResource(R.string.decline))
+                        Text(
+                            text = stringResource(R.string.decline),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
 
                     Button(
                         onClick = { showAcceptDialog = true },
                         enabled = isNetworkAvailable,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(stringResource(R.string.accept_booking))
+                        Text(
+                            text = stringResource(R.string.accept_booking),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
 
-            // Action Button: Scan QR to Complete (Confirmed Status)
+            // Action Buttons: Scan QR to Complete & Add to Calendar (Confirmed Status)
             if (appointment.Status.equals("confirmed", ignoreCase = true)) {
                 Button(
                     onClick = { showQrScannerDialog = true },
                     enabled = isNetworkAvailable,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .defaultMinSize(minHeight = 52.dp),
                     shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_check),
-                        contentDescription = "Scan QR",
-                        modifier = Modifier.padding(end = 8.dp).size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.scan_client_qr_to_complete),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check),
+                            contentDescription = "Scan QR",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.scan_client_qr_to_complete),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // Add to Calendar Button (Chef Perspective)
+                OutlinedButton(
+                    onClick = {
+                        val loc = listOfNotNull(
+                            appointment.Address.takeIf { it.isNotBlank() },
+                            appointment.Postcode.takeIf { it.isNotBlank() },
+                            appointment.State.takeIf { it.isNotBlank() }
+                        ).joinToString(", ")
+                        val desc = "FoodieHeal Appointment with Client $userName\n" +
+                                "Booking ID: ${appointment.AppointmentID.orEmpty()}\n" +
+                                "Serving Size: ${appointment.Serving_Size} portions\n" +
+                                "Dietary Preference: ${appointment.Health_Preference}\n" +
+                                if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
+
+                        Toast.makeText(context, R.string.toast_opening_calendar, Toast.LENGTH_SHORT).show()
+                        CalendarSyncHelper.addAppointmentToCalendar(
+                            context = context,
+                            title = "FoodieHeal Session - Client $userName",
+                            description = desc.trim(),
+                            location = loc,
+                            dateStr = appointment.Date,
+                            startTimeStr = appointment.Start_Time,
+                            endTimeStr = appointment.End_Time
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 50.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_calendar),
+                            contentDescription = stringResource(R.string.add_to_calendar),
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.add_to_calendar),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
+
+            // Bottom spacer for comfortable scrolling clearance above navigation bars
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 

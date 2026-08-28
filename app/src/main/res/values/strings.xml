@@ -560,7 +560,7 @@
     <string name="open_maps">Open with Maps</string>
     <string name="total_booking_value">Total Booking Value</string>
     <string name="call_client">Call Client</string>
-    <string name="scan_client_qr_to_complete">Scan Client QR to Complete Booking</string>
+    <string name="scan_client_qr_to_complete">Scan Client QR to Complete</string>
 
     <string name="price_format">RM %.2f</string>
     <string name="rate_per_guest_label">Rate per Guest (%1$d guests):</string>
@@ -1124,4 +1124,12 @@
     <string name="toast_chef_upgrade_success">Upgraded to Chef successfully!</string>
     <string name="biometric_prompt_title">Confirm Payment</string>
     <string name="biometric_prompt_subtitle">Authenticate to authorize payment of %1$s via %2$s</string>
+
+    <!-- Calendar Feature-->
+    <string name="add_to_calendar">Add to Calendar</string>
+    <string name="toast_opening_calendar">Opening Calendar...</string>
+    <string name="dialog_calendar_title">Booking Confirmed!</string>
+    <string name="dialog_calendar_message">Your payment was successful and booking is confirmed. Would you like to add this session to your Calendar with reminder alerts?</string>
+    <string name="btn_add_to_calendar">Add to Calendar</string>
+    <string name="btn_view_booking">View Booking</string>
 </resources>

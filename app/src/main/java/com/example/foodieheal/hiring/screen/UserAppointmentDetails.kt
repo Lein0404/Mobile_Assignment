@@ -74,6 +74,7 @@ import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.DetailRow
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
+import com.example.foodieheal.hiring.util.CalendarSyncHelper
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -882,6 +883,51 @@ fun UserAppointmentDetailScreen(
                             text = "Show Completion QR Code",
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
+                        )
+                    }
+
+                    // Add to Calendar Button (Only for Confirmed Status)
+                    OutlinedButton(
+                        onClick = {
+                            val chefName = chefUser?.name ?: "Chef"
+                            val loc = listOfNotNull(
+                                appointment.Address.takeIf { it.isNotBlank() },
+                                appointment.Postcode.takeIf { it.isNotBlank() },
+                                appointment.State.takeIf { it.isNotBlank() }
+                            ).joinToString(", ")
+                            val desc = "FoodieHeal Appointment with Chef $chefName\n" +
+                                    "Booking ID: ${appointment.AppointmentID.orEmpty()}\n" +
+                                    "Serving Size: ${appointment.Serving_Size} portions\n" +
+                                    "Health Preference: ${appointment.Health_Preference}\n" +
+                                    if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
+
+                            Toast.makeText(context, R.string.toast_opening_calendar, Toast.LENGTH_SHORT).show()
+                            CalendarSyncHelper.addAppointmentToCalendar(
+                                context = context,
+                                title = "FoodieHeal Appointment - Chef $chefName",
+                                description = desc.trim(),
+                                location = loc,
+                                dateStr = appointment.Date,
+                                startTimeStr = appointment.Start_Time,
+                                endTimeStr = appointment.End_Time
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_calendar),
+                            contentDescription = stringResource(R.string.add_to_calendar),
+                            modifier = Modifier.padding(end = 8.dp).size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.add_to_calendar),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

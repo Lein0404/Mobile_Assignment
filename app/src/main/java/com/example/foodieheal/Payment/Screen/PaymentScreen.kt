@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import com.example.foodieheal.hiring.util.CalendarSyncHelper
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -107,6 +109,8 @@ fun PaymentScreen(
         }
     }
 
+    var showCalendarPromptDialog by remember { mutableStateOf(false) }
+    var completedTransactionId by remember { mutableStateOf<String?>(null) }
     var walletBalance by remember { mutableStateOf<Double?>(null) }
     var isWalletActive by remember { mutableStateOf(false) }
     val walletRepo = remember { com.example.foodieheal.wallet.data.WalletRepository() }
@@ -305,7 +309,8 @@ fun PaymentScreen(
                             selectedMethod = methodState.selectedMethod,
                             onSuccess = { transactionId ->
                                 Toast.makeText(context, R.string.toast_payment_success, Toast.LENGTH_SHORT).show()
-                                onPaymentSuccess(transactionId)
+                                completedTransactionId = transactionId
+                                showCalendarPromptDialog = true
                             },
                             onError = { error ->
                                 onPaymentError(error)
@@ -494,7 +499,7 @@ fun PaymentScreen(
         AddNewCardBottomSheet(
             onDismiss = { showAddCardSheet = false },
             onCardAdded = { last4, brand, expiry ->
-                appointment.userId?.let { userId ->
+                appointment?.userId?.let { userId ->
                     paymentMethodViewModel.addNewCard(
                         userId = userId,
                         last4Digits = last4,
@@ -505,6 +510,78 @@ fun PaymentScreen(
                             Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
                         }
                     )
+                }
+            }
+        )
+    }
+
+    // Calendar Sync dialog upon payment done
+    if (showCalendarPromptDialog && appointment != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showCalendarPromptDialog = false
+                onPaymentSuccess(completedTransactionId.orEmpty())
+            },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_calendar),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_calendar_title),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.dialog_calendar_message),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val loc = listOfNotNull(
+                            appointment.Address.takeIf { it.isNotBlank() },
+                            appointment.Postcode.takeIf { it.isNotBlank() },
+                            appointment.State.takeIf { it.isNotBlank() }
+                        ).joinToString(", ")
+                        val desc = "FoodieHeal Appointment\n" +
+                                "Booking ID: ${appointment.AppointmentID.orEmpty()}\n" +
+                                "Serving Size: ${appointment.Serving_Size} portions\n" +
+                                "Health Preference: ${appointment.Health_Preference}\n" +
+                                if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
+
+                        CalendarSyncHelper.addAppointmentToCalendar(
+                            context = context,
+                            title = "FoodieHeal Appointment Session",
+                            description = desc.trim(),
+                            location = loc,
+                            dateStr = appointment.Date,
+                            startTimeStr = appointment.Start_Time,
+                            endTimeStr = appointment.End_Time
+                        )
+                        showCalendarPromptDialog = false
+                        onPaymentSuccess(completedTransactionId.orEmpty())
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(stringResource(R.string.btn_add_to_calendar))
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showCalendarPromptDialog = false
+                        onPaymentSuccess(completedTransactionId.orEmpty())
+                    }
+                ) {
+                    Text(stringResource(R.string.btn_view_booking))
                 }
             }
         )
