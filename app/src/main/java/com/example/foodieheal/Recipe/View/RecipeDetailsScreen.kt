@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,6 +70,7 @@ fun RecipeDetailsScreen(
     // 🌟 Share logic
     var showSharePreview by remember { mutableStateOf(false) }
     var showOfflineShareDialog by remember { mutableStateOf(false) }
+    var showOfflinePlannerDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
@@ -91,7 +93,16 @@ fun RecipeDetailsScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("View Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
@@ -115,23 +126,29 @@ fun RecipeDetailsScreen(
                             colorFilter = ColorFilter.tint(Color.White)
                         )
                     }
-                    
-                    if (isMyRecipe) {
-                        Box {
-                            IconButton(onClick = { expanded = true }) {
-                                Icon(painterResource(id = R.drawable.ic_vertical_more), "More", tint = Color.White)
-                            }
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
+
+                    Box {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(painterResource(id = R.drawable.ic_vertical_more), "More", tint = Color.White)
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            if (isMyRecipe) {
                                 DropdownMenuItem(
                                     text = { Text("Edit Recipe") },
                                     onClick = {
                                         expanded = false
                                         navController.navigate(Screen.EditRecipe.createRoute(recipeId))
                                     },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(id = R.drawable.ic_square_edit),
+                                            null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) },
@@ -139,31 +156,56 @@ fun RecipeDetailsScreen(
                                         expanded = false
                                         recipeToDelete = recipe
                                     },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(id = R.drawable.ic_delete),
+                                            null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 )
-                                DropdownMenuItem(
-                                    text = { Text("Share Recipe") },
-                                    onClick = {
-                                        expanded = false
-                                        if (viewModel.isNetworkAvailable) {
-                                            showSharePreview = true
-                                        } else {
-                                            showOfflineShareDialog = true
+                            }
+
+                            DropdownMenuItem(
+                                text = { Text("Share Recipe") },
+                                onClick = {
+                                    expanded = false
+                                    if (viewModel.isNetworkAvailable) {
+                                        showSharePreview = true
+                                    } else {
+                                        showOfflineShareDialog = true
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(id = R.drawable.ic_share),
+                                        null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Add to Planner") },
+                                onClick = {
+                                    expanded = false
+                                    if (viewModel.isNetworkAvailable) {
+                                        recipe?.recipe_id?.let { id ->
+                                            navController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
                                         }
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_share), null, modifier = Modifier.size(18.dp)) }
-                                )
-                            }
-                        }
-                    } else {
-                        IconButton(onClick = { 
-                            if (viewModel.isNetworkAvailable) {
-                                showSharePreview = true
-                            } else {
-                                showOfflineShareDialog = true
-                            }
-                        }) {
-                            Icon(painterResource(id = R.drawable.ic_share), "Share Recipe", tint = Color.White)
+                                    } else {
+                                        showOfflinePlannerDialog = true
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(id = R.drawable.ic_recipe),
+                                        null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            )
                         }
                     }
                 },
@@ -425,6 +467,31 @@ fun RecipeDetailsScreen(
             text = { Text("You cannot share recipes while offline. Please check your network settings.") },
             confirmButton = {
                 TextButton(onClick = { showOfflineShareDialog = false }) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    // 🌟 Offline Planner Dialog
+    if (showOfflinePlannerDialog) {
+        AlertDialog(
+            onDismissRequest = { showOfflinePlannerDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.wifi_off),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("No Internet Connection")
+                }
+            },
+            text = { Text("You cannot add recipes to your planner while offline. Please check your network settings.") },
+            confirmButton = {
+                TextButton(onClick = { showOfflinePlannerDialog = false }) {
                     Text("OK", fontWeight = FontWeight.Bold)
                 }
             }

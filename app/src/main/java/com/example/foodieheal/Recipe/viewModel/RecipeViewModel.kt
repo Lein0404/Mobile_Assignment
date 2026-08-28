@@ -545,6 +545,12 @@ class RecipeViewModel(
         }
     }
 
+    fun showOfflinePlannerMessage() {
+        viewModelScope.launch {
+            _bookmarkMessage.emit("Wifi connection required to add recipes to planner.")
+        }
+    }
+
     fun generateNextRecipeId(): String {
         val maxId = recipeList.mapNotNull { it.recipe_id?.removePrefix("R")?.toIntOrNull() }.maxOrNull() ?: 0
         return "R${(maxId + 1).toString().padStart(3, '0')}"

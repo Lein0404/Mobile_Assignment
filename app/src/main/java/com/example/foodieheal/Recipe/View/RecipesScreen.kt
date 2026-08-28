@@ -471,8 +471,12 @@ fun RecipesScreen(
                         },
                         onShareClick = { recipeToShare = it },
                         onAddClick = {
-                            recipe.recipe_id?.let { id ->
-                                parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
+                            if (viewModel.isNetworkAvailable) {
+                                recipe.recipe_id?.let { id ->
+                                    parentNavController.navigate(Screen.AddRecipeToPlanner.createRoute(id))
+                                }
+                            } else {
+                                viewModel.showOfflinePlannerMessage()
                             }
                         },
                         onClick = {
@@ -493,7 +497,15 @@ fun RecipesScreen(
     // 🌟 Manually anchor the Snackbar at the bottom, perfectly into the "empty place" under the FAB
     SnackbarHost(
         hostState = snackbarHostState,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
+        snackbar = { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
     )
 }
 

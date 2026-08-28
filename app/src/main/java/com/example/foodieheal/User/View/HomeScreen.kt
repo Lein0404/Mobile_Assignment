@@ -110,7 +110,16 @@ fun  HomeScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         contentWindowInsets = WindowInsets(0, 0, 0, 0), // 🌟 Remove status bar gap
         containerColor = MaterialTheme.colorScheme.primary // Match orange header
     ) { paddingValues ->
@@ -232,8 +241,12 @@ fun  HomeScreen(
                             }
                         },
                         onAddClick = { recipe ->
-                            recipe.recipe_id?.let { rid ->
-                                navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
+                            if (recipeViewModel.isNetworkAvailable) {
+                                recipe.recipe_id?.let { rid ->
+                                    navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
+                                }
+                            } else {
+                                recipeViewModel.showOfflinePlannerMessage()
                             }
                         }
                     )
