@@ -105,9 +105,13 @@ sealed class Screen(val route: String) {
         fun createRoute(shoppingListId: String? = null) =
             if (shoppingListId != null) "add_shopping_list_item?shoppingListId=$shoppingListId" else "add_shopping_list_item"
     }
-    object ShoppingListAddFrom : Screen("shopping_list_add_from?shoppingListId={shoppingListId}") {
-        fun createRoute(shoppingListId: String? = null) =
-            if (shoppingListId != null) "shopping_list_add_from?shoppingListId=$shoppingListId" else "shopping_list_add_from"
+    object ShoppingListAddFrom : Screen("shopping_list_add_from?shoppingListId={shoppingListId}&recipeId={recipeId}") {
+        fun createRoute(shoppingListId: String? = null, recipeId: String? = null): String {
+            val params = mutableListOf<String>()
+            if (shoppingListId != null) params.add("shoppingListId=$shoppingListId")
+            if (recipeId != null) params.add("recipeId=$recipeId")
+            return if (params.isNotEmpty()) "shopping_list_add_from?${params.joinToString("&")}" else "shopping_list_add_from"
+        }
     }
     object AdminIngredient: Screen("admin_ingredient?tab={tab}") {
         fun createRoute(tab: Int = 0) = "admin_ingredient?tab=$tab"

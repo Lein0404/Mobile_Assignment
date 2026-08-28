@@ -78,7 +78,6 @@ object ShoppingListShareHelper {
 
         val lines = rawText.lines()
         val matchedList = mutableListOf<IngredientsEntity>()
-        val seenIngredientIds = mutableSetOf<String>()
 
         for (rawLine in lines) {
             val trimmed = rawLine.trim()
@@ -88,7 +87,7 @@ object ShoppingListShareHelper {
             if (trimmed.startsWith("[") && trimmed.endsWith("]")) continue
 
             // Clean line: remove checkmark unicode/emojis and bullet points / numbering
-            var cleanLine = trimmed
+            val cleanLine = trimmed
                 .replace("✔", "")
                 .replace("✅", "")
                 .replace("[x]", "", ignoreCase = true)
@@ -98,22 +97,39 @@ object ShoppingListShareHelper {
 
             if (cleanLine.isEmpty()) continue
 
-            // 1. Exact match (case-insensitive)
+            // Extract base name without (xN) or general (quantity unit) parenthesis for matching
+            val baseName = cleanLine
+                .replace(Regex("\\s*\\(x\\d+\\)$"), "")
+                .replace(Regex("\\s*\\([^)]+\\)$"), "")
+                .trim()
+
+            // 1. Exact match (case-insensitive) on full line or base name
             var matched = allIngredients.find { it.ingredientName.equals(cleanLine, ignoreCase = true) }
+            if (matched == null && baseName.isNotEmpty()) {
+                matched = allIngredients.find { it.ingredientName.equals(baseName, ignoreCase = true) }
+            }
 
             // 2. Substring / contains match (find the most specific match)
             if (matched == null) {
                 matched = allIngredients
                     .filter { ing ->
                         cleanLine.contains(ing.ingredientName, ignoreCase = true) ||
-                        ing.ingredientName.contains(cleanLine, ignoreCase = true)
+                        ing.ingredientName.contains(cleanLine, ignoreCase = true) ||
+                        (baseName.isNotEmpty() && (baseName.contains(ing.ingredientName, ignoreCase = true) || ing.ingredientName.contains(baseName, ignoreCase = true)))
                     }
                     .maxByOrNull { it.ingredientName.length }
             }
 
-            if (matched != null && !seenIngredientIds.contains(matched.ingredientId)) {
-                seenIngredientIds.add(matched.ingredientId)
-                matchedList.add(matched)
+            if (matched != null) {
+                val existingIndex = matchedList.indexOfFirst { it.ingredientId == matched.ingredientId }
+                if (existingIndex >= 0) {
+                    val existing = matchedList[existingIndex]
+                    val countToAdd = com.example.foodieheal.ingredients.repo.ShoppingListRepository.extractCount(cleanLine)
+                    val newName = com.example.foodieheal.ingredients.repo.ShoppingListRepository.aggregateIngredientName(existing.ingredientName, countToAdd)
+                    matchedList[existingIndex] = existing.copy(ingredientName = newName)
+                } else {
+                    matchedList.add(matched.copy(ingredientName = cleanLine))
+                }
             }
         }
 

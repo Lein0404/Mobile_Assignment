@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.ingredients.local.toEntity
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
@@ -27,14 +28,17 @@ import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.ui.components.DropDownList
 
 /**
- * Screen for pasting and adding ingredients parsed from the device's clipboard.
- * Filters out unrecognized lines and only displays valid, registered ingredients.
+ * Screen for adding ingredients to a shopping list from Clipboard or Recipe.
+ * Option C: Displays ingredient names with quantity & units formatted e.g. "Frozen Chicken Nuggets (6 count)".
+ * Duplicates are aggregated with count (e.g. "Ketchup (x2)") on addition.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListAddFromScreen(
     navController: NavController,
     targetShoppingListId: String? = null,
+    recipeId: String? = null,
+    recipeViewModel: RecipeViewModel = viewModel(),
     ingredientsViewModel: IngredientsViewModel = viewModel(
         factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
     ),
@@ -47,6 +51,8 @@ fun ShoppingListAddFromScreen(
     val shoppingUiState by shoppingListViewModel.uiState.collectAsState()
     val addFromState = shoppingUiState.addFromState
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
+
+    val isFromRecipe = !recipeId.isNullOrBlank()
 
     // Initialize selectedListId in VM if not set
     LaunchedEffect(targetShoppingListId, shoppingUiState.homeState.shoppingLists) {
@@ -69,22 +75,61 @@ fun ShoppingListAddFromScreen(
         shoppingUiState.homeState.shoppingLists.map { it.title.ifEmpty { it.shoppingListId } }
     }
 
-    LaunchedEffect(ingredientsUiState.ingredients) {
-        if (ingredientsUiState.ingredients.isNotEmpty() && !addFromState.isParsed) {
-            val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
-            shoppingListViewModel.refreshFromClipboard(context, allEntities)
+    // Load recipe if recipeId is present
+    LaunchedEffect(recipeId) {
+        if (isFromRecipe) {
+            val existing = recipeViewModel.selectedRecipe?.takeIf { it.recipe_id == recipeId }
+                ?: recipeViewModel.recipeList.find { it.recipe_id == recipeId }
+                ?: recipeViewModel.myRecipes.find { it.recipe_id == recipeId }
+                ?: recipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
+
+            if (existing != null && existing.ingredients.isNotEmpty()) {
+                val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
+                shoppingListViewModel.setIngredientsFromRecipe(existing.ingredients, allEntities)
+            } else {
+                recipeViewModel.fetchRecipeById(recipeId!!)
+            }
         }
     }
 
-    val allSelected = addFromState.parsedIngredients.isNotEmpty() && 
-        addFromState.selectedIngredientIds.size == addFromState.parsedIngredients.size
+    // Parse ingredients from Recipe or Clipboard
+    LaunchedEffect(recipeId, recipeViewModel.selectedRecipe, ingredientsUiState.ingredients) {
+        if (!addFromState.isParsed) {
+            val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
+            if (isFromRecipe) {
+                val recipe = recipeViewModel.selectedRecipe?.takeIf { it.recipe_id == recipeId || it.recipe_id == null }
+                    ?: recipeViewModel.recipeList.find { it.recipe_id == recipeId }
+                    ?: recipeViewModel.myRecipes.find { it.recipe_id == recipeId }
+                    ?: recipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
+
+                if (recipe != null && recipe.ingredients.isNotEmpty()) {
+                    shoppingListViewModel.setIngredientsFromRecipe(recipe.ingredients, allEntities)
+                }
+            } else {
+                if (ingredientsUiState.ingredients.isNotEmpty()) {
+                    shoppingListViewModel.refreshFromClipboard(context, allEntities)
+                }
+            }
+        }
+    }
+
+    // Clean up when leaving screen
+    DisposableEffect(Unit) {
+        onDispose {
+            shoppingListViewModel.resetAddFromState()
+        }
+    }
+
+    val allSelected = addFromState.parsedIngredients.isNotEmpty() &&
+            addFromState.selectedIngredientIds.size == addFromState.parsedIngredients.size
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.shopping_list_paste_clipboard),
+                        text = if (isFromRecipe) stringResource(R.string.shopping_list_add_to_list)
+                               else stringResource(R.string.shopping_list_paste_clipboard),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -117,27 +162,114 @@ fun ShoppingListAddFromScreen(
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_l)))
 
             // ── Target Shopping List Selector ──
-            if (shoppingUiState.homeState.shoppingLists.isNotEmpty()) {
-                DropDownList(
-                    labelId = R.string.shopping_list_title,
-                    placeholderId = R.string.select_shopping_list_placeholder,
-                    selectedValue = selectedShoppingList?.title?.ifEmpty { selectedShoppingList.shoppingListId } ?: "",
-                    options = shoppingListOptions,
-                    onOptionSelected = { chosenTitle ->
-                        val found = shoppingUiState.homeState.shoppingLists.find {
-                            (it.title.ifEmpty { it.shoppingListId }) == chosenTitle
-                        }
-                        if (found != null) {
-                            shoppingListViewModel.updateAddFromSelectedListId(found.shoppingListId)
+            val hasExistingLists = shoppingUiState.homeState.shoppingLists.isNotEmpty()
+            val isNewList = addFromState.isNewList || !hasExistingLists
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_sm))
+            ) {
+                if (hasExistingLists) {
+                    // Option 1: Existing Shopping List
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { shoppingListViewModel.updateAddFromIsNewList(false) }
+                    ) {
+                        RadioButton(
+                            selected = !isNewList,
+                            onClick = { shoppingListViewModel.updateAddFromIsNewList(false) },
+                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                        )
+                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
+                        Text(
+                            text = stringResource(R.string.existing_shopping_list_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (!isNewList) FontWeight.SemiBold else FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    if (!isNewList) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = dimensionResource(R.dimen.padding_md))
+                        ) {
+                            DropDownList(
+                                labelId = R.string.shopping_list_title,
+                                placeholderId = R.string.select_shopping_list_placeholder,
+                                selectedValue = selectedShoppingList?.title?.ifEmpty { selectedShoppingList.shoppingListId } ?: "",
+                                options = shoppingListOptions,
+                                onOptionSelected = { chosenTitle ->
+                                    val found = shoppingUiState.homeState.shoppingLists.find {
+                                        (it.title.ifEmpty { it.shoppingListId }) == chosenTitle
+                                    }
+                                    if (found != null) {
+                                        shoppingListViewModel.updateAddFromSelectedListId(found.shoppingListId)
+                                    }
+                                }
+                            )
                         }
                     }
-                )
+                }
+
+                // Option 2: New Shopping List
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { shoppingListViewModel.updateAddFromIsNewList(true) }
+                ) {
+                    RadioButton(
+                        selected = isNewList,
+                        onClick = { shoppingListViewModel.updateAddFromIsNewList(true) },
+                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
+                    Text(
+                        text = stringResource(R.string.shopping_list_new_title),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (isNewList) FontWeight.SemiBold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                if (isNewList) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = dimensionResource(R.dimen.padding_md)),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_xsm))
+                    ) {
+                        Text(
+                            text = stringResource(R.string.shopping_list_name_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        OutlinedTextField(
+                            value = addFromState.newListNameInput,
+                            onValueChange = { shoppingListViewModel.updateAddFromNewListName(it) },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.label_name),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm)),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_md)))
 
             // ── Content ──
-            if (ingredientsUiState.isLoading && !addFromState.isParsed) {
+            if ((ingredientsUiState.isLoading || (isFromRecipe && recipeViewModel.isLoading)) && !addFromState.isParsed) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -154,26 +286,29 @@ fun ShoppingListAddFromScreen(
                         modifier = Modifier.padding(dimensionResource(R.dimen.padding_l))
                     ) {
                         Text(
-                            text = stringResource(R.string.shopping_list_no_ingredients_clipboard),
+                            text = if (isFromRecipe) stringResource(R.string.shopping_list_no_ingredients_recipe)
+                                   else stringResource(R.string.shopping_list_no_ingredients_clipboard),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                        Button(
-                            onClick = { 
-                                val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
-                                shoppingListViewModel.refreshFromClipboard(context, allEntities) 
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm))
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_content_paste),
-                                contentDescription = null,
-                                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
-                            )
-                            Spacer(Modifier.width(dimensionResource(R.dimen.padding_smd)))
-                            Text(stringResource(R.string.shopping_list_refresh_clipboard))
+                        if (!isFromRecipe) {
+                            Button(
+                                onClick = {
+                                    val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
+                                    shoppingListViewModel.refreshFromClipboard(context, allEntities)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm))
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_content_paste),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
+                                )
+                                Spacer(Modifier.width(dimensionResource(R.dimen.padding_smd)))
+                                Text(stringResource(R.string.shopping_list_refresh_clipboard))
+                            }
                         }
                     }
                 }
@@ -190,18 +325,19 @@ fun ShoppingListAddFromScreen(
                         key = { it.ingredientId }
                     ) { ingredient ->
                         val isSelected = addFromState.selectedIngredientIds.contains(ingredient.ingredientId)
+                        // ── Row for each item to be added from recipe / pasted from clipboard to the shopping list ──
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     shoppingListViewModel.toggleAddFromIngredientSelection(ingredient.ingredientId)
                                 }
-                                .padding(vertical = dimensionResource(R.dimen.padding_smd)),
+                                .padding(vertical = dimensionResource(R.dimen.padding_xsm)),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
                                 checked = isSelected,
-                                onCheckedChange = { 
+                                onCheckedChange = {
                                     shoppingListViewModel.toggleAddFromIngredientSelection(ingredient.ingredientId)
                                 },
                                 colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
@@ -215,8 +351,14 @@ fun ShoppingListAddFromScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 if (!ingredient.ingredientCategory.isNullOrBlank()) {
+                                    val displayCategory = remember(ingredient.ingredientCategory) {
+                                        com.example.foodieheal.ingredients.model.IngredientCategory.entries.find {
+                                            it.name.equals(ingredient.ingredientCategory, ignoreCase = true) ||
+                                            it.categoryName.equals(ingredient.ingredientCategory, ignoreCase = true)
+                                        }?.categoryName ?: ingredient.ingredientCategory
+                                    }
                                     Text(
-                                        text = ingredient.ingredientCategory,
+                                        text = displayCategory,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -241,7 +383,8 @@ fun ShoppingListAddFromScreen(
                         }
                     ) {
                         Text(
-                            text = if (allSelected) stringResource(R.string.shopping_list_unselect_all) else stringResource(R.string.shopping_list_select_all),
+                            text = if (allSelected) stringResource(R.string.shopping_list_unselect_all)
+                                   else stringResource(R.string.shopping_list_select_all),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
@@ -253,21 +396,39 @@ fun ShoppingListAddFromScreen(
                             val ingredientsToAdd = addFromState.parsedIngredients.filter {
                                 addFromState.selectedIngredientIds.contains(it.ingredientId)
                             }
-                            val targetId = addFromState.selectedListId.ifEmpty {
-                                selectedShoppingList?.shoppingListId ?: ""
-                            }
-                            if (targetId.isNotEmpty() && ingredientsToAdd.isNotEmpty()) {
-                                shoppingListViewModel.addIngredientsToShoppingList(
-                                    shoppingListId = targetId,
+                            if (isNewList) {
+                                shoppingListViewModel.createShoppingListAndAddIngredients(
+                                    title = addFromState.newListNameInput,
                                     ingredients = ingredientsToAdd
-                                ) { count ->
-                                    val targetListName = selectedShoppingList?.title?.ifEmpty { targetId } ?: targetId
-                                    Toast.makeText(context, application.getString(R.string.shopping_list_items_added_to_list, count, targetListName), Toast.LENGTH_SHORT).show()
+                                ) { listTitle, count ->
+                                    Toast.makeText(
+                                        context,
+                                        application.getString(R.string.shopping_list_items_added_to_list, count, listTitle),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                     navController.popBackStack()
+                                }
+                            } else {
+                                val targetId = addFromState.selectedListId.ifEmpty {
+                                    selectedShoppingList?.shoppingListId ?: ""
+                                }
+                                if (targetId.isNotEmpty() && ingredientsToAdd.isNotEmpty()) {
+                                    shoppingListViewModel.addIngredientsToShoppingList(
+                                        shoppingListId = targetId,
+                                        ingredients = ingredientsToAdd
+                                    ) { count ->
+                                        val targetListName = selectedShoppingList?.title?.ifEmpty { targetId } ?: targetId
+                                        Toast.makeText(
+                                            context,
+                                            application.getString(R.string.shopping_list_items_added_to_list, count, targetListName),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        navController.popBackStack()
+                                    }
                                 }
                             }
                         },
-                        enabled = addFromState.selectedIngredientIds.isNotEmpty() && (addFromState.selectedListId.isNotEmpty() || selectedShoppingList != null),
+                        enabled = addFromState.selectedIngredientIds.isNotEmpty() && (isNewList || selectedShoppingList != null),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary

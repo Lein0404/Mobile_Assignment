@@ -77,15 +77,63 @@ class ShoppingListRepository(private val dao: ShoppingListDao) {
     }
 
     suspend fun insertItem(item: ShoppingListItemEntity) = withContext(Dispatchers.IO) {
-        dao.insertItem(item)
+        val existingItems = dao.getItemsForListSync(item.shoppingListId, item.userId)
+        val itemBase = extractBaseName(item.ingredientName)
+        val incomingCount = extractCount(item.ingredientName)
+        val matchingExisting = existingItems.find {
+            !it.isChecked && extractBaseName(it.ingredientName).equals(itemBase, ignoreCase = true)
+        }
+
+        if (matchingExisting != null) {
+            val newName = aggregateIngredientName(matchingExisting.ingredientName, incomingCount)
+            dao.updateItemName(matchingExisting.id, newName)
+        } else {
+            dao.insertItem(item)
+        }
         dao.updateLastUpdated(item.shoppingListId, item.userId)
     }
 
     suspend fun insertItems(items: List<ShoppingListItemEntity>) = withContext(Dispatchers.IO) {
-        if (items.isNotEmpty()) {
-            dao.insertItems(items)
-            val first = items.first()
-            dao.updateLastUpdated(first.shoppingListId, first.userId)
+        if (items.isEmpty()) return@withContext
+        val shoppingListId = items.first().shoppingListId
+        val userId = items.first().userId
+        val currentItems = dao.getItemsForListSync(shoppingListId, userId).toMutableList()
+
+        for (item in items) {
+            val itemBase = extractBaseName(item.ingredientName)
+            val incomingCount = extractCount(item.ingredientName)
+            val matchingIndex = currentItems.indexOfFirst {
+                !it.isChecked && extractBaseName(it.ingredientName).equals(itemBase, ignoreCase = true)
+            }
+
+            if (matchingIndex >= 0) {
+                val matching = currentItems[matchingIndex]
+                val newName = aggregateIngredientName(matching.ingredientName, incomingCount)
+                dao.updateItemName(matching.id, newName)
+                currentItems[matchingIndex] = matching.copy(ingredientName = newName)
+            } else {
+                dao.insertItem(item)
+                currentItems.add(item)
+            }
+        }
+        dao.updateLastUpdated(shoppingListId, userId)
+    }
+
+    companion object {
+        fun extractCount(name: String): Int {
+            val regex = Regex("\\(x(\\d+)\\)$")
+            val match = regex.find(name.trim())
+            return match?.groupValues?.get(1)?.toIntOrNull() ?: 1
+        }
+
+        fun extractBaseName(name: String): String =
+            name.replace(Regex("\\s*\\(x\\d+\\)$"), "").trim()
+
+        fun aggregateIngredientName(existingName: String, countToAdd: Int = 1): String {
+            val base = extractBaseName(existingName)
+            val currentCount = extractCount(existingName)
+            val newCount = currentCount + countToAdd
+            return if (newCount > 1) "$base (x$newCount)" else base
         }
     }
 

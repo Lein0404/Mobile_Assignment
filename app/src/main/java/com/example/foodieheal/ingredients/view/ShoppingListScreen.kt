@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -105,28 +107,34 @@ fun ShoppingListScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val customTextSelectionColors = TextSelectionColors(
+                        handleColor = MaterialTheme.colorScheme.onPrimary,
+                        backgroundColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.4f)
+                    )
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        BasicTextField(
-                            value = detailState.editableTitle,
-                            onValueChange = { viewModel.updateEditableTitle(it) },
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.titleLarge.copy(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onPrimary),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done,
-                                capitalization = KeyboardCapitalization.Sentences
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    focusManager.clearFocus()
-                                    saveTitleIfChanged()
-                                }
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
+                            BasicTextField(
+                                value = detailState.editableTitle,
+                                onValueChange = { viewModel.updateEditableTitle(it) },
+                                singleLine = true,
+                                textStyle = MaterialTheme.typography.titleLarge.copy(
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onPrimary),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done,
+                                    capitalization = KeyboardCapitalization.Sentences
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        focusManager.clearFocus()
+                                        saveTitleIfChanged()
+                                    }
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         if (formattedUpdated.isNotEmpty()) {
                             Text(
                                 text = stringResource(R.string.shopping_list_last_updated, formattedUpdated),

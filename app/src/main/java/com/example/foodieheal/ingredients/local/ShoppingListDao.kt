@@ -68,6 +68,9 @@ interface ShoppingListDao {
     @Query("SELECT * FROM shopping_list_items WHERE shopping_list_id = :shoppingListId AND user_id = :userId")
     fun getItemsForList(shoppingListId: String, userId: String): Flow<List<ShoppingListItemEntity>>
 
+    @Query("SELECT * FROM shopping_list_items WHERE shopping_list_id = :shoppingListId AND user_id = :userId")
+    suspend fun getItemsForListSync(shoppingListId: String, userId: String): List<ShoppingListItemEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: ShoppingListItemEntity)
 
@@ -76,6 +79,9 @@ interface ShoppingListDao {
 
     @Query("UPDATE shopping_list_items SET is_checked = :isChecked WHERE id = :id")
     suspend fun updateItemChecked(id: Long, isChecked: Boolean)
+
+    @Query("UPDATE shopping_list_items SET ingredient_name = :name WHERE id = :id")
+    suspend fun updateItemName(id: Long, name: String)
 
     @Query("DELETE FROM shopping_list_items WHERE id = :id")
     suspend fun deleteItem(id: Long)

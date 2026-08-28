@@ -63,7 +63,9 @@ data class ShoppingListAddFromUiState(
     val parsedIngredients: List<IngredientsEntity> = emptyList(),
     val selectedIngredientIds: Set<String> = emptySet(),
     val isParsed: Boolean = false,
-    val selectedListId: String = ""
+    val selectedListId: String = "",
+    val isNewList: Boolean = false,
+    val newListNameInput: String = ""
 )
 
 class ShoppingListViewModel(
@@ -370,10 +372,41 @@ class ShoppingListViewModel(
         _uiState.update { it.copy(addItemState = it.addItemState.copy(selectedIngredients = emptyList())) }
     }
 
-    // ──────────────── Add From Clipboard Screen ────────────────
+    // ──────────────── Add From Clipboard / Recipe Screen ────────────────
 
     fun updateAddFromSelectedListId(listId: String) {
         _uiState.update { it.copy(addFromState = it.addFromState.copy(selectedListId = listId)) }
+    }
+
+    fun updateAddFromIsNewList(isNew: Boolean) {
+        _uiState.update { it.copy(addFromState = it.addFromState.copy(isNewList = isNew)) }
+    }
+
+    fun updateAddFromNewListName(name: String) {
+        _uiState.update { it.copy(addFromState = it.addFromState.copy(newListNameInput = name)) }
+    }
+
+    fun createShoppingListAndAddIngredients(
+        title: String,
+        ingredients: List<IngredientsEntity>,
+        onSuccess: (String, Int) -> Unit
+    ) {
+        if (currentUserId.isEmpty() || ingredients.isEmpty()) return
+        viewModelScope.launch {
+            val createdList = shoppingRepo.createShoppingList(currentUserId, title.trim().ifEmpty { null })
+            val items = ingredients.map { ing ->
+                ShoppingListItemEntity(
+                    shoppingListId = createdList.shoppingListId,
+                    userId = currentUserId,
+                    ingredientId = ing.ingredientId,
+                    ingredientName = ing.ingredientName,
+                    ingredientCategory = ing.ingredientCategory,
+                    isChecked = false
+                )
+            }
+            shoppingRepo.insertItems(items)
+            onSuccess(createdList.title.ifEmpty { createdList.shoppingListId }, items.size)
+        }
     }
 
     fun refreshFromClipboard(context: android.content.Context, allIngredients: List<IngredientsEntity>) {
@@ -387,6 +420,119 @@ class ShoppingListViewModel(
                     isParsed = true
                 )
             )
+        }
+    }
+
+    fun setIngredientsFromRecipe(
+        recipeIngredients: List<com.example.foodieheal.Recipe.Model.IngredientItem>,
+        allIngredients: List<IngredientsEntity>
+    ) {
+        val parsedList = recipeIngredients.mapIndexed { index, recipeIng ->
+            val name = recipeIng.name.trim()
+            val qty = recipeIng.displayQuantity.trim()
+            val unit = recipeIng.unit.trim()
+
+            // Option C format: e.g. "Frozen Chicken Nuggets (6 count)"
+            val formattedName = when {
+                qty.isNotEmpty() && qty != "0" && unit.isNotEmpty() -> "$name ($qty $unit)"
+                qty.isNotEmpty() && qty != "0" -> "$name ($qty)"
+                unit.isNotEmpty() -> "$name ($unit)"
+                else -> name
+            }
+
+            // Match against cached ingredients to find official ID and Category
+            val matched = allIngredients.find { it.ingredientName.equals(name, ignoreCase = true) }
+                ?: allIngredients.find { name.contains(it.ingredientName, ignoreCase = true) || it.ingredientName.contains(name, ignoreCase = true) }
+
+            val resolvedCategory = matched?.ingredientCategory
+                ?: inferCategoryFromIngredientName(name)
+
+            IngredientsEntity(
+                ingredientId = matched?.ingredientId ?: "RECIPE_ING_${index}_${name.hashCode()}",
+                ingredientName = formattedName,
+                ingredientCategory = resolvedCategory,
+                ingredientDesc = "",
+                ingredientImage = matched?.ingredientImage
+            )
+        }
+
+        _uiState.update {
+            it.copy(
+                addFromState = it.addFromState.copy(
+                    parsedIngredients = parsedList,
+                    selectedIngredientIds = parsedList.map { ing -> ing.ingredientId }.toSet(),
+                    isParsed = true
+                )
+            )
+        }
+    }
+
+    private fun inferCategoryFromIngredientName(name: String): String {
+        val lower = name.lowercase()
+        return when {
+            lower.contains("potato") || lower.contains("tomato") || lower.contains("onion") ||
+            lower.contains("garlic") || lower.contains("carrot") || lower.contains("spinach") ||
+            lower.contains("lettuce") || lower.contains("broccoli") || lower.contains("cabbage") ||
+            lower.contains("petai") || lower.contains("cucumber") || lower.contains("mushroom") ||
+            lower.contains("vegetable") || lower.contains("capsicum") || lower.contains("celery") -> IngredientCategory.VEGETABLES.name
+
+            lower.contains("nugget") || lower.contains("frozen") || lower.contains("fries") ||
+            lower.contains("patty") || lower.contains("patties") -> IngredientCategory.FROZEN_FOODS.name
+
+            lower.contains("chicken") || lower.contains("beef") || lower.contains("pork") ||
+            lower.contains("lamb") || lower.contains("turkey") || lower.contains("duck") ||
+            lower.contains("steak") || lower.contains("meat") || lower.contains("bacon") ||
+            lower.contains("sausage") || lower.contains("ham") -> IngredientCategory.MEAT_POULTRY.name
+
+            lower.contains("fish") || lower.contains("salmon") || lower.contains("tuna") ||
+            lower.contains("shrimp") || lower.contains("prawn") || lower.contains("crab") ||
+            lower.contains("squid") || lower.contains("seafood") -> IngredientCategory.SEAFOOD.name
+
+            lower.contains("milk") || lower.contains("cheese") || lower.contains("egg") ||
+            lower.contains("butter") || lower.contains("yogurt") || lower.contains("cream") -> IngredientCategory.DAIRY_EGGS.name
+
+            lower.contains("salt") || lower.contains("sugar") || lower.contains("pepper") ||
+            lower.contains("paprika") || lower.contains("oregano") || lower.contains("basil") ||
+            lower.contains("thyme") || lower.contains("cinnamon") || lower.contains("spice") ||
+            lower.contains("herb") || lower.contains("seasoning") || lower.contains("powder") -> IngredientCategory.HERBS_SPICES_SEASONINGS.name
+
+            lower.contains("sauce") || lower.contains("ketchup") || lower.contains("mayo") ||
+            lower.contains("mayonnaise") || lower.contains("mustard") || lower.contains("dressing") ||
+            lower.contains("vinegar") || lower.contains("chili") || lower.contains("sambal") -> IngredientCategory.CONDIMENTS_SAUCES_DRESSINGS.name
+
+            lower.contains("oil") || lower.contains("ghee") || lower.contains("margarine") -> IngredientCategory.OILS_FATS.name
+
+            lower.contains("rice") || lower.contains("flour") || lower.contains("pasta") ||
+            lower.contains("noodle") || lower.contains("oat") || lower.contains("grain") -> IngredientCategory.GRAINS_RICE.name
+
+            lower.contains("apple") || lower.contains("banana") || lower.contains("orange") ||
+            lower.contains("berry") || lower.contains("fruit") || lower.contains("lemon") ||
+            lower.contains("lime") || lower.contains("mango") || lower.contains("avocado") -> IngredientCategory.FRUITS.name
+
+            lower.contains("bean") || lower.contains("lentil") || lower.contains("pea") ||
+            lower.contains("chickpea") || lower.contains("tofu") || lower.contains("tempeh") -> IngredientCategory.LEGUMES_BEANS.name
+
+            lower.contains("cereal") || lower.contains("granola") || lower.contains("muesli") -> IngredientCategory.BREAKFAST_CEREALS.name
+            lower.contains("juice") || lower.contains("tea") || lower.contains("coffee") ||
+            lower.contains("soda") || lower.contains("water") || lower.contains("drink") -> IngredientCategory.BEVERAGES.name
+
+            lower.contains("chip") || lower.contains("snack") || lower.contains("candy") ||
+            lower.contains("chocolate") || lower.contains("cookie") || lower.contains("biscuit") -> IngredientCategory.SNACKS_SWEETS.name
+
+            lower.contains("almond") || lower.contains("walnut") || lower.contains("peanut") ||
+            lower.contains("nut") || lower.contains("seed") -> IngredientCategory.NUTS_SEEDS.name
+
+            lower.contains("canned") || lower.contains("can") -> IngredientCategory.CANNED_PACKAGED.name
+            lower.contains("bread") || lower.contains("muffin") || lower.contains("toast") ||
+            lower.contains("bagel") || lower.contains("croissant") -> IngredientCategory.BAKERY.name
+
+            else -> IngredientCategory.OTHERS.name
+        }
+    }
+
+    fun resetAddFromState() {
+        _uiState.update {
+            it.copy(addFromState = ShoppingListAddFromUiState())
         }
     }
 

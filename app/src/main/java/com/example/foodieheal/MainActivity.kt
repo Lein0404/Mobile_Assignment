@@ -1174,14 +1174,27 @@ class MainActivity : FragmentActivity() {
                                 }
                                 composable(
                                     route = Screen.ShoppingListAddFrom.route,
-                                    arguments = listOf(navArgument("shoppingListId") {
-                                        type = NavType.StringType
-                                        nullable = true
-                                        defaultValue = null
-                                    })
+                                    arguments = listOf(
+                                        navArgument("shoppingListId") {
+                                            type = NavType.StringType
+                                            nullable = true
+                                            defaultValue = null
+                                        },
+                                        navArgument("recipeId") {
+                                            type = NavType.StringType
+                                            nullable = true
+                                            defaultValue = null
+                                        }
+                                    )
                                 ) { backStackEntry ->
                                     val shoppingListId = backStackEntry.arguments?.getString("shoppingListId")
-                                    ShoppingListAddFromScreen(navController, targetShoppingListId = shoppingListId)
+                                    val recipeId = backStackEntry.arguments?.getString("recipeId")
+                                    ShoppingListAddFromScreen(
+                                        navController = navController,
+                                        targetShoppingListId = shoppingListId,
+                                        recipeId = recipeId,
+                                        recipeViewModel = sharedRecipeViewModel
+                                    )
                                 }
                             }
                         }

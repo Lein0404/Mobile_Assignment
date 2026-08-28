@@ -109,7 +109,7 @@ fun SelectShoppingListDialog(
                     )
                     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_smd)))
                     Text(
-                        text = stringResource(R.string.shopping_list_new_title_small),
+                        text = stringResource(R.string.shopping_list_new_title),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (isNewList) FontWeight.SemiBold else FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurface

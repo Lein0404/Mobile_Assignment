@@ -45,12 +45,7 @@ fun RecipeDetailsScreen(
         viewModel.fetchRecipeById(recipeId)
     }
 
-    // 🌟 2. Clear state when leaving the screen
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.clearSelectedRecipe()
-        }
-    }
+
 
     val recipe = viewModel.selectedRecipe
     val user = authViewModel.currentUser
@@ -372,8 +367,12 @@ fun RecipeDetailsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = "Ingredients", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        IconButton(onClick = { /* Add to cart */ }) {
-                            Icon(painterResource(id = R.drawable.ic_shopping_cart), null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface)
+                        IconButton(onClick = {
+                            recipe.let {
+                                navController.navigate(Screen.ShoppingListAddFrom.createRoute(recipeId = it.recipe_id ?: recipeId))
+                            }
+                        }) {
+                            Icon(painterResource(id = R.drawable.ic_add_to_shopping_cart), null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     recipe.ingredients.forEach { ingredient ->
