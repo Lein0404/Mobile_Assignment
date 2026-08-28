@@ -126,7 +126,6 @@ open class AppCacheCleanupService : Service() {
                 try {
                     val recipeDb = RecipeDatabase.getDatabase(context)
                     recipeDb.recipeDao().clearRecipes()
-                    recipeDb.recipeDao().clearIngredients()
                     Log.d(TAG, "Cleared Recipe cache.")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error clearing Recipe cache", e)

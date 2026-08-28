@@ -70,6 +70,8 @@ import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
 import com.example.foodieheal.Payment.ViewModel.PaymentViewModel
 import com.example.foodieheal.Payment.local.PayMethodDatabase
 import com.example.foodieheal.Payment.repo.PaymentRepository
+import com.example.foodieheal.ingredients.local.IngredientsDatabase
+import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.view.ShoppingListAddFromScreen
 import com.example.foodieheal.ingredients.view.ShoppingListAddItemScreen
 import com.example.foodieheal.ingredients.view.ShoppingListHomeScreen
@@ -200,8 +202,10 @@ class MainActivity : ComponentActivity() {
                 }
 
 
-                val recipeDb = remember { com.example.foodieheal.Recipe.local.RecipeDatabase.getDatabase(context) }
-                val recipeRepo = remember { RecipeRepository(recipeDb.recipeDao()) }
+                val ingredientsDb = remember { IngredientsDatabase.getInstance(context) }
+                val ingredientsRepo = remember { IngredientsRepository(ingredientsDb.ingredientsDao()) }
+                val recipeDb = remember { RecipeDatabase.getDatabase(context) }
+                val recipeRepo = remember { RecipeRepository(recipeDb.recipeDao(), ingredientsRepo) }
                 val sharedRecipeViewModel: RecipeViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")

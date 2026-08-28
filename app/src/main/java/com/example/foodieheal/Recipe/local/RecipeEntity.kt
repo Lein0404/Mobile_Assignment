@@ -72,12 +72,3 @@ fun com.example.foodieheal.Recipe.Model.Recipe.toEntity(json: kotlinx.serializat
         authorImageUrl = this.authorInfo?.profile_pic_url ?: this.authorImageUrl
     )
 }
-
-@Entity(tableName = "local_ingredients")
-data class IngredientEntity(
-    @PrimaryKey val id: String,
-    val name: String?,
-    val kcal: Double?,
-    val defaultUnit: String?,
-    val defaultQuantity: Double? = 1.0 // 🌟 New field
-)
