@@ -12,9 +12,12 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.Recipe
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 
 class RecipeViewModel(
     private val repository: RecipeRepository,
@@ -298,6 +301,10 @@ class RecipeViewModel(
         bookmarkJobs[recipeId] = viewModelScope.launch {
             try {
                 repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
+                    // 🌟 Check if this job is still active before showing toast or updating state
+                    // This prevents "Old" jobs from overriding the current UI if they finish late.
+                    if (!isActive) return@launch
+
                     val message = if (isBookmarked) {
                         if (isNetworkAvailable) "Removed '$recipeName' from favorites" 
                         else "Removed locally: $recipeName"
@@ -306,8 +313,11 @@ class RecipeViewModel(
                         else "Bookmarked locally: $recipeName"
                     }
                     _bookmarkMessage.emit(message)
-                    fetchBookmarkedRecipes(userId)
+                    // 🌟 REMOVED: fetchBookmarkedRecipes(userId) 
+                    // We already did an optimistic update. Refreshing from server causes flickering.
                 }.onFailure { e ->
+                    if (!isActive) return@launch
+
                     // Revert UI only if it's NOT a network error
                     val msg = e.localizedMessage ?: ""
                     val isNetworkError = msg.contains("Unable to resolve host", true) ||
@@ -316,19 +326,26 @@ class RecipeViewModel(
 
                     if (!isNetworkError) {
                         bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
+                        
+                        // Also revert the list update
+                        if (isBookmarked) {
+                            recipeList.find { it.recipe_id == recipeId }?.let {
+                                bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
+                            }
+                        } else {
+                            bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
+                        }
+                        
                         _bookmarkMessage.emit("Bookmark failed: ${msg.split("\n").firstOrNull() ?: "Unknown error"}")
-                    } else {
-                        _bookmarkMessage.emit("Saved locally: $recipeName")
                     }
-                    Log.e("RecipeViewModel", "Bookmark error for $recipeId", e)
                 }
             } catch (e: Exception) {
-                _bookmarkMessage.emit("Error: ${e.localizedMessage}")
-            } finally {
-                // Cleanup job map when done
-                if (bookmarkJobs[recipeId]?.isActive == false) {
-                    bookmarkJobs.remove(recipeId)
+                if (isActive) {
+                    _bookmarkMessage.emit("Error: ${e.localizedMessage}")
                 }
+            } finally {
+                // Cleanup job map
+                bookmarkJobs.remove(recipeId)
             }
         }
     }
@@ -511,7 +528,7 @@ class RecipeViewModel(
                 // 🌟 Delay the background refresh slightly to give Supabase DB time to propagate the deletion
                 // and to prevent a race condition where the fetch returns the old data.
                 viewModelScope.launch {
-                    kotlinx.coroutines.delay(1000)
+                    delay(1000)
                     refreshAll()
                     fetchMyRecipes(userId, force = false) // Don't force clear again, we already filtered
                 }
