@@ -282,7 +282,7 @@ fun ProfileScreen(
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
                     }
-                    DrawerItem("Follow Requests", R.drawable.ic_hiring) {
+                    DrawerItem("Follow Requests", R.drawable.follower) {
                         scope.launch {
                             drawerState.close()
                             navController.navigate(Screen.FollowRequests.route)
