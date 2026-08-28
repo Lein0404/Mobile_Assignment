@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+data class CloudinaryUploadUiState(
+    val selectedImageUri: Uri? = null,
+    val uploadedImageUrl: String = "",
+    val imageError: Int? = null,
+)
+
 class CloudinaryUploadViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(CloudinaryUploadUiState())

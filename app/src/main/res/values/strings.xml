@@ -816,7 +816,7 @@
     <string name="ingredients_title">Ingredients</string>
     <string name="ingredients_tab_existing">Existing</string>
     <string name="ingredients_tab_requests">Requests</string>
-    <string name="ingredients_fab_new_request">New Request</string>
+    <string name="ingredients_fab_new_request">Add Request</string>
     <string name="ingredients_toast_added">%1$s added to the shopping list.</string>
     <string name="ingredients_requests_empty">No requests found.</string>
     <string name="ingredients_requests_filter_title">Filter by Status</string>
