@@ -1133,4 +1133,9 @@
     <string name="dialog_calendar_message">Your payment was successful and booking is confirmed. Would you like to add this session to your Calendar with reminder alerts?</string>
     <string name="btn_add_to_calendar">Add to Calendar</string>
     <string name="btn_view_booking">View Booking</string>
+
+    <!-- Rebook Chef Feature -->
+    <string name="btn_rebook_chef">Rebook Chef</string>
+    <string name="rebooking_in_progress">Preparing booking...</string>
+    <string name="rebook_failed">Unable to prepare rebook: %1$s</string>
 </resources>

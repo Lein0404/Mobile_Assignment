@@ -61,6 +61,10 @@ class AppointmentBookingViewModel(
     private val _selectedRecipes = MutableStateFlow<List<SelectedAppointmentRecipe>>(emptyList())
     val selectedRecipes: StateFlow<List<SelectedAppointmentRecipe>> = _selectedRecipes.asStateFlow()
 
+    // Rebooking progress state (holds the appointmentId being loaded)
+    private val _isRebooking = MutableStateFlow<String?>(null)
+    val isRebooking: StateFlow<String?> = _isRebooking.asStateFlow()
+
     val pricingBreakdown: StateFlow<AppointmentPricingBreakdown> = combine(
         _selectedChef,
         _uiState,
@@ -111,6 +115,71 @@ class AppointmentBookingViewModel(
         _selectedChef.value = null
     }
 
+    fun prepareRebook(
+        appointment: Appointment,
+        onSuccess: (chefId: String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val appointmentId = appointment.AppointmentID.orEmpty()
+        val chefId = appointment.chefId
+
+        if (chefId.isBlank()) {
+            onError("Chef details are missing.")
+            return
+        }
+
+        viewModelScope.launch {
+            _isRebooking.value = appointmentId
+            try {
+                val chef = repository.fetchChefById(chefId)
+                if (chef == null) {
+                    onError("Chef profile could not be found.")
+                    return@launch
+                }
+                _selectedChef.value = chef
+
+                val attachedWithDetails = if (appointmentId.isNotBlank()) {
+                    repository.fetchAppointmentRecipes(appointmentId)
+                } else emptyList()
+
+                val selected = attachedWithDetails.mapNotNull { item ->
+                    item.recipe?.let { recipe ->
+                        SelectedAppointmentRecipe(
+                            recipe = recipe,
+                            serviceCount = item.service_count.toInt().coerceAtLeast(1),
+                            customNote = item.custom_note.orEmpty()
+                        )
+                    }
+                }
+                _selectedRecipes.value = selected
+
+                _uiState.update { current ->
+                    current.copy(
+                        address = appointment.Address,
+                        postcode = appointment.Postcode,
+                        state = appointment.State,
+                        healthPreference = appointment.Health_Preference,
+                        servingSize = appointment.Serving_Size.toString(),
+                        description = appointment.Note,
+                        appointmentTime = "",
+                        startTime = "",
+                        endTime = "",
+                        hasAttemptedSubmit = false,
+                        errors = emptySet()
+                    )
+                }
+
+                val targetChefId = chef.chefId.ifEmpty { chef.id }
+                onSuccess(targetChefId)
+            } catch (e: Exception) {
+                Log.e("AppointmentBookingVM", "Error preparing rebook", e)
+                onError(e.localizedMessage ?: "Failed to prepare rebook.")
+            } finally {
+                _isRebooking.value = null
+            }
+        }
+    }
+
     fun onAppointmentTimeSlotChanged(startTime: String, endTime: String) {
         val combined = "$startTime - $endTime"
         _uiState.update {
@@ -121,27 +190,6 @@ class AppointmentBookingViewModel(
             )
         }
         validateTimeSlot(combined)
-        revalidateIfSubmitted()
-    }
-
-    fun onAppointmentTimeChanged(time: String) {
-        if (time.contains("-")) {
-            val parts = time.split("-").map { it.trim() }
-            if (parts.size == 2) {
-                _uiState.update {
-                    it.copy(
-                        startTime = parts[0],
-                        endTime = parts[1],
-                        appointmentTime = time
-                    )
-                }
-            } else {
-                _uiState.update { it.copy(appointmentTime = time) }
-            }
-        } else {
-            _uiState.update { it.copy(appointmentTime = time) }
-        }
-        validateTimeSlot(time)
         revalidateIfSubmitted()
     }
 

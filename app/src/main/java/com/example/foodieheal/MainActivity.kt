@@ -956,11 +956,26 @@ class MainActivity : FragmentActivity() {
                                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
 
                                 composable(Screen.AppoinmtmentHistory.route) {
+                                    val rebookingAppointmentId by bookingViewModel.isRebooking.collectAsStateWithLifecycle()
+                                    val context = LocalContext.current
+
                                     AppointmentHistoryScreen(
                                         viewModel = userAppointmentViewModel,
+                                        rebookingAppointmentId = rebookingAppointmentId,
                                         onBackClick = { navController.popBackStack() },
                                         onAppointmentClick = { appointmentId ->
                                             navController.navigate(Screen.UserAppointmentDetail.createRoute(appointmentId))
+                                        },
+                                        onRebookClick = { appointment ->
+                                            bookingViewModel.prepareRebook(
+                                                appointment = appointment,
+                                                onSuccess = { chefId ->
+                                                    navController.navigate("${Screen.HiringAppointment.route}/$chefId")
+                                                },
+                                                onError = { errorMsg ->
+                                                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
                                         }
                                     )
                                 }

@@ -117,6 +117,35 @@ class HiringRepository(
         }
     }
 
+    suspend fun fetchChefById(chefId: String): Chef? = withContext(Dispatchers.IO) {
+        val dao = getChefDao()
+        try {
+            val chef = try {
+                client.from("Chef")
+                    .select { filter { eq("chefId", chefId) } }
+                    .decodeSingleOrNull<Chef>()
+            } catch (e: Exception) {
+                null
+            } ?: try {
+                client.from("Chef")
+                    .select { filter { eq("id", chefId) } }
+                    .decodeSingleOrNull<Chef>()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (chef != null) {
+                dao?.insertChef(chef.toEntity())
+                chef
+            } else {
+                dao?.getChefById(chefId)?.toDomain()
+            }
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error fetching chef by ID $chefId", e)
+            dao?.getChefById(chefId)?.toDomain()
+        }
+    }
+
     suspend fun fetchAppointmentsForUser(userId: String): List<Appointment> = withContext(Dispatchers.IO) {
         val dao = getAppointmentDao()
         try {
