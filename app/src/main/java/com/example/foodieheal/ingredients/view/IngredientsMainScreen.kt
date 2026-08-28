@@ -327,10 +327,24 @@ fun IngredientRequestsScreen(
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.ingredients_requests_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.ingredients_requests_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
+                    Button(
+                        onClick = {
+                            navController.navigate(Screen.IngredientRequestForm.createRoute())
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                    ) {
+                        Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null)
+                        Spacer(Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
+                        Text(stringResource(R.string.ingredients_fab_new_request))
+                    }
+                }
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }

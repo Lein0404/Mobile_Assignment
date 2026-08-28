@@ -57,6 +57,7 @@ fun IngredientSearchAndFilter(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
+        singleLine = true,
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         trailingIcon = {
             if (showFilterIcon) {

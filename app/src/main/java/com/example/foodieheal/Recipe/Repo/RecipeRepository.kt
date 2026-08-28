@@ -14,6 +14,9 @@ import com.example.foodieheal.MainActivity
 import com.example.foodieheal.User.local.UserDatabase
 import com.example.foodieheal.User.local.toPublicEntity
 import com.example.foodieheal.User.local.toDomain
+import com.example.foodieheal.Recipe.Model.UnitDetails
+import com.example.foodieheal.ingredients.local.IngredientsDatabase
+import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -30,9 +33,16 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class RecipeRepository(
-    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null
+    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null,
+    private val ingredientsRepository: IngredientsRepository? = null
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    private fun getIngredientsRepo(): IngredientsRepository? {
+        return ingredientsRepository ?: MainActivity.appContext?.let { ctx ->
+            IngredientsRepository(IngredientsDatabase.getInstance(ctx).ingredientsDao())
+        }
+    }
 
     suspend fun getAllRecipes(): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
@@ -167,9 +177,40 @@ class RecipeRepository(
 
     suspend fun getAvailableIngredients(): Result<List<Ingredient>> = withContext(Dispatchers.IO) {
         runCatching {
-            client.from("ingredient_units")
-                .select(Columns.raw("*, units(default_quantity)"))
-                .decodeList<Ingredient>()
+            val repo = getIngredientsRepo()
+            if (repo != null) {
+                val ingredients = repo.getIngredients()
+                val allUnits = repo.getUnits().associateBy { it.unitID }
+                val allIngredientUnits = repo.getAllIngredientUnits()
+
+                ingredients.flatMap { ing ->
+                    val unitsForIng = allIngredientUnits.filter { it.ingredientID == ing.ingredientId }
+                    if (unitsForIng.isEmpty()) {
+                        listOf(
+                            Ingredient(
+                                id = ing.ingredientId,
+                                name = ing.ingredientName,
+                                kcal = 0.0,
+                                defaultUnit = "pieces",
+                                unitDetails = UnitDetails(defaultQuantity = 1.0)
+                            )
+                        )
+                    } else {
+                        unitsForIng.map { iu ->
+                            val unit = allUnits[iu.unitID]
+                            Ingredient(
+                                id = iu.ingredientUnitId,
+                                name = ing.ingredientName,
+                                kcal = iu.caloriesPerDefaultQuantity,
+                                defaultUnit = unit?.unitDisplay?.ifEmpty { unit.unitName } ?: "pieces",
+                                unitDetails = UnitDetails(defaultQuantity = unit?.defaultQuantity ?: 1.0)
+                            )
+                        }
+                    }
+                }
+            } else {
+                emptyList()
+            }
         }
     }
 
