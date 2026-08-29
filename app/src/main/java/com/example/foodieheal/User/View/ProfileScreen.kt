@@ -174,8 +174,12 @@ fun ProfileScreen(
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
 
-    val myRecipes = if (isMyProfile) viewModel.myRecipes else viewModel.myRecipes.filter { 
-        it.visibility == "public" || (it.visibility == "followers" && followViewModel.followStatus == "ACCEPTED")
+    val myRecipes = remember(viewModel.myRecipes, followViewModel.followStatus, isMyProfile) {
+        if (isMyProfile) viewModel.myRecipes 
+        else viewModel.myRecipes.filter { 
+            val visibility = it.visibility.lowercase()
+            visibility == "public" || (visibility == "followers" && followViewModel.followStatus == "ACCEPTED")
+        }
     }
     val bookmarkedRecipes = viewModel.bookmarkedRecipes
     val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
