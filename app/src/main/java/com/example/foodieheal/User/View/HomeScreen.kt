@@ -67,7 +67,11 @@ fun  HomeScreen(
         }
 
         if (randomRecipes.isEmpty() && recipeViewModel.recipeList.isNotEmpty()) {
-            randomRecipes = recipeViewModel.recipeList.shuffled().take(5)
+            // 🌟 Only show PUBLIC recipes from the master list on Home Screen
+            randomRecipes = recipeViewModel.recipeList
+                .filter { it.visibility.lowercase() == "public" }
+                .shuffled()
+                .take(5)
         }
     }
 

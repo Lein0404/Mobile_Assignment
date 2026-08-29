@@ -265,7 +265,7 @@ fun RecipeDetailsScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     // Title and Course + Last Updated
                     Text(text = recipe.recipeName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
                         Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(text = recipe.recipeCourse, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -279,6 +279,31 @@ fun RecipeDetailsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }
+                    }
+
+                    // 🌟 Show Visibility Status on its own line
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        val (iconRes, visibilityText) = when(recipe.visibility.lowercase()) {
+                            "followers" -> R.drawable.follower to "Followers Only"
+                            "private" -> R.drawable.privatevis to "Private"
+                            else -> R.drawable.publicvis to "Public"
+                        }
+                        
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = visibilityText, 
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
