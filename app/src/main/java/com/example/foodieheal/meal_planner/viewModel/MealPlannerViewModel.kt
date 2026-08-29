@@ -2,6 +2,7 @@ package com.example.foodieheal.meal_planner.viewModel
 
 import android.app.Application
 import android.util.Log
+import com.example.foodieheal.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -133,9 +134,16 @@ class MealPlannerViewModel(
                 isNetworkAvailable = connected
                 Log.d(TAG, "Network connection state updated: connected=$connected")
                 if (connected) {
+                    // 🌟 Clear sync flags to force a re-verification with the server for the current view
+                    syncedWeeks.clear()
+                    fetchedMonths.clear()
+
                     loadPlanForDate(lastActiveDate, forceRefresh = true)
                     loadPlanForDate(lastActiveDate.minusDays(1), forceRefresh = true)
                     loadPlanForDate(lastActiveDate.plusDays(1), forceRefresh = true)
+                    
+                    // Also refresh the current month's dots
+                    loadMonthConditions(YearMonth.from(lastActiveDate))
                 }
             }
         }
@@ -214,11 +222,18 @@ class MealPlannerViewModel(
                                 }
                             }
                         }
-                    } else if (forceRefresh || !mealPlansCache.containsKey(date)) {
-                        // Only wipe cache if we're sure there's nothing on the server for this user/date
-                        mealPlansCache[date] = null
-                        if (!isSharedDate) {
-                            updateLocalConditionForDate(date, null)
+                    } else {
+                        // 🌟 If no plan exists, we still mark the week for syncing if online
+                        // to pre-fetch other days and ensure offline availability.
+                        if (isNetworkAvailable && !isSharedDate) {
+                            syncCurrentWeekLocally(date)
+                        }
+                        
+                        if (forceRefresh || !mealPlansCache.containsKey(date)) {
+                            mealPlansCache[date] = null
+                            if (!isSharedDate) {
+                                updateLocalConditionForDate(date, null)
+                            }
                         }
                     }
                 }
@@ -370,11 +385,16 @@ class MealPlannerViewModel(
                         if (date == excludeDate) return@forEach // Skip overwriting freshly updated local state
 
                         val matchingPlan = plans.find { it.date == date.toString() }
-                        mealPlansCache[date] = matchingPlan
-                        if (matchingPlan != null) {
-                            updateLocalConditionForDate(date, matchingPlan)
-                        } else {
-                            monthConditions.remove(date)
+                        
+                        // 🌟 ONLY update memory cache if we don't have a plan or if the new one is non-null
+                        // This prevents a "failed" sync from wiping out a successful single-day load
+                        if (mealPlansCache[date] == null || matchingPlan != null) {
+                            mealPlansCache[date] = matchingPlan
+                            if (matchingPlan != null) {
+                                updateLocalConditionForDate(date, matchingPlan)
+                            } else {
+                                monthConditions.remove(date)
+                            }
                         }
                     }
                 }
@@ -445,9 +465,9 @@ class MealPlannerViewModel(
                 val clonedPlan = sourcePlan.copy(date = targetDate.toString())
                 mealPlansCache[targetDate] = clonedPlan
                 updateLocalConditionForDate(targetDate, clonedPlan)
-                _uiEvent.emit("Successfully copied plan to $targetDate!")
+                _uiEvent.emit(getApplication<Application>().getString(R.string.msg_copy_daily_success, targetDate.toString()))
             }.onFailure {
-                _uiEvent.emit("Failed to copy meal plan.")
+                _uiEvent.emit(getApplication<Application>().getString(R.string.msg_copy_daily_failed))
             }
         }
     }
@@ -502,14 +522,14 @@ class MealPlannerViewModel(
             isLoading = false
             
             if (successCount > 0) {
-                _uiEvent.emit("Successfully saved $successCount days to your planner!")
+                _uiEvent.emit(getApplication<Application>().getString(R.string.msg_copy_weekly_success, successCount))
                 // 🌟 Final check: Ensure UI displays my new data correctly
                 sourceWeekDays.forEachIndexed { index, _ ->
                     val targetDate = targetWeekStart.plusDays(index.toLong())
                     loadPlanForDate(targetDate, forceRefresh = true)
                 }
             } else {
-                _uiEvent.emit("No recipes found to copy.")
+                _uiEvent.emit(getApplication<Application>().getString(R.string.msg_copy_weekly_none))
             }
         }
     }
@@ -558,7 +578,7 @@ class MealPlannerViewModel(
             }
 
             isLoading = false
-            _uiEvent.emit("Successfully applied '${template.planName}' template!")
+            _uiEvent.emit(getApplication<Application>().getString(R.string.msg_apply_template_success, template.planName))
         }
     }
 
@@ -651,9 +671,9 @@ class MealPlannerViewModel(
         withContext(Dispatchers.Main) {
             plans.forEach { plan ->
                 val date = LocalDate.parse(plan.date)
-                // Only update cache if it's the intended target AND we don't already have it
-                // (Avoiding overwriting current viewed date prevents flickering)
-                if (plan.user_id == targetUserId && !mealPlansCache.containsKey(date)) {
+                // 🌟 Update cache if it's the intended target AND (we don't have it OR it was previously null)
+                // This ensures that days marked as empty while offline are corrected when data arrives.
+                if (plan.user_id == targetUserId && (mealPlansCache[date] == null)) {
                     mealPlansCache[date] = plan
                 }
                 

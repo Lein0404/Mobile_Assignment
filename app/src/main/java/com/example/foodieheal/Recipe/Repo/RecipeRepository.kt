@@ -7,10 +7,8 @@ import com.example.foodieheal.Cloudinary.CloudinaryConfig
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.Recipe
-import com.example.foodieheal.Recipe.local.RecipeEntity
 import com.example.foodieheal.Recipe.local.toDomain
 import com.example.foodieheal.Recipe.local.toEntity
-import com.example.foodieheal.Recipe.Model.IngredientItem
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.MainActivity
 import com.example.foodieheal.User.local.UserDatabase
@@ -64,7 +62,6 @@ class RecipeRepository(
                 }
 
                 recipeDao?.let { dao ->
-                    dao.clearRecipes()
                     dao.insertRecipes(recipes.map { it.toEntity(json) })
                 }
                 
@@ -114,7 +111,6 @@ class RecipeRepository(
 
             // Also cache the author info for offline profile viewing
             cacheAuthorInfo(recipe)
-            Unit
         }
     }
 
@@ -128,7 +124,6 @@ class RecipeRepository(
 
             // Also cache the author info for offline profile viewing
             cacheAuthorInfo(recipe)
-            Unit
         }
     }
 
@@ -260,7 +255,7 @@ class RecipeRepository(
             // 1. Get server state
             val response = client.from("recipe_bookmarks")
                 .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
-            val serverIds = response.decodeList<BookmarkId>().map { it.recipe_id }.toSet()
+            val serverIds = response.decodeList<BookmarkId>().map { it.recipeId }.toSet()
 
             // 2. Update local Room to match server exactly
             recipeDao?.clearBookmarks(userId)
@@ -276,9 +271,9 @@ class RecipeRepository(
             try {
                 val response = client.from("recipe_bookmarks")
                     .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
-                val bookmarkedIds = response.decodeList<BookmarkId>().map { it.recipe_id }
+                val bookmarkedIds = response.decodeList<BookmarkId>().map { it.recipeId }
 
-                if (bookmarkedIds.isEmpty()) return@runCatching emptyList<Recipe>()
+                if (bookmarkedIds.isEmpty()) return@runCatching emptyList()
 
                 val recipes = try {
                     client.from("recipes")
@@ -309,7 +304,7 @@ class RecipeRepository(
         runCatching {
             val response = client.from("recipe_bookmarks")
                 .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
-            response.decodeList<BookmarkId>().map { it.recipe_id }
+            response.decodeList<BookmarkId>().map { it.recipeId }
         }
     }
 
@@ -333,7 +328,7 @@ class RecipeRepository(
                         .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
                             filter { eq("recipe_id", recipeId) }
                         }.decodeSingle<Recipe>()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     client.from("recipes").select { filter { eq("recipe_id", recipeId) } }.decodeSingle<Recipe>()
                 }
 
@@ -343,7 +338,7 @@ class RecipeRepository(
                 recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
                 
                 recipe
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 recipeDao?.getRecipeById(recipeId)?.toDomain(json)?.apply { isOffline = true }
             }
         }
@@ -364,14 +359,14 @@ class RecipeRepository(
 
     suspend fun getRecipesByIds(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            if (recipeIds.isEmpty()) return@runCatching emptyList<Recipe>()
+            if (recipeIds.isEmpty()) return@runCatching emptyList()
             try {
                 val recipes = try {
                     client.from("recipes")
                         .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
                             filter { isIn("recipe_id", recipeIds) }
                         }.decodeList<Recipe>()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     client.from("recipes").select { filter { isIn("recipe_id", recipeIds) } }.decodeList<Recipe>()
                 }
 
@@ -379,32 +374,20 @@ class RecipeRepository(
                     recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                     recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
                 }
+
+
+                recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+
                 recipes
-            } catch (e: Exception) {
-                val local = recipeDao?.getAllRecipes() ?: emptyList()
-                local.filter { entity -> recipeIds.contains(entity.recipe_id) }
-                    .map { it.toDomain(json).apply { isOffline = true } }
+            } catch (_: Exception) {
+                recipeDao?.getRecipesByIds(recipeIds)?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
-        }
-    }
-
-    /**
-     * 🌟 EXCLUSIVE FUNCTION: Optimized for batch loading meal plan recipes from local DB.
-     */
-    suspend fun getRecipesByIdsLocalFirst(recipeIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val local = recipeDao?.getAllRecipes() ?: emptyList()
-            val cached = local.filter { it.recipe_id in recipeIds }.map { it.toDomain(json).apply { isOffline = true } }
-
-            if (cached.size == recipeIds.size) return@runCatching cached
-
-            getRecipesByIds(recipeIds).getOrDefault(cached)
         }
     }
 
     suspend fun getFollowingRecipes(followedUserIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
-            if (followedUserIds.isEmpty()) return@runCatching emptyList<Recipe>()
+            if (followedUserIds.isEmpty()) return@runCatching emptyList()
 
             val recipes = try {
                 client.from("recipes")
@@ -438,6 +421,10 @@ class RecipeRepository(
                 recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
             }
+
+            // 🌟 Cache for offline
+            recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+
             recipes
         }
     }
@@ -455,7 +442,7 @@ class RecipeRepository(
                     user?.let { dao.insertPublicUser(it.toPublicEntity()) }
                 }
                 user
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Offline fallback
                 MainActivity.appContext?.let { context ->
                     val dao = UserDatabase.getDatabase(context).userDao()
@@ -467,7 +454,7 @@ class RecipeRepository(
 
     suspend fun getUsersByCustomIds(customIds: List<String>): Result<List<User>> = withContext(Dispatchers.IO) {
         runCatching {
-            if (customIds.isEmpty()) return@runCatching emptyList<User>()
+            if (customIds.isEmpty()) return@runCatching emptyList()
             try {
                 val users = client.from("users")
                     .select { filter { isIn("custom_id", customIds) } }
@@ -479,7 +466,7 @@ class RecipeRepository(
                     users.forEach { dao.insertPublicUser(it.toPublicEntity()) }
                 }
                 users
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Offline fallback
                 MainActivity.appContext?.let { context ->
                     val dao = UserDatabase.getDatabase(context).userDao()
@@ -512,4 +499,4 @@ class RecipeRepository(
 }
 
 @Serializable
-data class BookmarkId(@SerialName("recipe_id") val recipe_id: String)
+data class BookmarkId(@SerialName("recipe_id") val recipeId: String)

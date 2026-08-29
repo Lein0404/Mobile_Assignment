@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -113,6 +114,7 @@ import com.example.foodieheal.hiring.screen.AppointmentHistoryScreen
 import com.example.foodieheal.ui.theme.FoodieHealTheme
 import com.example.foodieheal.wallet.screen.WalletScreen
 import com.example.foodieheal.wallet.screen.WalletTransactionDetailScreen
+import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import java.time.LocalDate
@@ -137,13 +139,10 @@ class MainActivity : FragmentActivity() {
         appContext = applicationContext
         enableEdgeToEdge()
 
-        // 0. Configure Toasty
         Toasty.Config.getInstance().allowQueue(true).apply()
 
-        // 1. Process deep link on initial cold start
         handleDeepLink(intent)
 
-        // 2. Start cache cleanup services to listen for app removal on App Switcher
         try {
             startService(Intent(applicationContext, com.example.foodieheal.hiring.local.HiringCacheCleanupService::class.java))
             startService(Intent(applicationContext, com.example.foodieheal.Chef.local.ChefCacheCleanupService::class.java))
@@ -168,7 +167,6 @@ class MainActivity : FragmentActivity() {
                         if (route != null) {
                             Log.d(TAG, "Navigating to deep link route: $route")
 
-                            // 🌟 FIX: Construct a Synthetic Backstack (Landing -> DeepLink)
                             // This ensures that when the user presses 'Back', they go to Home instead of exiting.
                             val landingDest = when {
                                 sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route

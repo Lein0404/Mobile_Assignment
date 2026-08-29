@@ -109,7 +109,7 @@ fun AddEditTemplateScreen(
     modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember { DayOfWeek.entries.toList() }
-    val mainTabs = listOf("Details", "Weekly Plan")
+    val mainTabs = listOf(stringResource(R.string.tab_details), stringResource(R.string.tab_weekly_plan))
     
     // 🌟 State for the main swipable tabs
     val mainPagerState = rememberPagerState(pageCount = { mainTabs.size })
@@ -191,7 +191,7 @@ fun AddEditTemplateScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrowback),
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.topapp_back),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -286,8 +286,8 @@ fun AddEditTemplateScreen(
                     OutlinedTextField(
                         value = planDescription,
                         onValueChange = onPlanDescriptionChange,
-                        label = { Text("Template Description") },
-                        placeholder = { Text("Describe your plan (e.g. goals, intended audience)...") },
+                        label = { Text(stringResource(R.string.label_template_description)) },
+                        placeholder = { Text(stringResource(R.string.placeholder_template_description)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 150.dp),

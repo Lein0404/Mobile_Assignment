@@ -215,7 +215,7 @@ fun AddRecipeToPlanScreen(
                 },
                 onCalendarClick = { showDatePicker = true },
                 onDateSelected = { newDate -> selectedDate = newDate },
-                monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Added nutrition dots
+                monthConditions = mealPlannerViewModel.monthConditions,
                 topContent = {
                     Text(
                         text = stringResource(R.string.adding_recipe, recipe.recipeName),
@@ -322,7 +322,7 @@ fun AddRecipePageContent(
     pageDate: LocalDate,
     recipe: Recipe,
     isNetworkAvailable: Boolean,
-    dailyPlan: DailyPlan?, // <-- Fix: Using shared package DailyPlan model explicitly
+    dailyPlan: DailyPlan?,
     selectedSlots: SnapshotStateMap<String, Set<MealType>>,
     currentUser: User?,
     onNavigateToProfile: () -> Unit
@@ -441,12 +441,12 @@ fun MealSectionSlot(
     isSelected: Boolean,
     onSelectionToggle: () -> Unit
 ) {
-    // Reuses the public shared MealSection design architecture perfectly
     MealSection(
         title = title,
         recipes = recipes,
         isSelectionMode = true,
         isSelected = isSelected,
+        isNetworkAvailable = true,
         onSelectionChange = { onSelectionToggle() },
         onAddClick = {},
         onDeleteClick = {}

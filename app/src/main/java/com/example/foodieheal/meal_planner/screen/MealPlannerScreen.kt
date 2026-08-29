@@ -76,13 +76,11 @@ fun MealPlannerScreen(
             restore = { LocalDate.parse(it) }
         )
     ) {
-        // 🌟 Initial state: Prefer deep link date if available, otherwise today
         mutableStateOf(mealPlannerViewModel.deepLinkSourceDays?.firstOrNull() ?: LocalDate.now())
     }
 
     val appointmentsState by userAppointmentViewModel.userAppointmentsState.collectAsStateWithLifecycle()
 
-    // 🌟 Filter appointments for the currently selected date
     val appointmentsForSelectedDate = remember(appointmentsState, selectedDate) {
         if (appointmentsState is UserAppointmentsUiState.Success) {
             val success = appointmentsState as UserAppointmentsUiState.Success

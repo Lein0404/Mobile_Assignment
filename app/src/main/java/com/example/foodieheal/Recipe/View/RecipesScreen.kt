@@ -3,7 +3,6 @@ package com.example.foodieheal.Recipe.View
 import android.app.Activity
 import android.widget.Toast
 import es.dmoral.toasty.Toasty
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,11 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -160,9 +157,11 @@ fun RecipesScreen(
 
 
     SideEffect {
-        val window = (view.context as Activity).window
-        window.statusBarColor = primaryColor.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        val window = (context as? Activity)?.window
+        window?.let {
+            it.statusBarColor = primaryColor.toArgb()
+            WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = false
+        }
     }
 
     LaunchedEffect(selectedTab, currentUserId) {
@@ -234,18 +233,16 @@ fun RecipesScreen(
                         )
                     }
 
-                    TabRow(
+                    SecondaryTabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Content
-                        indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    height = 3.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
-                                )
-                            }
+                        indicator = {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(selectedTab),
+                                height = 3.dp,
+                                color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
+                            )
                         },
                         divider = {}
                     ) {
@@ -378,104 +375,86 @@ fun RecipesScreen(
                     modifier = Modifier.padding(top = 8.dp, start = 20.dp)
                 )
             }
-                Column {
+
+            if (selectedTab == 2) {
+                item(span = { GridItemSpan(2) }) {
                     // 🌟 Compact Followed/Bookmarks Toggle (Connected Pill style)
-                    if (selectedTab == 2) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val subTabModifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(20.dp))
-
-                            Box(
-                                modifier = subTabModifier
-                                    .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { showFollowingFeed = true },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "Followed",
-                                    color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-            item(span = { GridItemSpan(2) }) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                ) {
-                    Spacer(modifier = Modifier.width(10.dp))
-                    courses.forEach { course: String ->
-                        val isSelected = selectedCourse == course
-                        Surface(
-                            onClick = { selectedCourse = course },
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFFE0E0E0),
-                        ) {
-                            Text(
-                                text = course,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                color = if (isSelected) Color.White else Color.Black,
-                                fontSize = 12.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            Box(
-                                modifier = subTabModifier
-                                    .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { showFollowingFeed = false },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "Bookmarks",
-                                    color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        lazyItems(courses) { course: String ->
-                            val isSelected = selectedCourse == course
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedCourse = course },
-                                label = {
-                                    Text(
-                                        text = course,
-                                        fontSize = 15.sp,
-                                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
-                                    )
-                                },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = Color.White,
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                ),
-                                border = null
+                        val subTabModifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(20.dp))
+
+                        Box(
+                            modifier = subTabModifier
+                                .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { showFollowingFeed = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Followed",
+                                color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(
+                            modifier = subTabModifier
+                                .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { showFollowingFeed = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Bookmarks",
+                                color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+
+            item(span = { GridItemSpan(2) }) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    item { Spacer(modifier = Modifier.width(12.dp)) }
+                    lazyItems(courses) { course: String ->
+                        val isSelected = selectedCourse == course
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedCourse = course },
+                            label = {
+                                Text(
+                                    text = course,
+                                    fontSize = 15.sp,
+                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
+                                )
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            border = null
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.width(20.dp)) }
                 }
             }
 
@@ -485,7 +464,7 @@ fun RecipesScreen(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 8.dp, start = 16.dp) // 🌟 Added padding
+                    modifier = Modifier.padding(top = 8.dp, start = 16.dp)
                 )
             }
             // Vertical space cleanup
@@ -614,7 +593,6 @@ fun RecipesScreen(
             )
         }
     )
-}
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -903,264 +881,5 @@ fun RecipesScreen(
             )
         }
     }
-}
-
-@Composable
-fun RecipeCardItem(
-    recipe: Recipe,
-    modifier: Modifier = Modifier,
-    currentUser: User? = null, // 🌟 Added for live name sync
-    showMenu: Boolean = false,
-    isBookmarked: Boolean = false,
-    isSelected: Boolean = false, // 🌟 Added for Selection Mode
-    isSelectionMode: Boolean = false, // 🌟 Added for Selection Mode
-    onBookmarkClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {},
-    onEditClick: () -> Unit = {},
-    onAddClick: () -> Unit = {},
-    onClick: () -> Unit = {}
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = if (isSelectionMode && isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-        modifier = modifier.height(310.dp).clickable { onClick() } // 🌟 Increased height for 2-line names + Author
-    ) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(MaterialTheme.colorScheme.surfaceVariant)) { // 🌟 Optimized image height
-                if (!recipe.recipeImageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = recipe.recipeImageUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    // 🌟 Artistic Placeholder
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)), // 🌟 Themed Background
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val iconRes = when (recipe.recipeCourse.lowercase()) {
-                            "breakfast" -> R.drawable.ic_breakfast
-                            "lunch" -> R.drawable.ic_lunch
-                            "dinner" -> R.drawable.ic_dinner
-                            else -> R.drawable.ic_snack
-                        }
-                        Image(
-                            painter = painterResource(id = iconRes),
-                            contentDescription = null,
-                            modifier = Modifier.size(60.dp),
-                            alpha = 0.3f,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onTertiaryContainer) // 🌟 Themed Icon
-                        )
-                    }
-                }
-
-                // 🌟 Selection Check Badge
-                if (isSelectionMode && isSelected) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = CircleShape,
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .size(24.dp)
-                            .align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_check),
-                            contentDescription = stringResource(R.string.desc_checkbox_checked),
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.padding(4.dp)
-                        )
-                    }
-                }
-
-                // 🌟 Bookmark icon (Hidden or shown depending on preference, plan says "don't decrease features")
-                if (!isSelectionMode) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
-                        modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(28.dp)
-                    ) {
-                        IconButton(onClick = onBookmarkClick) {
-                            Image(
-                                painter = painterResource(
-                                    id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark
-                                ),
-                                contentDescription = "Bookmark",
-                                modifier = Modifier.size(16.dp),
-                                colorFilter = ColorFilter.tint(
-                                    if (isBookmarked) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                ) // 🌟 Themed Icon matching Chef Bookmark logic
-                            )
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), // 🌟 Themed Surface
-                        modifier = Modifier.align(Alignment.TopStart).padding(10.dp).size(28.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_recipe),
-                            contentDescription = "Add to Planner",
-                            modifier = Modifier.padding(6.dp).clickable { onAddClick() },
-                            tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
-                        )
-                    }
-                }
-            }
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = recipe.recipeName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis, // 🌟 Limit to 2 lines with ...
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (showMenu) {
-                        Box {
-                            IconButton(onClick = { expanded = true }, modifier = Modifier.size(20.dp)) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_vertical_more),
-                                    contentDescription = "Menu",
-                                    tint = MaterialTheme.colorScheme.onSurface // 🌟 Themed Icon
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Edit Recipe") },
-                                    onClick = {
-                                        expanded = false
-                                        onEditClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) }, // 🌟 Themed Error
-                                    onClick = {
-                                        expanded = false
-                                        onDeleteClick()
-                                    },
-                                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp)) // 🌟 Tighter spacing
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_fire),
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "${recipe.calories} kcal",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_clock),
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp), // 🌟 Better sized icon
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${recipe.time} mins",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
-
-                    // 🌟 Use the live name from currentUser if this is the user's own recipe
-                    val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
-                        currentUser.name
-                    } else {
-                        recipe.authorInfo?.name ?: recipe.authorName ?: "Chef"
-                    }
-
-                    if (!authorToDisplay.isNullOrEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.author),
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = authorToDisplay,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(start = 4.dp).weight(1f, fill = false)
-                            )
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-}
-
-@Composable
-fun FilterSectionHeader(@DrawableRes icon: Int, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(bottom = 8.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }

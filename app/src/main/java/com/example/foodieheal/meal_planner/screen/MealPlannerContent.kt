@@ -105,8 +105,10 @@ fun MealPlannerContent(
         ) { page ->
             val pageDate = remember(page, anchorDate) { anchorDate.plusDays(page.toLong()) }
 
-            LaunchedEffect(pageDate) {
-                onLoadPlanForDate(pageDate)
+            LaunchedEffect(pageDate, isNetworkAvailable) {
+                if (isNetworkAvailable) {
+                    onLoadPlanForDate(pageDate)
+                }
             }
 
             MealPageContent(
@@ -266,6 +268,7 @@ fun MealPageContent(
                         MealSection(
                             title = stringResource(title),
                             recipes = recipes,
+                            isNetworkAvailable = isNetworkAvailable,
                             onAddClick = { onAddMealRecipe(type) },
                             onDeleteClick = { recipe -> onDeleteMealRecipe(type, recipe) },
                             onRecipeDetails = onRecipeDetails,
@@ -336,7 +339,7 @@ fun AppointmentSummarySection(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Scheduled Hiring Appointments",
+                    text = stringResource(R.string.title_scheduled_hiring_appointments),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onTertiary
@@ -346,7 +349,7 @@ fun AppointmentSummarySection(
             Spacer(Modifier.height(12.dp))
 
             appointments.forEach { appointment ->
-                val chefName = chefsMap[appointment.chefId]?.name ?: "Chef"
+                val chefName = chefsMap[appointment.chefId]?.name ?: stringResource(R.string.default_chef_name)
                 val timeSlot = "${formatToAmPm(appointment.Start_Time)} - ${formatToAmPm(appointment.End_Time)}"
                 
                 Row(

@@ -1,6 +1,7 @@
 package com.example.foodieheal.meal_planner.viewModel
 
 import android.util.Log
+import com.example.foodieheal.R
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
@@ -71,33 +73,43 @@ class TemplateViewModel(
         .onEach { _isLoading.value = true }
         .flatMapLatest {
             planRepository.observeAllPlans()
+                .catch { e ->
+                    Log.e(TAG, "allWeeklyPlans: Error observing plans", e)
+                    emit(emptyList())
+                }
         }
         .mapLatest { entityList ->
-            // 🌟 1. Extract ALL unique recipe IDs from ALL plans in the list
-            val allRecipeIds = entityList.flatMap { entity ->
-                entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.recipeId } }
-            }.distinct()
+            try {
+                // 🌟 1. Extract ALL unique recipe IDs from ALL plans in the list
+                val allRecipeIds = entityList.flatMap { entity ->
+                    entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.recipeId } }
+                }.distinct()
 
-            Log.d(TAG, "allWeeklyPlans: Batch fetching ${allRecipeIds.size} recipes for ${entityList.size} plans")
+                Log.d(TAG, "allWeeklyPlans: Batch fetching ${allRecipeIds.size} recipes for ${entityList.size} plans")
 
-            // 🌟 2. Fetch all required recipes in ONE batch request
-            val recipes = recipeRepository.getRecipesByIds(allRecipeIds).getOrDefault(emptyList())
-            val recipeMap = recipes.filter { it.recipe_id != null }.associateBy { it.recipe_id!! }
+                // 🌟 2. Fetch all required recipes in ONE batch request
+                val recipes = recipeRepository.getRecipesByIds(allRecipeIds).getOrDefault(emptyList())
+                val recipeMap = recipes.filter { it.recipe_id != null }.associateBy { it.recipe_id!! }
 
-            // 🌟 3. Efficiently map entities to domain models using the pre-fetched map
-            val result = entityList.map { entity ->
-                WeeklyPlan(
-                    planName = entity.planName,
-                    planDescription = entity.planDescription,
-                    planId = entity.planId,
-                    userId = entity.userId,
-                    category = entity.category,
-                    dailyPlans = hydrateDailyPlansSync(entity.dailyPlans, recipeMap),
-                    public = entity.public
-                )
+                // 🌟 3. Efficiently map entities to domain models using the pre-fetched map
+                val result = entityList.map { entity ->
+                    WeeklyPlan(
+                        planName = entity.planName,
+                        planDescription = entity.planDescription,
+                        planId = entity.planId,
+                        userId = entity.userId,
+                        category = entity.category,
+                        dailyPlans = hydrateDailyPlansSync(entity.dailyPlans, recipeMap),
+                        public = entity.public
+                    )
+                }
+                _isLoading.value = false
+                result
+            } catch (e: Exception) {
+                Log.e(TAG, "allWeeklyPlans: Error mapping entities", e)
+                _isLoading.value = false
+                emptyList()
             }
-            _isLoading.value = false
-            result
         }
         .flowOn(Dispatchers.IO)
         .stateIn(
@@ -156,7 +168,7 @@ class TemplateViewModel(
                 refreshPlans()
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to delete plan")
+                onError(e.localizedMessage ?: com.example.foodieheal.MainActivity.appContext?.getString(R.string.error_failed_to_delete_plan) ?: "Failed to delete plan")
             }
         }
     }
@@ -250,14 +262,15 @@ class TemplateViewModel(
             try {
                 val sourcePlan = allWeeklyPlans.value.find { it.planId == sourcePlanId }
                     ?: run {
-                        onError("Source plan not found")
+                        onError(com.example.foodieheal.MainActivity.appContext?.getString(R.string.error_source_plan_not_found) ?: "Source plan not found")
                         return@launch
                     }
 
                 val newPlanId = java.util.UUID.randomUUID().toString()
+                val copySuffix = com.example.foodieheal.MainActivity.appContext?.getString(R.string.label_copy_suffix) ?: "(Copy)"
                 val copiedPlan = sourcePlan.copy(
                     planId = newPlanId,
-                    planName = "${sourcePlan.planName} (Copy)",
+                    planName = "${sourcePlan.planName} $copySuffix",
                     userId = currentUserId,
                     public = false
                 )
@@ -269,7 +282,7 @@ class TemplateViewModel(
 
                 onSuccess(newPlanId)
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to copy template")
+                onError(e.localizedMessage ?: com.example.foodieheal.MainActivity.appContext?.getString(R.string.error_failed_to_copy_template) ?: "Failed to copy template")
             }
         }
     }

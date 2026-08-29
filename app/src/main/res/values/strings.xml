@@ -124,6 +124,11 @@
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
     <string name="dialog_title_choose_weekly_repeat_date">Choose a date range and repeat your weekly plan!</string>
     <string name="dialog_title_choose_date_range_paste">Choose a date range to paste the weekly plan</string>
+    <string name="msg_copy_daily_success">Successfully copied plan to %1$s!</string>
+    <string name="msg_copy_daily_failed">Failed to copy meal plan.</string>
+    <string name="msg_copy_weekly_success">Successfully saved %1$d days to your planner!</string>
+    <string name="msg_copy_weekly_none">No recipes found to copy.</string>
+    <string name="msg_apply_template_success">Successfully applied ‘%1$s’ template!</string>
     <string name="daily_success_notify">Daily plan copied successfully!</string>
     <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
@@ -1138,4 +1143,32 @@
     <string name="btn_rebook_chef">Rebook Chef</string>
     <string name="rebooking_in_progress">Preparing booking...</string>
     <string name="rebook_failed">Unable to prepare rebook: %1$s</string>
+
+    <!-- Meal Planner Folders -->
+    <string name="tab_details">Details</string>
+    <string name="tab_weekly_plan">Weekly Plan</string>
+    <string name="label_template_description">Template Description</string>
+    <string name="placeholder_template_description">Describe your plan (e.g. goals, intended audience)…</string>
+    <string name="title_scheduled_hiring_appointments">Scheduled Hiring Appointments</string>
+    <string name="msg_plan_id_copied">Plan ID copied to clipboard</string>
+    <string name="msg_share_template_text">Check out this meal plan template on Foodie Heal: %1$s</string>
+    <string name="msg_share_my_template_text">Check out my meal plan template on Foodie Heal: %1$s</string>
+    <string name="title_share_template">Share Template</string>
+    <string name="msg_show_less">Show Less</string>
+    <string name="msg_more">More…</string>
+    <string name="msg_template_deleted">Template deleted successfully!</string>
+    <string name="empty_no_community_templates">No community templates available</string>
+    <string name="empty_no_templates_match">No templates match your search</string>
+    <string name="empty_no_my_templates">You haven’t created any templates yet</string>
+    <string name="error_recipe_not_found">Recipe not found.</string>
+    <string name="error_recipe_not_available_offline">Recipe data not available offline.</string>
+    <string name="label_plan_id">Plan ID</string>
+    <string name="label_public_template">Public Template</string>
+    <string name="label_private_template">Private Template</string>
+    <string name="desc_copy_plan_id">Copy Plan ID</string>
+    <string name="desc_add_template">Add template</string>
+    <string name="error_failed_to_delete_plan">Failed to delete plan</string>
+    <string name="error_source_plan_not_found">Source plan not found</string>
+    <string name="label_copy_suffix">(Copy)</string>
+    <string name="error_failed_to_copy_template">Failed to copy template</string>
 </resources>

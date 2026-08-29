@@ -93,12 +93,12 @@
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "loadExistingPlan() Exception while loading plan '$id'", e)
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            isLoading = false,
-                            errorMessage = "err_failed_load_template"
-                        )
-                    }
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isLoading = false,
+                                errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_load_template)
+                            )
+                        }
                 }
             }
         }
@@ -198,14 +198,14 @@
             Log.d(TAG, "saveTemplate() called | isEditMode: $isEditMode, planName: '${currentState.planName}', category: ${currentState.category}")
 
             if (currentState.category == null) {
-                val errMsg = "err_select_category"
+                val errMsg = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_select_category)
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
             }
 
             if (currentState.planName.isBlank()) {
-                val errMsg = "err_empty_template_name"
+                val errMsg = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_empty_template_name)
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
@@ -251,7 +251,7 @@
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "err_failed_save_template"
+                            errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_save_template)
                         )
                     }
                 }

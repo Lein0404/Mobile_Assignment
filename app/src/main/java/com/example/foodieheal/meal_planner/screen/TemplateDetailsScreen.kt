@@ -90,16 +90,16 @@ fun TemplateDetailsScreen(
 
     fun copyIdToClipboard(id: String) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Plan ID", id)
+        val clip = ClipData.newPlainText(context.getString(R.string.label_plan_id), id)
         clipboard.setPrimaryClip(clip)
-        Toasty.custom(context, "Plan ID copied to clipboard", R.drawable.foodieheallogo_removebg_preview, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+        Toasty.custom(context, context.getString(R.string.msg_plan_id_copied), R.drawable.foodieheallogo_removebg_preview, R.color.black, Toast.LENGTH_SHORT, true, true).show()
     }
 
     fun shareTemplate(id: String) {
         val shareUrl = "https://tzh652.github.io/template?id=$id"
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "Check out this meal plan template on Foodie Heal: $shareUrl")
+            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_template_text, shareUrl))
             type = "text/plain"
         }
         val shareIntent = Intent.createChooser(sendIntent, shareTitle)
@@ -134,7 +134,7 @@ fun TemplateDetailsScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
                                 imageVector = if (plan.public) Icons.Default.Public else Icons.Default.Lock,
-                                contentDescription = if (plan.public) "Public Template" else "Private Template",
+                                contentDescription = if (plan.public) stringResource(R.string.label_public_template) else stringResource(R.string.label_private_template),
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                             )
@@ -154,7 +154,7 @@ fun TemplateDetailsScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Plan ID",
+                                contentDescription = stringResource(R.string.desc_copy_plan_id),
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
@@ -201,7 +201,7 @@ fun TemplateDetailsScreen(
             if (plan.planDescription.isNotBlank()) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(
-                        text = "Details",
+                        text = stringResource(R.string.tab_details),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -230,7 +230,7 @@ fun TemplateDetailsScreen(
                             
                             if (showMoreButton || isDescriptionExpanded) {
                                 Text(
-                                    text = if (isDescriptionExpanded) "Show Less" else "More...",
+                                    text = if (isDescriptionExpanded) stringResource(R.string.msg_show_less) else stringResource(R.string.msg_more),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,

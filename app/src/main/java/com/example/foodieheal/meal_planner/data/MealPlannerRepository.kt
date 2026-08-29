@@ -23,7 +23,6 @@ import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.time.LocalDate
 
 class MealPlannerRepository(
@@ -43,11 +42,12 @@ class MealPlannerRepository(
                 ?: throw Exception("User is not logged in!")
 
             // 1. Serialize and save the plan structure
-            val json = Json.encodeToString(dailyPlans)
+            val json = com.example.foodieheal.SupabaseClient.json
+            val jsonStr = json.encodeToString(dailyPlans)
             val entity = LocalWeeklyPlanEntity(
                 weekStartDate = weekStartDate.toString(),
                 userId = currentUserId,
-                planJson = json
+                planJson = jsonStr
             )
             localDao.insertPlan(entity)
 
@@ -57,7 +57,7 @@ class MealPlannerRepository(
             }.distinctBy { it.recipe_id }
 
             if (allRecipes.isNotEmpty()) {
-                val recipeEntities = allRecipes.map { it.toEntity(Json { ignoreUnknownKeys = true }) }
+                val recipeEntities = allRecipes.map { it.toEntity(json) }
                 recipeDao.insertRecipes(recipeEntities)
             }
             allRecipes
@@ -86,7 +86,7 @@ class MealPlannerRepository(
             val entity = localDao.getPlan(weekStartDate.toString(), currentUserId) 
                 ?: throw Exception("No local data for this week")
             
-            val plans = Json.decodeFromString<List<DailyPlan>>(entity.planJson)
+            val plans = com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(entity.planJson)
             plans
         }.onFailure { error ->
             if (error.message != "No local data for this week") {
@@ -126,8 +126,28 @@ class MealPlannerRepository(
                 }
             )
 
-            // 🌟 Use upsert with a list to be explicit, and catch network errors
+            // 🌟 1. Save to Supabase
             postgrest.from("daily_plans").upsert(listOf(dto))
+
+            // 🌟 2. Atomic Sync to Local Room DB
+            // We need to update the weekly entity containing this date
+            val weekStart = LocalDate.parse(plan.date).with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+            val localResult = getLocalWeeklyPlan(weekStart)
+            
+            val updatedWeekPlans = if (localResult.isSuccess) {
+                val currentPlans = localResult.getOrThrow().toMutableList()
+                val index = currentPlans.indexOfFirst { it.date == plan.date }
+                if (index != -1) {
+                    currentPlans[index] = plan
+                } else {
+                    currentPlans.add(plan)
+                }
+                currentPlans
+            } else {
+                listOf(plan)
+            }
+
+            saveWeeklyPlanLocally(weekStart, updatedWeekPlans)
             Unit
         }.onFailure { error ->
             Log.e("MealPlannerRepo", "CRITICAL: Failed to save daily plan for ${plan.date}", error)
@@ -175,6 +195,11 @@ class MealPlannerRepository(
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
             }
 
+            // 🌟 Cache fetched recipes for offline availability
+            if (fetchedRecipes.isNotEmpty()) {
+                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
+            }
+
             DailyPlan(
                 user_id = rawPlan.userId,
                 date = rawPlan.date,
@@ -188,6 +213,14 @@ class MealPlannerRepository(
                     )
                 }
             )
+        }.recover { error ->
+            // 🌟 OFFLINE FALLBACK for single day
+            val currentUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id ?: ""
+            if (currentUserId.isNotEmpty()) {
+                val weekStart = date.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                val localWeek = getLocalWeeklyPlan(weekStart).getOrNull()
+                localWeek?.find { it.date == date.toString() }
+            } else null
         }.onFailure { error ->
             Log.e("MealPlannerDebug", "Critical Exception in getDailyPlan!", error)
         }
@@ -239,6 +272,11 @@ class MealPlannerRepository(
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
             }
 
+            // 🌟 Cache fetched recipes for offline availability
+            if (fetchedRecipes.isNotEmpty()) {
+                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
+            }
+
             val recipeMap = fetchedRecipes.associateBy { it.recipe_id }
 
             // 4. Map back to Domain objects
@@ -263,7 +301,7 @@ class MealPlannerRepository(
             if (currentUserId.isNotEmpty()) {
                 val localWeeks = localDao.getAllPlansForUser(currentUserId)
                 val allPlans = localWeeks.flatMap { week ->
-                    Json.decodeFromString<List<DailyPlan>>(week.planJson)
+                    com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(week.planJson)
                 }
                 // Filter plans within the requested range
                 allPlans.filter { plan ->
@@ -352,6 +390,11 @@ class MealPlannerRepository(
                     }
                     .decodeList<Recipe>()
             } else emptyList()
+
+            // 🌟 Cache fetched recipes for offline availability
+            if (fetchedRecipes.isNotEmpty()) {
+                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
+            }
 
             // 4. Map DTO entities back to Domain UI models
             publicEntities.map { entity ->

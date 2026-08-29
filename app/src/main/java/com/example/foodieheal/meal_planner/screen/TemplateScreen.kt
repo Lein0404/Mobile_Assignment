@@ -211,10 +211,10 @@ fun AllTemplatesScreen(
         val shareUrl = "https://tzh652.github.io/template?id=$id"
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "Check out this meal plan template on Foodie Heal: $shareUrl")
+            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_template_text, shareUrl))
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.title_share_template))
         context.startActivity(shareIntent)
     }
 
@@ -230,7 +230,7 @@ fun AllTemplatesScreen(
                 IconButton(onClick = { focusManager.clearFocus() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.search),
-                        contentDescription = "Search",
+                        contentDescription = stringResource(R.string.search),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -269,7 +269,7 @@ fun AllTemplatesScreen(
                         }
                     )
                 },
-                emptyMessage = if (query.isBlank()) "No community templates available" else "No templates match your search"
+                emptyMessage = if (query.isBlank()) stringResource(R.string.empty_no_community_templates) else stringResource(R.string.empty_no_templates_match)
             )
         }
     }
@@ -289,10 +289,10 @@ fun MyTemplatesScreen(
         val shareUrl = "https://tzh652.github.io/template?id=$id"
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "Check out my meal plan template on Foodie Heal: $shareUrl")
+            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_my_template_text, shareUrl))
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Template")
+        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.title_share_template))
         context.startActivity(shareIntent)
     }
 
@@ -308,7 +308,7 @@ fun MyTemplatesScreen(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_outline_add),
-                    contentDescription = "Add template"
+                    contentDescription = stringResource(R.string.desc_add_template)
                 )
             }
         }
@@ -326,7 +326,7 @@ fun MyTemplatesScreen(
                     templateViewModel.deleteWeeklyPlan(
                         planId = id,
                         onSuccess = {
-                            Toasty.custom(context, "Template deleted successfully!", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+                            Toasty.custom(context, context.getString(R.string.msg_template_deleted), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         }
                     )
                 },
@@ -334,7 +334,7 @@ fun MyTemplatesScreen(
                 onEdit =  onEdit,
                 onShare = { id -> shareTemplate(id) },
                 isMyTemplate = true,
-                emptyMessage = "You haven't created any templates yet"
+                emptyMessage = stringResource(R.string.empty_no_my_templates)
             )
         }
     }
@@ -349,7 +349,7 @@ fun CategorizedTemplatesScreen(
     onDelete:(String)-> Unit = {},
     onShare: (String) -> Unit = {},
     onAdd: (String) -> Unit = {},
-    emptyMessage: String = "No templates found"
+    emptyMessage: String = stringResource(R.string.not_available)
 ) {
     if (weeklyPlans.isEmpty()) {
         Box(
