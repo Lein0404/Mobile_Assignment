@@ -22,17 +22,6 @@ import com.example.foodieheal.ingredients.model.IngredientCategory
  * Shared composable for the search bar + "Categories" label + category filter chips
  * used across IngredientsExistingScreen, IngredientRequestsScreen,
  * and AdminIngredientRequestsScreen.
- *
- * @param searchQuery          Current search text
- * @param onSearchQueryChange  Callback when the search text changes
- * @param searchPlaceholder    Placeholder string shown in the search field
- * @param selectedCategories   Currently selected category chips
- * @param onToggleCategory     Callback when a chip is toggled
- * @param categoriesLabel      Header text above the chip row (e.g. "Categories")
- * @param showFilterIcon       Whether to show the status-filter icon (request screens only)
- * @param isFilterActive       Highlights the filter icon when a status filter is applied
- * @param onFilterClick        Callback when the filter icon is tapped
- * @param unselectedLabelColor Label color for unselected chips (defaults to onSecondary)
  */
 @Composable
 fun IngredientSearchAndFilter(
@@ -41,12 +30,18 @@ fun IngredientSearchAndFilter(
     searchPlaceholder: String,
     selectedCategories: Set<IngredientCategory>,
     onToggleCategory: (IngredientCategory) -> Unit,
-    categoriesLabel: String = stringResource(R.string.shopping_list_categories),
+    categoriesLabel: String = stringResource(R.string.categories_filter_header),
     showFilterIcon: Boolean = false,
     isFilterActive: Boolean = false,
     onFilterClick: () -> Unit = {},
-    lazyRowState: LazyListState = rememberLazyListState()
+    lazyRowState: LazyListState = rememberLazyListState(),
+    isExpanded: Boolean = false,
+    onExpandedChange: (Boolean) -> Unit = {}
 ) {
+    val headerColor =
+        if (selectedCategories.isNotEmpty()) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurface
+
     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
     // 1. Search Bar
@@ -62,6 +57,7 @@ fun IngredientSearchAndFilter(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
+        singleLine = true,
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
         trailingIcon = {
             if (showFilterIcon) {
@@ -96,39 +92,62 @@ fun IngredientSearchAndFilter(
     )
 
     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-    Text(
-        text = categoriesLabel,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-    )
-    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
 
-    // 2. Category Chips
-    LazyRow(
-        state = lazyRowState,
-        contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
+    // 2. Category Header with Toggle
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onExpandedChange(!isExpanded) }
+            .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        items(IngredientCategory.entries) { category ->
-            val isSelected = selectedCategories.contains(category)
-            FilterChip(
-                selected = isSelected,
-                onClick = { onToggleCategory(category) },
-                label = {
-                    Text(
-                        text = category.categoryName,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                },
-                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    labelColor = MaterialTheme.colorScheme.onSecondary,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                border = null
-            )
+        Text(
+            text = categoriesLabel,
+            fontWeight = FontWeight.Bold,
+            color = headerColor
+        )
+        Icon(
+            painter =
+                if (isExpanded) painterResource(R.drawable.ic_arrow_drop_up)
+                else painterResource(R.drawable.ic_arrow_drop_down),
+            contentDescription =
+                if (isExpanded) stringResource(R.string.ingredients_collapse_categories)
+                else stringResource(R.string.ingredients_expand_categories),
+            tint = headerColor
+        )
+    }
+
+    if (isExpanded) {
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
+
+        // 3. Category Chips
+        LazyRow(
+            state = lazyRowState,
+            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
+        ) {
+            items(IngredientCategory.entries) { category ->
+                val isSelected = selectedCategories.contains(category)
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onToggleCategory(category) },
+                    label = {
+                        Text(
+                            text = category.categoryName,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        labelColor = MaterialTheme.colorScheme.onSecondary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    border = null
+                )
+            }
         }
     }
 

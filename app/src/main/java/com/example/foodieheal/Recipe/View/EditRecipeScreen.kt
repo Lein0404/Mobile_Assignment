@@ -69,11 +69,13 @@ fun EditRecipeScreen(
     var recipeName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("Breakfast") }
+    var visibility by remember { mutableStateOf("public") }
+    val visibilityOptions = listOf("public", "followers", "private")
     var totalTime by remember { mutableStateOf("") }
     var cookingSkill by remember { mutableStateOf("Beginner") }
     var budget by remember { mutableStateOf("0 - 10") }
     var steps by remember { mutableStateOf("") }
-    
+
     val ingredients = remember { mutableStateListOf<IngredientInputState>() }
 
     // 2. Populate fields when recipe data is loaded
@@ -82,11 +84,12 @@ fun EditRecipeScreen(
             recipeName = r.recipeName
             description = r.recipeDescription
             course = r.recipeCourse
+            visibility = r.visibility
             totalTime = r.time.toString()
             cookingSkill = r.cookingSkill
             budget = r.estimatedBudget
             steps = r.recipeStep
-            
+
             ingredients.clear()
             r.ingredients.forEach { 
                 ingredients.add(IngredientInputState(it.name, it.displayQuantity, it.unit))
@@ -102,6 +105,7 @@ fun EditRecipeScreen(
         derivedStateOf {
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             totalTime.isNotBlank() &&
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() &&
             ingredients.isNotEmpty() &&
@@ -109,7 +113,7 @@ fun EditRecipeScreen(
         }
     }
 
-    val totalCalories = remember {
+    val totalCalories by remember {
         derivedStateOf {
             ingredients.sumOf { input ->
                 val qty = input.quantity.toDoubleOrNull() ?: 0.0
@@ -126,13 +130,14 @@ fun EditRecipeScreen(
                 qty * caloriePerUnitValue / unitValue
             }.toInt()
         }
-    }.value
+    }
 
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients()
         viewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
@@ -164,7 +169,16 @@ fun EditRecipeScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Edit Recipe", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
@@ -293,6 +307,15 @@ fun EditRecipeScreen(
                                 )
                             }
                         )
+                        // 🌟 Added time limit hint
+                        if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
+                            Text(
+                                text = "Time cannot exceed 24 hours.",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         LabelText("Calories (kcal)")
@@ -373,6 +396,32 @@ fun EditRecipeScreen(
                         .bringIntoViewRequester(bringIntoViewRequester)
                 )
 
+                LabelText("Visibility")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    visibilityOptions.forEach { option ->
+                        FilterChip(
+                            selected = visibility == option,
+                            onClick = { visibility = option },
+                            label = { 
+                                Text(
+                                    text = option.replaceFirstChar { it.uppercase() },
+                                    modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                ) 
+                            },
+                            modifier = Modifier.weight(1f).height(48.dp), // 🌟 Set height explicitly
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 if (viewModel.errorMessage != null) {
@@ -414,12 +463,15 @@ fun EditRecipeScreen(
                             recipeName = recipeName,
                             recipeDescription = description,
                             recipeCourse = course,
+                            visibility = visibility,
                             time = totalTime.toIntOrNull() ?: 0,
                             calories = totalCalories,
                             cookingSkill = cookingSkill,
                             estimatedBudget = budget,
                             recipeStep = steps,
-                            ingredients = ingredients.map { IngredientItem(it.name, JsonPrimitive(it.quantity), it.unit) }
+                            ingredients = ingredients.map { IngredientItem(it.name, JsonPrimitive(it.quantity), it.unit) },
+                            authorName = authViewModel.currentUser?.name, // 🌟 Refresh author info
+                            authorImageUrl = authViewModel.currentUser?.profilePicUrl
                         )
                         viewModel.updateRecipe(updatedRecipe, imageBytes)
                     },

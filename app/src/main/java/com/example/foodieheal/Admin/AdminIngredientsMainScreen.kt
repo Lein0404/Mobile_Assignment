@@ -226,7 +226,7 @@ fun AdminOfflineMessage() {
             Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
             Text(
                 text = stringResource(R.string.admin_offline_manage_message),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
@@ -255,7 +255,9 @@ fun AdminIngredientRequestsScreen(
             showFilterIcon = true,
             isFilterActive = uiState.selectedStatus != null,
             onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
-            lazyRowState = categoryScrollState
+            lazyRowState = categoryScrollState,
+            isExpanded = uiState.isCategoriesExpanded,
+            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -369,7 +371,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
     ) {
         Row(
             modifier = Modifier
-                .padding(dimensionResource(id = R.dimen.padding_l))
+                .padding(dimensionResource(id = R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm)),
             verticalAlignment = Alignment.CenterVertically

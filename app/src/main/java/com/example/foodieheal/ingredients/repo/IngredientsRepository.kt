@@ -5,6 +5,7 @@ import com.example.foodieheal.ingredients.local.IngredientsDao
 import com.example.foodieheal.ingredients.local.toDomain
 import com.example.foodieheal.ingredients.local.toEntity
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.shared.IngredientNameNormalizer
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
@@ -138,6 +139,15 @@ class IngredientsRepository(private val dao: IngredientsDao) {
         (1..count).map { i ->
             "IGU${(maxNum + i).toString().padStart(4, '0')}"
         }
+    }
+
+    suspend fun findExistingIngredientName(name: String): String? = withContext(Dispatchers.IO) {
+        if (name.isBlank()) return@withContext null
+        
+        val allIngredients = getIngredients()
+        allIngredients.firstOrNull {
+            IngredientNameNormalizer.isMatch(it.ingredientName, name)
+        }?.ingredientName
     }
 }
 

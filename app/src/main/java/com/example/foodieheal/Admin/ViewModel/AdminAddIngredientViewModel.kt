@@ -12,6 +12,8 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
+
 data class AdminAddIngredientUiState(
     val isNetworkAvailable: Boolean = true,
     val isSubmitting: Boolean = false,
@@ -20,7 +22,8 @@ data class AdminAddIngredientUiState(
 
 class AdminAddIngredientViewModel(
     application: Application,
-    private val repository: IngredientsRepository
+    private val repository: IngredientsRepository,
+    private val requestRepository: IngredientRequestRepository
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AdminAddIngredientUiState())
@@ -77,6 +80,31 @@ class AdminAddIngredientViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
+                // Check if name already exists in master catalog
+                val existingCatalogName = repository.findExistingIngredientName(state.ingredientName)
+                if (existingCatalogName != null) {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _formState.update {
+                        it.copy(
+                            nameError = R.string.ingredients_error_name_exists,
+                            nameErrorArg = existingCatalogName
+                        )
+                    }
+                    return@launch
+                }
+
+                // Check if name already exists in pending/approved ingredient requests
+                val existingRequestName = requestRepository.findExistingRequestName(state.ingredientName)
+                if (existingRequestName != null) {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _formState.update {
+                        it.copy(
+                            nameError = R.string.ingredients_error_request_exists,
+                            nameErrorArg = existingRequestName
+                        )
+                    }
+                    return@launch
+                }
                 val ingredientId = repository.getNextIngredientId()
                 val filledRows = state.unitRows.filter { it.selectedUnit != null && it.calories.isNotBlank() }
                 val unitIds = repository.getNextIngredientUnitIds(filledRows.size)

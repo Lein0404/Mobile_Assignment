@@ -20,11 +20,11 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
-import com.example.foodieheal.ui.components.ActiveFiltersRow
-import com.example.foodieheal.ui.components.ChefFilterBottomSheet
-import com.example.foodieheal.ui.components.ChefFilterState
-import com.example.foodieheal.ui.components.ChefSearchBar
-import com.example.foodieheal.ui.components.filterAndSortChefs
+import com.example.foodieheal.hiring.components.ActiveFiltersRow
+import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
+import com.example.foodieheal.hiring.components.ChefFilterState
+import com.example.foodieheal.hiring.components.ChefSearchBar
+import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.Chef.model.Chef
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -198,7 +198,8 @@ fun BookmarkedChefsTabContent(
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             ChefFilterBottomSheet(
                 filterState = filterState,

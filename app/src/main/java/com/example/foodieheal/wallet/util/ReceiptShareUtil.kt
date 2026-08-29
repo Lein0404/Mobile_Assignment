@@ -3,6 +3,7 @@ package com.example.foodieheal.wallet.util
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.graphics.pdf.PdfDocument
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
@@ -52,6 +53,231 @@ object ReceiptShareUtil {
             Toast.makeText(context, "Failed to generate receipt image: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
         }
     }
+
+
+    // PDF Export
+    fun sharePdfReceipt(context: Context, transaction: WalletTransaction) {
+        try {
+            // A4 (standard PDF page size)
+            val pageWidth  = 595
+            val pageHeight = 842
+
+            val document = PdfDocument()
+            val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+            val page = document.startPage(pageInfo)
+            val canvas = page.canvas
+
+            drawReceiptOnCanvas(
+                canvas    = canvas,
+                txn       = transaction,
+                width     = pageWidth,
+                height    = pageHeight,
+                scalePx   = 1f
+            )
+
+            document.finishPage(page)
+
+            // Write to cache
+            val cacheDir = File(context.cacheDir, "receipts").apply { mkdirs() }
+            val pdfFile  = File(cacheDir, "receipt_${transaction.id.take(8)}_${System.currentTimeMillis()}.pdf")
+            FileOutputStream(pdfFile).use { document.writeTo(it) }
+            document.close()
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                pdfFile
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "FoodieHeal Transaction Receipt")
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    "FoodieHeal Official Receipt (PDF)\n" +
+                    "Amount: RM ${String.format(Locale.US, "%.2f", transaction.safeAmount)}\n" +
+                    "Ref ID: ${transaction.id}"
+                )
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            context.startActivity(Intent.createChooser(shareIntent, "Export PDF via"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating PDF receipt", e)
+            Toast.makeText(context, "Failed to generate PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun drawReceiptOnCanvas(
+        canvas: Canvas,
+        txn: WalletTransaction,
+        width: Int,
+        height: Int,
+        scalePx: Float
+    ) {
+        val s = scalePx
+        val w = width.toFloat()
+        val h = height.toFloat()
+
+        // Background
+        val bgPaint = Paint().apply { color = Color.parseColor("#F4F5F7") }
+        canvas.drawRect(0f, 0f, w, h, bgPaint)
+
+        // Card
+        val mx = 30f * s; val my = 24f * s
+        val cw = w - mx * 2; val ch = h - my * 2
+        val cardRect = RectF(mx, my, mx + cw, my + ch)
+        val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            setShadowLayer(12f * s, 0f, 4f * s, Color.parseColor("#20000000"))
+        }
+        canvas.drawRoundRect(cardRect, 18f * s, 18f * s, cardPaint)
+
+        // Header gradient
+        val hh = 110f * s
+        val headerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(
+                mx, my, mx + cw, my + hh,
+                Color.parseColor("#EC5E3A"), Color.parseColor("#E64A19"),
+                Shader.TileMode.CLAMP
+            )
+        }
+        val headerPath = Path().apply {
+            addRoundRect(
+                mx, my, mx + cw, my + hh,
+                floatArrayOf(18f*s,18f*s,18f*s,18f*s,0f,0f,0f,0f),
+                Path.Direction.CW
+            )
+        }
+        canvas.drawPath(headerPath, headerPaint)
+
+        // Header text
+        val cx = w / 2f
+        val titleP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE; textSize = 26f*s
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("FoodieHeal Pay", cx, my + 52f*s, titleP)
+        val subP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#E0FFFFFF"); textSize = 14f*s
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("Official E-Wallet Transaction Receipt", cx, my + 82f*s, subP)
+
+        // Status badge
+        val isCredit = txn.isCredit
+        val statusBg  = if (isCredit) Color.parseColor("#E8F5E9") else Color.parseColor("#FFEBEE")
+        val statusFg  = if (isCredit) Color.parseColor("#2E7D32") else Color.parseColor("#C62828")
+        val badgeCY   = my + hh + 55f*s
+
+        canvas.drawCircle(cx, badgeCY, 30f*s, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = statusBg })
+        val iconP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = statusFg; textSize = 28f*s
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(if (isCredit) "↓" else "↑", cx, badgeCY + 10f*s, iconP)
+
+        // Status label
+        val statusLabel = when (txn.typeEnum) {
+            WalletTransactionType.TOP_UP              -> "Top-Up Successful"
+            WalletTransactionType.APPOINTMENT_PAYMENT -> "Payment Successful"
+            WalletTransactionType.REFUND              -> "Refund Credited"
+            WalletTransactionType.RESCHEDULE_ADJUSTMENT -> "Adjustment Applied"
+        }
+        val statusP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = statusFg; textSize = 17f*s
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(statusLabel, cx, badgeCY + 57f*s, statusP)
+
+        // Amount
+        val sign = if (isCredit) "+" else "-"
+        val amtStr = "$sign RM ${String.format(Locale.US, "%.2f", txn.safeAmount)}"
+        val amtP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = statusFg; textSize = 40f*s
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawAmount(amtStr, cx, badgeCY + 105f*s, amtP)
+
+        // Dashed divider with cutout circles
+        val divY = badgeCY + 140f*s
+        val dashP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#D5D7DB"); style = Paint.Style.STROKE
+            strokeWidth = 2f*s
+            pathEffect = DashPathEffect(floatArrayOf(8f*s, 8f*s), 0f)
+        }
+        canvas.drawLine(mx + 25f*s, divY, mx + cw - 25f*s, divY, dashP)
+        val cutP = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#F4F5F7") }
+        canvas.drawCircle(mx, divY, 14f*s, cutP)
+        canvas.drawCircle(mx + cw, divY, 14f*s, cutP)
+
+        // Detail rows
+        var rowY = divY + 35f*s
+        val rowH = 38f*s
+        val lx = mx + 30f*s; val rx = mx + cw - 30f*s
+        val lblP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#757575"); textSize = 16f*s
+            textAlign = Paint.Align.LEFT
+        }
+        val valP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#212121"); textSize = 16f*s
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.RIGHT
+        }
+
+        fun drawDetailRow(label: String, value: String, valColor: Int = Color.parseColor("#212121")) {
+            valP.color = valColor
+            canvas.drawText(label, lx, rowY, lblP)
+            val v = if (value.length > 26) value.take(23) + "..." else value
+            canvas.drawText(v, rx, rowY, valP)
+            rowY += rowH
+        }
+
+        drawDetailRow("Date & Time", formatReceiptDate(txn.createdAt))
+        drawDetailRow("Transaction ID", txn.id.take(14) + "...")
+        val pmDisplay = when {
+            txn.typeEnum == WalletTransactionType.TOP_UP && txn.paymentMethod != null -> txn.paymentMethod.displayTitle
+            txn.typeEnum == WalletTransactionType.TOP_UP   -> "Instant Top-Up Gateway"
+            txn.typeEnum == WalletTransactionType.REFUND   -> "In-App Wallet (Refund)"
+            else -> "FoodieHeal In-App Wallet"
+        }
+        drawDetailRow("Payment Method", pmDisplay)
+        if (!txn.description.isNullOrBlank()) drawDetailRow("Description", txn.description)
+        drawDetailRow("Balance Before", "RM ${String.format(Locale.US, "%.2f", txn.safeBalanceBefore)}")
+        drawDetailRow("Balance After",  "RM ${String.format(Locale.US, "%.2f", txn.safeBalanceAfter)}",
+            Color.parseColor("#EC5E3A"))
+
+        // Footer divider
+        val fdY = rowY + 14f*s
+        val fdP = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#EEEEEE"); strokeWidth = 1.5f*s }
+        canvas.drawLine(mx + 20f*s, fdY, mx + cw - 20f*s, fdY, fdP)
+
+        // Barcode
+        val bcY = fdY + 20f*s
+        val barP = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#333333") }
+        val pattern = intArrayOf(4,2,6,2,3,5,2,6,3,2,5,3,2,6,4,2,5,3,2,4,3,6,2,4,2,5,3,6,2,4)
+        var bx = cx - 100f*s
+        for (bw in pattern) {
+            canvas.drawRect(bx, bcY, bx + bw * s, bcY + 24f*s, barP)
+            bx += (bw * s) + 3f*s
+        }
+
+        // Footer text
+        val ftP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#9E9E9E"); textSize = 12f*s; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("Thank you for choosing FoodieHeal", cx, bcY + 40f*s, ftP)
+        canvas.drawText("Computer-generated receipt • No signature required", cx, bcY + 60f*s, ftP)
+    }
+
+    private fun Canvas.drawAmount(text: String, x: Float, y: Float, paint: Paint) =
+        this.drawText(text, x, y, paint)
+
 
     private fun generateReceiptBitmap(context: Context, txn: WalletTransaction): Bitmap {
         val width = 1080

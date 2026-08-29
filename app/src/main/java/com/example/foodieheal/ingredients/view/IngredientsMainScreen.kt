@@ -10,8 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -32,6 +30,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodieheal.ingredients.model.*
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
+import com.example.foodieheal.ingredients.shared.SelectShoppingListDialog
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
@@ -112,8 +111,9 @@ fun IngredientsMainScreen(
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.shopping_list_back)
+                                    painter = painterResource(R.drawable.ic_arrowback),
+                                    contentDescription = stringResource(R.string.back),
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         },
@@ -196,12 +196,13 @@ fun IngredientsMainScreen(
                     navController = navController,
                     categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
-                        viewModel.addToShoppingList(ingredient)
-                        Toast.makeText(
-                            context,
-                            application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        viewModel.requestAddToShoppingList(ingredient) {
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 )
             } else {
@@ -210,6 +211,38 @@ fun IngredientsMainScreen(
                     uiState = requestUiState,
                     navController = navController,
                     categoryScrollState = requestsCategoryScrollState
+                )
+            }
+
+            val addShoppingState = uiState.addShoppingListState
+            if (addShoppingState.showDialog) {
+                SelectShoppingListDialog(
+                    shoppingLists = addShoppingState.availableLists,
+                    isNewList = addShoppingState.isNewListOptionSelected,
+                    newListNameInput = addShoppingState.newListNameInput,
+                    selectedIndex = addShoppingState.selectedListIndex,
+                    onIsNewListChange = { viewModel.updateIsNewListOption(it) },
+                    onNewListNameChange = { viewModel.updateNewShoppingListName(it) },
+                    onSelectedIndexChange = { viewModel.updateSelectedShoppingListIndex(it) },
+                    onDismissRequest = { viewModel.onDismissSelectShoppingListDialog() },
+                    onConfirm = {
+                        viewModel.confirmAddPendingIngredientToShoppingList { addedName ->
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, addedName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    onConfirmNewList = {
+                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
+                            Toast.makeText(
+                                context,
+                                application.getString(R.string.ingredients_toast_added, addedName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 )
             }
         }
@@ -249,7 +282,7 @@ fun IngredientRequestsScreen(
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                 Text(
                     text = stringResource(R.string.ingredients_no_internet_requests),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
@@ -270,7 +303,9 @@ fun IngredientRequestsScreen(
             showFilterIcon = true,
             isFilterActive = uiState.selectedStatus != null,
             onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
-            lazyRowState = categoryScrollState
+            lazyRowState = categoryScrollState,
+            isExpanded = uiState.isCategoriesExpanded,
+            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -292,10 +327,24 @@ fun IngredientRequestsScreen(
             }
         } else if (uiState.filteredRequests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.ingredients_requests_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.ingredients_requests_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
+                    Button(
+                        onClick = {
+                            navController.navigate(Screen.IngredientRequestForm.createRoute())
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                    ) {
+                        Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null)
+                        Spacer(Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
+                        Text(stringResource(R.string.ingredients_fab_new_request))
+                    }
+                }
             }
         } else {
             val grouped = uiState.filteredRequests.groupBy { it.request.ingredientCategory ?: IngredientCategory.OTHERS }
@@ -449,7 +498,9 @@ fun IngredientsExistingScreen(
             searchPlaceholder = stringResource(R.string.ingredients_existing_search_placeholder),
             selectedCategories = uiState.selectedCategories,
             onToggleCategory = { viewModel.toggleCategory(it) },
-            lazyRowState = categoryScrollState
+            lazyRowState = categoryScrollState,
+            isExpanded = uiState.isCategoriesExpanded,
+            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -530,7 +581,7 @@ fun IngredientCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(dimensionResource(id = R.dimen.padding_l))
+                .padding(dimensionResource(id = R.dimen.padding_md))
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically

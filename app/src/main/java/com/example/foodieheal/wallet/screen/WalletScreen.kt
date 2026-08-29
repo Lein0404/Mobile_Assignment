@@ -1,6 +1,7 @@
 package com.example.foodieheal.wallet.screen
 
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,9 +9,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -37,6 +40,8 @@ import com.example.foodieheal.wallet.model.WalletTransactionType
 import com.example.foodieheal.wallet.viewmodel.TransactionFilterOption
 import com.example.foodieheal.wallet.viewmodel.WalletUiState
 import com.example.foodieheal.wallet.viewmodel.WalletViewModel
+import com.example.foodieheal.wallet.component.SpendingAnalyticsCard
+import com.example.foodieheal.ui.components.WalletScreenSkeleton
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -56,6 +61,7 @@ fun WalletScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showTopUpSheet by remember { mutableStateOf(false) }
+    var selectedMainTab by remember { mutableIntStateOf(0) } // 0 = History, 1 = Analytics
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
@@ -120,7 +126,7 @@ fun WalletScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.isLoading && uiState.wallet == null) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                WalletScreenSkeleton(modifier = Modifier.align(Alignment.TopCenter))
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -170,50 +176,90 @@ fun WalletScreen(
                     }
 
                     item {
-                        FilterChipsRow(
-                            selectedFilter = uiState.selectedFilter,
-                            onFilterSelect = { viewModel.setFilter(it) }
-                        )
-                    }
-
-                    item {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.transaction_history),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = stringResource(R.string.wallet_records_count, uiState.filteredTransactions.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            val tabs = listOf("Transaction History", "Spending Analytics")
+                            tabs.forEachIndexed { index, title ->
+                                val isSelected = selectedMainTab == index
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(11.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent)
+                                        .clickable { selectedMainTab = index }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    val transactions = uiState.filteredTransactions
-                    if (transactions.isEmpty()) {
+                    if (selectedMainTab == 1) {
                         item {
-                            EmptyTransactionsView(
-                                filter = uiState.selectedFilter,
-                                onTopUpClick = { showTopUpSheet = true }
+                            SpendingAnalyticsCard(
+                                transactions = uiState.transactions
                             )
                         }
                     } else {
-                        items(
-                            items = transactions,
-                            key = { it.id.ifBlank { "${it.createdAt}_${it.amount}_${it.transactionType}" } }
-                        ) { txn ->
-                            WalletTransactionItem(
-                                transaction = txn,
-                                isBalanceHidden = uiState.isBalanceHidden,
-                                onClick = { onTransactionClick(txn.id) }
+                        item {
+                            FilterChipsRow(
+                                selectedFilter = uiState.selectedFilter,
+                                onFilterSelect = { viewModel.setFilter(it) }
                             )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.transaction_history),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.wallet_records_count, uiState.filteredTransactions.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        val transactions = uiState.filteredTransactions
+                        if (transactions.isEmpty()) {
+                            item {
+                                EmptyTransactionsView(
+                                    filter = uiState.selectedFilter,
+                                    onTopUpClick = { showTopUpSheet = true }
+                                )
+                            }
+                        } else {
+                            items(
+                                items = transactions,
+                                key = { it.id.ifBlank { "${it.createdAt}_${it.amount}_${it.transactionType}" } }
+                            ) { txn ->
+                                WalletTransactionItem(
+                                    transaction = txn,
+                                    isBalanceHidden = uiState.isBalanceHidden,
+                                    onClick = { onTransactionClick(txn.id) }
+                                )
+                            }
                         }
                     }
                 }
@@ -624,7 +670,10 @@ fun TopUpBottomSheet(
     var customAmountText by remember { mutableStateOf("") }
     var selectedPreset by remember { mutableStateOf<Double?>(100.0) }
     var selectedCardId by remember {
-        mutableStateOf(savedCards.firstOrNull { (it as? PaymentMethod.CreditCard)?.isDefault == true }?.id ?: savedCards.firstOrNull()?.id)
+        mutableStateOf(
+            savedCards.firstOrNull { (it as? PaymentMethod.CreditCard)?.isDefault == true }?.id
+                ?: savedCards.firstOrNull()?.id
+        )
     }
 
     val presetAmounts = listOf(50.0, 100.0, 200.0, 500.0)
@@ -639,178 +688,256 @@ fun TopUpBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        modifier = Modifier.fillMaxSize() // Fills whole screen window
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize() // Forces bottom sheet content to fill full height
+                .padding(horizontal = 24.dp)
         ) {
-            Text(
-                text = stringResource(R.string.wallet_top_up_sheet_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = stringResource(R.string.wallet_top_up_preset_prompt),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Preset Amount Grid (Flexible 2x2 layout for all screen sizes)
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                presetAmounts.chunked(2).forEach { rowPresets ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        rowPresets.forEach { preset ->
-                            val isSelected = selectedPreset == preset
-                            Surface(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedPreset = preset
-                                    customAmountText = ""
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurface,
-                                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                Text(
+                    text = stringResource(R.string.wallet_top_up_sheet_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                TextButton(
+                    onClick = {
+                        selectedPreset = 100.0
+                        customAmountText = ""
+                    },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Reset",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = true)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TopUpSectionHeader(
+                    icon = R.drawable.dollar_symbol,
+                    title = stringResource(R.string.wallet_top_up_preset_prompt)
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    presetAmounts.chunked(2).forEach { rowPresets ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowPresets.forEach { preset ->
+                                val isSelected = selectedPreset == preset
+                                Surface(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedPreset = preset
+                                        customAmountText = ""
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                    },
+                                    contentColor = if (isSelected) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                    border = if (isSelected) {
+                                        BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                    } else {
+                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(48.dp)
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.currency_rm_int, preset.toInt()),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        maxLines = 1,
-                                        textAlign = TextAlign.Center
-                                    )
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.currency_rm_int, preset.toInt()),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            maxLines = 1,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // Custom Amount Input
-            OutlinedTextField(
-                value = customAmountText,
-                onValueChange = { input ->
-                    val filtered = input.filter { it.isDigit() || it == '.' }
-                    if (filtered.count { it == '.' } <= 1) {
-                        customAmountText = filtered
-                        if (filtered.isNotEmpty()) {
-                            selectedPreset = null
-                        }
-                    }
-                },
-                label = { Text(stringResource(R.string.wallet_custom_amount_label)) },
-                placeholder = { Text(stringResource(R.string.wallet_custom_amount_placeholder)) },
-                prefix = { Text(stringResource(R.string.currency_prefix), fontWeight = FontWeight.Bold) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
-            )
+                Spacer(modifier = Modifier.height(20.dp))
 
-            // Payment Source Selection
-            if (savedCards.isNotEmpty()) {
-                Text(
-                    text = stringResource(R.string.wallet_payment_method_label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                TopUpSectionHeader(
+                    icon = R.drawable.dollar_symbol,
+                    title = stringResource(R.string.wallet_custom_amount_label)
                 )
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    savedCards.forEach { card ->
-                        val isCardSelected = selectedCardId == card.id
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedCardId = card.id },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isCardSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                                else MaterialTheme.colorScheme.surface
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Row(
+                OutlinedTextField(
+                    value = customAmountText,
+                    onValueChange = { input ->
+                        val filtered = input.filter { it.isDigit() || it == '.' }
+                        if (filtered.count { it == '.' } <= 1) {
+                            customAmountText = filtered
+                            if (filtered.isNotEmpty()) {
+                                selectedPreset = null
+                            }
+                        }
+                    },
+                    placeholder = {
+                        Text(
+                            stringResource(R.string.wallet_custom_amount_placeholder),
+                            fontSize = 14.sp
+                        )
+                    },
+                    prefix = {
+                        Text(
+                            stringResource(R.string.currency_prefix),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        unfocusedBorderColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TopUpSectionHeader(
+                    icon = R.drawable.dollar_symbol,
+                    title = stringResource(R.string.wallet_payment_method_label)
+                )
+
+                if (savedCards.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        savedCards.forEach { card ->
+                            val isCardSelected = selectedCardId == card.id
+                            Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { selectedCardId = card.id },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isCardSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                },
+                                border = if (isCardSelected) {
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                                } else null
                             ) {
-                                RadioButton(
-                                    selected = isCardSelected,
-                                    onClick = { selectedCardId = card.id }
-                                )
-                                Icon(
-                                    painter = painterResource(R.drawable.dollar_symbol),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = card.title,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isCardSelected) FontWeight.Bold else FontWeight.Normal
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = isCardSelected,
+                                        onClick = { selectedCardId = card.id },
+                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                                    )
+                                    Icon(
+                                        painter = painterResource(R.drawable.dollar_symbol),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = card.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isCardSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
-                }
-            } else {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.check_circle),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.wallet_demo_gateway_label),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.check_circle),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.wallet_demo_gateway_label),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Action Buttons
             Button(
                 onClick = { onConfirmTopUp(finalAmount, selectedCardId) },
                 enabled = isValid && !isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .padding(vertical = 12.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                )
             ) {
                 if (isSubmitting) {
                     CircularProgressIndicator(
@@ -820,7 +947,10 @@ fun TopUpBottomSheet(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.wallet_top_up_btn_format, String.format(Locale.US, "%.2f", finalAmount)),
+                        text = stringResource(
+                            R.string.wallet_top_up_btn_format,
+                            String.format(Locale.US, "%.2f", finalAmount)
+                        ),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -829,6 +959,33 @@ fun TopUpBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+private fun TopUpSectionHeader(
+    title: String,
+    @DrawableRes icon: Int? = null
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 8.dp)
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

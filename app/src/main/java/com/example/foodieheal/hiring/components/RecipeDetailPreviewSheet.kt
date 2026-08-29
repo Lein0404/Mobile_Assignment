@@ -87,24 +87,25 @@ fun RecipeDetailPreviewSheet(
                 shape = RoundedCornerShape(2.dp),
                 color = MaterialTheme.colorScheme.outlineVariant
             ) {}
-        }
+        },
+        modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .imePadding()
         ) {
-            // Scrollable
+
             Column(
                 modifier = Modifier
-                    .weight(1f, fill = false)
+                    .weight(1f, fill = true)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(170.dp)
+                        .height(200.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
@@ -137,7 +138,7 @@ fun RecipeDetailPreviewSheet(
                         }
                     }
 
-                    // Course
+                    // Course Badge
                     if (recipe.recipeCourse.isNotBlank()) {
                         Surface(
                             modifier = Modifier
@@ -156,6 +157,7 @@ fun RecipeDetailPreviewSheet(
                         }
                     }
 
+                    // Close Button
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -419,6 +421,7 @@ fun RecipeDetailPreviewSheet(
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
+            // --- Fixed Bottom Action Panel ---
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surface,
@@ -428,7 +431,7 @@ fun RecipeDetailPreviewSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     if (isReadOnly) {
@@ -489,8 +492,8 @@ fun RecipeDetailPreviewSheet(
                             onClick = onDismiss,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(46.dp),
-                            shape = RoundedCornerShape(12.dp),
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -573,7 +576,6 @@ fun RecipeDetailPreviewSheet(
                             }
                         }
 
-                        // Chef note input
                         OutlinedTextField(
                             value = customNoteText,
                             onValueChange = {
@@ -610,7 +612,7 @@ fun RecipeDetailPreviewSheet(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(46.dp),
+                                    .height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = MaterialTheme.colorScheme.error
@@ -624,7 +626,7 @@ fun RecipeDetailPreviewSheet(
                                 onClick = onDismiss,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(46.dp),
+                                    .height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
@@ -642,8 +644,8 @@ fun RecipeDetailPreviewSheet(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary

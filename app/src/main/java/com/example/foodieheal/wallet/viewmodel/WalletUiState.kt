@@ -20,7 +20,8 @@ data class WalletUiState(
     val isBalanceHidden: Boolean = false,
     val selectedFilter: TransactionFilterOption = TransactionFilterOption.ALL,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val optimisticBalance: Double? = null
 ) {
     val filteredTransactions: List<WalletTransaction>
         get() = when (selectedFilter) {
@@ -31,7 +32,7 @@ data class WalletUiState(
         }
 
     val currentBalance: Double
-        get() = wallet?.balance ?: 0.0
+        get() = optimisticBalance ?: wallet?.balance ?: 0.0
 
     val isWalletActive: Boolean
         get() = wallet?.isActive == true

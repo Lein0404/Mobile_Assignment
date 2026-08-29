@@ -125,10 +125,9 @@ open class AppCacheCleanupService : Service() {
             if (shouldClearAll || targets.contains(CacheTarget.RECIPES)) {
                 try {
                     val recipeDb = RecipeDatabase.getDatabase(context)
-                    // 🌟 REMOVED: recipeDb.recipeDao().clearRecipes() 
-                    // We want to persist synced recipes for offline meal planning.
+                    recipeDb.recipeDao().clearRecipes()
                     recipeDb.recipeDao().clearIngredients()
-                    Log.d(TAG, "Cleared Ingredients cache (Recipes preserved for offline).")
+                    Log.d(TAG, "Cleared Recipe cache.")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error clearing Recipe cache", e)
                 }

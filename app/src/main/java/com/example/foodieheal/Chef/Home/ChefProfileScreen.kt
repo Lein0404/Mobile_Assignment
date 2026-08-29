@@ -48,6 +48,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.ui.components.DetailSectionCard
 
+import com.example.foodieheal.Chef.Home.ChefAvailabilityCard
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 
@@ -270,6 +271,12 @@ fun ChefProfileScreen(
                         value = fullAddress.ifEmpty { stringResource(R.string.not_provided) }
                     )
                 }
+
+                // Weekly Availability Schedule Grid
+                ChefAvailabilityCard(
+                    chef = chef,
+                    authViewModel = viewModel
+                )
 
                 // Account Security Section
                 DetailSectionCard(title = stringResource(R.string.account_security)) {

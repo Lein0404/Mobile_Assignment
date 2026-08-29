@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class Chef(
@@ -51,5 +52,11 @@ data class Chef(
     val Pricing : Double ? =null,
 
     @SerialName("Status")
-    val status: String
+    val status: String,
+
+    @SerialName("created_at")
+    val created_at: String? = null,
+
+    @SerialName("availability_hours")
+    val availability_hours: JsonElement? = null
 )

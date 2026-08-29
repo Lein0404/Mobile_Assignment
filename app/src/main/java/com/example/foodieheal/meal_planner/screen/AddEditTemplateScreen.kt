@@ -152,7 +152,7 @@ fun AddEditTemplateScreen(
                         onBackClick()
                     }
                 ) {
-                    Text(stringResource(R.string.btn_discard), color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.button_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

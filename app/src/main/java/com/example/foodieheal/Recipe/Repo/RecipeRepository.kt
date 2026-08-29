@@ -12,6 +12,13 @@ import com.example.foodieheal.Recipe.local.toDomain
 import com.example.foodieheal.Recipe.local.toEntity
 import com.example.foodieheal.Recipe.Model.IngredientItem
 import com.example.foodieheal.SupabaseClient.client
+import com.example.foodieheal.MainActivity
+import com.example.foodieheal.User.local.UserDatabase
+import com.example.foodieheal.User.local.toPublicEntity
+import com.example.foodieheal.User.local.toDomain
+import com.example.foodieheal.Recipe.Model.UnitDetails
+import com.example.foodieheal.ingredients.local.IngredientsDatabase
+import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -28,9 +35,16 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class RecipeRepository(
-    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null
+    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null,
+    private val ingredientsRepository: IngredientsRepository? = null
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    private fun getIngredientsRepo(): IngredientsRepository? {
+        return ingredientsRepository ?: MainActivity.appContext?.let { ctx ->
+            IngredientsRepository(IngredientsDatabase.getInstance(ctx).ingredientsDao())
+        }
+    }
 
     suspend fun getAllRecipes(): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
@@ -97,6 +111,9 @@ class RecipeRepository(
             val cleanRecipe = recipe.copy(authorInfo = null)
             client.from("recipes").insert(cleanRecipe)
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
+
+            // Also cache the author info for offline profile viewing
+            cacheAuthorInfo(recipe)
             Unit
         }
     }
@@ -108,7 +125,25 @@ class RecipeRepository(
                 filter { eq("recipe_id", recipe.recipe_id ?: "") }
             }
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
+
+            // Also cache the author info for offline profile viewing
+            cacheAuthorInfo(recipe)
             Unit
+        }
+    }
+
+    private suspend fun cacheAuthorInfo(recipe: Recipe) {
+        if (recipe.author_id != null && recipe.authorName != null) {
+            MainActivity.appContext?.let { context ->
+                val dao = UserDatabase.getDatabase(context).userDao()
+                val user = User(
+                    id = null,
+                    customId = recipe.author_id,
+                    name = recipe.authorName,
+                    profilePicUrl = recipe.authorImageUrl
+                )
+                dao.insertPublicUser(user.toPublicEntity())
+            }
         }
     }
 
@@ -143,27 +178,95 @@ class RecipeRepository(
 
     suspend fun getAvailableIngredients(): Result<List<Ingredient>> = withContext(Dispatchers.IO) {
         runCatching {
-            client.from("ingredient_units")
-                .select(Columns.raw("*, units(default_quantity)"))
-                .decodeList<Ingredient>()
+            val repo = getIngredientsRepo()
+            if (repo != null) {
+                val ingredients = repo.getIngredients()
+                val allUnits = repo.getUnits().associateBy { it.unitID }
+                val allIngredientUnits = repo.getAllIngredientUnits()
+
+                ingredients.flatMap { ing ->
+                    val unitsForIng = allIngredientUnits.filter { it.ingredientID == ing.ingredientId }
+                    if (unitsForIng.isEmpty()) {
+                        listOf(
+                            Ingredient(
+                                id = ing.ingredientId,
+                                name = ing.ingredientName,
+                                kcal = 0.0,
+                                defaultUnit = "pieces",
+                                unitDetails = UnitDetails(defaultQuantity = 1.0)
+                            )
+                        )
+                    } else {
+                        unitsForIng.map { iu ->
+                            val unit = allUnits[iu.unitID]
+                            Ingredient(
+                                id = iu.ingredientUnitId,
+                                name = ing.ingredientName,
+                                kcal = iu.caloriesPerDefaultQuantity,
+                                defaultUnit = unit?.unitDisplay?.ifEmpty { unit.unitName } ?: "pieces",
+                                unitDetails = UnitDetails(defaultQuantity = unit?.defaultQuantity ?: 1.0)
+                            )
+                        }
+                    }
+                }
+            } else {
+                emptyList()
+            }
         }
     }
 
     suspend fun toggleBookmark(userId: String, recipeId: String, isBookmarked: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val table = client.from("recipe_bookmarks")
+            // 1. Update Room first (Instant UI)
             if (isBookmarked) {
-                table.delete {
-                    filter {
-                        eq("user_id", userId)
-                        eq("recipe_id", recipeId)
-                    }
-                }
                 recipeDao?.deleteBookmark(userId, recipeId)
             } else {
-                table.insert(mapOf("user_id" to userId, "recipe_id" to recipeId))
                 recipeDao?.insertBookmarks(listOf(com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, recipeId)))
             }
+
+            // 2. Try Supabase
+            try {
+                val table = client.from("recipe_bookmarks")
+                if (isBookmarked) {
+                    table.delete {
+                        filter {
+                            eq("user_id", userId)
+                            eq("recipe_id", recipeId)
+                        }
+                    }
+                } else {
+                    table.insert(mapOf("user_id" to userId, "recipe_id" to recipeId))
+                }
+            } catch (e: Exception) {
+                // If network failure, we don't throw error. Room is already updated.
+                val msg = e.message ?: ""
+                val isNetworkError = msg.contains("Unable to resolve host", true) ||
+                                   msg.contains("Failed to connect", true) ||
+                                   msg.contains("connection", true)
+
+                if (!isNetworkError) throw e
+                else Log.d("RecipeRepository", "Bookmark saved locally. Sync pending.")
+            }
+            Unit
+        }
+    }
+
+    /**
+     * 🌟 Sync local bookmarks with Supabase.
+     * Simple Logic: Update local Room to match Supabase exactly.
+     */
+    suspend fun syncBookmarks(userId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            // 1. Get server state
+            val response = client.from("recipe_bookmarks")
+                .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
+            val serverIds = response.decodeList<BookmarkId>().map { it.recipe_id }.toSet()
+
+            // 2. Update local Room to match server exactly
+            recipeDao?.clearBookmarks(userId)
+            recipeDao?.insertBookmarks(serverIds.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
+
+            Log.d("RecipeRepository", "Bookmark sync complete for $userId. Fetched ${serverIds.size} bookmarks.")
             Unit
         }
     }
@@ -186,14 +289,14 @@ class RecipeRepository(
                     Log.e("RecipeRepository", "Bookmarks Join Error: ${e.localizedMessage}")
                     client.from("recipes").select { filter { isIn("recipe_id", bookmarkedIds) } }.decodeList<Recipe>()
                 }
-                
+
                 recipes.forEach { recipe ->
                     recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                     recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
                 }
 
                 recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
-                
+
                 recipes
             } catch (e: Exception) {
                 Log.e("RecipeRepository", "Error fetching bookmarks", e)
@@ -217,6 +320,7 @@ class RecipeRepository(
     suspend fun deleteRecipe(recipeId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             client.from("recipes").delete { filter { eq("recipe_id", recipeId) } }
+            recipeDao?.deleteRecipe(recipeId)
             Unit
         }
     }
@@ -232,11 +336,12 @@ class RecipeRepository(
                 } catch (e: Exception) {
                     client.from("recipes").select { filter { eq("recipe_id", recipeId) } }.decodeSingle<Recipe>()
                 }
-                
+
                 recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
 
                 recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
+                
                 recipe
             } catch (e: Exception) {
                 recipeDao?.getRecipeById(recipeId)?.toDomain(json)?.apply { isOffline = true }
@@ -251,7 +356,7 @@ class RecipeRepository(
         runCatching {
             val local = recipeDao?.getRecipeById(recipeId)?.toDomain(json)
             if (local != null) return@runCatching local.apply { isOffline = true }
-            
+
             // If not in local, then try network
             getRecipeById(recipeId).getOrNull()
         }
@@ -269,7 +374,7 @@ class RecipeRepository(
                 } catch (e: Exception) {
                     client.from("recipes").select { filter { isIn("recipe_id", recipeIds) } }.decodeList<Recipe>()
                 }
-                
+
                 recipes.forEach { recipe ->
                     recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                     recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
@@ -290,18 +395,97 @@ class RecipeRepository(
         runCatching {
             val local = recipeDao?.getAllRecipes() ?: emptyList()
             val cached = local.filter { it.recipe_id in recipeIds }.map { it.toDomain(json).apply { isOffline = true } }
-            
+
             if (cached.size == recipeIds.size) return@runCatching cached
-            
+
             getRecipesByIds(recipeIds).getOrDefault(cached)
+        }
+    }
+
+    suspend fun getFollowingRecipes(followedUserIds: List<String>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (followedUserIds.isEmpty()) return@runCatching emptyList<Recipe>()
+
+            val recipes = try {
+                client.from("recipes")
+                    .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                        filter {
+                            isIn("recipe_author", followedUserIds)
+                            // 🌟 SAFETY: If visibility column is missing, the query might fail.
+                            // We attempt to filter, but if it fails, we fetch without filtering and filter in memory.
+                            try {
+                                or {
+                                    eq("visibility", "public")
+                                    eq("visibility", "followers")
+                                }
+                            } catch (e: Exception) {
+                                Log.w("RecipeRepository", "Visibility filter failed, table might need update: ${e.message}")
+                            }
+                        }
+                    }.decodeList<Recipe>()
+            } catch (e: Exception) {
+                Log.e("RecipeRepository", "FollowingRecipes Join Error: ${e.localizedMessage}")
+                val fallback = client.from("recipes").select {
+                    filter {
+                        isIn("recipe_author", followedUserIds)
+                    }
+                }.decodeList<Recipe>()
+                // Filter in memory if server filter failed
+                fallback.filter { it.visibility == "public" || it.visibility == "followers" }
+            }
+
+            recipes.forEach { recipe ->
+                recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+            }
+            recipes
         }
     }
 
     suspend fun getUserByCustomId(customId: String): Result<User?> = withContext(Dispatchers.IO) {
         runCatching {
-            client.from("users")
-                .select { filter { eq("custom_id", customId) } }
-                .decodeSingleOrNull<User>()
+            try {
+                val user = client.from("users")
+                    .select { filter { eq("custom_id", customId) } }
+                    .decodeSingleOrNull<User>()
+
+                // Cache for offline
+                MainActivity.appContext?.let { context ->
+                    val dao = UserDatabase.getDatabase(context).userDao()
+                    user?.let { dao.insertPublicUser(it.toPublicEntity()) }
+                }
+                user
+            } catch (e: Exception) {
+                // Offline fallback
+                MainActivity.appContext?.let { context ->
+                    val dao = UserDatabase.getDatabase(context).userDao()
+                    dao.getPublicUser(customId)?.toDomain()
+                }
+            }
+        }
+    }
+
+    suspend fun getUsersByCustomIds(customIds: List<String>): Result<List<User>> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (customIds.isEmpty()) return@runCatching emptyList<User>()
+            try {
+                val users = client.from("users")
+                    .select { filter { isIn("custom_id", customIds) } }
+                    .decodeList<User>()
+
+                // Cache for offline
+                MainActivity.appContext?.let { context ->
+                    val dao = UserDatabase.getDatabase(context).userDao()
+                    users.forEach { dao.insertPublicUser(it.toPublicEntity()) }
+                }
+                users
+            } catch (e: Exception) {
+                // Offline fallback
+                MainActivity.appContext?.let { context ->
+                    val dao = UserDatabase.getDatabase(context).userDao()
+                    customIds.mapNotNull { dao.getPublicUser(it)?.toDomain() }
+                } ?: emptyList()
+            }
         }
     }
 

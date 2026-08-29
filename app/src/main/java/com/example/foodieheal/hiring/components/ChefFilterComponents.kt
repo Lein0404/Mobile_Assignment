@@ -1,7 +1,10 @@
-package com.example.foodieheal.ui.components
+package com.example.foodieheal.hiring.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -290,6 +294,7 @@ fun ActiveFiltersRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ChefFilterBottomSheet(
     filterState: ChefFilterState,
@@ -298,172 +303,306 @@ fun ChefFilterBottomSheet(
     onDismiss: () -> Unit
 ) {
     var tempState by remember { mutableStateOf(filterState) }
+    var stateSearchQuery by remember { mutableStateOf("") }
+
+    val distinctStates = remember(availableStates) {
+        availableStates.distinct().sorted()
+    }
+
+    val filteredStates = remember(stateSearchQuery, distinctStates) {
+        if (stateSearchQuery.isBlank()) distinctStates
+        else distinctStates.filter { it.contains(stateSearchQuery.trim(), ignoreCase = true) }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
     ) {
-        // Header
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Filter & Sort Chefs",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
-            TextButton(onClick = { tempState = ChefFilterState(searchQuery = tempState.searchQuery) }) {
+            TextButton(
+                onClick = {
+                    tempState = ChefFilterState(searchQuery = tempState.searchQuery)
+                    stateSearchQuery = ""
+                }
+            ) {
                 Text("Reset All", color = MaterialTheme.colorScheme.error)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 1. Sort by Rating
-        FilterSectionHeader(title = "Sort by Rating")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = tempState.rateSortOrder == RateSortOrder.DESCENDING,
-                onClick = {
-                    tempState = tempState.copy(
-                        rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.DESCENDING) RateSortOrder.NONE else RateSortOrder.DESCENDING
-                    )
-                },
-                label = { Text("High to Low") }
-            )
-            FilterChip(
-                selected = tempState.rateSortOrder == RateSortOrder.ASCENDING,
-                onClick = {
-                    tempState = tempState.copy(
-                        rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.ASCENDING) RateSortOrder.NONE else RateSortOrder.ASCENDING
-                    )
-                },
-                label = { Text("Low to High") }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 2. Sort by Hourly Rate / Price
-        FilterSectionHeader(title = "Sort by Hourly Rate")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = tempState.priceSortOrder == PriceSortOrder.ASCENDING,
-                onClick = {
-                    tempState = tempState.copy(
-                        priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.ASCENDING) PriceSortOrder.NONE else PriceSortOrder.ASCENDING
-                    )
-                },
-                label = { Text("Price: Low to High") }
-            )
-            FilterChip(
-                selected = tempState.priceSortOrder == PriceSortOrder.DESCENDING,
-                onClick = {
-                    tempState = tempState.copy(
-                        priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.DESCENDING) PriceSortOrder.NONE else PriceSortOrder.DESCENDING
-                    )
-                },
-                label = { Text("Price: High to Low") }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 3. Gender
-        FilterSectionHeader(title = "Chef Gender")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Male", "Female").forEach { gender ->
-                FilterChip(
-                    selected = tempState.selectedGender.equals(gender, ignoreCase = true),
-                    onClick = {
-                        tempState = tempState.copy(
-                            selectedGender = if (tempState.selectedGender.equals(gender, ignoreCase = true)) null else gender
-                        )
-                    },
-                    label = { Text(gender) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 4. Age Range
-        FilterSectionHeader(title = "Chef Age")
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            AgeRange.entries.forEach { range ->
-                FilterChip(
-                    selected = tempState.selectedAgeRange == range,
-                    onClick = {
-                        tempState = tempState.copy(
-                            selectedAgeRange = if (tempState.selectedAgeRange == range) null else range
-                        )
-                    },
-                    label = { Text(range.label) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 5. State / Location (from ReusableList.kt States)
-        FilterSectionHeader(title = "State / Location")
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
         ) {
-            availableStates.forEach { state ->
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 1. Sort by Rating
+            FilterSectionHeader(icon = R.drawable.ic_star, title = "Sort by Rating")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 FilterChip(
-                    selected = tempState.selectedState.equals(state, ignoreCase = true),
+                    selected = tempState.rateSortOrder == RateSortOrder.DESCENDING,
                     onClick = {
                         tempState = tempState.copy(
-                            selectedState = if (tempState.selectedState.equals(state, ignoreCase = true)) null else state
+                            rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.DESCENDING) RateSortOrder.NONE else RateSortOrder.DESCENDING
                         )
                     },
-                    label = { Text(state) }
+                    label = { Text("High to Low") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                FilterChip(
+                    selected = tempState.rateSortOrder == RateSortOrder.ASCENDING,
+                    onClick = {
+                        tempState = tempState.copy(
+                            rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.ASCENDING) RateSortOrder.NONE else RateSortOrder.ASCENDING
+                        )
+                    },
+                    label = { Text("Low to High") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
 
-        // Apply Button
+            Spacer(modifier = Modifier.height(24.dp))
+
+            FilterSectionHeader(icon = R.drawable.dollar_symbol, title = "Sort by Hourly Rate")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = tempState.priceSortOrder == PriceSortOrder.ASCENDING,
+                    onClick = {
+                        tempState = tempState.copy(
+                            priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.ASCENDING) PriceSortOrder.NONE else PriceSortOrder.ASCENDING
+                        )
+                    },
+                    label = { Text("Price: Low to High") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                FilterChip(
+                    selected = tempState.priceSortOrder == PriceSortOrder.DESCENDING,
+                    onClick = {
+                        tempState = tempState.copy(
+                            priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.DESCENDING) PriceSortOrder.NONE else PriceSortOrder.DESCENDING
+                        )
+                    },
+                    label = { Text("Price: High to Low") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            FilterSectionHeader(icon = null, title = "Chef Gender")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("Male", "Female").forEach { gender ->
+                    FilterChip(
+                        selected = tempState.selectedGender.equals(gender, ignoreCase = true),
+                        onClick = {
+                            tempState = tempState.copy(
+                                selectedGender = if (tempState.selectedGender.equals(gender, ignoreCase = true)) null else gender
+                            )
+                        },
+                        label = { Text(gender) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            FilterSectionHeader(icon = R.drawable.ic_clock, title = "Chef Age")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AgeRange.entries.forEach { range ->
+                    FilterChip(
+                        selected = tempState.selectedAgeRange == range,
+                        onClick = {
+                            tempState = tempState.copy(
+                                selectedAgeRange = if (tempState.selectedAgeRange == range) null else range
+                            )
+                        },
+                        label = { Text(range.label) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            FilterSectionHeader(icon = R.drawable.location, title = "State / Location")
+
+            OutlinedTextField(
+                value = stateSearchQuery,
+                onValueChange = { stateSearchQuery = it },
+                placeholder = { Text("Search location / state...", fontSize = 14.sp) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(24.dp))
+                },
+                trailingIcon = {
+                    if (stateSearchQuery.isNotEmpty()) {
+                        IconButton(onClick = { stateSearchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                        }
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color.Transparent
+                )
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (distinctStates.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(filteredStates) { state ->
+                        val isSelected = tempState.selectedState.equals(state, ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                tempState = tempState.copy(
+                                    selectedState = if (isSelected) null else state
+                                )
+                            },
+                            label = { Text(state) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
+
+                // Show Selected State Chip
+                tempState.selectedState?.let { selected ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Selected Location:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    InputChip(
+                        selected = true,
+                        onClick = { tempState = tempState.copy(selectedState = null) },
+                        label = { Text(selected, fontSize = 11.sp) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Remove",
+                                modifier = Modifier.size(14.dp)
+                            )
+                        },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
         Button(
             onClick = {
                 onApply(tempState)
+                onDismiss()
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(12.dp),
+                .padding(vertical = 12.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = "Apply Filters",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun FilterSectionHeader(title: String) {
-    Text(
-        text = title,
-        fontSize = 15.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(bottom = 6.dp)
-    )
+private fun FilterSectionHeader(
+    title: String,
+    @DrawableRes icon: Int? = null
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 8.dp)
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }

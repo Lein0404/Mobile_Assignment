@@ -5,11 +5,8 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,8 +23,9 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
-import com.example.foodieheal.ingredients.local.ShoppingListEntity
+import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
@@ -35,8 +33,9 @@ import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddShoppingListItemScreen(
+fun ShoppingListAddItemScreen(
     navController: NavController,
+    targetShoppingListId: String? = null,
     ingredientsViewModel: IngredientsViewModel = viewModel(
         factory = IngredientsViewModelFactory(LocalContext.current.applicationContext as Application)
     ),
@@ -45,10 +44,9 @@ fun AddShoppingListItemScreen(
     )
 ) {
     val uiState by ingredientsViewModel.uiState.collectAsState()
+    val shoppingUiState by shoppingListViewModel.uiState.collectAsState()
+    val addItemState = shoppingUiState.addItemState
     val context = LocalContext.current
-    
-    // Track selected ingredients
-    val selectedIngredients = remember { mutableStateListOf<IngredientItem>() }
 
     Scaffold(
         topBar = {
@@ -63,8 +61,9 @@ fun AddShoppingListItemScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.shopping_list_back)
+                            painter = painterResource(R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -85,71 +84,15 @@ fun AddShoppingListItemScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-                // Search Bar
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { ingredientsViewModel.onSearchQueryChange(it) },
-                    placeholder = {
-                        Text(
-                            stringResource(R.string.shopping_list_search_placeholder),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_search),
-                            contentDescription = stringResource(R.string.search)
-                        )
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    )
+                IngredientSearchAndFilter(
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChange = { ingredientsViewModel.onSearchQueryChange(it) },
+                    searchPlaceholder = stringResource(R.string.shopping_list_search_placeholder),
+                    selectedCategories = uiState.selectedCategories,
+                    onToggleCategory = { ingredientsViewModel.toggleCategory(it) },
+                    isExpanded = uiState.isCategoriesExpanded,
+                    onExpandedChange = { ingredientsViewModel.toggleCategoriesExpanded() }
                 )
-
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-                Text(
-                    text = stringResource(R.string.shopping_list_categories),
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_l))
-                )
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-
-                // Categories chips
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
-                ) {
-                    items(IngredientCategory.entries) { category ->
-                        FilterChip(
-                            selected = uiState.selectedCategories.contains(category),
-                            onClick = { ingredientsViewModel.toggleCategory(category) },
-                            label = {
-                                Text(
-                                    text = category.categoryName,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
-                            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                labelColor = MaterialTheme.colorScheme.primary,
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            border = null
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
                 if (uiState.isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -180,16 +123,12 @@ fun AddShoppingListItemScreen(
                                 )
                             }
                             items(items) { item ->
-                                val isSelected = selectedIngredients.any { it.ingredient.ingredientId == item.ingredient.ingredientId }
+                                val isSelected = addItemState.selectedIngredients.any { it.ingredient.ingredientId == item.ingredient.ingredientId }
                                 SelectableIngredientCard(
                                     item = item,
                                     isSelected = isSelected,
                                     onToggleSelection = {
-                                        if (isSelected) {
-                                            selectedIngredients.removeAll { it.ingredient.ingredientId == item.ingredient.ingredientId }
-                                        } else {
-                                            selectedIngredients.add(item)
-                                        }
+                                        shoppingListViewModel.toggleIngredientSelection(item)
                                     }
                                 )
                             }
@@ -203,25 +142,55 @@ fun AddShoppingListItemScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = dimensionResource(id = R.dimen.padding_l)),
-                verticalArrangement = Arrangement.Bottom, // push the button down to the bottom
+                verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
-                val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedIngredients.size)
+            ) {
+                val selectedCount = addItemState.selectedIngredients.size
+                val toastMessage = stringResource(R.string.add_shopping_item_toast_added, selectedCount)
                 Button(
                     onClick = {
-                        if (selectedIngredients.isNotEmpty()) {
+                        if (addItemState.selectedIngredients.isNotEmpty()) {
                             val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
-                            val entities = selectedIngredients.map { item ->
-                                ShoppingListEntity(
-                                    userId = userId,
-                                    ingredientId = item.ingredient.ingredientId,
-                                    ingredientName = item.ingredient.ingredientName,
-                                    isChecked = false
-                                )
+                            if (userId.isEmpty()) return@Button
+
+                            val resolvedListId = targetShoppingListId
+                                ?: shoppingUiState.detailState.selectedShoppingListId
+                                ?: shoppingUiState.homeState.shoppingLists.firstOrNull()?.shoppingListId
+
+                            if (resolvedListId != null) {
+                                val entities = addItemState.selectedIngredients.map { item ->
+                                    ShoppingListItemEntity(
+                                        shoppingListId = resolvedListId,
+                                        userId = userId,
+                                        ingredientId = item.ingredient.ingredientId,
+                                        ingredientName = item.ingredient.ingredientName,
+                                        ingredientCategory = item.ingredient.ingredientCategory?.name,
+                                        isChecked = false
+                                    )
+                                }
+                                shoppingListViewModel.addItems(resolvedListId, entities)
+                                shoppingListViewModel.clearAddItemSelection()
+                                Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            } else {
+                                // Create new shopping list first, then add items
+                                shoppingListViewModel.createNewShoppingList { newListId ->
+                                    val entities = addItemState.selectedIngredients.map { item ->
+                                        ShoppingListItemEntity(
+                                            shoppingListId = newListId,
+                                            userId = userId,
+                                            ingredientId = item.ingredient.ingredientId,
+                                            ingredientName = item.ingredient.ingredientName,
+                                            ingredientCategory = item.ingredient.ingredientCategory?.name,
+                                            isChecked = false
+                                        )
+                                    }
+                                    shoppingListViewModel.addItems(newListId, entities)
+                                    shoppingListViewModel.clearAddItemSelection()
+                                    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                }
                             }
-                            shoppingListViewModel.addItems(entities)
-                            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
                         }
                     },
                     modifier = Modifier
@@ -233,10 +202,10 @@ fun AddShoppingListItemScreen(
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     ),
-                    enabled = selectedIngredients.isNotEmpty()
+                    enabled = addItemState.selectedIngredients.isNotEmpty()
                 ) {
                     Text(
-                        text = stringResource(R.string.add_shopping_item_button, selectedIngredients.size),
+                        text = stringResource(R.string.add_shopping_item_button, selectedCount),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }

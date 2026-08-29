@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
@@ -26,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
@@ -42,16 +40,24 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
-import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.Recipe.View.RecipeCardItem
+import com.example.foodieheal.Recipe.View.FilterSectionHeader
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
+import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.hiring.components.ActiveFiltersRow
+import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
+import com.example.foodieheal.hiring.components.ChefFilterState
+import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.User.viewModel.FollowViewModel
+import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,9 +67,22 @@ fun ProfileScreen(
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
     chefRegisterViewModel: ChefRegisterViewModel,
-    bookmarkViewModel: BookmarkViewModel = viewModel()
+    bookmarkViewModel: BookmarkViewModel = viewModel(),
+    followViewModel: FollowViewModel = viewModel(),
+    targetCustomId: String? = null
 ) {
     val user = authViewModel.currentUser
+    
+    // 🌟 isVisitor Check: True only if we have a valid target ID that isn't ours or the nav placeholder
+    val isVisitor = targetCustomId != null && 
+                    targetCustomId != user?.customId && 
+                    targetCustomId != "{customId}"
+
+    val isMyProfile = !isVisitor
+    
+    // Use targetCustomId if visiting someone else, else use current user
+    val effectiveCustomId = if (isVisitor) targetCustomId else user?.customId
+    
     val primaryColor = MaterialTheme.colorScheme.primary
     val view = LocalView.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -93,19 +112,55 @@ fun ProfileScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        followViewModel.followEvents.collect { event ->
+            val message = when(event) {
+                FollowViewModel.FollowEvent.RequestSent -> view.context.getString(R.string.follow_request_sent)
+                FollowViewModel.FollowEvent.RequestCancelled -> view.context.getString(R.string.follow_request_cancelled)
+                FollowViewModel.FollowEvent.Unfollowed -> view.context.getString(R.string.unfollowed_user)
+                FollowViewModel.FollowEvent.RequestAccepted -> view.context.getString(R.string.follow_request_accepted)
+                FollowViewModel.FollowEvent.RequestRejected -> view.context.getString(R.string.follow_request_rejected)
+                FollowViewModel.FollowEvent.NoInternet -> view.context.getString(R.string.desc_connect_internet_follow)
+            }
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     var showBigImage by remember { mutableStateOf(false) }
     
     // 🌟 State for the Delete Confirmation Dialog
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
+    var recipeToShare by remember { mutableStateOf<Recipe?>(null) }
 
     var selectedMainTab by remember { mutableIntStateOf(0) } 
     var showChefBookmarks by remember { mutableStateOf(false) } // 🌟 Toggle between Recipes and Chefs
+    
+    val visitorProfile = remember { mutableStateOf<User?>(null) }
+
+    LaunchedEffect(targetCustomId) {
+        if (!isMyProfile && targetCustomId != null) {
+            val repo = com.example.foodieheal.User.Repo.UserRepository()
+            visitorProfile.value = repo.getUserByCustomId(targetCustomId)
+            
+            user?.customId?.let { myId ->
+                followViewModel.fetchFollowStatus(myId, targetCustomId)
+            }
+        }
+    }
+
+    LaunchedEffect(effectiveCustomId) {
+        effectiveCustomId?.let { cid ->
+            followViewModel.fetchFollowCounts(cid)
+        }
+    }
+
+    val displayUser = if (isMyProfile) user else visitorProfile.value
     
     var userRecipesSearchQuery by remember { mutableStateOf("") }
     var bookmarksSearchQuery by remember { mutableStateOf("") }
     
     // 🌟 Chef Filter State (matching hiring screen)
-    var chefFilterState by remember { mutableStateOf(com.example.foodieheal.ui.components.ChefFilterState()) }
+    var chefFilterState by remember { mutableStateOf(ChefFilterState()) }
     var showChefFilterSheet by remember { mutableStateOf(false) }
     
     // 🌟 Recipe Filter State (matching recipes screen)
@@ -119,13 +174,19 @@ fun ProfileScreen(
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
 
-    val myRecipes = viewModel.myRecipes
+    val myRecipes = remember(viewModel.myRecipes, followViewModel.followStatus, isMyProfile) {
+        if (isMyProfile) viewModel.myRecipes 
+        else viewModel.myRecipes.filter { 
+            val visibility = it.visibility.lowercase()
+            visibility == "public" || (visibility == "followers" && followViewModel.followStatus == "ACCEPTED")
+        }
+    }
     val bookmarkedRecipes = viewModel.bookmarkedRecipes
     val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
 
     // 🌟 Search & Filter Chefs Logic (Hiring Screen Style)
     val filteredChefs = remember(bookmarkedChefs, chefFilterState) {
-        com.example.foodieheal.ui.components.filterAndSortChefs(bookmarkedChefs, chefFilterState)
+        filterAndSortChefs(bookmarkedChefs, chefFilterState)
     }
 
     SideEffect {
@@ -134,8 +195,8 @@ fun ProfileScreen(
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
-    LaunchedEffect(selectedMainTab, showChefBookmarks, user) {
-        val cid = user?.customId ?: return@LaunchedEffect
+    LaunchedEffect(selectedMainTab, showChefBookmarks, effectiveCustomId) {
+        val cid = effectiveCustomId ?: return@LaunchedEffect
         
         // Reset filters when switching tabs
         userRecipesSearchQuery = ""
@@ -152,13 +213,14 @@ fun ProfileScreen(
             if (!showChefBookmarks) {
                 viewModel.fetchBookmarkedRecipes(cid)
             } else {
-                user.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
+                displayUser?.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
             }
         }
     }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = isMyProfile,
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(300.dp),
@@ -188,10 +250,10 @@ fun ProfileScreen(
                             navController.navigate(Screen.Ingredients.route)
                         }
                     }
-                    DrawerItem("Shopping List", R.drawable.ic_shopping_cart) {
+                    DrawerItem("My Shopping Lists", R.drawable.ic_shopping_cart) {
                         scope.launch {
                             drawerState.close()
-                            navController.navigate(Screen.ShoppingList.route)
+                            navController.navigate(Screen.ShoppingListHome.route)
                         }
                     }
                     DrawerItem("Become a Chef", R.drawable.ic_hiring) {
@@ -226,6 +288,12 @@ fun ProfileScreen(
                     }
                     DrawerItem("Appointment History", R.drawable.ic_calendar) {
                         navController.navigate(Screen.AppoinmtmentHistory.route)
+                    }
+                    DrawerItem("Follow Requests", R.drawable.follower) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.FollowRequests.route)
+                        }
                     }
                     DrawerItem("My Wallet", R.drawable.wallet) {
                         scope.launch {
@@ -267,7 +335,16 @@ fun ProfileScreen(
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
             topBar = {
                 Column(
                     modifier = Modifier
@@ -283,12 +360,16 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_hamburger_menu),
-                            contentDescription = "Menu",
+                            painter = painterResource(id = if (isMyProfile) R.drawable.ic_hamburger_menu else R.drawable.ic_arrowback),
+                            contentDescription = if (isMyProfile) "Menu" else "Back",
                             tint = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Icon
                             modifier = Modifier.size(24.dp).clickable {
-                                scope.launch {
-                                    drawerState.open()
+                                if (isMyProfile) {
+                                    scope.launch {
+                                        drawerState.open()
+                                    }
+                                } else {
+                                    navController.popBackStack()
                                 }
                             }
                         )
@@ -315,7 +396,7 @@ fun ProfileScreen(
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f) // 🌟 Themed Color
                         ) {
-                            val profilePicUrl = user?.profilePicUrl ?: ""
+                            val profilePicUrl = displayUser?.profilePicUrl ?: ""
                             val bitmap = remember(profilePicUrl) {
                                 if (profilePicUrl.isNotEmpty() && !profilePicUrl.startsWith("http")) {
                                     try {
@@ -342,7 +423,7 @@ fun ProfileScreen(
                             } else {
                                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                     Text(
-                                        text = user?.name?.take(1)?.uppercase() ?: "?",
+                                        text = if (displayUser == null && isVisitor) "?" else (displayUser?.name?.take(1)?.uppercase() ?: "?"),
                                         color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold
@@ -353,21 +434,96 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.width(20.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = user?.name ?: "",
+                                text = if (displayUser == null && isVisitor) "Offline User" else (displayUser?.name ?: ""),
                                 color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            if (!user?.description.isNullOrEmpty()) {
+                            if (displayUser != null && !displayUser.description.isNullOrEmpty()) {
                                 Text(
-                                    text = user?.description!!,
+                                    text = displayUser.description!!,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f), // 🌟 Themed Text
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
+                            } else if (displayUser == null && isVisitor) {
+                                Text(
+                                    text = "Cannot load profile while offline.",
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                            
+                            Row(modifier = Modifier.padding(top = 12.dp)) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.clickable { 
+                                        effectiveCustomId?.let { cid ->
+                                            navController.navigate(Screen.FollowList.createRoute(cid, "followers"))
+                                        }
+                                    }
+                                ) {
+                                    Text(
+                                        text = "${followViewModel.followerCount}",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Followers",
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(24.dp))
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.clickable { 
+                                        effectiveCustomId?.let { cid ->
+                                            navController.navigate(Screen.FollowList.createRoute(cid, "following"))
+                                        }
+                                    }
+                                ) {
+                                    Text(
+                                        text = "${followViewModel.followingCount}",
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Following",
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+
+                            if (isVisitor && user != null && targetCustomId != null) {
+                                val status = followViewModel.followStatus
+                                val buttonText = when (status) {
+                                    null -> "Follow"
+                                    "PENDING" -> "Request Sent"
+                                    "ACCEPTED" -> "Unfollow"
+                                    else -> "Follow"
+                                }
+                                Button(
+                                    onClick = {
+                                        user.customId?.let { myId ->
+                                            followViewModel.toggleFollow(myId, targetCustomId)
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                                    modifier = Modifier.padding(top = 12.dp).height(32.dp)
+                                ) {
+                                    Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -391,123 +547,77 @@ fun ProfileScreen(
                         containerColor = MaterialTheme.colorScheme.surface, // 🌟 Themed Background
                         contentColor = MaterialTheme.colorScheme.primary,
                         indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedMainTab]),
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            if (selectedMainTab < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier.tabIndicatorOffset(tabPositions[selectedMainTab]),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         },
                         divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) } // 🌟 Themed Divider
                     ) {
                         Tab(
                             selected = selectedMainTab == 0,
                             onClick = { selectedMainTab = 0 },
-                            text = { Text("User Recipes", fontWeight = FontWeight.Bold) }
+                            text = { Text(if (isMyProfile) "User Recipes" else "Recipes", fontWeight = FontWeight.Bold) }
                         )
-                        Tab(
-                            selected = selectedMainTab == 1,
-                            onClick = { selectedMainTab = 1 },
-                            text = { Text("Bookmarks", fontWeight = FontWeight.Bold) }
-                        )
+                        if (isMyProfile) {
+                            Tab(
+                                selected = selectedMainTab == 1,
+                                onClick = { selectedMainTab = 1 },
+                                text = { Text("Bookmarks", fontWeight = FontWeight.Bold) }
+                            )
+                        }
                     }
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(20.dp),
+                        contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 🌟 Beautiful Pill Toggle (Only for Bookmarks)
-                        if (selectedMainTab == 1) {
-                            item(span = { GridItemSpan(2) }) {
-                                val recipeBgColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                                val chefBgColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent, label = "")
-                                val recipeTextColor by animateColorAsState(if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-                                val chefTextColor by animateColorAsState(if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "")
-
-                                Surface(
-                                    shape = RoundedCornerShape(24.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // Recipes Option
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(recipeBgColor)
-                                                .clickable { showChefBookmarks = false },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_recipe),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = recipeTextColor
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Recipes", color = recipeTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                            }
-                                        }
-
-                                        // Chefs Option
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(chefBgColor)
-                                                .clickable { showChefBookmarks = true },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_hiring),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = chefTextColor
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Chefs", color = chefTextColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
                         // 🌟 Search & Course Section
                         item(span = { GridItemSpan(2) }) {
                             Column {
                                 if (selectedMainTab == 1 && showChefBookmarks) {
-                                    // 🌟 Chef Search Bar (Redesigned for Consistency)
-                                    OutlinedTextField(
-                                        value = chefFilterState.searchQuery,
-                                        onValueChange = { chefFilterState = chefFilterState.copy(searchQuery = it) },
-                                        placeholder = { Text("Search chefs here", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            focusedBorderColor = Color.Transparent,
-                                            unfocusedBorderColor = Color.Transparent
-                                        ),
-                                        trailingIcon = {
-                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
-                                                // Filter Icon with active color if filters are applied
-                                                val filterIconTint = if (chefFilterState.activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant
-                                                
+                                    // 🌟 Compact Search Bar (matching RecipesScreen style)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = chefFilterState.searchQuery,
+                                            onValueChange = { chefFilterState = chefFilterState.copy(searchQuery = it) },
+                                            placeholder = { Text("Search chefs here", fontSize = 14.sp) },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(52.dp),
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(12.dp),
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.search),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            },
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Surface(
+                                            onClick = { showChefFilterSheet = true },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(52.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
                                                 BadgedBox(
                                                     badge = {
                                                         if (chefFilterState.activeFilterCount > 0) {
@@ -520,98 +630,238 @@ fun ProfileScreen(
                                                     Icon(
                                                         painter = painterResource(id = R.drawable.filter),
                                                         contentDescription = "Filter",
-                                                        modifier = Modifier.size(20.dp).clickable { showChefFilterSheet = true },
-                                                        tint = filterIconTint
+                                                        modifier = Modifier.size(20.dp),
+                                                        tint = if (chefFilterState.activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
-                                                
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.search),
-                                                    contentDescription = "Search",
-                                                    modifier = Modifier.size(20.dp),
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
                                             }
                                         }
-                                    )
+                                    }
                                     
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
 
-                                    // Active filter chips row
-                                    com.example.foodieheal.ui.components.ActiveFiltersRow(
-                                        filterState = chefFilterState,
-                                        onFilterChange = { chefFilterState = it },
-                                        onResetAll = { chefFilterState = com.example.foodieheal.ui.components.ChefFilterState(searchQuery = chefFilterState.searchQuery) }
-                                    )
-                                } else {
-                                    // 🌟 Recipe Search Bar (Standard Style)
-                                    val currentQuery = if (selectedMainTab == 0) userRecipesSearchQuery else bookmarksSearchQuery
-                                    OutlinedTextField(
-                                        value = currentQuery,
-                                        onValueChange = { 
-                                            if (selectedMainTab == 0) userRecipesSearchQuery = it else bookmarksSearchQuery = it
-                                        },
-                                        placeholder = { 
-                                            Text(
-                                                if (selectedMainTab == 0) "Search recipe here" else "Search recipes/authors", 
-                                                fontSize = 14.sp, 
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            ) 
-                                        },
-                                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            focusedBorderColor = Color.Transparent,
-                                            unfocusedBorderColor = Color.Transparent
-                                        ),
-                                        trailingIcon = {
-                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
+                                    // 🌟 Compact Recipes/Chefs Toggle (Now under search bar)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp)
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                            .padding(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val subTabModifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(20.dp))
+
+                                        Box(
+                                            modifier = subTabModifier
+                                                .background(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                .clickable { showChefBookmarks = false },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
-                                                    painter = painterResource(id = R.drawable.filter),
-                                                    contentDescription = "Filter",
-                                                    modifier = Modifier.size(20.dp).clickable { showRecipeFilterSheet = true },
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    painter = painterResource(id = R.drawable.ic_recipe),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.search),
-                                                    contentDescription = "Search",
-                                                    modifier = Modifier.size(20.dp).clickable { /* Handle search click */ },
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    "Recipes",
+                                                    color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    
-                                    Text("Course", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        lazyItems(courses) { course ->
-                                            val isSelected = selectedCourse == course
-                                            Surface(
-                                                onClick = { selectedCourse = course },
-                                                shape = RoundedCornerShape(20.dp),
-                                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surfaceVariant
-                                            ) {
+
+                                        Box(
+                                            modifier = subTabModifier
+                                                .background(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                .clickable { showChefBookmarks = true },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.ic_hiring),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = course,
-                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 12.sp,
+                                                    "Chefs",
+                                                    color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 14.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
                                     }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Active filter chips row
+                                    ActiveFiltersRow(
+                                        filterState = chefFilterState,
+                                        onFilterChange = { chefFilterState = it },
+                                        onResetAll = {
+                                            chefFilterState =
+                                                ChefFilterState(searchQuery = chefFilterState.searchQuery)
+                                        }
+                                    )
+                                } else {
+                                    // 🌟 Compact Recipe Search Bar (matching RecipesScreen style)
+                                    val currentQuery = if (selectedMainTab == 0) userRecipesSearchQuery else bookmarksSearchQuery
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = currentQuery,
+                                            onValueChange = { 
+                                                if (selectedMainTab == 0) userRecipesSearchQuery = it else bookmarksSearchQuery = it
+                                            },
+                                            placeholder = { 
+                                                Text(
+                                                    if (selectedMainTab == 0) "Search recipes here" else "Search recipes/authors", 
+                                                    fontSize = 14.sp
+                                                ) 
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(52.dp),
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(12.dp),
+                                            leadingIcon = {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.search),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            },
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Surface(
+                                            onClick = { showRecipeFilterSheet = true },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(52.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.filter),
+                                                    contentDescription = "Filter",
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        }
+                                    }
                                     
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text(selectedCourse, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // 🌟 Compact Recipes/Chefs Toggle (Now under search bar for Bookmarks tab)
+                                    if (selectedMainTab == 1) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 12.dp)
+                                                .height(48.dp)
+                                                .clip(RoundedCornerShape(24.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                                .padding(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val subTabModifier = Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(20.dp))
+
+                                            Box(
+                                                modifier = subTabModifier
+                                                    .background(if (!showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                    .clickable { showChefBookmarks = false },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.ic_recipe),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp),
+                                                        tint = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        "Recipes",
+                                                        color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 15.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+
+                                            Box(
+                                                modifier = subTabModifier
+                                                    .background(if (showChefBookmarks) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                                    .clickable { showChefBookmarks = true },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.ic_hiring),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp),
+                                                        tint = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        "Chefs",
+                                                        color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 15.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        lazyItems(courses) { course ->
+                                            val isSelected = selectedCourse == course
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { selectedCourse = course },
+                                                label = { 
+                                                    Text(
+                                                        text = course, 
+                                                        fontSize = 15.sp, 
+                                                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
+                                                    ) 
+                                                },
+                                                shape = RoundedCornerShape(20.dp),
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = primaryColor,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                                ),
+                                                border = null
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Removed selectedCourse header text
                                 }
                             }
                         }
@@ -653,7 +903,7 @@ fun ProfileScreen(
                                         RecipeCardItem(
                                             recipe = recipe,
                                             currentUser = user, // 🌟 Pass current user for card name sync
-                                            showMenu = true,
+                                            showMenu = isMyProfile,
                                             isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                             onBookmarkClick = {
                                                 user?.customId?.let { cid ->
@@ -666,6 +916,16 @@ fun ProfileScreen(
                                             onEditClick = {
                                                 recipe.recipe_id?.let { id ->
                                                     navController.navigate(Screen.EditRecipe.createRoute(id))
+                                                }
+                                            },
+                                            onShareClick = { recipeToShare = it },
+                                            onAddClick = {
+                                                if (viewModel.isNetworkAvailable) {
+                                                    recipe.recipe_id?.let { rid ->
+                                                        navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
+                                                    }
+                                                } else {
+                                                    viewModel.showOfflinePlannerMessage()
                                                 }
                                             },
                                             onClick = {
@@ -717,10 +977,19 @@ fun ProfileScreen(
                                                 currentUser = user, // 🌟 Pass current user for card name sync
                                                 isBookmarked = true,
                                                 onBookmarkClick = {
-                                                    user?.customId?.let { cid ->
+                                                user?.customId?.let { cid ->
+                                                    recipe.recipe_id?.let { rid ->
+                                                        viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                    }
+                                                }
+                                            },
+                                                onAddClick = {
+                                                    if (viewModel.isNetworkAvailable) {
                                                         recipe.recipe_id?.let { rid ->
-                                                            viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                            navController.navigate(Screen.AddRecipeToPlanner.createRoute(rid))
                                                         }
+                                                    } else {
+                                                        viewModel.showOfflinePlannerMessage()
                                                     }
                                                 },
                                                 onClick = {
@@ -797,6 +1066,15 @@ fun ProfileScreen(
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+        )
+    }
+
+    // 🌟 Share Dialog
+    recipeToShare?.let { recipe ->
+        ShareRecipeDialog(
+            recipe = recipe,
+            authorName = if (recipe.author_id == user?.customId) user?.name else recipe.authorName,
+            onDismiss = { recipeToShare = null }
         )
     }
 
@@ -890,11 +1168,12 @@ fun ProfileScreen(
     if (showChefFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showChefFilterSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            com.example.foodieheal.ui.components.ChefFilterBottomSheet(
+            ChefFilterBottomSheet(
                 filterState = chefFilterState,
-                availableStates = com.example.foodieheal.Chef.States,
+                availableStates = States,
                 onApply = { updated ->
                     chefFilterState = updated
                     showChefFilterSheet = false
@@ -1130,27 +1409,7 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-fun FilterSectionHeader(@DrawableRes icon: Int, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(bottom = 8.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
+
 
 @Composable
 fun DrawerItem(

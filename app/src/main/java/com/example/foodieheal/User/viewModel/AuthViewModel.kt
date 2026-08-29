@@ -188,7 +188,10 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     height = localUser.height,
                     age = localUser.age,
                     gender = localUser.gender,
-                    bmi = localUser.bmi
+                    bmi = localUser.bmi,
+                    isPrivate = localUser.isPrivate,
+                    followerCount = localUser.followerCount,
+                    followingCount = localUser.followingCount
                 )
             }
 
@@ -233,7 +236,10 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                         height = user.height ?: 0.0,
                         age = user.age ?: 0,
                         gender = user.gender,
-                        bmi = user.bmi ?: 0.0
+                        bmi = user.bmi ?: 0.0,
+                        isPrivate = user.isPrivate,
+                        followerCount = user.followerCount,
+                        followingCount = user.followingCount
                     )
                 )
             } catch (e: Exception) { }
@@ -533,6 +539,43 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     fun updateLocalChef(chef: Chef) {
         currentChef = chef
         saveChefToCache(chef)
+    }
+
+    fun updateChefAvailability(
+        weeklyAvailability: com.example.foodieheal.Chef.model.WeeklyAvailability,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val chef = currentChef ?: run {
+            onError("Chef data not loaded")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val jsonElement = weeklyAvailability.toJsonElement()
+                val updatedChef = chef.copy(availability_hours = jsonElement)
+
+                withContext(Dispatchers.IO) {
+                    client.postgrest.from("Chef").update(
+                        buildMap<String, kotlinx.serialization.json.JsonElement> {
+                            put("availability_hours", jsonElement)
+                        }
+                    ) {
+                        filter {
+                            eq("chefId", chef.chefId)
+                        }
+                    }
+                }
+
+                currentChef = updatedChef
+                saveChefToCache(updatedChef)
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to update chef availability", e)
+                onError(parseError(e))
+            }
+        }
     }
 
     fun fetchChefData() {

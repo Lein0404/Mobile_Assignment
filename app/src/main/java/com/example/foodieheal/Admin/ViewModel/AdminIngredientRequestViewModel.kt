@@ -256,6 +256,19 @@ class AdminIngredientRequestViewModel(
                     return@launch
                 }
 
+                // Check if ingredient name already exists in master catalog
+                val existingCatalogName = productionRepository.findExistingIngredientName(state.ingredientName)
+                if (existingCatalogName != null) {
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            nameError = R.string.ingredients_error_name_exists,
+                            nameErrorArg = existingCatalogName
+                        )
+                    }
+                    return@launch
+                }
+
                 // 1. Generate IDs
                 val ingredientId = productionRepository.getNextIngredientId()
                 val unitIds = productionRepository.getNextIngredientUnitIds(state.unitRows.size)

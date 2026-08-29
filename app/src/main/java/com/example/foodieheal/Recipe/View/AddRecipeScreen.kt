@@ -42,6 +42,9 @@ import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -60,11 +63,14 @@ fun AddRecipeScreen(
     var recipeName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("Breakfast") }
+    var visibility by remember { mutableStateOf("public") }
+    val visibilityOptions = listOf("public", "followers", "private")
     var totalTime by remember { mutableStateOf("") }
     var cookingSkill by remember { mutableStateOf("Beginner") }
     var budget by remember { mutableStateOf("0 - 10") }
     var steps by remember { mutableStateOf("") }
     var showResetDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val ingredients = remember { mutableStateListOf(IngredientInputState()) }
     val scrollState = rememberScrollState()
@@ -77,6 +83,7 @@ fun AddRecipeScreen(
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             // 🌟 Description and Image are now optional, so they are removed from validation
             totalTime.isNotBlank() &&
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() &&
             ingredients.isNotEmpty() &&
@@ -84,7 +91,7 @@ fun AddRecipeScreen(
         }
     }
 
-    val totalCalories = remember {
+    val totalCalories by remember {
         derivedStateOf {
             ingredients.sumOf { input ->
                 val qty = input.quantity.toDoubleOrNull() ?: 0.0
@@ -102,13 +109,14 @@ fun AddRecipeScreen(
                 qty * caloriePerUnitValue / unitValue
             }.toInt()
         }
-    }.value
+    }
 
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients()
         viewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
@@ -142,7 +150,16 @@ fun AddRecipeScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Add Recipe", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
@@ -260,6 +277,15 @@ fun AddRecipeScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
                     )
+                    // 🌟 Added time limit hint
+                    if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
+                        Text(
+                            text = "Time cannot exceed 24 hours.",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     LabelText("Calories (kcal)")
@@ -297,7 +323,50 @@ fun AddRecipeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LabelText("Ingredients")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LabelText("Ingredients")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_help),
+                            contentDescription = "Help",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { showHelpDialog = true },
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                        if (showHelpDialog) {
+                            Popup(
+                                alignment = Alignment.TopStart,
+                                offset = IntOffset(x = -100, y = 40),
+                                onDismissRequest = { showHelpDialog = false },
+                                properties = PopupProperties(focusable = true)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
+                                    shadowElevation = 8.dp,
+                                    modifier = Modifier.width(300.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            text = "Can't find an ingredient?",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "You may request for missing ingredients in the \"View & Request Ingredients\" menu option under Profile. We'll review and approve it right away!",
+                                            fontSize = 11.sp,
+                                            lineHeight = 16.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 TextButton(onClick = { showResetDialog = true }) {
                     Text("Reset Ingredients", color = Color.Red, fontWeight = FontWeight.Bold)
                 }
@@ -339,6 +408,32 @@ fun AddRecipeScreen(
                     }
                     .bringIntoViewRequester(bringIntoViewRequester)
             )
+
+            LabelText("Visibility")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                visibilityOptions.forEach { option ->
+                    FilterChip(
+                        selected = visibility == option,
+                        onClick = { visibility = option },
+                        label = { 
+                            Text(
+                                text = option.replaceFirstChar { it.uppercase() },
+                                modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding for bigger chip
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            ) 
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp), // 🌟 Set height explicitly
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -385,9 +480,12 @@ fun AddRecipeScreen(
                         recipe_id = nextId,
                         // 🌟 FIX: Use the short customId (U001) to match your search logic
                         author_id = authViewModel.currentUser?.customId,
+                        authorName = authViewModel.currentUser?.name, // 🌟 Save author info for offline
+                        authorImageUrl = authViewModel.currentUser?.profilePicUrl,
                         recipeName = recipeName,
                         recipeDescription = description,
                         recipeCourse = course,
+                        visibility = visibility,
                         time = totalTime.toIntOrNull() ?: 0,
                         calories = totalCalories,
                         cookingSkill = cookingSkill,

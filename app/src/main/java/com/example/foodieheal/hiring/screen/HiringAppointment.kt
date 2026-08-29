@@ -194,6 +194,7 @@ fun HiringAppointment(
             DayScheduleSection(
                 selectedDate = selectedDate,
                 appointments = chefAppointmentsForSelectedDate,
+                chef = chef,
                 onAddAppointmentClick = {
                     if (!selectedDate.isBefore(LocalDate.now())) {
                         onAddAppointmentClick(selectedDate)
@@ -221,6 +222,7 @@ fun HiringAppointment(
 private fun DayScheduleSection(
     selectedDate: LocalDate,
     appointments: List<Appointment>,
+    chef: Chef,
     onAddAppointmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -229,6 +231,14 @@ private fun DayScheduleSection(
     }
     val isPastDate = remember(selectedDate) {
         selectedDate.isBefore(LocalDate.now())
+    }
+
+    val weeklyAvail = remember(chef.availability_hours) {
+        com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+    }
+    val isChefAvailableOnDate = remember(weeklyAvail, selectedDate, chef.availability_hours) {
+        if (chef.availability_hours == null) true
+        else weeklyAvail.isDateAvailable(selectedDate)
     }
 
     Surface(
@@ -249,14 +259,24 @@ private fun DayScheduleSection(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = formattedTitle,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = formattedTitle,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (!isChefAvailableOnDate) {
+                            Text(
+                                text = "Chef Off Duty on this day",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
 
-                    if (!isPastDate) {
+                    if (!isPastDate && isChefAvailableOnDate) {
                         IconButton(onClick = onAddAppointmentClick) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_add_circle_outline),
@@ -278,9 +298,14 @@ private fun DayScheduleSection(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.empty_no_appointments_for_date),
+                            text = if (!isChefAvailableOnDate) {
+                                "Chef is off duty on this day. Please select another date on the calendar."
+                            } else {
+                                stringResource(R.string.empty_no_appointments_for_date)
+                            },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 16.sp
+                            fontSize = 15.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
@@ -314,20 +339,14 @@ private fun AppointmentCard(
     showAddIcon: Boolean = false,
     onAddClick: (() -> Unit)? = null
 ) {
-    val statusBgColor = when (statusText.lowercase()) {
-        "completed", "finished" -> Color(0xFFE3F2FD)
-        "confirmed", "accepted" -> Color(0xFFE8F5E9)
-        "rejected", "cancelled" -> Color(0xFFFFEBEE)
-        "pending" -> Color(0xFFFFF8E1)
-        else -> MaterialTheme.colorScheme.surface
-    }
-
-    val statusTextColor = when (statusText.lowercase()) {
-        "completed", "finished" -> Color(0xFF1565C0)
-        "confirmed", "accepted" -> Color(0xFF2E7D32)
-        "rejected", "cancelled" -> Color(0xFFC62828)
-        "pending" -> Color(0xFFF57F17)
-        else -> MaterialTheme.colorScheme.onSurface
+    val (statusBgColor, statusTextColor) = when (statusText.lowercase(java.util.Locale.ROOT).trim()) {
+        "completed", "finished" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
+        "confirmed", "accepted" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
+        "cancelled"             -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
+        "rejected"              -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
+        "unpaid"                -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
+        "pending"               -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
+        else                    -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Column(

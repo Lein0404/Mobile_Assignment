@@ -1,5 +1,6 @@
 package com.example.foodieheal.hiring.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -21,18 +22,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.States
-import com.example.foodieheal.R
-import com.example.foodieheal.ui.components.ActiveFiltersRow
-import com.example.foodieheal.ui.components.ChefFilterBottomSheet
-import com.example.foodieheal.ui.components.ChefFilterState
-import com.example.foodieheal.ui.components.ChefSearchBar
-import com.example.foodieheal.ui.components.filterAndSortChefs
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Chef.model.WeeklyAvailability
+import com.example.foodieheal.R
+import com.example.foodieheal.hiring.components.ActiveFiltersRow
+import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
+import com.example.foodieheal.hiring.components.ChefFilterState
+import com.example.foodieheal.hiring.components.ChefSearchBar
+import com.example.foodieheal.hiring.components.filterAndSortChefs
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +55,11 @@ fun PopularChefsTabContent(
         filterAndSortChefs(chefs, filterState)
     }
 
-    Column(modifier = modifier.fillMaxSize().imePadding()) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
         // Search & Filter Trigger Bar
         ChefSearchBar(
             query = filterState.searchQuery,
@@ -98,10 +105,15 @@ fun PopularChefsTabContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.padding(24.dp)
                         ) {
-                            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = errorMessage,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                             Button(
                                 onClick = onRetry,
+                                shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Text(stringResource(R.string.btn_retry))
@@ -138,7 +150,8 @@ fun PopularChefsTabContent(
                                 Text(
                                     text = stringResource(R.string.adjust_search_criteria_or_reset),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 13.sp
+                                    fontSize = 13.sp,
+                                    textAlign = TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 TextButton(
@@ -152,7 +165,7 @@ fun PopularChefsTabContent(
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
+                            contentPadding = PaddingValues(14.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -160,23 +173,23 @@ fun PopularChefsTabContent(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 4.dp),
+                                        .padding(horizontal = 2.dp, vertical = 4.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
                                         text = stringResource(R.string.header_chef),
-                                        fontSize = 20.sp,
+                                        fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
-
-                                    Text(
-                                        text = stringResource(R.string.chefs_found_count, filteredChefs.size),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                        Text(
+                                            text = stringResource(R.string.chefs_found_count, filteredChefs.size),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                        )
                                 }
                             }
 
@@ -209,7 +222,8 @@ fun PopularChefsTabContent(
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             ChefFilterBottomSheet(
                 filterState = filterState,
@@ -231,28 +245,31 @@ fun ChefHireItem(
 ) {
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Image
+            // Profile Picture
             Box(
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(92.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.tertiary),
+                    .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (chef.profilePictureUrl.isNullOrEmpty()) {
                     Text(
-                        text = chef.name?.take(1)?.uppercase() ?: stringResource(R.string.default_initial_chef),
+                        text = chef.name.take(1).uppercase(Locale.ROOT).ifBlank {
+                            stringResource(R.string.default_initial_chef)
+                        },
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onTertiary,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                         fontWeight = FontWeight.Bold
                     )
                 } else {
@@ -269,6 +286,39 @@ fun ChefHireItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Availability Badge
+            val isAvailableToday = remember(chef.availability_hours) {
+                WeeklyAvailability.fromJsonElement(chef.availability_hours).isAvailableToday()
+            }
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = if (isAvailableToday) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.padding(bottom = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(if (isAvailableToday) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    )
+                    Text(
+                        text = if (isAvailableToday) {
+                            stringResource(R.string.chef_available_today)
+                        } else {
+                            stringResource(R.string.chef_off_today)
+                        },
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isAvailableToday) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             // Chef Name
             Text(
                 text = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
@@ -279,29 +329,25 @@ fun ChefHireItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Experience & Location
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Experience & Location Details
             val expText = stringResource(R.string.experience_years_short, chef.experience ?: 0)
-            val locationText = chef.state?.takeIf { it.isNotBlank() }.orEmpty()
+            val locationText = chef.state?.takeIf { it.isNotBlank() } ?: stringResource(R.string.none_selected)
 
             Text(
-                text = expText,
+                text = "$expText • $locationText",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
-            Text(
-                text = locationText,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Rating and Pricing Row at the bottom
+            // Rating and Pricing Footer Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -310,28 +356,32 @@ fun ChefHireItem(
                 val rating = chef.averagerating
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_star),
                         contentDescription = stringResource(R.string.rating_star),
-                        tint = Color(0xFFFFB300), // Gold Star Color
+                        tint = Color(0xFFFFB300), // Gold Star
                         modifier = Modifier.size(14.dp)
                     )
 
                     Text(
-                        text = if (rating != null && rating > 0.0) String.format(Locale.US, "%.1f", rating) else stringResource(R.string.not_available),
+                        text = if (rating != null && rating > 0.0) {
+                            String.format(Locale.US, "%.1f", rating)
+                        } else {
+                            stringResource(R.string.chef_new_rating)
+                        },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 chef.Pricing?.let { price ->
                     Text(
                         text = stringResource(R.string.rate_per_hour, price.toInt()),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }

@@ -52,6 +52,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
 import com.example.foodieheal.Chef.ViewModel.HomeUiState
+import com.example.foodieheal.Chef.Home.ChefEarningsChart
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -229,6 +230,18 @@ fun ChefHomeScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+
+                    // Earnings Chart (shown when data is available)
+                    item {
+                        when (val state = homeUiState) {
+                            is HomeUiState.Success -> {
+                                ChefEarningsChart(
+                                    appointments = state.allAppointments
+                                )
+                            }
+                            else -> {} // Loading/Error handled by banner already
                         }
                     }
 

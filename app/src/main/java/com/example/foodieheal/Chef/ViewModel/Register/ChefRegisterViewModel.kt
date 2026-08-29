@@ -3,6 +3,7 @@ package com.example.foodieheal.Chef.ViewModel.Register
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,7 @@ import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -199,6 +201,14 @@ class ChefRegisterViewModel(
                 repository.insertChef(newChef)
                 repository.signOut()
 
+                delay(1200L)
+
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.toast_chef_register_success),
+                    Toast.LENGTH_LONG
+                ).show()
+
                 isSubmitting = false
                 resetRegistrationFlow()
                 onSuccess()
@@ -206,6 +216,11 @@ class ChefRegisterViewModel(
                 Log.e("ChefRegister", "Registration error trace", e)
                 isSubmitting = false
                 errorMessage = repository.mapRegistrationError(e.message)
+                Toast.makeText(
+                    context,
+                    errorMessage ?: "Registration failed. Please try again.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -241,7 +256,14 @@ class ChefRegisterViewModel(
                 )
 
                 repository.insertChef(newChef)
-                // Note: In upgrade flow, we DO NOT sign out the user!
+
+                delay(1200L)
+
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.toast_chef_upgrade_success),
+                    Toast.LENGTH_LONG
+                ).show()
 
                 isSubmitting = false
                 resetRegistrationFlow()
@@ -250,6 +272,11 @@ class ChefRegisterViewModel(
                 Log.e("ChefUpgrade", "Upgrade error trace", e)
                 isSubmitting = false
                 errorMessage = repository.mapRegistrationError(e.message)
+                Toast.makeText(
+                    context,
+                    errorMessage ?: "Chef upgrade failed. Please try again.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
