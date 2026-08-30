@@ -77,24 +77,40 @@ fun ColumnScope.IngredientFormBody(
     // 2. Ingredient Name
     CommonInputField(
         value = ingredientName,
-        onValueChange = onNameChange,
+        onValueChange = { if (it.length <= 40) onNameChange(it) },
         textId = R.string.ingredient_name,
         modifier = Modifier.fillMaxWidth(),
-        isError = nameError != null
-    )
-    nameError?.let { resId ->
-        val errorMsg = if (nameErrorArg != null) {
-            stringResource(id = resId, nameErrorArg)
-        } else {
-            stringResource(id = resId)
+        isError = nameError != null,
+        supportingText = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    nameError?.let { resId ->
+                        val errorMsg = if (nameErrorArg != null) {
+                            stringResource(id = resId, nameErrorArg)
+                        } else {
+                            stringResource(id = resId)
+                        }
+                        Text(
+                            text = errorMsg,
+                            modifier = Modifier.offset(x = -dimensionResource(id = R.dimen.padding_l)),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.ingredient_form_name_char_count_limit, ingredientName.length),
+                    modifier = Modifier.offset(x = dimensionResource(id = R.dimen.padding_l)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (ingredientName.length >= 40) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-        Text(
-            text = errorMsg,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-        )
-    }
+    )
     Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
     // 3. Category
@@ -148,23 +164,39 @@ fun ColumnScope.IngredientFormBody(
     // 4. Description
     CommonInputField(
         value = description,
-        onValueChange = onDescriptionChange,
+        onValueChange = { if (it.length <= 150) onDescriptionChange(it) },
         textId = R.string.description,
         modifier = Modifier
             .height(dimensionResource(R.dimen.large_OutlinedTextField_size))
             .fillMaxWidth(),
         singleLine = false,
         maxLines = 8,
-        isError = descriptionError != null
+        isError = descriptionError != null,
+        supportingText = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    descriptionError?.let { resId ->
+                        Text(
+                            text = stringResource(id = resId),
+                            modifier = Modifier.offset(x = -dimensionResource(id = R.dimen.padding_l)),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.ingredient_form_desc_char_count_limit, description.length),
+                    modifier = Modifier.offset(x = dimensionResource(id = R.dimen.padding_l)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (description.length >= 150) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     )
-    descriptionError?.let { resId ->
-        Text(
-            text = stringResource(id = resId),
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
-        )
-    }
     Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
     // 5. Calorie Information

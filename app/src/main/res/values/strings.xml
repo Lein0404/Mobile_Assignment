@@ -913,6 +913,8 @@
     <string name="ingredient_form_title_update">Update Request</string>
     <string name="ingredient_form_online_required">You need to be online to submit a request</string>
     <string name="ingredient_form_category_placeholder">e.g. Vegetables</string>
+    <string name="ingredient_form_name_char_count_limit">%1$d / 40</string>
+    <string name="ingredient_form_desc_char_count_limit">%1$d / 150</string>
     <string name="ingredient_form_add_unit">Add Unit</string>
     <string name="ingredient_form_toast_submitted">Request submitted successfully</string>
     <string name="ingredient_form_toast_updated">Request updated successfully</string>
