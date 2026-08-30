@@ -505,38 +505,47 @@ fun RecipeListSection(
     onBookmarkClick: (Recipe) -> Unit,
     onAddClick: (Recipe) -> Unit
 ) {
-    if (isLoading && recipes.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-    } else if (recipes.isEmpty()) {
-        Text(
-            text = "No recipes found for this category",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
-            fontSize = 13.sp
-        )
-    } else {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(recipes) { recipe ->
-                RecipeCardItem(
-                    recipe = recipe,
-                    modifier = Modifier.width(165.dp),
-                    currentUser = currentUser, // 🌟 FIX: Pass current user for live sync
-                    isBookmarked = bookmarkedIds.contains(recipe.recipe_id),
-                    onBookmarkClick = { onBookmarkClick(recipe) },
-                    onAddClick = { onAddClick(recipe) },
-                    onClick = { onRecipeClick(recipe) }
-                )
+    when {
+        // 🌟 Data State: Show recipes if we have them
+        recipes.isNotEmpty() -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(recipes) { recipe ->
+                    RecipeCardItem(
+                        recipe = recipe,
+                        modifier = Modifier.width(165.dp),
+                        currentUser = currentUser, // 🌟 FIX: Pass current user for live sync
+                        isBookmarked = bookmarkedIds.contains(recipe.recipe_id),
+                        onBookmarkClick = { onBookmarkClick(recipe) },
+                        onAddClick = { onAddClick(recipe) },
+                        onClick = { onRecipeClick(recipe) }
+                    )
+                }
             }
+        }
+
+        // 🌟 Loading State: Only when list is empty
+        isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        // 🌟 Empty State
+        else -> {
+            Text(
+                text = "No recipes found for this category",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                fontSize = 13.sp
+            )
         }
     }
 }

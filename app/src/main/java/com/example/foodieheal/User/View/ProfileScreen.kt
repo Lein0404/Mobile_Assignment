@@ -439,23 +439,11 @@ fun ProfileScreen(
                                 text = if (displayUser == null && isVisitor) "Offline User" else (displayUser?.name ?: ""),
                                 color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            if (displayUser != null && !displayUser.description.isNullOrEmpty()) {
-                                Text(
-                                    text = displayUser.description!!,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f), // 🌟 Themed Text
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            } else if (displayUser == null && isVisitor) {
-                                Text(
-                                    text = "Cannot load profile while offline.",
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                                    fontSize = 12.sp
-                                )
-                            }
+
                             
                             Row(modifier = Modifier.padding(top = 12.dp)) {
                                 Column(
@@ -526,6 +514,26 @@ fun ProfileScreen(
                                 }
                             }
                         }
+                    }
+
+                    // 🌟 Relocated Description: Now uses full width for better layout
+                    if (displayUser != null && !displayUser.description.isNullOrEmpty()) {
+                        Text(
+                            text = displayUser.description!!,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
+                        )
+                    } else if (displayUser == null && isVisitor) {
+                        Text(
+                            text = "Cannot load profile while offline.",
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
+                        )
                     }
                 }
             }
