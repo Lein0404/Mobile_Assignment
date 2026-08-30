@@ -7,18 +7,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.User.Model.Follow
+import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.User.viewModel.FollowViewModel
 
@@ -38,6 +39,10 @@ fun FollowRequestsScreen(
 ) {
     val user = authViewModel.currentUser
     val requests = followViewModel.followersList.filter { it.status == "PENDING" }
+    val requestUsers = remember { mutableStateMapOf<String, User>() }
+    var isFetchingRequesterProfiles by remember { mutableStateOf(false) }
+    var isInitialLoadComplete by remember { mutableStateOf(false) }
+    
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
@@ -58,6 +63,36 @@ fun FollowRequestsScreen(
     LaunchedEffect(user?.customId) {
         user?.customId?.let { followViewModel.fetchFollowers(it) }
     }
+
+    LaunchedEffect(requests) {
+        if (requests.isNotEmpty()) {
+            val ids = requests.mapNotNull { it.followerId }.distinct()
+            if (ids.isNotEmpty()) {
+                isFetchingRequesterProfiles = true
+                val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
+                repo.getUsersByCustomIds(ids).onSuccess { result ->
+                    result.forEach { u ->
+                        u.customId?.let { requestUsers[it] = u }
+                    }
+                    isFetchingRequesterProfiles = false
+                    isInitialLoadComplete = true
+                }.onFailure {
+                    isFetchingRequesterProfiles = false
+                    isInitialLoadComplete = true
+                }
+            } else {
+                isFetchingRequesterProfiles = false
+                isInitialLoadComplete = true
+            }
+        } else {
+            // If requests are empty, we check if the VM is still loading the relationship list
+            if (!followViewModel.isLoadingFollowList) {
+                isInitialLoadComplete = true
+            }
+        }
+    }
+
+    val showLoading = followViewModel.isLoadingFollowList || isFetchingRequesterProfiles || !isInitialLoadComplete
 
     Scaffold(
         snackbarHost = { 
@@ -95,6 +130,10 @@ fun FollowRequestsScreen(
             ) {
                 OfflinePlaceholder(message = stringResource(R.string.desc_connect_internet_follow_request))
             }
+        } else if (showLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         } else if (requests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("No pending follow requests", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -106,8 +145,10 @@ fun FollowRequestsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(requests) { request ->
+                    val requester = request.followerId?.let { requestUsers[it] }
                     RequestItem(
                         request = request,
+                        requester = requester,
                         onAccept = {
                             user?.customId?.let { myId ->
                                 request.followerId?.let { fid ->
@@ -132,6 +173,7 @@ fun FollowRequestsScreen(
 @Composable
 fun RequestItem(
     request: Follow,
+    requester: User?,
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
@@ -141,36 +183,67 @@ fun RequestItem(
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top // 🌟 Align to top for multi-line content
         ) {
-            // Placeholder for avatar (in a real app, you'd fetch the user info)
-            Box(
-                modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = request.followerId?.take(1)?.uppercase() ?: "?", fontWeight = FontWeight.Bold)
+            if (!requester?.profilePicUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = requester.profilePicUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = requester?.name?.take(1)?.uppercase() ?: request.followerId?.take(1)?.uppercase() ?: "?",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(text = "User ${request.followerId}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = "wants to follow you", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+                Text(
+                    text = requester?.name ?: "User ${request.followerId}",
+                    fontWeight = FontWeight.Bold, 
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "wants to follow you", 
+                    fontSize = 12.sp, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(
-                    onClick = onReject,
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Reject", fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = onAccept,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Text("Accept", color = Color.White, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onAccept,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                        modifier = Modifier.height(32.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Accept", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(
+                        onClick = onReject,
+                        modifier = Modifier.height(32.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Reject", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
