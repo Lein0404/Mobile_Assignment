@@ -495,48 +495,40 @@ fun RecipesScreen(
                         CircularProgressIndicator()
                     }
                 }
-            } else if (selectedTab == 2 && !showFollowingFeed && currentDataList.isEmpty()) {
-                // 🌟 Saved Empty State
-                item(span = { GridItemSpan(2) }) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 100.dp, start = 16.dp, end = 16.dp), // 🌟 Added padding
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.bookmark),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = stringResource(id = R.string.empty_no_bookmarked_recipes),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(id = R.string.empty_bookmarked_recipes_sub),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
-                }
             } else if (filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 32.dp), contentAlignment = Alignment.Center) {
-                        val isFilterActive = filterMaxTime < 240f || filterMaxCalories < 5000f || filterSkill != null || filterBudget != null || filterIngredients.isNotEmpty()
-                        Text(
-                            text = if (searchQuery.isNotEmpty() || isFilterActive)
-                                "No recipes match your filters."
-                            else "No recipes found for '$selectedCourse'.",
-                            color = Color.Gray
+                    val isFilterActive = filterMaxTime < 240f || filterMaxCalories < 5000f || filterSkill != null || filterBudget != null || filterIngredients.isNotEmpty()
+                    
+                    val (icon, title, subtitle) = when {
+                        searchQuery.isNotEmpty() || isFilterActive -> Triple(
+                            R.drawable.filter, 
+                            "No recipes match filters", 
+                            "Try adjusting your search or filters"
                         )
+                        selectedTab == 0 -> Triple(
+                            R.drawable.ic_recipe, 
+                            "No recipes found", 
+                            "Check back later for more popular recipes"
+                        )
+                        selectedTab == 1 -> Triple(
+                            R.drawable.ic_recipe, 
+                            stringResource(R.string.empty_no_my_recipes), 
+                            stringResource(R.string.empty_my_recipes_sub)
+                        )
+                        selectedTab == 2 && showFollowingFeed -> Triple(
+                            R.drawable.follower, 
+                            "No followed recipes yet", 
+                            "Follow other users to see their recipes here"
+                        )
+                        selectedTab == 2 && !showFollowingFeed -> Triple(
+                            R.drawable.bookmark, 
+                            stringResource(R.string.empty_no_bookmarked_recipes), 
+                            stringResource(R.string.empty_bookmarked_recipes_sub)
+                        )
+                        else -> Triple(R.drawable.ic_recipe, "No recipes found", "")
                     }
+
+                    EmptyState(iconRes = icon, title = title, subtitle = subtitle)
                 }
             } else {
                 // 🌟 Using gridItemsIndexed to alternate padding between columns
@@ -901,5 +893,42 @@ fun RecipesScreen(
             )
         }
     }
+    }
+}
+
+@Composable
+fun EmptyState(
+    @androidx.annotation.DrawableRes iconRes: Int,
+    title: String,
+    subtitle: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 80.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.padding(horizontal = 32.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
     }
 }
