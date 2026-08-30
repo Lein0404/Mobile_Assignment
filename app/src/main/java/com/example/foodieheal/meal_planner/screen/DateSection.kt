@@ -455,9 +455,13 @@ fun CustomizedDatePickerDialog(
                 val totalDaysInMonth = currentMonth.lengthOfMonth()
                 val totalCells = emptyLeadingSpaces + totalDaysInMonth
 
+                // Calculate dynamic height based on number of rows (4, 5, or 6)
+                val rows = (totalCells + 6) / 7
+                val gridHeight = (rows * 52).dp + ((rows - 1) * 6).dp
+
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(7),
-                    modifier = Modifier.height(320.dp),
+                    modifier = Modifier.height(gridHeight),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
