@@ -212,6 +212,9 @@ fun ProfileScreen(
         if (selectedMainTab == 0) {
             viewModel.fetchMyRecipes(cid)
         } else {
+            // 🌟 Always fetch following list to keep 'followedUserIds' updated for privacy checks
+            viewModel.fetchFollowingRecipes(cid)
+
             if (!showChefBookmarks) {
                 viewModel.fetchBookmarkedRecipes(cid)
             } else {
@@ -1005,6 +1008,15 @@ fun ProfileScreen(
                             }
                         } else {
                             val filtered = bookmarkedRecipes.filter { recipe ->
+                                // 🌟 Privacy & Visibility Logic
+                                val isVisible = when {
+                                    recipe.author_id == user?.customId -> true // My recipes are always visible to me
+                                    recipe.visibility == "public" -> true // Public recipes are visible to everyone
+                                    recipe.visibility == "followers" -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
+                                    else -> false // Private recipes (or any other status) are hidden from others
+                                }
+                                if (!isVisible) return@filter false
+
                                 val matchesSearch = (recipe.recipeName.contains(bookmarksSearchQuery, true) || 
                                                    recipe.authorName?.contains(bookmarksSearchQuery, true) == true)
                                 val matchesCourse = selectedCourse == "All" || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)

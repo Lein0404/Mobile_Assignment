@@ -110,15 +110,15 @@ fun RecipesScreen(
 
     val isLoading = viewModel.isLoading
 
-    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
+    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget, viewModel.followedUserIds) {
         derivedStateOf {
             currentDataList.filter { recipe ->
-                // 🌟 Visibility check for Popular tab
+                // 🌟 Privacy & Visibility Logic
                 val isVisible = when {
-                    selectedTab != 0 -> true // Other tabs already represent filtered sets (My, Following, Bookmarks)
-                    recipe.author_id == currentUserId -> true // My recipes in popular are visible to me
-                    recipe.visibility == "public" -> true // Public is visible to everyone
-                    else -> false // Private/Followers only not shown in Popular to non-owners
+                    recipe.author_id == currentUserId -> true // My recipes are always visible to me
+                    recipe.visibility == "public" -> true // Public recipes are visible to everyone
+                    recipe.visibility == "followers" -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
+                    else -> false // Private recipes (or any other status) are hidden from others
                 }
                 if (!isVisible) return@filter false
 
@@ -185,9 +185,10 @@ fun RecipesScreen(
                         }
                 }
                 2 -> {
-                    if (showFollowingFeed) {
-                        viewModel.fetchFollowingRecipes(cid)
-                    } else {
+                    // 🌟 Always fetch following list to keep 'followedUserIds' updated for privacy checks
+                    viewModel.fetchFollowingRecipes(cid)
+                    
+                    if (!showFollowingFeed) {
                         // 🌟 FIX: Use customId (cid) to match the Supabase table and local Room DB
                         viewModel.fetchBookmarkedRecipes(cid)
                     }
@@ -507,8 +508,8 @@ fun RecipesScreen(
                         )
                         selectedTab == 0 -> Triple(
                             R.drawable.ic_recipe, 
-                            "No recipes found", 
-                            "Check back later for more popular recipes"
+                            "No popular recipes found", 
+                            "Check back later for trending delicious dishes!"
                         )
                         selectedTab == 1 -> Triple(
                             R.drawable.ic_recipe, 
@@ -517,8 +518,8 @@ fun RecipesScreen(
                         )
                         selectedTab == 2 && showFollowingFeed -> Triple(
                             R.drawable.follower, 
-                            "No followed recipes yet", 
-                            "Follow other users to see their recipes here"
+                            "No following recipes", 
+                            "Follow your favorite authors to see their latest recipes here!"
                         )
                         selectedTab == 2 && !showFollowingFeed -> Triple(
                             R.drawable.bookmark, 

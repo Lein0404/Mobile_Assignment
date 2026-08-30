@@ -42,6 +42,8 @@ class RecipeViewModel(
         private set
     var bookmarkedRecipeIds by mutableStateOf<Set<String>>(emptySet())
         private set
+    var followedUserIds by mutableStateOf<Set<String>>(emptySet())
+        private set
     var selectedRecipe by mutableStateOf<Recipe?>(null)
         private set
     var recipeAuthor by mutableStateOf<User?>(null)
@@ -206,6 +208,7 @@ class RecipeViewModel(
                 val followRepo = com.example.foodieheal.User.Repo.FollowRepository()
                 val following = followRepo.getFollowing(followerId)
                 val followedIds = following.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
+                followedUserIds = followedIds.toSet()
 
                 if (followedIds.isNotEmpty()) {
                     repository.getFollowingRecipes(followedIds).onSuccess { recipes ->
@@ -585,6 +588,7 @@ class RecipeViewModel(
     fun clearUserData() {
         myRecipes = emptyList()
         followingRecipes = emptyList()
+        followedUserIds = emptySet()
         bookmarkedRecipes = emptyList()
         bookmarkedRecipeIds = emptySet()
         selectedRecipe = null
