@@ -36,6 +36,7 @@ import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
 import com.example.foodieheal.hiring.components.ChefFilterState
 import com.example.foodieheal.hiring.components.ChefSearchBar
 import com.example.foodieheal.hiring.components.filterAndSortChefs
+import com.example.foodieheal.ui.components.getHighlightedText
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -196,6 +197,7 @@ fun PopularChefsTabContent(
                             items(filteredChefs, key = { it.chefId.ifEmpty { it.id } }) { chef ->
                                 ChefHireItem(
                                     chef = chef,
+                                    searchQuery = filterState.searchQuery,
                                     onClick = { onChefClick(chef) }
                                 )
                             }
@@ -241,6 +243,7 @@ fun PopularChefsTabContent(
 @Composable
 fun ChefHireItem(
     chef: Chef,
+    searchQuery: String = "",
     onClick: () -> Unit
 ) {
     Card(
@@ -321,7 +324,10 @@ fun ChefHireItem(
 
             // Chef Name
             Text(
-                text = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
+                text = getHighlightedText(
+                    fullText = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
+                    query = searchQuery
+                ),
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -336,7 +342,10 @@ fun ChefHireItem(
             val locationText = chef.state?.takeIf { it.isNotBlank() } ?: stringResource(R.string.none_selected)
 
             Text(
-                text = "$expText • $locationText",
+                text = getHighlightedText(
+                    fullText = "$expText • $locationText",
+                    query = searchQuery
+                ),
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import com.example.foodieheal.hiring.util.HiringNetworkHelper
+
 class BookmarkViewModel(
     val chefBookmarkRepo: BookmarkRepository = BookmarkRepository(),
     private val networkMonitor: NetworkMonitor? = null
@@ -36,7 +38,7 @@ class BookmarkViewModel(
     var isLoadingBookmarks by mutableStateOf(false)
         private set
 
-    private val _isNetworkAvailable = MutableStateFlow(true)
+    private val _isNetworkAvailable = MutableStateFlow(HiringNetworkHelper.isDeviceOnline())
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
     private var lastUserId: String? = null
@@ -46,16 +48,16 @@ class BookmarkViewModel(
     }
 
     private fun observeNetworkStatus() {
-        networkMonitor?.let { monitor ->
-            viewModelScope.launch {
-                monitor.isConnected.collect { connected ->
-                    _isNetworkAvailable.value = connected
-                    if (connected && !lastUserId.isNullOrBlank()) {
-                        fetchBookmarkedChefs(lastUserId!!, forceRefresh = false)
-                    }
+        HiringNetworkHelper.observeHiringNetwork(
+            networkMonitor = networkMonitor,
+            coroutineScope = viewModelScope,
+            stateFlow = _isNetworkAvailable,
+            onReconnected = {
+                if (!lastUserId.isNullOrBlank()) {
+                    fetchBookmarkedChefs(lastUserId!!, forceRefresh = false)
                 }
             }
-        }
+        )
     }
 
     fun isChefBookmarked(chefId: String): Boolean {

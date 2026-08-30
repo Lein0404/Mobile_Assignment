@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.hiring.util.HiringNetworkHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +30,7 @@ class ChefListViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    private val _isNetworkAvailable = MutableStateFlow(true)
+    private val _isNetworkAvailable = MutableStateFlow(HiringNetworkHelper.isDeviceOnline())
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
     init {
@@ -46,17 +47,12 @@ class ChefListViewModel(
     }
 
     private fun observeNetworkStatus() {
-        networkMonitor?.let { monitor ->
-            viewModelScope.launch {
-                monitor.isConnected.collect { connected ->
-                    _isNetworkAvailable.value = connected
-                    if (connected) {
-                        // Reconnected: sync fresh chefs in background
-                        fetchAllChefs(forceRefresh = false)
-                    }
-                }
-            }
-        }
+        HiringNetworkHelper.observeHiringNetwork(
+            networkMonitor = networkMonitor,
+            coroutineScope = viewModelScope,
+            stateFlow = _isNetworkAvailable,
+            onReconnected = { fetchAllChefs(forceRefresh = false) }
+        )
     }
 
     fun selectChef(chef: Chef) {

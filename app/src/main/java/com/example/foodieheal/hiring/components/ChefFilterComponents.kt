@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.Chef.States
 import com.example.foodieheal.R
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.ui.components.getHighlightedText
 
 enum class RateSortOrder(val label: String) {
     NONE("None"),
@@ -515,7 +516,14 @@ fun ChefFilterBottomSheet(
                                     selectedState = if (isSelected) null else state
                                 )
                             },
-                            label = { Text(state) },
+                            label = {
+                                Text(
+                                    text = getHighlightedText(
+                                        fullText = state,
+                                        query = stateSearchQuery
+                                    )
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.primary

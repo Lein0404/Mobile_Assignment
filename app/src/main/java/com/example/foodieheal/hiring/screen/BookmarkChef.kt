@@ -154,6 +154,7 @@ fun BookmarkedChefsTabContent(
                         ) { chef ->
                             ChefHireItem(
                                 chef = chef,
+                                searchQuery = filterState.searchQuery,
                                 onClick = { onChefClick(chef) }
                             )
                         }

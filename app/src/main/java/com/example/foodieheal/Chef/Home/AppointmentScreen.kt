@@ -38,6 +38,7 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
+import com.example.foodieheal.ui.components.getHighlightedText
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -361,6 +362,7 @@ fun AppointmentsScreen(
                                 AppointmentCard(
                                     appointment = appointment,
                                     userName = userName,
+                                    searchQuery = searchQuery,
                                     onCardClick = { onCardClick(appointment) }
                                 )
                             }
@@ -378,6 +380,7 @@ fun AppointmentsScreen(
 fun AppointmentCard(
     appointment: Appointment,
     userName: String,
+    searchQuery: String = "",
     onCardClick: () -> Unit
 ) {
     val feeRate = AppointmentPricingBreakdown.PLATFORM_FEE_RATE
@@ -423,7 +426,10 @@ fun AppointmentCard(
 
                     Column {
                         Text(
-                            text = userName,
+                            text = getHighlightedText(
+                                fullText = userName,
+                                query = searchQuery
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -477,7 +483,10 @@ fun AppointmentCard(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "${appointment.Address}, ${appointment.State}",
+                    text = getHighlightedText(
+                        fullText = "${appointment.Address}, ${appointment.State}",
+                        query = searchQuery
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -509,7 +518,10 @@ fun AppointmentCard(
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     ) {
                         Text(
-                            text = appointment.Health_Preference,
+                            text = getHighlightedText(
+                                fullText = appointment.Health_Preference,
+                                query = searchQuery
+                            ),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -521,7 +533,10 @@ fun AppointmentCard(
             // Optional Note
             if (appointment.Note.isNotBlank()) {
                 Text(
-                    text = "Note: ${appointment.Note}",
+                    text = getHighlightedText(
+                        fullText = "Note: ${appointment.Note}",
+                        query = searchQuery
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline,
                     maxLines = 2,

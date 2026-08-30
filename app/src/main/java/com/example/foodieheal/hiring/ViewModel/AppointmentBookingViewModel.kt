@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.foodieheal.hiring.util.HiringNetworkHelper
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
@@ -47,7 +48,7 @@ class AppointmentBookingViewModel(
     private val _chefAppointmentsState = MutableStateFlow(ChefAppointmentsUiState())
     val chefAppointmentsState: StateFlow<ChefAppointmentsUiState> = _chefAppointmentsState.asStateFlow()
 
-    private val _isNetworkAvailable = MutableStateFlow(true)
+    private val _isNetworkAvailable = MutableStateFlow(HiringNetworkHelper.isDeviceOnline())
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
     // Bookmarked recipes for selection
@@ -91,16 +92,16 @@ class AppointmentBookingViewModel(
     }
 
     private fun observeNetworkStatus() {
-        networkMonitor?.let { monitor ->
-            viewModelScope.launch {
-                monitor.isConnected.collect { connected ->
-                    _isNetworkAvailable.value = connected
-                    if (connected && currentChefId.isNotBlank()) {
-                        fetchAppointmentsForChef(currentChefId)
-                    }
+        HiringNetworkHelper.observeHiringNetwork(
+            networkMonitor = networkMonitor,
+            coroutineScope = viewModelScope,
+            stateFlow = _isNetworkAvailable,
+            onReconnected = {
+                if (currentChefId.isNotBlank()) {
+                    fetchAppointmentsForChef(currentChefId)
                 }
             }
-        }
+        )
     }
 
     fun selectChef(chef: Chef) {

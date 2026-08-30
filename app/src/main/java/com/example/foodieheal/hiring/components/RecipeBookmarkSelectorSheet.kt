@@ -79,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.ui.components.getHighlightedText
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
@@ -404,6 +405,7 @@ fun RecipeBookmarkSelectorSheet(
 
                                 RecipeSelectableCard(
                                     recipe = recipe,
+                                    searchQuery = searchQuery,
                                     isSelected = isSelected,
                                     selectedRecipeState = selectedItem,
                                     onToggle = { onToggleSelect(recipe) },
@@ -460,8 +462,9 @@ fun RecipeBookmarkSelectorSheet(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RecipeSelectableCard(
+private fun RecipeSelectableCard(
     recipe: Recipe,
+    searchQuery: String = "",
     isSelected: Boolean,
     selectedRecipeState: SelectedAppointmentRecipe?,
     onToggle: () -> Unit,
@@ -522,7 +525,10 @@ fun RecipeSelectableCard(
                         .clickable { onViewDetails() }
                 ) {
                     Text(
-                        text = recipe.recipeName,
+                        text = getHighlightedText(
+                            fullText = recipe.recipeName,
+                            query = searchQuery
+                        ),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -544,7 +550,10 @@ fun RecipeSelectableCard(
                                 color = MaterialTheme.colorScheme.secondaryContainer
                             ) {
                                 Text(
-                                    text = recipe.recipeCourse,
+                                    text = getHighlightedText(
+                                        fullText = recipe.recipeCourse,
+                                        query = searchQuery
+                                    ),
                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,

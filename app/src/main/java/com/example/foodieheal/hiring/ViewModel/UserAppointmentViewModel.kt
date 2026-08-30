@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.example.foodieheal.hiring.util.HiringNetworkHelper
+
 class UserAppointmentViewModel(
     private val repository: HiringRepository = HiringRepository(),
     private val networkMonitor: NetworkMonitor? = null
@@ -22,7 +24,7 @@ class UserAppointmentViewModel(
     private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
     val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
 
-    private val _isNetworkAvailable = MutableStateFlow(true)
+    private val _isNetworkAvailable = MutableStateFlow(HiringNetworkHelper.isDeviceOnline())
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
     private val _deletedAppointmentIds = MutableStateFlow<Set<String>>(emptySet())
@@ -67,16 +69,12 @@ class UserAppointmentViewModel(
     }
 
     private fun observeNetworkStatus() {
-        networkMonitor?.let { monitor ->
-            viewModelScope.launch {
-                monitor.isConnected.collect { connected ->
-                    _isNetworkAvailable.value = connected
-                    if (connected) {
-                        fetchAppointmentsForCurrentUser(forceRefresh = false)
-                    }
-                }
-            }
-        }
+        HiringNetworkHelper.observeHiringNetwork(
+            networkMonitor = networkMonitor,
+            coroutineScope = viewModelScope,
+            stateFlow = _isNetworkAvailable,
+            onReconnected = { fetchAppointmentsForCurrentUser(forceRefresh = false) }
+        )
     }
 
     fun fetchAppointmentsForCurrentUser(forceRefresh: Boolean = false) {
