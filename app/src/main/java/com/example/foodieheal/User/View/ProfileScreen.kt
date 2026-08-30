@@ -56,6 +56,7 @@ import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
 import com.example.foodieheal.hiring.components.ChefFilterState
 import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.hiring.viewmodel.BookmarkViewModel
+import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.User.viewModel.FollowViewModel
 import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlinx.coroutines.launch
@@ -67,6 +68,7 @@ fun ProfileScreen(
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
     chefRegisterViewModel: ChefRegisterViewModel,
+    bookingViewModel: AppointmentBookingViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel(),
     followViewModel: FollowViewModel = viewModel(),
     targetCustomId: String? = null
@@ -1058,6 +1060,7 @@ fun ProfileScreen(
                                         ChefCardItem(
                                             chef = chef,
                                             onClick = {
+                                                bookingViewModel.selectChef(chef)
                                                 val chefId = chef.chefId.ifEmpty { chef.id }
                                                 navController.navigate("${Screen.HiringChefDetails.route}/$chefId")
                                             }

@@ -701,6 +701,8 @@ class MainActivity : FragmentActivity() {
                                             sharedRecipeViewModel,
                                             sharedAuthViewModel,
                                             chefViewModel,
+                                            bookingViewModel = bookingViewModel,
+                                            bookmarkViewModel = bookmarkViewModel,
                                             targetCustomId = customId
                                         )
                                     }
