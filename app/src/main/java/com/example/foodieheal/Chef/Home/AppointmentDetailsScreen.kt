@@ -70,6 +70,7 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.Chef.components.ChefQrScannerDialog
+import com.example.foodieheal.ui.components.AppointmentStatusStepper
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.foodieheal.hiring.util.CalendarSyncHelper
@@ -78,12 +79,12 @@ import com.example.foodieheal.hiring.util.CalendarSyncHelper
 @Composable
 fun AppointmentDetailScreen(
     appointment: Appointment,
-    userName: String,
+    userName: String = "Client",
     userPhone: String = "",
     isNetworkAvailable: Boolean = true,
     attachedRecipes: List<AppointmentRecipeWithDetails> = emptyList(),
     isLoadingRecipes: Boolean = false,
-    onBackClick: () -> Unit,
+    onBackClick: () -> Unit = {},
     onStatusChange: (newStatus: String, rejectionReason: String?) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
@@ -110,15 +111,15 @@ fun AppointmentDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_arrowback),
-                            contentDescription = stringResource(R.string.back)
+                            painter = painterResource(id = R.drawable.ic_arrowback),
+                            contentDescription = stringResource(R.string.back),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -132,6 +133,12 @@ fun AppointmentDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Interactive Service Lifecycle Stepper
+            AppointmentStatusStepper(
+                currentStatus = appointment.Status.orEmpty(),
+                rejectionReason = appointment.Reject_Reason
+            )
+
             // Client Header & Status Card
             Card(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

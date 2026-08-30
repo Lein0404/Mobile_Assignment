@@ -4,27 +4,57 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
+enum class EarningsTimeRange(val label: String, val monthCount: Int) {
+    LAST_3_MONTHS("3M", 3),
+    LAST_6_MONTHS("6M", 6),
+    THIS_YEAR("12M", 12)
+}
 
 data class MonthEarnings(
     val monthKey: String,
@@ -91,8 +121,10 @@ fun ChefEarningsChart(
     appointments: List<Appointment>,
     modifier: Modifier = Modifier
 ) {
-    val monthlyData = remember(appointments) {
-        aggregateChefEarnings(appointments, monthCount = 6)
+    var selectedRange by remember { mutableStateOf(EarningsTimeRange.LAST_6_MONTHS) }
+
+    val monthlyData = remember(appointments, selectedRange) {
+        aggregateChefEarnings(appointments, monthCount = selectedRange.monthCount)
     }
 
     var selectedIndex by remember(monthlyData) {
@@ -101,10 +133,12 @@ fun ChefEarningsChart(
 
     val selectedMonth = monthlyData.getOrNull(selectedIndex) ?: monthlyData.lastOrNull()
 
+    val totalGross = remember(monthlyData) { monthlyData.sumOf { it.grossEarnings } }
+    val totalFee = remember(monthlyData) { monthlyData.sumOf { it.platformFee } }
     val totalEarnings = remember(monthlyData) { monthlyData.sumOf { it.earnings } }
 
     var animTriggered by remember { mutableStateOf(false) }
-    LaunchedEffect(appointments) { animTriggered = true }
+    LaunchedEffect(selectedRange, appointments) { animTriggered = true }
 
     val globalMax = remember(monthlyData) {
         val m = monthlyData.maxOfOrNull { it.earnings } ?: 0.0
@@ -112,6 +146,8 @@ fun ChefEarningsChart(
     }
 
     val accentColor = MaterialTheme.colorScheme.primary
+    val chartScrollState = rememberScrollState()
+    val isScrollable = selectedRange == EarningsTimeRange.THIS_YEAR
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -122,68 +158,124 @@ fun ChefEarningsChart(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-
+            // Header Row: Range Selector (3m / 6m / 12m)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f, fill = false)) {
-                    Text(
-                        text = "Earnings Overview",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Last 6 months • Net Payout (excl. 5% platform fee)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                // Total pill
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = accentColor.copy(alpha = 0.12f),
-                    modifier = Modifier.padding(start = 8.dp)
+                Row(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        horizontalAlignment = Alignment.End
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(accentColor.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
                     ) {
+                        Icon(
+                            painter = painterResource(R.drawable.wallet),
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
-                            text = "Net Total",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = "Earnings Overview",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Last ${selectedRange.monthCount} months • Net Payout",
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = String.format(Locale.US, "RM %.2f", totalEarnings),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = accentColor,
-                            softWrap = false
-                        )
+                    }
+                }
+
+                // Range Selector (3M | 6M | 12M)
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                        .padding(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    EarningsTimeRange.entries.forEach { range ->
+                        val isSelected = selectedRange == range
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { selectedRange = range }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = range.label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                softWrap = false,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
 
+            // Summary Metric Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                EarningsMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Total Gross",
+                    amount = totalGross,
+                    accentColor = MaterialTheme.colorScheme.onSurface
+                )
+                EarningsMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Platform Fee (5%)",
+                    amount = totalFee,
+                    accentColor = MaterialTheme.colorScheme.error
+                )
+                EarningsMetricCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Net Payout",
+                    amount = totalEarnings,
+                    accentColor = accentColor
+                )
+            }
+
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
+            // Bar Chart Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(170.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
                     .padding(horizontal = 6.dp, vertical = 10.dp)
             ) {
-                // Grid lines
+                // Background reference grid lines
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
@@ -196,9 +288,16 @@ fun ChefEarningsChart(
                     }
                 }
 
+                // Month Bars (with horizontal scrolling when 12M is selected)
                 Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = if (isScrollable) {
+                        Modifier
+                            .fillMaxSize()
+                            .horizontalScroll(chartScrollState)
+                    } else {
+                        Modifier.fillMaxSize()
+                    },
+                    horizontalArrangement = if (isScrollable) Arrangement.spacedBy(10.dp) else Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
                     monthlyData.forEachIndexed { index, monthData ->
@@ -208,12 +307,14 @@ fun ChefEarningsChart(
                             isSelected   = index == selectedIndex,
                             animated     = animTriggered,
                             accentColor  = accentColor,
+                            isCompact    = isScrollable,
                             onClick      = { selectedIndex = index }
                         )
                     }
                 }
             }
 
+            // Selected Month Detail Inspection Card
             if (selectedMonth != null) {
                 EarningsDetailCard(
                     month       = selectedMonth,
@@ -225,12 +326,53 @@ fun ChefEarningsChart(
 }
 
 @Composable
+private fun EarningsMetricCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    amount: Double,
+    accentColor: Color
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 10.sp,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = String.format(Locale.US, "RM %.2f", amount),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = accentColor,
+                fontSize = 12.sp,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
 private fun EarningsBarColumn(
     monthData:   MonthEarnings,
     maxVal:      Double,
     isSelected:  Boolean,
     animated:    Boolean,
     accentColor: Color,
+    isCompact:   Boolean = false,
     onClick:     () -> Unit
 ) {
     val ratio = (monthData.earnings / maxVal).toFloat().coerceIn(0f, 1f)
@@ -243,13 +385,14 @@ private fun EarningsBarColumn(
         label = "earnings_bar"
     )
     val maxBarDp = 110.dp
+    val barWidth = if (isCompact) 16.dp else 18.dp
 
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) accentColor.copy(alpha = 0.12f) else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = if (isCompact) 4.dp else 6.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -257,14 +400,14 @@ private fun EarningsBarColumn(
         Box(
             modifier = Modifier
                 .height(maxBarDp)
-                .width(18.dp),
+                .width(barWidth),
             contentAlignment = Alignment.BottomCenter
         ) {
             val barHeight = (maxBarDp * animatedHeight)
                 .coerceAtLeast(if (monthData.earnings > 0) 4.dp else 2.dp)
             Box(
                 modifier = Modifier
-                    .width(18.dp)
+                    .width(barWidth)
                     .height(barHeight)
                     .clip(RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp))
                     .background(
@@ -281,7 +424,7 @@ private fun EarningsBarColumn(
 
         Text(
             text     = monthData.monthLabel,
-            fontSize = 10.5.sp,
+            fontSize = if (isCompact) 10.sp else 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             color    = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
             softWrap = false,
@@ -309,7 +452,7 @@ private fun EarningsDetailCard(
         ) {
             Column(modifier = Modifier.weight(1f, fill = false)) {
                 Text(
-                    text = month.fullLabel,
+                    text = "${month.fullLabel} Breakdown",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
