@@ -172,6 +172,7 @@ class RecipeViewModel(
                     recipeList = recipeList.map(updater)
                     myRecipes = myRecipes.map(updater)
                     bookmarkedRecipes = bookmarkedRecipes.map(updater)
+                    followingRecipes = followingRecipes.map(updater)
                 }
             }
         }

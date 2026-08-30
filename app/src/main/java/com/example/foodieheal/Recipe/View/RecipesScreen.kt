@@ -339,42 +339,71 @@ fun RecipesScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(2) }) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
                         .padding(horizontal = 16.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = MaterialTheme.colorScheme.outline,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.search),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.search),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Surface(
+                        onClick = { showFilterSheet = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            val activeFilterCount = (if (filterMaxTime < 240f) 1 else 0) +
+                                    (if (filterMaxCalories < 5000f) 1 else 0) +
+                                    (if (filterSkill != null) 1 else 0) +
+                                    (if (filterBudget != null) 1 else 0) +
+                                    (if (filterIngredients.isNotEmpty()) 1 else 0)
+
+                            BadgedBox(
+                                badge = {
+                                    if (activeFilterCount > 0) {
+                                        Badge(containerColor = primaryColor, contentColor = Color.White) {
+                                            Text(activeFilterCount.toString())
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.filter),
+                                    contentDescription = "Filter",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            item(span = { GridItemSpan(2) }) {
-                Text(
-                    text = "Course",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 8.dp, start = 20.dp)
-                )
-            }
 
             if (selectedTab == 2) {
                 item(span = { GridItemSpan(2) }) {
@@ -458,15 +487,6 @@ fun RecipesScreen(
                 }
             }
 
-            item(span = { GridItemSpan(2) }) {
-                Text(
-                    text = selectedCourse,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 8.dp, start = 16.dp)
-                )
-            }
             // Vertical space cleanup
 
             if (isLoading && filteredRecipes.isEmpty()) {
