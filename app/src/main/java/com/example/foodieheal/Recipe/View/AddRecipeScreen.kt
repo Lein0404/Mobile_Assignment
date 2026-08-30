@@ -28,12 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -46,6 +42,7 @@ import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
+import com.example.foodieheal.ui.components.getHighlightedText
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.unit.IntOffset
@@ -697,38 +694,6 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
                     }
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun getHighlightedText(
-    fullText: String, 
-    query: String, 
-    highlightColor: Color = MaterialTheme.colorScheme.primary
-): AnnotatedString {
-    val trimmedQuery = query.trim()
-    if (trimmedQuery.isEmpty()) return AnnotatedString(fullText)
-
-    return buildAnnotatedString {
-        var startIndex = 0
-        while (startIndex < fullText.length) {
-            val index = fullText.indexOf(trimmedQuery, startIndex, ignoreCase = true)
-            if (index == -1) {
-                append(fullText.substring(startIndex))
-                break
-            }
-
-            append(fullText.substring(startIndex, index))
-            withStyle(
-                style = SpanStyle(
-                    color = highlightColor, 
-                    fontWeight = FontWeight.Bold,
-                )
-            ) {
-                append(fullText.substring(index, index + trimmedQuery.length))
-            }
-            startIndex = index + trimmedQuery.length
         }
     }
 }

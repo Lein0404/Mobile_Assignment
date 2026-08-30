@@ -38,6 +38,7 @@ import com.example.foodieheal.ingredients.view.IngredientsExistingScreen
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ui.components.StatusBadge
+import com.example.foodieheal.ui.components.getHighlightedText
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
 
@@ -300,7 +301,7 @@ fun AdminIngredientRequestsScreen(
                             Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         }
                         items(items) { item ->
-                            AdminIngredientRequestCard(item) {
+                            AdminIngredientRequestCard(item, uiState.searchQuery) {
                                 navController.navigate(Screen.AdminIngredientDetail.createRoute(item.request.ingredientRequestId))
                             }
                         }
@@ -360,7 +361,11 @@ fun AdminIngredientRequestsScreen(
 }
 
 @Composable
-fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> Unit) {
+fun AdminIngredientRequestCard(
+    item: AdminIngredientRequestItem,
+    searchQuery: String = "",
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -381,7 +386,7 @@ fun AdminIngredientRequestCard(item: AdminIngredientRequestItem, onClick: () -> 
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
-                    text = item.request.ingredientName,
+                    text = getHighlightedText(item.request.ingredientName, searchQuery),
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(

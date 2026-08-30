@@ -51,7 +51,11 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -434,6 +438,38 @@ fun GenderDropdown(
 
             }
 
+        }
+    }
+}
+
+@Composable
+fun getHighlightedText(
+    fullText: String,
+    query: String,
+    highlightColor: Color = MaterialTheme.colorScheme.primary
+): AnnotatedString {
+    val trimmedQuery = query.trim()
+    if (trimmedQuery.isEmpty()) return AnnotatedString(fullText)
+
+    return buildAnnotatedString {
+        var startIndex = 0
+        while (startIndex < fullText.length) {
+            val index = fullText.indexOf(trimmedQuery, startIndex, ignoreCase = true)
+            if (index == -1) {
+                append(fullText.substring(startIndex))
+                break
+            }
+
+            append(fullText.substring(startIndex, index))
+            withStyle(
+                style = SpanStyle(
+                    color = highlightColor,
+                    fontWeight = FontWeight.Bold,
+                )
+            ) {
+                append(fullText.substring(index, index + trimmedQuery.length))
+            }
+            startIndex = index + trimmedQuery.length
         }
     }
 }
