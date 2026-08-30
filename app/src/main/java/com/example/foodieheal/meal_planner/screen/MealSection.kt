@@ -49,6 +49,7 @@ fun RecipeCard(
     color: Color,
     isSelectionMode: Boolean = false,
     viewMode: Boolean = false,
+    isNetworkAvailable: Boolean = true
 ) {
     Card(
         modifier = Modifier
@@ -149,7 +150,7 @@ fun RecipeCard(
                     }
                 }
 
-                if (!isSelectionMode) {
+                if (!isSelectionMode && isNetworkAvailable) {
                     if(!viewMode) {
                         IconButton(onClick = onDeleteClick) {
                             Icon(
@@ -172,6 +173,7 @@ fun MealSection(
     viewMode: Boolean = false,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
+    isNetworkAvailable: Boolean = true,
     onSelectionChange: (Boolean) -> Unit = {},//empty lambda bcz in normal meal planner screen no need use, only in addRecipeToMealPlannerScreen
     onAddClick: () -> Unit ={} ,//only in normal meal planner
     onDeleteClick: (Recipe) -> Unit = {},//only in normal meal planner
@@ -230,7 +232,7 @@ fun MealSection(
                 color = MaterialTheme.colorScheme.onTertiary
             )
 
-            if (!isSelectionMode) {
+            if (!isSelectionMode && isNetworkAvailable) {
                 if(!viewMode) {
                     IconButton(onClick = onAddClick) {
                         Icon(
@@ -241,7 +243,7 @@ fun MealSection(
                         )
                     }
                 }
-            } else {
+            } else if (isSelectionMode) {
                 RoundCheckbox(
                     checked = isSelected,
                     onCheckedChange = onSelectionChange,
@@ -275,6 +277,7 @@ fun MealSection(
                         onClick = {onRecipeDetails(recipeItem.recipe_id?:"")},
                         color = color,
                         isSelectionMode = isSelectionMode,
+                        isNetworkAvailable = isNetworkAvailable
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }

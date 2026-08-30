@@ -1,6 +1,7 @@
 package com.example.foodieheal.meal_planner.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,13 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.PlanCategory
@@ -49,13 +49,12 @@ fun AddEditTemplateRoute(
 
     LaunchedEffect(uiState.isSavedSuccess) {
         if (uiState.isSavedSuccess) {
-            // 👈 Show dynamic Toast based on create vs edit mode
             val message = if (viewModel.isEditMode) {
                 templateUpdatedMsg
             } else {
                 templateCreatedMsg
             }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, message, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
 
             onBackClick()
         }
@@ -66,6 +65,8 @@ fun AddEditTemplateRoute(
         isEditMode = viewModel.isEditMode,
         planName = uiState.planName,
         onPlanNameChange = viewModel::updatePlanName,
+        planDescription = uiState.planDescription,
+        onPlanDescriptionChange = viewModel::updatePlanDescription,
         selectedCategory = uiState.category?.displayNameRes?:R.string.null_string,
         onCategorySelected = viewModel::updateCategoryByString,
         isPublic = uiState.isPublic,
@@ -91,6 +92,8 @@ fun AddEditTemplateScreen(
     isEditMode: Boolean = false,
     planName: String,
     onPlanNameChange: (String) -> Unit,
+    planDescription: String,
+    onPlanDescriptionChange: (String) -> Unit,
     selectedCategory: Int,
     onCategorySelected: (String) -> Unit,
     isPublic: Boolean,
@@ -106,10 +109,15 @@ fun AddEditTemplateScreen(
     modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember { DayOfWeek.entries.toList() }
-    val pagerState = rememberPagerState(pageCount = { daysOfWeek.size })
+    val mainTabs = listOf(stringResource(R.string.tab_details), stringResource(R.string.tab_weekly_plan))
+    
+    // 🌟 State for the main swipable tabs
+    val mainPagerState = rememberPagerState(pageCount = { mainTabs.size })
+    // 🌟 State for the inner days pager
+    val dayPagerState = rememberPagerState(pageCount = { daysOfWeek.size })
     val scope = rememberCoroutineScope()
 
-    val currentSelectedDay = daysOfWeek[pagerState.currentPage]
+    val currentSelectedDay = daysOfWeek[dayPagerState.currentPage]
     val selectedDayTotalCalories = remember(dailyPlans, currentSelectedDay) {
         dailyPlans[currentSelectedDay]
             ?.flatMap { slot -> slot.recipes }
@@ -117,13 +125,14 @@ fun AddEditTemplateScreen(
     }
 
     // Dialog state management
-    var showNameDialog by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) }
 
     // Check if user has added any recipes across all days
     val hasEnteredData = remember(dailyPlans) {
         dailyPlans.values.any { slotList -> slotList.any { it.recipes.isNotEmpty() } }
     }
+
+    val isFormDirty = hasEnteredData || selectedCategory != R.string.null_string || planName.isNotBlank() || planDescription.isNotBlank()
 
     // --- Discard Confirmation Dialog ---
     if (showDiscardDialog) {
@@ -143,57 +152,12 @@ fun AddEditTemplateScreen(
                         onBackClick()
                     }
                 ) {
-                    Text(stringResource(R.string.btn_discard), color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.button_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDiscardDialog = false }) {
                     Text(stringResource(R.string.btn_continue_editing))
-                }
-            }
-        )
-    }
-
-    // --- Template Name Input Dialog ---
-    if (showNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showNameDialog = false },
-            title = { Text(if (isEditMode) stringResource(R.string.dialog_edit_template_name_title) else stringResource(R.string.dialog_set_template_name_title)) },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(R.string.dialog_template_name_prompt),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = planName,
-                        onValueChange = onPlanNameChange,
-                        label = { Text(stringResource(R.string.label_template_name)) },
-                        placeholder = { Text(stringResource(R.string.placeholder_template_name_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showNameDialog = false
-                        onSave()
-                    },
-                    enabled = planName.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(stringResource(R.string.save), color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    onPlanNameChange("")
-                    showNameDialog = false
-                }) {
-                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
@@ -218,7 +182,7 @@ fun AddEditTemplateScreen(
             ) {
                 IconButton(
                     onClick = {
-                        if (hasEnteredData || selectedCategory != R.string.null_string || planName.isNotBlank()) {
+                        if (isFormDirty) {
                             showDiscardDialog = true
                         } else {
                             onBackClick()
@@ -227,7 +191,7 @@ fun AddEditTemplateScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrowback),
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.topapp_back),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -244,7 +208,8 @@ fun AddEditTemplateScreen(
                 Button(
                     onClick = {
                         if (planName.isBlank()) {
-                            showNameDialog = true
+                            // Switch to details if name missing
+                            scope.launch { mainPagerState.animateScrollToPage(0) }
                         } else {
                             onSave()
                         }
@@ -253,111 +218,159 @@ fun AddEditTemplateScreen(
                     shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Green,
-                        disabledContainerColor = Color.LightGray
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                     )
                 ) {
                     Text(
                         text = stringResource(R.string.save),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
         }
 
-        // --- Category Selection Dropdown ---
-        DropDownList(
-            labelId = R.string.category,
-            placeholderId = R.string.category,
-            selectedValue = stringResource(selectedCategory),
-            onOptionSelected = onCategorySelected,
-            options = PlanCategory.catList,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-
-        // --- Public / Private Toggle Row ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        // --- Navigation Tabs ---
+        TabRow(
+            selectedTabIndex = mainPagerState.currentPage,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary,
+            divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.label_make_plan_public),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (isPublic) stringResource(R.string.msg_visible_to_community) else stringResource(R.string.msg_only_visible_to_you),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+            mainTabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = mainPagerState.currentPage == index,
+                    onClick = { scope.launch { mainPagerState.animateScrollToPage(index) } },
+                    text = { Text(title, fontWeight = FontWeight.Bold) }
                 )
             }
-            Switch(
-                checked = isPublic,
-                onCheckedChange = onPublicChange
-            )
         }
 
-        Spacer(Modifier.height(4.dp))
+        // --- Swipable Content Pager ---
+        HorizontalPager(
+            state = mainPagerState,
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = true // Enable swiping between Details and Plan
+        ) { pageIndex ->
+            if (pageIndex == 0) {
+                // --- TAB 1: TEMPLATE DETAILS ---
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Template Name Input
+                    OutlinedTextField(
+                        value = planName,
+                        onValueChange = onPlanNameChange,
+                        label = { Text(stringResource(R.string.label_template_name)) },
+                        placeholder = { Text(stringResource(R.string.placeholder_template_name_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 2.dp,
-            color = Color.LightGray
-        )
+                    // Category Selection Dropdown
+                    DropDownList(
+                        labelId = R.string.category,
+                        placeholderId = R.string.category,
+                        selectedValue = stringResource(selectedCategory),
+                        onOptionSelected = onCategorySelected,
+                        options = PlanCategory.catList,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-        Spacer(Modifier.height(4.dp))
+                    // Template Description Input
+                    OutlinedTextField(
+                        value = planDescription,
+                        onValueChange = onPlanDescriptionChange,
+                        label = { Text(stringResource(R.string.label_template_description)) },
+                        placeholder = { Text(stringResource(R.string.placeholder_template_description)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 150.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-        // --- Weekly Day Selection Row ---
-        WeeklyDayCardRow(
-            selectedDay = currentSelectedDay,
-            onDaySelected = { selectedDay ->
-                val targetPage = daysOfWeek.indexOf(selectedDay)
-                if (targetPage != -1) {
-                    scope.launch {
-                        pagerState.animateScrollToPage(targetPage)
+                    // Public / Private Toggle Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.label_make_plan_public),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (isPublic) stringResource(R.string.msg_visible_to_community) else stringResource(R.string.msg_only_visible_to_you),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = isPublic,
+                            onCheckedChange = onPublicChange
+                        )
+                    }
+                }
+            } else {
+                // --- TAB 2: WEEKLY PLAN ---
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Spacer(Modifier.height(8.dp))
+
+                    // Weekly Day Selection Row
+                    WeeklyDayCardRow(
+                        selectedDay = currentSelectedDay,
+                        onDaySelected = { selectedDay ->
+                            val targetPage = daysOfWeek.indexOf(selectedDay)
+                            if (targetPage != -1) {
+                                scope.launch {
+                                    dayPagerState.animateScrollToPage(targetPage)
+                                }
+                            }
+                        }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    CalorieProgressBar(
+                        currentCalories = selectedDayTotalCalories,
+                        maxCalories = maxCalories,
+                        onNavigateToProfile = onNavigateToProfile,
+                        modifier = Modifier
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    // Horizontal Pager for Days
+                    HorizontalPager(
+                        state = dayPagerState,
+                        modifier = Modifier.fillMaxSize(),
+                        beyondViewportPageCount = 1
+                    ) { page ->
+                        val dayOfWeek = daysOfWeek[page]
+                        val mealSlotsForDay = dailyPlans[dayOfWeek] ?: emptyList()
+
+                        TemplateDayPageContent(
+                            mealSlots = mealSlotsForDay,
+                            onAddMealRecipe = { mealType -> onAddMealRecipe(dayOfWeek, mealType) },
+                            onDeleteMealRecipe = { mealType, recipe -> onDeleteMealRecipe(dayOfWeek, mealType, recipe) },
+                            onRecipeClick = onRecipeClick
+                        )
                     }
                 }
             }
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        CalorieProgressBar(
-            currentCalories = selectedDayTotalCalories,
-            maxCalories = maxCalories,
-            onNavigateToProfile = onNavigateToProfile,
-            modifier = Modifier
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
-
-        // --- Horizontal Pager for Days ---
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            beyondViewportPageCount = 1
-        ) { page ->
-            val dayOfWeek = daysOfWeek[page]
-            val mealSlotsForDay = dailyPlans[dayOfWeek] ?: emptyList()
-
-            TemplateDayPageContent(
-                mealSlots = mealSlotsForDay,
-                onAddMealRecipe = { mealType -> onAddMealRecipe(dayOfWeek, mealType) },
-                onDeleteMealRecipe = { mealType, recipe -> onDeleteMealRecipe(dayOfWeek, mealType, recipe) },
-                onRecipeClick = onRecipeClick
-            )
         }
     }
 }

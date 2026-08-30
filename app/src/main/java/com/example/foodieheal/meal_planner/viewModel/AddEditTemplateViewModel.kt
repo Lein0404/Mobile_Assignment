@@ -79,6 +79,7 @@
                         _uiState.update { currentState ->
                             currentState.copy(
                                 planName = existingPlanDto.planName,
+                                planDescription = existingPlanDto.planDescription,
                                 category = existingPlanDto.category,
                                 isPublic = existingPlanDto.public,
                                 dailyPlans = domainDailyPlans,
@@ -92,12 +93,12 @@
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "loadExistingPlan() Exception while loading plan '$id'", e)
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            isLoading = false,
-                            errorMessage = "err_failed_load_template"
-                        )
-                    }
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isLoading = false,
+                                errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_load_template)
+                            )
+                        }
                 }
             }
         }
@@ -105,6 +106,11 @@
         fun updatePlanName(newName: String) {
             Log.d(TAG, "updatePlanName(): New name = '$newName'")
             _uiState.update { it.copy(planName = newName) }
+        }
+
+        fun updatePlanDescription(newDescription: String) {
+            Log.d(TAG, "updatePlanDescription(): New description = '$newDescription'")
+            _uiState.update { it.copy(planDescription = newDescription) }
         }
 
         fun updateCategory(newCategory: PlanCategory) {
@@ -192,14 +198,14 @@
             Log.d(TAG, "saveTemplate() called | isEditMode: $isEditMode, planName: '${currentState.planName}', category: ${currentState.category}")
 
             if (currentState.category == null) {
-                val errMsg = "err_select_category"
+                val errMsg = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_select_category)
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
             }
 
             if (currentState.planName.isBlank()) {
-                val errMsg = "err_empty_template_name"
+                val errMsg = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_empty_template_name)
                 Log.w(TAG, "saveTemplate() Validation failed: $errMsg")
                 _uiState.update { it.copy(errorMessage = errMsg) }
                 return
@@ -223,6 +229,7 @@
                     val planToSave = WeeklyPlan(
                         planId = finalPlanId,
                         planName = currentState.planName.trim(),
+                        planDescription = currentState.planDescription.trim(),
                         userId = currentUserId,
                         category = currentState.category,
                         dailyPlans = currentState.dailyPlans,
@@ -244,7 +251,7 @@
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "err_failed_save_template"
+                            errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_save_template)
                         )
                     }
                 }

@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -29,6 +28,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ingredients.shared.SelectShoppingListDialog
 import com.example.foodieheal.ui.components.ImagePlaceholder
 import com.example.foodieheal.ui.components.PrimaryButton
 import com.example.foodieheal.ui.components.StatusBadge
@@ -215,7 +215,7 @@ fun IngredientDetailScreen(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
-                                        text = displayData.category ?: stringResource(R.string.shopping_list_categories),
+                                        text = displayData.category ?: stringResource(R.string.categories_filter_header),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -232,12 +232,17 @@ fun IngredientDetailScreen(
                                             requestDetail?.request?.let { request ->
                                                 val productionId = request.ingredientId
                                                 if (productionId != null) {
-                                                    ingredientsViewModel.addToShoppingList(productionId, request.ingredientName)
-                                                    Toast.makeText(
-                                                        context,
-                                                        application.getString(R.string.ingredients_toast_added, request.ingredientName),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
+                                                    ingredientsViewModel.requestAddToShoppingList(
+                                                        ingredientId = productionId,
+                                                        ingredientName = request.ingredientName,
+                                                        category = request.ingredientCategory
+                                                    ) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            application.getString(R.string.ingredients_toast_added, request.ingredientName),
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
                                                 } else {
                                                     Toast.makeText(
                                                         context,
@@ -248,8 +253,9 @@ fun IngredientDetailScreen(
                                             }
                                         } else {
                                             ingredientsUiState.ingredientDetail?.ingredient?.let {
-                                                ingredientsViewModel.addToShoppingList(it)
-                                                Toast.makeText(context, application.getString(R.string.ingredients_toast_added, it.ingredientName), Toast.LENGTH_SHORT).show()
+                                                ingredientsViewModel.requestAddToShoppingList(it) {
+                                                    Toast.makeText(context, application.getString(R.string.ingredients_toast_added, it.ingredientName), Toast.LENGTH_SHORT).show()
+                                                }
                                             }
                                         }
                                     }) {
@@ -367,6 +373,38 @@ fun IngredientDetailScreen(
             dismissButton = {
                 TextButton(onClick = { requestViewModel.onShowDeleteDialog(false) }) {
                     Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
+    val addShoppingState = ingredientsUiState.addShoppingListState
+    if (addShoppingState.showDialog) {
+        SelectShoppingListDialog(
+            shoppingLists = addShoppingState.availableLists,
+            isNewList = addShoppingState.isNewListOptionSelected,
+            newListNameInput = addShoppingState.newListNameInput,
+            selectedIndex = addShoppingState.selectedListIndex,
+            onIsNewListChange = { ingredientsViewModel.updateIsNewListOption(it) },
+            onNewListNameChange = { ingredientsViewModel.updateNewShoppingListName(it) },
+            onSelectedIndexChange = { ingredientsViewModel.updateSelectedShoppingListIndex(it) },
+            onDismissRequest = { ingredientsViewModel.onDismissSelectShoppingListDialog() },
+            onConfirm = {
+                ingredientsViewModel.confirmAddPendingIngredientToShoppingList { addedName ->
+                    Toast.makeText(
+                        context,
+                        application.getString(R.string.ingredients_toast_added, addedName),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            },
+            onConfirmNewList = {
+                ingredientsViewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
+                    Toast.makeText(
+                        context,
+                        application.getString(R.string.ingredients_toast_added, addedName),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         )

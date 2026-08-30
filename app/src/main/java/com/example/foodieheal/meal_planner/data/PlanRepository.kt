@@ -21,70 +21,85 @@ class PlanRepository {
      * Inserts a new WeeklyPlanEntity into Supabase.
      */
     suspend fun insertPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
-        postgrest.insert(planEntity)
+        runCatching {
+            postgrest.insert(planEntity)
+        }.onFailure { e ->
+            Log.e("PlanRepository", "insertPlan failed", e)
+        }
     }
 
     /**
      * Saves or updates a complete WeeklyPlanEntity in Supabase.
      */
     suspend fun saveWeeklyPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
-        postgrest.upsert(planEntity)
+        runCatching {
+            postgrest.upsert(planEntity)
+        }.onFailure { e ->
+            Log.e("PlanRepository", "saveWeeklyPlan failed", e)
+        }
     }
 
     /**
      * Retrieves a WeeklyPlanEntity by its ID.
      */
     suspend fun getWeeklyPlanById(planId: String): WeeklyPlanEntity? = withContext(Dispatchers.IO) {
-        postgrest.select {
-            filter {
-                eq("planId", planId)
-            }
-        }.decodeSingleOrNull<WeeklyPlanEntity>()
+        runCatching {
+            postgrest.select {
+                filter {
+                    eq("planId", planId)
+                }
+            }.decodeSingleOrNull<WeeklyPlanEntity>()
+        }.getOrNull()
     }
 
     /**
      * Fetches all plans belonging to a specific category AND user.
      */
     fun observePlansByCategoryAndUser(category: PlanCategory, userId: String): Flow<List<WeeklyPlanEntity>> = flow {
-        val plans = postgrest.select {
-            filter {
-                eq("category", category.name)
-                eq("userId", userId)
-            }
-        }.decodeList<WeeklyPlanEntity>()
-
-        emit(plans)
+        val result = runCatching {
+            postgrest.select {
+                filter {
+                    eq("category", category.name)
+                    eq("userId", userId)
+                }
+            }.decodeList<WeeklyPlanEntity>()
+        }
+        emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)
 
     /**
      * Fetches all plans belonging to a specific category.
      */
     fun observePlansByCategory(category: PlanCategory): Flow<List<WeeklyPlanEntity>> = flow {
-        val plans = postgrest.select {
-            filter {
-                eq("category", category.name)
-            }
-        }.decodeList<WeeklyPlanEntity>()
-
-        emit(plans)
+        val result = runCatching {
+            postgrest.select {
+                filter {
+                    eq("category", category.name)
+                }
+            }.decodeList<WeeklyPlanEntity>()
+        }
+        emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)
 
     /**
      * Fetches all plans.
      */
     fun observeAllPlans(): Flow<List<WeeklyPlanEntity>> = flow {
-        val plans = postgrest.select().decodeList<WeeklyPlanEntity>()
-        emit(plans)
+        val result = runCatching {
+            postgrest.select().decodeList<WeeklyPlanEntity>()
+        }
+        emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)
 
-    /**
-     * Deletes a plan by ID.
-     */
     suspend fun deletePlan(planId: String) = withContext(Dispatchers.IO) {
-        postgrest.delete {
-            filter {
-                eq("planId", planId)
+        runCatching {
+            postgrest.delete {
+                filter {
+                    eq("planId", planId)
+                }
             }
+        }.onFailure { e ->
+            Log.e("PlanRepository", "deletePlan failed", e)
         }
     }
     /**

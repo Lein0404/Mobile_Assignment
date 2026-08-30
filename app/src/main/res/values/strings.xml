@@ -40,6 +40,8 @@
     <string name="error_logout_failed">Logout failed. Please try again.</string>
     <string name="error_invalid_credentials">Invalid email and/or password. Please try again.</string>
     <string name="nav_logout">Logout</string>
+    <string name="logout_confirm_title">Logout Confirmation</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
 
     <!-- Image related -->
     <string name="image">Image</string>
@@ -122,6 +124,11 @@
     <string name="dialog_title_choose_paste_date">Choose a date to paste today\'s plan</string>
     <string name="dialog_title_choose_weekly_repeat_date">Choose a date range and repeat your weekly plan!</string>
     <string name="dialog_title_choose_date_range_paste">Choose a date range to paste the weekly plan</string>
+    <string name="msg_copy_daily_success">Successfully copied plan to %1$s!</string>
+    <string name="msg_copy_daily_failed">Failed to copy meal plan.</string>
+    <string name="msg_copy_weekly_success">Successfully saved %1$d days to your planner!</string>
+    <string name="msg_copy_weekly_none">No recipes found to copy.</string>
+    <string name="msg_apply_template_success">Successfully applied ‘%1$s’ template!</string>
     <string name="daily_success_notify">Daily plan copied successfully!</string>
     <string name="weekly_success_notify">Weekly plan copied successfully!</string>
 
@@ -190,6 +197,9 @@
     <string name="time_range_format">%1$s - %2$s</string>
     <string name="price_currency_format">RM %.2f</string>
     <string name="status_confirmed">Confirmed</string>
+    <string name="chef_available_today">Available Today</string>
+    <string name="chef_off_today">Off Today</string>
+    <string name="chef_new_rating">New</string>
 
     <string name="empty_no_chefs_found">No chef profiles found.</string>
     <string name="empty_no_appointments_found">No Appointments Found</string>
@@ -553,6 +563,36 @@
     <string name="confirm_accept">Confirm Accept</string>
     <string name="confirm_decline">Confirm Decline</string>
     <string name="open_maps">Open with Maps</string>
+    <string name="total_booking_value">Total Booking Value</string>
+    <string name="call_client">Call Client</string>
+    <string name="scan_client_qr_to_complete">Scan Client QR to Complete</string>
+
+    <string name="price_format">RM %.2f</string>
+    <string name="rate_per_guest_label">Rate per Guest (%1$d guests):</string>
+    <string name="rate_per_guest_value_format">RM %.2f / person</string>
+
+    <string name="reason_for_declining">Reason for Declining</string>
+    <string name="client_review_and_rating">Client Review &amp; Rating</string>
+    <string name="quoted_text_format">“%1$s”</string>
+    <string name="rating_format">%1$d.0</string>
+    <string name="no_review_submitted">No review submitted by the client yet.</string>
+
+    <string name="section_attached_dishes">Attached Dishes / Meal Plan</string>
+    <string name="no_recipes_requested">No specific recipes requested by client</string>
+    <string name="default_recipe_name">Recipe #%1$d</string>
+    <string name="recipe_portions_format">%1$d portion(s)</string>
+    <string name="recipe_calories_format">%1$d kcal</string>
+    <string name="recipe_time_format">• %1$dm</string>
+    <string name="client_note_format">Client note: “%1$s”</string>
+    <string name="recipe_image_content_description">Recipe image</string>
+
+    <string name="service_verified_qr_completed">Service verified via QR! Booking marked as Completed.</string>
+
+    <string name="payment_status_paid">Paid</string>
+    <string name="payment_status_cancelled">Cancelled</string>
+    <string name="payment_status_na">N/A</string>
+    <string name="payment_status_awaiting_payment">Awaiting Payment</string>
+    <string name="payment_status_pending">Pending</string>
 
     <string name="accept_title">Accept Booking?</string>
     <string name="accept_body_format">Are you sure you want to accept this appointment for %1$s on %2$s?</string>
@@ -654,7 +694,7 @@
     <string name="dialog_discard_draft_title">Discard Draft?</string>
     <string name="dialog_discard_changes_msg">Are you sure you want to discard your edits? Changes will not be saved.</string>
     <string name="dialog_discard_draft_msg">Are you sure you want to discard this template? Unsaved changes will be lost.</string>
-    <string name="btn_discard">Discard</string>
+    <string name="button_discard">Discard</string>
     <string name="btn_continue_editing">Continue Editing</string>
     <string name="dialog_edit_template_name_title">Edit Template Name</string>
     <string name="dialog_set_template_name_title">Set Template Name</string>
@@ -736,40 +776,87 @@
     <string name="section_professional_bg">Professional Background</string>
     <string name="years_format">%1$s Years</string>
 
-    <!-- INGREDIENTS MODULE -->
-    <!-- Shopping List -->
+    <!-- SHOPPING LIST MODULE -->
+    <!-- Shopping List Home Screen -->
+    <string name="shopping_list_home_title">My Shopping Lists</string>
+    <string name="shopping_list_new_title">New shopping list</string>
+    <string name="shopping_list_home_search_placeholder">Search shopping lists here</string>
+    <string name="shopping_list_home_empty_state">No shopping list is created.</string>
+    <string name="shopping_list_create_button">Create Shopping List</string>
+    <string name="shopping_list_home_no_match">No shopping lists match your search.</string>
+    <string name="shopping_list_set_default_toast">\"%1$s\" set as default shopping list</string>
+    <string name="shopping_list_deselect_default_toast">\"%1$s\" deselected as default</string>
+    <string name="shopping_list_change_default_title">Change Default Shopping List</string>
+    <string name="shopping_list_change_default_message">A shopping list (%1$s) has already been set as default. Change to this shopping list instead?</string>
+    <string name="shopping_list_delete_title">Delete Shopping List</string>
+    <string name="shopping_list_delete_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="shopping_list_deleted_toast">\"%1$s\" deleted from your Shopping Lists</string>
+    <string name="shopping_list_share">Share shopping list</string>
+    <string name="shopping_list_deselect_default">Deselect as default</string>
+    <string name="shopping_list_set_default">Set as default</string>
+    <string name="shopping_list_delete">Delete shopping list</string>
+    <string name="label_default">Default</string>
+    <string name="label_name">Name</string>
+    <string name="btn_add">Add</string>
+
+    <!-- SelectShoppingListDialog.kt -->
+    <string name="select_shopping_list_dialog_title">Select shopping list to add</string>
+    <string name="shopping_list_name_title">Shopping list name</string>
+    <string name="existing_shopping_list_title">Existing shopping list</string>
+
+    <!-- Shopping List Detail Screen -->
     <string name="shopping_list_title">Shopping List</string>
-    <string name="shopping_list_back">Back</string>
     <string name="shopping_list_options">Options</string>
     <string name="shopping_list_add_items">Add items</string>
     <string name="shopping_list_clear_checked">Clear checked items</string>
     <string name="shopping_list_no_checked_items">No checked items to clear.</string>
     <string name="shopping_list_clear_all">Clear all items</string>
-    <string name="shopping_list_already_empty">Shopping List is already empty.</string>
+    <string name="shopping_list_already_empty">This shopping list is already empty.</string>
     <string name="shopping_list_search_placeholder">Search ingredients here</string>
-    <string name="shopping_list_categories">Categories</string>
-    <string name="shopping_list_empty_state">Your shopping list is empty. Add new item now!</string>
+    <string name="shopping_list_empty_state">This shopping list is empty.</string>
     <string name="shopping_list_no_match">No items match your search.</string>
     <string name="shopping_list_clear_checked_dialog_title">Clear Checked Items</string>
-    <string name="shopping_list_clear_checked_dialog_text">There are %1$d checked item(s) to be clear from your Shopping List. Are you sure?</string>
-    <string name="shopping_list_clear_checked_toast">%1$d checked item(s) cleared from your Shopping List</string>
+    <string name="shopping_list_clear_checked_dialog_text">There are %1$d checked item(s) to be clear from this shopping list. Are you sure?</string>
+    <string name="shopping_list_clear_checked_toast">%1$d checked item(s) cleared from this shopping list</string>
     <string name="shopping_list_clear_all_dialog_title">Clear All Items</string>
-    <string name="shopping_list_clear_all_dialog_text">All items will be cleared from your Shopping List. Are you sure?</string>
-    <string name="shopping_list_clear_all_toast">All items cleared from your Shopping List</string>
+    <string name="shopping_list_clear_all_dialog_text">All items will be cleared from this shopping list. Are you sure?</string>
+    <string name="shopping_list_clear_all_toast">All items cleared from this shopping list</string>
+    <string name="select_shopping_list_placeholder">Select a shopping list</string>
     <string name="shopping_list_error_local_data">Using local data only.</string>
 
-    <!-- Add Shopping List Item -->
+    <string name="shopping_list_last_updated">Last updated: %1$s</string>
+    <string name="shopping_list_copy_clipboard">Copy to clipboard</string>
+    <string name="shopping_list_paste_clipboard">Paste from clipboard</string>
+    <string name="shopping_list_add_item">Add item</string>
+    <string name="shopping_list_search_items_placeholder">Search items here</string>
+    <string name="shopping_list_add_items_button">Add Items</string>
+    <string name="shopping_list_save_changes_title">Save Changes?</string>
+    <string name="shopping_list_save_changes_message">Do you want to save changes to the shopping list title before leaving?</string>
+    <string name="button_save">Save</string>
+
+    <!-- Add from Clipboard / Recipes to Shopping List (ShoppingListAddFromScreen.kt) -->
+    <string name="shopping_list_add_to_list">Add to Shopping List</string>
+    <string name="shopping_list_no_ingredients_clipboard">No valid ingredients found on clipboard.</string>
+    <string name="shopping_list_no_ingredients_recipe">No ingredients found in this recipe.</string>
+    <string name="shopping_list_refresh_clipboard">Refresh from Clipboard</string>
+    <string name="shopping_list_unselect_all">Unselect all</string>
+    <string name="shopping_list_select_all">Select all</string>
+    <string name="shopping_list_add_selected">Add selected items</string>
+    <string name="shopping_list_items_added_to_list">%1$d items added to %2$s</string>
+
+    <!-- Add items to Shopping List (ShoppingListAddItemScreen.kt) -->
     <string name="add_shopping_item_title">Add to Shopping List</string>
     <string name="add_shopping_item_no_ingredients">No ingredients found.</string>
-    <string name="add_shopping_item_toast_added">%1$d item(s) added to Shopping List</string>
+    <string name="add_shopping_item_toast_added">%1$d item(s) added to this shopping list</string>
     <string name="add_shopping_item_button">Add %1$d Item(s) to Shopping List</string>
 
-    <!-- Ingredients -->
+    <!-- INGREDIENTS MODULE -->
+    <!-- Ingredients Main Screen -->
     <string name="ingredients_title">Ingredients</string>
     <string name="ingredients_tab_existing">Existing</string>
     <string name="ingredients_tab_requests">Requests</string>
-    <string name="ingredients_fab_new_request">New Request</string>
-    <string name="ingredients_toast_added">%1$s added to Shopping List</string>
+    <string name="ingredients_fab_new_request">Add Request</string>
+    <string name="ingredients_toast_added">%1$s added to the shopping list.</string>
     <string name="ingredients_requests_empty">No requests found.</string>
     <string name="ingredients_requests_filter_title">Filter by Status</string>
     <string name="ingredients_requests_filter_all">All</string>
@@ -779,11 +866,14 @@
     <string name="ingredients_requests_apply_filter">Apply Filter</string>
     <string name="ingredients_existing_search_placeholder">Search ingredients here</string>
     <string name="ingredients_requests_search_placeholder">Search ingredient requests here</string>
+    <string name="categories_filter_header">Categories Filter</string>
     <string name="ingredients_existing_empty">No ingredients match your search.</string>
     <string name="ingredients_error_fetch_ingredients">Failed to fetch ingredients</string>
     <string name="ingredients_error_fetch_requests">Failed to fetch requests</string>
     <string name="ingredients_error_fetch_details">Failed to fetch ingredient details</string>
     <string name="ingredients_no_internet_requests">Please connect to the internet to view ingredient requests</string>
+    <string name="ingredients_expand_categories">Expand categories filter</string>
+    <string name="ingredients_collapse_categories">Collapse categories filter</string>
 
     <!-- Ingredient Detail -->
     <string name="ingredient_detail_request_processed_title">Request Processed</string>
@@ -834,6 +924,8 @@
 
     <!-- Ingredients Module Validation Errors -->
     <string name="ingredients_error_name_required">Ingredient name is required</string>
+    <string name="ingredients_error_name_exists">An ingredient (%1$s) already exists.</string>
+    <string name="ingredients_error_request_exists">An ingredient request (%1$s) already exists.</string>
     <string name="error_category_required">Category is required</string>
     <string name="ingredients_error_description_required">Description is required</string>
     <string name="error_at_least_one_unit_required">At least one calorie information entry is required</string>
@@ -1033,5 +1125,50 @@
     <string name="pay_amount_format">Pay %1$s</string>
     <string name="title_order_summary">Order Summary</string>
     <string name="title_select_payment_method">Select Payment Method</string>
-    <string name="btn_add_new_card">+ Add New Credit / Debit Card</string>
+    <string name="add_new_card">+ Add New Credit / Debit Card</string>
+    <string name="toast_chef_register_success">Chef registered successfully!</string>
+    <string name="toast_chef_upgrade_success">Upgraded to Chef successfully!</string>
+    <string name="biometric_prompt_title">Confirm Payment</string>
+    <string name="biometric_prompt_subtitle">Authenticate to authorize payment of %1$s via %2$s</string>
+
+    <!-- Calendar Feature-->
+    <string name="add_to_calendar">Add to Calendar</string>
+    <string name="toast_opening_calendar">Opening Calendar...</string>
+    <string name="dialog_calendar_title">Booking Confirmed!</string>
+    <string name="dialog_calendar_message">Your payment was successful and booking is confirmed. Would you like to add this session to your Calendar with reminder alerts?</string>
+    <string name="btn_add_to_calendar">Add to Calendar</string>
+    <string name="btn_view_booking">View Booking</string>
+
+    <!-- Rebook Chef Feature -->
+    <string name="btn_rebook_chef">Rebook Chef</string>
+    <string name="rebooking_in_progress">Preparing booking...</string>
+    <string name="rebook_failed">Unable to prepare rebook: %1$s</string>
+
+    <!-- Meal Planner Folders -->
+    <string name="tab_details">Details</string>
+    <string name="tab_weekly_plan">Weekly Plan</string>
+    <string name="label_template_description">Template Description</string>
+    <string name="placeholder_template_description">Describe your plan (e.g. goals, intended audience)…</string>
+    <string name="title_scheduled_hiring_appointments">Scheduled Hiring Appointments</string>
+    <string name="msg_plan_id_copied">Plan ID copied to clipboard</string>
+    <string name="msg_share_template_text">Check out this meal plan template on Foodie Heal: %1$s</string>
+    <string name="msg_share_my_template_text">Check out my meal plan template on Foodie Heal: %1$s</string>
+    <string name="title_share_template">Share Template</string>
+    <string name="msg_show_less">Show Less</string>
+    <string name="msg_more">More…</string>
+    <string name="msg_template_deleted">Template deleted successfully!</string>
+    <string name="empty_no_community_templates">No community templates available</string>
+    <string name="empty_no_templates_match">No templates match your search</string>
+    <string name="empty_no_my_templates">You haven’t created any templates yet</string>
+    <string name="error_recipe_not_found">Recipe not found.</string>
+    <string name="error_recipe_not_available_offline">Recipe data not available offline.</string>
+    <string name="label_plan_id">Plan ID</string>
+    <string name="label_public_template">Public Template</string>
+    <string name="label_private_template">Private Template</string>
+    <string name="desc_copy_plan_id">Copy Plan ID</string>
+    <string name="desc_add_template">Add template</string>
+    <string name="error_failed_to_delete_plan">Failed to delete plan</string>
+    <string name="error_source_plan_not_found">Source plan not found</string>
+    <string name="label_copy_suffix">(Copy)</string>
+    <string name="error_failed_to_copy_template">Failed to copy template</string>
 </resources>

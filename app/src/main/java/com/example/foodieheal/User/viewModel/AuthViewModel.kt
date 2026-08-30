@@ -16,6 +16,7 @@ import com.example.foodieheal.User.local.UserDao
 import com.example.foodieheal.User.local.UserEntity
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.meal_planner.local.MealPlanDatabase
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
@@ -540,6 +541,43 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         saveChefToCache(chef)
     }
 
+    fun updateChefAvailability(
+        weeklyAvailability: com.example.foodieheal.Chef.model.WeeklyAvailability,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val chef = currentChef ?: run {
+            onError("Chef data not loaded")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val jsonElement = weeklyAvailability.toJsonElement()
+                val updatedChef = chef.copy(availability_hours = jsonElement)
+
+                withContext(Dispatchers.IO) {
+                    client.postgrest.from("Chef").update(
+                        buildMap<String, kotlinx.serialization.json.JsonElement> {
+                            put("availability_hours", jsonElement)
+                        }
+                    ) {
+                        filter {
+                            eq("chefId", chef.chefId)
+                        }
+                    }
+                }
+
+                currentChef = updatedChef
+                saveChefToCache(updatedChef)
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to update chef availability", e)
+                onError(parseError(e))
+            }
+        }
+    }
+
     fun fetchChefData() {
         val userId = client.auth.currentUserOrNull()?.id ?: return
         viewModelScope.launch {
@@ -739,6 +777,12 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 val dao = getDao()
                 dao?.deleteUser()
                 dao?.deleteChef()
+                
+                // 🌟 Clear local meal plans on logout
+                MainActivity.appContext?.let { context ->
+                    MealPlanDatabase.getDatabase(context).mealPlanDao().clearAllPlans()
+                }
+
                 client.auth.signOut()
             } catch (e: Exception) { }
             isProcessing = false

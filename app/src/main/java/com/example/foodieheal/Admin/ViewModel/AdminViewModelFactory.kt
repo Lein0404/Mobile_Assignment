@@ -27,7 +27,7 @@ class AdminViewModelFactory(
                 AdminIngredientRequestViewModel(application, ingredientRequestRepo, userRepository, ingredientsRepo) as T
             }
             modelClass.isAssignableFrom(AdminAddIngredientViewModel::class.java) -> {
-                AdminAddIngredientViewModel(application, ingredientsRepo) as T
+                AdminAddIngredientViewModel(application, ingredientsRepo, ingredientRequestRepo) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

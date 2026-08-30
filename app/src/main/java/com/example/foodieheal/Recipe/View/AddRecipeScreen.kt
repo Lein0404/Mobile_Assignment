@@ -42,6 +42,9 @@ import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -67,6 +70,7 @@ fun AddRecipeScreen(
     var budget by remember { mutableStateOf("0 - 10") }
     var steps by remember { mutableStateOf("") }
     var showResetDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val ingredients = remember { mutableStateListOf(IngredientInputState()) }
     val scrollState = rememberScrollState()
@@ -112,6 +116,7 @@ fun AddRecipeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients()
         viewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
@@ -318,7 +323,50 @@ fun AddRecipeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LabelText("Ingredients")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LabelText("Ingredients")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_help),
+                            contentDescription = "Help",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { showHelpDialog = true },
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                        if (showHelpDialog) {
+                            Popup(
+                                alignment = Alignment.TopStart,
+                                offset = IntOffset(x = -100, y = 40),
+                                onDismissRequest = { showHelpDialog = false },
+                                properties = PopupProperties(focusable = true)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
+                                    shadowElevation = 8.dp,
+                                    modifier = Modifier.width(300.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            text = "Can't find an ingredient?",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "You may request for missing ingredients in the \"View & Request Ingredients\" menu option under Profile. We'll review and approve it right away!",
+                                            fontSize = 11.sp,
+                                            lineHeight = 16.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 TextButton(onClick = { showResetDialog = true }) {
                     Text("Reset Ingredients", color = Color.Red, fontWeight = FontWeight.Bold)
                 }

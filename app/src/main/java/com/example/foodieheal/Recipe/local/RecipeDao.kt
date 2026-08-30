@@ -20,15 +20,6 @@ interface RecipeDao {
     @Query("DELETE FROM local_recipes")
     suspend fun clearRecipes()
 
-    @Query("SELECT * FROM local_ingredients")
-    suspend fun getAllIngredients(): List<IngredientEntity>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertIngredients(ingredients: List<IngredientEntity>)
-
-    @Query("DELETE FROM local_ingredients")
-    suspend fun clearIngredients()
-
     @Query("SELECT recipeId FROM local_bookmarks WHERE userId = :userId")
     suspend fun getBookmarkIds(userId: String): List<String>
 
@@ -49,4 +40,7 @@ interface RecipeDao {
 
     @Query("SELECT * FROM local_recipes WHERE recipe_id = :recipeId LIMIT 1")
     suspend fun getRecipeById(recipeId: String): RecipeEntity?
+
+    @Query("SELECT * FROM local_recipes WHERE recipe_id IN (:recipeIds)")
+    suspend fun getRecipesByIds(recipeIds: List<String>): List<RecipeEntity>
 }

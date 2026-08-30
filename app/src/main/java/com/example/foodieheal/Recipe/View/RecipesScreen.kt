@@ -1,34 +1,38 @@
 package com.example.foodieheal.Recipe.View
 
 import android.app.Activity
-import androidx.annotation.DrawableRes
+import android.widget.Toast
+import es.dmoral.toasty.Toasty
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,17 +54,26 @@ import kotlin.collections.filter
 fun RecipesScreen(
     parentNavController: NavController,
     viewModel: RecipeViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    isSelectionMode: Boolean = false,
+    onSave: (List<String>) -> Unit = {},
+    onBackClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val recipeAddedSingularMsg = stringResource(R.string.msg_recipes_added_singular)
+    val recipeAddedPluralFormat = stringResource(R.string.msg_recipes_added_plural)
+
     val selectedTab = viewModel.activeTab
     // 🌟 3 Main Tabs to keep it from looking "scratchy"
     val tabs = listOf("Popular", "My Recipes", "Favorites")
     var showFollowingFeed by remember { mutableStateOf(true) } // Toggle between Following and Saved
-    
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("All") }
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
-    
+
+    val selectedRecipeIds = remember { mutableStateListOf<String>() }
+
     // Filter State
     var showFilterSheet by remember { mutableStateOf(false) }
     var filterMaxTime by remember { mutableFloatStateOf(240f) }
@@ -85,18 +98,19 @@ fun RecipesScreen(
 
     // 🌟 LOGIC: Filtering based on your instructions
     val currentDataList = when (selectedTab) {
-        // Tab 0: Popular -> Show ALL (Filtered later for Public only)
-        0 -> viewModel.recipeList
+        // Tab 0: Popular -> Show ALL recipes for testing sync (Include mine)
+        // 🌟 Selection Mode Adjustment: Filter out my recipes from Popular tab as per RecipesSelectingScreen
+        0 -> if (isSelectionMode) viewModel.recipeList.filter { it.author_id != currentUserId } else viewModel.recipeList
         // Tab 1: My Recipes -> Created by ME
         1 -> viewModel.myRecipes
         // Tab 2: Social -> Toggle between Following and Bookmarks
         2 -> if (showFollowingFeed) viewModel.followingRecipes else viewModel.bookmarkedRecipes
         else -> emptyList()
     }
-    
+
     val isLoading = viewModel.isLoading
-    
-    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget, currentUserId) {
+
+    val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget) {
         derivedStateOf {
             currentDataList.filter { recipe ->
                 // 🌟 Visibility check for Popular tab
@@ -140,27 +154,29 @@ fun RecipesScreen(
 
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
     var recipeToShare by remember { mutableStateOf<Recipe?>(null) }
-    
+
 
     SideEffect {
-        val window = (view.context as Activity).window
-        window.statusBarColor = primaryColor.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        val window = (context as? Activity)?.window
+        window?.let {
+            it.statusBarColor = primaryColor.toArgb()
+            WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = false
+        }
     }
 
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
-        val uid = authViewModel.currentUser?.id
         
         // 🌟 FIX: Always fetch Popular recipes even if not logged in yet
         if (selectedTab == 0 && viewModel.recipeList.isEmpty()) {
             viewModel.fetchAllRecipes()
         }
 
-        if (cid != null && uid != null) {
-            // 🌟 FIX: Use UUID for bookmark sync to match Supabase schema
-            viewModel.fetchBookmarkIds(cid) 
-            
+        if (cid != null) {
+            // 🌟 FIX: Always refresh bookmarks if the owner has changed (Leon vs KK)
+            // We check if the current IDs in memory actually belong to the current user
+            viewModel.fetchBookmarkIds(cid)
+
             when (selectedTab) {
                 1 -> {
                      val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != cid }
@@ -197,26 +213,36 @@ fun RecipesScreen(
                             .padding(top = 16.dp, start = 20.dp, end = 16.dp, bottom = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        if (isSelectionMode) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_arrowback),
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp).clickable(onClick = { onBackClick() })
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                        }
                         Text(
-                            text = "Recipe",
+                            text = if (isSelectionMode) {
+                                if (selectedRecipeIds.isEmpty()) stringResource(R.string.title_select_recipes)
+                                else stringResource(R.string.title_selected_count, selectedRecipeIds.size)
+                            } else "Recipe",
                             color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    TabRow(
+                    SecondaryTabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Content
-                        indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    height = 3.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
-                                )
-                            }
+                        indicator = {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(selectedTab),
+                                height = 3.dp,
+                                color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
+                            )
                         },
                         divider = {}
                     ) {
@@ -238,8 +264,53 @@ fun RecipesScreen(
                 }
             }
         },
+        bottomBar = {
+            if (isSelectionMode) {
+                AnimatedVisibility(
+                    visible = selectedRecipeIds.isNotEmpty(),
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shadowElevation = 8.dp,
+                        color = MaterialTheme.colorScheme.tertiary
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .navigationBarsPadding()
+                                .padding(16.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    val count = selectedRecipeIds.size
+                                    val message = if (count == 1) recipeAddedSingularMsg else {
+                                        recipeAddedPluralFormat.format(count)
+                                    }
+                                    Toasty.custom(context, message, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+                                    onSave(selectedRecipeIds)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.btn_add_selected_recipes, selectedRecipeIds.size),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
         floatingActionButton = {
-            if (selectedTab == 1) {
+            if (selectedTab == 1 && !isSelectionMode) {
                 FloatingActionButton(
                     onClick = { parentNavController.navigate(Screen.AddRecipe.route) },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -263,52 +334,91 @@ fun RecipesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item(span = { GridItemSpan(2) }) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search recipes/authors", fontSize = 14.sp) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.search),
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(horizontal = 16.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.search),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Surface(
-                        onClick = { showFilterSheet = true },
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(52.dp)
+                    },
+                )
+            }
+
+            item(span = { GridItemSpan(2) }) {
+                Text(
+                    text = "Course",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 8.dp, start = 20.dp)
+                )
+            }
+
+            if (selectedTab == 2) {
+                item(span = { GridItemSpan(2) }) {
+                    // 🌟 Compact Followed/Bookmarks Toggle (Connected Pill style)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.filter),
-                                contentDescription = "Filter",
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurface
+                        val subTabModifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(20.dp))
+
+                        Box(
+                            modifier = subTabModifier
+                                .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { showFollowingFeed = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Followed",
+                                color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(
+                            modifier = subTabModifier
+                                .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { showFollowingFeed = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Bookmarks",
+                                color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -316,85 +426,47 @@ fun RecipesScreen(
             }
 
             item(span = { GridItemSpan(2) }) {
-                Column {
-                    // 🌟 Compact Followed/Bookmarks Toggle (Connected Pill style)
-                    if (selectedTab == 2) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val subTabModifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(20.dp))
-
-                            Box(
-                                modifier = subTabModifier
-                                    .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { showFollowingFeed = true },
-                                contentAlignment = Alignment.Center
-                            ) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    item { Spacer(modifier = Modifier.width(12.dp)) }
+                    lazyItems(courses) { course: String ->
+                        val isSelected = selectedCourse == course
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedCourse = course },
+                            label = {
                                 Text(
-                                    "Followed",
-                                    color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    text = course,
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
+                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
                                 )
-                            }
-
-                            Box(
-                                modifier = subTabModifier
-                                    .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { showFollowingFeed = false },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "Bookmarks",
-                                    color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = Color.White,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            border = null
+                        )
                     }
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        lazyItems(courses) { course: String ->
-                            val isSelected = selectedCourse == course
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedCourse = course },
-                                label = { 
-                                    Text(
-                                        text = course, 
-                                        fontSize = 15.sp, 
-                                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
-                                    ) 
-                                },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = Color.White,
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                ),
-                                border = null
-                            )
-                        }
-                    }
+                    item { Spacer(modifier = Modifier.width(20.dp)) }
                 }
             }
 
+            item(span = { GridItemSpan(2) }) {
+                Text(
+                    text = selectedCourse,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 8.dp, start = 16.dp)
+                )
+            }
             // Vertical space cleanup
 
             if (isLoading && filteredRecipes.isEmpty()) {
@@ -409,7 +481,7 @@ fun RecipesScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 100.dp),
+                            .padding(top = 100.dp, start = 16.dp, end = 16.dp), // 🌟 Added padding
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -436,7 +508,7 @@ fun RecipesScreen(
                 }
             } else if (filteredRecipes.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 32.dp), contentAlignment = Alignment.Center) {
                         val isFilterActive = filterMaxTime < 240f || filterMaxCalories < 5000f || filterSkill != null || filterBudget != null || filterIngredients.isNotEmpty()
                         Text(
                             text = if (searchQuery.isNotEmpty() || isFilterActive)
@@ -447,14 +519,23 @@ fun RecipesScreen(
                     }
                 }
             } else {
-                gridItems(filteredRecipes) { recipe: Recipe ->
+                // 🌟 Using gridItemsIndexed to alternate padding between columns
+                gridItemsIndexed(filteredRecipes) { index, recipe ->
+                    val isSelected = selectedRecipeIds.contains(recipe.recipe_id)
                     RecipeCardItem(
-                        recipe = recipe, 
+                        recipe = recipe,
+                        // 🌟 Alternate padding: Left col gets start padding, Right col gets end padding
+                        modifier = Modifier.padding(
+                            start = if (index % 2 == 0) 16.dp else 0.dp,
+                            end = if (index % 2 != 0) 16.dp else 0.dp
+                        ),
                         // 🌟 FIX: Pass current user to ensure live name sync
                         currentUser = authViewModel.currentUser,
-                        // 🌟 ONLY show menu for Tab 1 (My Recipes)
-                        showMenu = selectedTab == 1,
+                        // 🌟 ONLY show menu for Tab 1 (My Recipes) and NOT in selection mode
+                        showMenu = selectedTab == 1 && !isSelectionMode,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
+                        isSelected = isSelected,
+                        isSelectionMode = isSelectionMode,
                         onBookmarkClick = {
                             // 🌟 FIX: Revert to customId (U001) as per Supabase table screenshot
                             authViewModel.currentUser?.customId?.let { cid ->
@@ -481,7 +562,12 @@ fun RecipesScreen(
                         },
                         onClick = {
                             recipe.recipe_id?.let { id ->
-                                parentNavController.navigate(Screen.RecipeDetails.createRoute(id))
+                                if (isSelectionMode) {
+                                    if (isSelected) selectedRecipeIds.remove(id)
+                                    else selectedRecipeIds.add(id)
+                                } else {
+                                    parentNavController.navigate(Screen.RecipeDetails.createRoute(id))
+                                }
                             }
                         }
                     )
@@ -507,7 +593,6 @@ fun RecipesScreen(
             )
         }
     )
-}
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -592,7 +677,7 @@ fun RecipesScreen(
 
                 // 3. Ingredients
                 FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = "Ingredients")
-                
+
                 // 🌟 ENLARGED: Ingredient Search Bar
                 OutlinedTextField(
                     value = ingredientSearchQuery,
@@ -730,7 +815,7 @@ fun RecipesScreen(
                 ) {
                     Text("Apply Filters", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -796,6 +881,5 @@ fun RecipesScreen(
             )
         }
     }
+    }
 }
-
-

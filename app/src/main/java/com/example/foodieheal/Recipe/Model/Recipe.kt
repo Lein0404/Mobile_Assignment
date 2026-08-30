@@ -26,7 +26,10 @@ data class Recipe(
 
     // 🌟 Denormalized fields: Stored directly in 'recipes' table for speed and offline reliability.
     @SerialName("author_name") var authorName: String? = null,
-    @SerialName("author_image_url") var authorImageUrl: String? = null
+    @SerialName("author_image_url") var authorImageUrl: String? = null,
+    @SerialName("author_image_cache") var authorImageCache: String? = null,
+
+    @kotlinx.serialization.Transient var isOffline: Boolean = false
 )
 
 @Serializable
@@ -47,7 +50,7 @@ data class IngredientItem(
             is JsonPrimitive -> q.content
             else -> q.toString()
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         "0"
     }
 }

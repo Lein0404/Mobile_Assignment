@@ -25,6 +25,8 @@ import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import java.util.Locale
 import java.util.UUID
 
+class AppointmentConflictException(message: String) : Exception(message)
+
 class HiringRepository(
     private var chefDao: ChefDao? = null,
     private var appointmentDao: AppointmentDao? = null,
@@ -115,6 +117,35 @@ class HiringRepository(
         }
     }
 
+    suspend fun fetchChefById(chefId: String): Chef? = withContext(Dispatchers.IO) {
+        val dao = getChefDao()
+        try {
+            val chef = try {
+                client.from("Chef")
+                    .select { filter { eq("chefId", chefId) } }
+                    .decodeSingleOrNull<Chef>()
+            } catch (e: Exception) {
+                null
+            } ?: try {
+                client.from("Chef")
+                    .select { filter { eq("id", chefId) } }
+                    .decodeSingleOrNull<Chef>()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (chef != null) {
+                dao?.insertChef(chef.toEntity())
+                chef
+            } else {
+                dao?.getChefById(chefId)?.toDomain()
+            }
+        } catch (e: Exception) {
+            Log.e("HiringRepository", "Error fetching chef by ID $chefId", e)
+            dao?.getChefById(chefId)?.toDomain()
+        }
+    }
+
     suspend fun fetchAppointmentsForUser(userId: String): List<Appointment> = withContext(Dispatchers.IO) {
         val dao = getAppointmentDao()
         try {
@@ -189,6 +220,15 @@ class HiringRepository(
             PaymentId = null,
             Status = appointment.Status.ifBlank { "Pending" }
         )
+
+        checkForConflict(
+            chefId        = initialAppointment.chefId,
+            date          = initialAppointment.Date,
+            newStart      = initialAppointment.Start_Time,
+            newEnd        = initialAppointment.End_Time,
+            excludeId     = null
+        )
+
         client.from("Appointment").insert(initialAppointment)
 
         val paymentRecord = payment(
@@ -593,6 +633,76 @@ class HiringRepository(
             } catch (e: Exception) {
                 Log.e("HiringRepository", "Error creating sentinel file in cacheDir", e)
             }
+        }
+    }
+
+    private suspend fun checkForConflict(
+        chefId:    String,
+        date:      String,
+        newStart:  String,
+        newEnd:    String,
+        excludeId: String?
+    ) {
+        if (chefId.isBlank() || date.isBlank() || newStart.isBlank() || newEnd.isBlank()) return
+
+        val existing = try {
+            client.from("Appointment")
+                .select {
+                    filter {
+                        eq("chefId", chefId)
+                        eq("Date", date)
+                    }
+                }
+                .decodeList<Appointment>()
+                .filter { appt ->
+                    val status = appt.Status.trim().lowercase(Locale.US)
+                    status != "cancelled" && status != "rejected" &&
+                    (excludeId == null || appt.AppointmentID != excludeId)
+                }
+        } catch (e: Exception) {
+            // If cannot reach Supabase, conservatively skip the check
+            // rather than blocking the user with a network error.
+            Log.w("HiringRepository", "Could not perform server-side conflict check: ${e.localizedMessage}")
+            return
+        }
+
+        val newStartMins  = parseToMinutes(newStart)  ?: return
+        val newEndMins    = parseToMinutes(newEnd)    ?: return
+
+        for (appt in existing) {
+            val existStart = parseToMinutes(appt.Start_Time) ?: continue
+            val existEnd   = parseToMinutes(appt.End_Time)   ?: continue
+
+            // Standard interval overlap > new starts before existing ends
+            if (newStartMins < existEnd && newEndMins > existStart) {
+                throw AppointmentConflictException(
+                    "The chef already has a booking from ${appt.Start_Time} to ${appt.End_Time} " +
+                    "on $date. Please choose a different time slot."
+                )
+            }
+        }
+    }
+
+    private fun parseToMinutes(timeStr: String): Int? {
+        val t = timeStr.trim()
+        return try {
+            // Handle 12-hour AM/PM format: "hh:mm AM" or "h:mm a"
+            if (t.uppercase(Locale.US).contains("AM") || t.uppercase(Locale.US).contains("PM")) {
+                val fmt = java.text.SimpleDateFormat("hh:mm a", Locale.US)
+                val date = fmt.parse(t) ?: return null
+                val cal  = java.util.Calendar.getInstance().apply { time = date }
+                cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+            } else {
+                // Handle 24-hour format: "HH:mm" or "HH:mm:ss"
+                val parts = t.split(":")
+                if (parts.size < 2) return null
+                val h = parts[0].toIntOrNull() ?: return null
+                val m = parts[1].toIntOrNull() ?: return null
+                h * 60 + m
+            }
+        } catch (e: Exception) {
+            Log.w("HiringRepository", "parseToMinutes failed for '$timeStr': ${e.localizedMessage}")
+            null
         }
     }
 }

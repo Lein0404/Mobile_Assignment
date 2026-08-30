@@ -5,19 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.example.foodieheal.Chef.local.ChefDatabase
-import com.example.foodieheal.Recipe.local.RecipeDatabase
-import com.example.foodieheal.hiring.local.HiringDatabase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 
 enum class CacheTarget {
     ALL,
-    CHEF_APPOINTMENTS,
-    HIRING_DATA,
-    RECIPES,
     TEMP_FILES
 }
 
@@ -41,7 +34,7 @@ open class AppCacheCleanupService : Service() {
         Log.d(TAG, "App task removed from App Switcher. Executing multipurpose cache cleanup...")
 
         val appContext = applicationContext
-        kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+        runBlocking(Dispatchers.IO) {
             try {
                 purgeAllCache(appContext)
                 Log.d(TAG, "All cache targets successfully cleared on task removal.")
@@ -91,47 +84,10 @@ open class AppCacheCleanupService : Service() {
 
         /**
          * Purges cache for specified targets or ALL.
+         * NOTE: Room databases are no longer cleared automatically to support offline persistence.
          */
         suspend fun purgeCache(context: Context, targets: Set<CacheTarget> = setOf(CacheTarget.ALL)) {
             val shouldClearAll = targets.contains(CacheTarget.ALL)
-
-            // Chef Portal Appointment and User Cache
-            if (shouldClearAll || targets.contains(CacheTarget.CHEF_APPOINTMENTS)) {
-                try {
-                    val chefDb = ChefDatabase.getInstance(context)
-                    chefDb.chefPortalAppointmentDao().clearAllAppointments()
-                    chefDb.chefPortalUserDao().clearAllUsers()
-                    Log.d(TAG, "Cleared Chef Portal cache.")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error clearing Chef Portal cache", e)
-                }
-            }
-
-            // Hiring and Chef Listings Cache
-            if (shouldClearAll || targets.contains(CacheTarget.HIRING_DATA)) {
-                try {
-                    val hiringDb = HiringDatabase.getInstance(context)
-                    hiringDb.chefDao().clearChefs()
-                    hiringDb.appointmentDao().clearAppointments()
-                    hiringDb.chefBookmarkDao().clearAllBookmarks()
-                    hiringDb.chefReviewDao().clearAllReviews()
-                    Log.d(TAG, "Cleared all Hiring database cache.")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error clearing Hiring cache", e)
-                }
-            }
-
-            // Recipes Cache
-            if (shouldClearAll || targets.contains(CacheTarget.RECIPES)) {
-                try {
-                    val recipeDb = RecipeDatabase.getDatabase(context)
-                    recipeDb.recipeDao().clearRecipes()
-                    recipeDb.recipeDao().clearIngredients()
-                    Log.d(TAG, "Cleared Recipe cache.")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error clearing Recipe cache", e)
-                }
-            }
 
             // Temporary cache files
             if (shouldClearAll || targets.contains(CacheTarget.TEMP_FILES)) {

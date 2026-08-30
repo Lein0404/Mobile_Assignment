@@ -3,6 +3,8 @@ package com.example.foodieheal.Chef.Home
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import java.util.Locale
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -56,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
@@ -63,8 +69,10 @@ import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
+import com.example.foodieheal.Chef.components.ChefQrScannerDialog
 import com.example.foodieheal.ui.components.DetailSectionCard
 import com.example.foodieheal.ui.components.formatToAmPm
+import com.example.foodieheal.hiring.util.CalendarSyncHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +90,7 @@ fun AppointmentDetailScreen(
 
     var showAcceptDialog by remember { mutableStateOf(false) }
     var showDeclineDialog by remember { mutableStateOf(false) }
+    var showQrScannerDialog by remember { mutableStateOf(false) }
     var rejectionReason by remember { mutableStateOf("") }
     var rejectionReasonError by remember { mutableStateOf(false) }
     var previewingRecipeItem by remember { mutableStateOf<AppointmentRecipeWithDetails?>(null) }
@@ -136,12 +145,41 @@ fun AppointmentDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = userName,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = userName.firstOrNull()?.uppercase() ?: "C",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+
+                            Column {
+                                Text(
+                                    text = userName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                appointment.AppointmentID?.let { apptId ->
+                                    Text(
+                                        text = stringResource(R.string.appointment_id_format, apptId.take(8)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
 
                         // Status Badge
                         val (badgeContainerColor, badgeContentColor) = when (appointment.Status.lowercase()) {
@@ -169,12 +207,206 @@ fun AppointmentDetailScreen(
                     }
 
                     if (userPhone.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.telephone),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = userPhone,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            TextButton(
+                                onClick = {
+                                    val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$userPhone"))
+                                    context.startActivity(callIntent)
+                                },
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(stringResource(R.string.call_client), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Total Amount & Earnings Summary Card
+            Card(
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.wallet),
+                                        contentDescription = "Earnings",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.total_booking_value),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "RM %.2f".format(appointment.Total_Price),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        // Payment Status Chip
+                        val isPaid = appointment.Status.equals("confirmed", ignoreCase = true) ||
+                                appointment.Status.equals("completed", ignoreCase = true)
+                        val payStatusText = when {
+                            isPaid -> "Paid"
+                            appointment.Status.equals("cancelled", ignoreCase = true) -> "Cancelled"
+                            appointment.Status.equals("rejected", ignoreCase = true) -> "N/A"
+                            appointment.Status.equals("unpaid", ignoreCase = true) -> "Awaiting Payment"
+                            else -> "Pending"
+                        }
+                        val payStatusColor = when {
+                            isPaid -> Color(0xFF2E7D32)
+                            appointment.Status.equals("cancelled", ignoreCase = true) -> Color(0xFFC62828)
+                            appointment.Status.equals("unpaid", ignoreCase = true) -> Color(0xFFF57F17)
+                            else -> Color(0xFFE65100)
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = payStatusColor.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = payStatusText,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = payStatusColor
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Rejection Reason Banner (if rejected)
+            if (appointment.Status.equals("rejected", ignoreCase = true) && !appointment.Reject_Reason.isNullOrBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFBE9E7))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.cancel),
+                                contentDescription = null,
+                                tint = Color(0xFFD84315),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.reason_for_declining),
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFD84315),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = stringResource(R.string.label_contact_format, userPhone),
+                            text = appointment.Reject_Reason,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF3E2723)
                         )
+                    }
+                }
+            }
+
+            // Customer Review & Rating Banner (if completed with rating)
+            if (appointment.Status.equals("completed", ignoreCase = true) && (appointment.rating ?: 0) > 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.client_review_and_rating),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                (1..5).forEach { starIndex ->
+                                    val isFilled = starIndex <= (appointment.rating ?: 0)
+                                    Icon(
+                                        painter = painterResource(
+                                            if (isFilled) R.drawable.ic_star else R.drawable.ic_outline_star
+                                        ),
+                                        contentDescription = null,
+                                        tint = if (isFilled) Color(0xFFFFB300) else MaterialTheme.colorScheme.outlineVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (!appointment.Comment.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.quoted_text_format, appointment.Comment),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -223,7 +455,7 @@ fun AppointmentDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Open in Maps")
+                    Text(stringResource(R.string.open_in_maps))
                 }
             }
 
@@ -260,7 +492,7 @@ fun AppointmentDetailScreen(
             }
 
             // Attached Dishes / Meal Plan Section
-            DetailSectionCard(title = "Attached Dishes / Meal Plan") {
+            DetailSectionCard(title = stringResource(R.string.section_attached_dishes)) {
                 if (isLoadingRecipes) {
                     Box(
                         modifier = Modifier
@@ -285,7 +517,7 @@ fun AppointmentDetailScreen(
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            text = "No specific recipes requested by client",
+                            text = stringResource(R.string.no_recipes_requested),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -305,7 +537,7 @@ fun AppointmentDetailScreen(
                                     },
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     1.dp,
                                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                 )
@@ -329,7 +561,7 @@ fun AppointmentDetailScreen(
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = recipe?.recipeName ?: "Recipe #${item.recipeId}",
+                                            text = recipe?.recipeName ?: stringResource(R.string.default_recipe_name, item.recipeId),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
                                             maxLines = 1,
@@ -350,7 +582,7 @@ fun AppointmentDetailScreen(
                                                 color = MaterialTheme.colorScheme.primaryContainer
                                             ) {
                                                 Text(
-                                                    text = "${item.service_count.toInt()} portion(s)",
+                                                    text = stringResource(R.string.recipe_portions_format, item.service_count.toInt()),
                                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.Bold,
@@ -363,7 +595,7 @@ fun AppointmentDetailScreen(
 
                                             if ((recipe?.calories ?: 0) > 0) {
                                                 Text(
-                                                    text = "${recipe?.calories} kcal",
+                                                    text = stringResource(R.string.recipe_calories_format, recipe?.calories ?: 0),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontSize = 11.sp,
@@ -374,7 +606,7 @@ fun AppointmentDetailScreen(
 
                                             if ((recipe?.time ?: 0) > 0) {
                                                 Text(
-                                                    text = "• ${recipe?.time}m",
+                                                    text = stringResource(R.string.recipe_time_format, recipe?.time ?: 0),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontSize = 11.sp,
@@ -387,7 +619,7 @@ fun AppointmentDetailScreen(
                                         if (!item.custom_note.isNullOrBlank()) {
                                             Spacer(modifier = Modifier.height(3.dp))
                                             Text(
-                                                text = "Client note: “${item.custom_note}”",
+                                                text = stringResource(R.string.client_note_format, item.custom_note),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.primary,
                                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -412,6 +644,128 @@ fun AppointmentDetailScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Review Section
+            if (appointment.Status.equals("completed", ignoreCase = true)) {
+                DetailSectionCard(title = stringResource(R.string.review)) {
+                    val hasReviewed = (appointment.rating != null && appointment.rating > 0)
+                    if (hasReviewed) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = userName.take(1).uppercase(Locale.ROOT),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+
+                                        Column {
+                                            Text(
+                                                text = userName,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            if (!appointment.Date.isNullOrBlank()) {
+                                                Text(
+                                                    text = appointment.Date,
+                                                    fontSize = 10.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = Color(0xFFFFF8E1),
+                                        border = BorderStroke(1.dp, Color(0xFFFFE082))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_star),
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFB300),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.rating_format, appointment.rating ?: 0),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF795548)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (!appointment.Comment.isNullOrBlank()) {
+                                    Text(
+                                        text = stringResource(R.string.quoted_text_format, appointment.Comment),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_star),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.no_review_submitted),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -457,26 +811,133 @@ fun AppointmentDetailScreen(
                             showDeclineDialog = true
                         },
                         enabled = isNetworkAvailable,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(stringResource(R.string.decline))
+                        Text(
+                            text = stringResource(R.string.decline),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
 
                     Button(
                         onClick = { showAcceptDialog = true },
                         enabled = isNetworkAvailable,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(stringResource(R.string.accept_booking))
+                        Text(
+                            text = stringResource(R.string.accept_booking),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
+
+            // Action Buttons: Scan QR to Complete & Add to Calendar (Confirmed Status)
+            if (appointment.Status.equals("confirmed", ignoreCase = true)) {
+                Button(
+                    onClick = { showQrScannerDialog = true },
+                    enabled = isNetworkAvailable,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check),
+                            contentDescription = "Scan QR",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.scan_client_qr_to_complete),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // Add to Calendar Button (Chef Perspective)
+                OutlinedButton(
+                    onClick = {
+                        val loc = listOfNotNull(
+                            appointment.Address.takeIf { it.isNotBlank() },
+                            appointment.Postcode.takeIf { it.isNotBlank() },
+                            appointment.State.takeIf { it.isNotBlank() }
+                        ).joinToString(", ")
+                        val desc = "FoodieHeal Appointment with Client $userName\n" +
+                                "Booking ID: ${appointment.AppointmentID.orEmpty()}\n" +
+                                "Serving Size: ${appointment.Serving_Size} portions\n" +
+                                "Dietary Preference: ${appointment.Health_Preference}\n" +
+                                if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
+
+                        Toast.makeText(context, R.string.toast_opening_calendar, Toast.LENGTH_SHORT).show()
+                        CalendarSyncHelper.addAppointmentToCalendar(
+                            context = context,
+                            title = "FoodieHeal Session - Client $userName",
+                            description = desc.trim(),
+                            location = loc,
+                            dateStr = appointment.Date,
+                            startTimeStr = appointment.Start_Time,
+                            endTimeStr = appointment.End_Time
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 50.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_calendar),
+                            contentDescription = stringResource(R.string.add_to_calendar),
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.add_to_calendar),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            // Bottom spacer for comfortable scrolling clearance above navigation bars
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -614,6 +1075,23 @@ fun AppointmentDetailScreen(
                 onDismiss = { previewingRecipeItem = null }
             )
         }
+    }
+
+    if (showQrScannerDialog) {
+        ChefQrScannerDialog(
+            expectedAppointmentId = appointment.AppointmentID.orEmpty(),
+            expectedChefId = appointment.chefId,
+            onVerified = {
+                showQrScannerDialog = false
+                onStatusChange("Completed", null)
+                Toast.makeText(
+                    context,
+                    "Service verified via QR! Booking marked as Completed.",
+                    Toast.LENGTH_LONG
+                ).show()
+            },
+            onDismiss = { showQrScannerDialog = false }
+        )
     }
 }
 

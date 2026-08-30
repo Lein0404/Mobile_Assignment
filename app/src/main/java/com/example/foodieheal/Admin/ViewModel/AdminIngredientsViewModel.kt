@@ -29,6 +29,7 @@ data class AdminIngredientsUiState(
     val isNetworkAvailable: Boolean = true,
     val errorMessage: Int? = null,
     val showStatusFilterDialog: Boolean = false,
+    val isCategoriesExpanded: Boolean = false
 )
 
 data class AdminIngredientRequestItem(
@@ -109,6 +110,10 @@ class AdminIngredientsViewModel(
 
     fun onTabChange(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun toggleCategoriesExpanded() {
+        _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
     fun onShowStatusFilterDialog(show: Boolean) {

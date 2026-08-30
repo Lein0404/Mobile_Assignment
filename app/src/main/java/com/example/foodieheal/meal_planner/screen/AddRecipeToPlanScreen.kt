@@ -58,6 +58,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.model.MealType
+import java.time.YearMonth
 import com.example.foodieheal.meal_planner.model.DailyPlan
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -144,6 +145,15 @@ fun AddRecipeToPlanScreen(
         }
     }
 
+    val currentMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
+    val maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
+
+    // 🌟 Load current and adjacent months immediately on screen launch
+    LaunchedEffect(currentMonth, maxCalories) {
+        mealPlannerViewModel.loadMonthConditions(currentMonth, maxCalories)
+        mealPlannerViewModel.prefetchAdjacentMonths(currentMonth, maxCalories)
+    }
+
     if (showDatePicker) {
         CustomizedDatePickerDialog(
             initialDate = selectedDate,
@@ -153,7 +163,7 @@ fun AddRecipeToPlanScreen(
             },
             onDismiss = { showDatePicker = false },
             mealPlannerViewModel = mealPlannerViewModel,
-            maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
+            maxCalories = maxCalories
         )
     }
 
@@ -173,10 +183,12 @@ fun AddRecipeToPlanScreen(
                 },
                 onConfirmClick = {
                     coroutineScope.launch {
+                        // 🌟 Use a list of deferred tasks or just iterate sequentially to ensure atomicity
                         selectedSlots.forEach { (savedDateStr, mealTypesList) ->
                             val targetDateParsed = LocalDate.parse(savedDateStr)
                             mealTypesList.forEach { mealType ->
-                                mealPlannerViewModel.addRecipeToMeal(targetDateParsed, mealType, recipe)
+                                // 🌟 Await the actual database operation to prevent race conditions on navigation
+                                mealPlannerViewModel.addRecipeToMealSuspend(targetDateParsed, mealType, recipe)
                             }
                         }
                         selectedSlots.clear()
@@ -203,7 +215,7 @@ fun AddRecipeToPlanScreen(
                 },
                 onCalendarClick = { showDatePicker = true },
                 onDateSelected = { newDate -> selectedDate = newDate },
-                monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Added nutrition dots
+                monthConditions = mealPlannerViewModel.monthConditions,
                 topContent = {
                     Text(
                         text = stringResource(R.string.adding_recipe, recipe.recipeName),
@@ -310,7 +322,7 @@ fun AddRecipePageContent(
     pageDate: LocalDate,
     recipe: Recipe,
     isNetworkAvailable: Boolean,
-    dailyPlan: DailyPlan?, // <-- Fix: Using shared package DailyPlan model explicitly
+    dailyPlan: DailyPlan?,
     selectedSlots: SnapshotStateMap<String, Set<MealType>>,
     currentUser: User?,
     onNavigateToProfile: () -> Unit
@@ -429,12 +441,12 @@ fun MealSectionSlot(
     isSelected: Boolean,
     onSelectionToggle: () -> Unit
 ) {
-    // Reuses the public shared MealSection design architecture perfectly
     MealSection(
         title = title,
         recipes = recipes,
         isSelectionMode = true,
         isSelected = isSelected,
+        isNetworkAvailable = true,
         onSelectionChange = { onSelectionToggle() },
         onAddClick = {},
         onDeleteClick = {}

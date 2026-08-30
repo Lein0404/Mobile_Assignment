@@ -137,6 +137,7 @@ fun EditRecipeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients()
         viewModel.bookmarkMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }

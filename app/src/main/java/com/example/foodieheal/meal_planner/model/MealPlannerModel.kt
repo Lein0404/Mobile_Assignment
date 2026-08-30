@@ -25,14 +25,16 @@ data class RecipeReference(
 )
 
 // --- Domain Models for UI use ---
+@Serializable
 data class DailyPlan(
-    val user_id: String,
+    @SerialName("user_id") val user_id: String,
     val date: String,
     val meals: List<RealMealSlot>
 )
 
+@Serializable
 data class RealMealSlot(
-    val mealType: MealType,
+    @SerialName("mealType") val mealType: MealType,
     val recipes: List<Recipe>
 )
 

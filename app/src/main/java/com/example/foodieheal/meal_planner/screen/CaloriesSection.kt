@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.ui.theme.Green
+import com.example.foodieheal.ui.theme.LightBlue
 import com.example.foodieheal.ui.theme.Orange
 import com.example.foodieheal.ui.theme.Red
 import com.example.foodieheal.ui.theme.Yellow
@@ -54,8 +55,8 @@ fun CalorieProgressBar(
     val progress: Float = weightage.coerceIn(0f, 1f)
 
     val calorieTextColor: Color = when {
-        weightage < 0.80f -> Red
-        weightage in 0.80f..0.949f -> Yellow
+        weightage < 0.80f -> Yellow
+        weightage in 0.80f..0.949f -> LightBlue
         weightage in 0.95f..1.059f -> Green
         weightage in 1.06f..1.20f -> Orange
         else -> Red
@@ -141,13 +142,13 @@ fun CalorieProgressBar(
                     CalorieGuideRow(
                         percent = stringResource(R.string.percent_under_80),
                         status = stringResource(R.string.status_under_intake),
-                        color = Red,
+                        color = Yellow,
                         description = stringResource(R.string.desc_under_intake)
                     )
                     CalorieGuideRow(
                         percent = stringResource(R.string.percent_80_94),
                         status = stringResource(R.string.status_slightly_low),
-                        color = Yellow,
+                        color = LightBlue,
                         description = stringResource(R.string.desc_slightly_low)
                     )
                     CalorieGuideRow(

@@ -41,9 +41,8 @@ fun RecipeDetailsScreen(
     authViewModel: AuthViewModel,
     followViewModel: FollowViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // 1. Fetch data if needed (Smart fetching)
     LaunchedEffect(recipeId) {
-        viewModel.fetchRecipeById(recipeId)
+        viewModel.fetchRecipeLocalFirst(recipeId)
     }
 
     // 🌟 2. Clear state when leaving the screen
@@ -57,7 +56,6 @@ fun RecipeDetailsScreen(
     val user = authViewModel.currentUser
     val view = androidx.compose.ui.platform.LocalView.current
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
-    // 🌟 FIX: Use customId for ownership check to match database logic
     val isMyRecipe = recipe?.author_id == user?.customId
 
     LaunchedEffect(recipe?.author_id, user?.customId) {
@@ -71,7 +69,7 @@ fun RecipeDetailsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var expanded by remember { mutableStateOf(false) }
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
-    
+
     // 🌟 Share logic
     var showSharePreview by remember { mutableStateOf(false) }
     var showOfflineShareDialog by remember { mutableStateOf(false) }
@@ -98,7 +96,7 @@ fun RecipeDetailsScreen(
     }
 
     Scaffold(
-        snackbarHost = { 
+        snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
                     snackbarData = data,
@@ -117,13 +115,11 @@ fun RecipeDetailsScreen(
                     }
                 },
                 actions = {
-                    // 🌟 Bookmark is now enabled for all recipes, including your own
                     IconButton(onClick = {
                         user?.customId?.let { cid ->
                             recipe?.let { r -> viewModel.toggleBookmark(cid, r.recipe_id ?: "", r.recipeName) }
                         }
                     }) {
-                        // 🌟 FIX: Use Image with specific size and tint for PNG icons to keep them sharp
                         Image(
                             painter = painterResource(id = if (isBookmarked) R.drawable.bookmark_fill else R.drawable.bookmark),
                             contentDescription = "Bookmark",
@@ -218,7 +214,30 @@ fun RecipeDetailsScreen(
             )
         }
     ) { paddingValues ->
-        if (recipe == null) {
+        if (viewModel.isNotFound) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(id = if (viewModel.isNetworkAvailable) R.drawable.ic_image else R.drawable.wifi_off),
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (viewModel.isNetworkAvailable)
+                            "Recipe not found."
+                        else
+                            "Recipe data not available offline.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                    TextButton(onClick = { navController.popBackStack() }) {
+                        Text("Go Back")
+                    }
+                }
+            }
+        } else if (recipe == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -228,7 +247,7 @@ fun RecipeDetailsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .background(MaterialTheme.colorScheme.surface) // 🌟 Themed Background
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 // Recipe Image or Artistic Placeholder
                 if (!recipe.recipeImageUrl.isNullOrEmpty()) {
@@ -239,12 +258,11 @@ fun RecipeDetailsScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    // 🌟 Option 3: Artistic "Food Sketch" Placeholder
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)), // 🌟 Themed Background
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         contentAlignment = Alignment.Center
                     ) {
                         val iconRes = when (recipe.recipeCourse.lowercase()) {
@@ -265,7 +283,7 @@ fun RecipeDetailsScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     // Title and Course + Last Updated
                     Text(text = recipe.recipeName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                         Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(text = recipe.recipeCourse, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -291,7 +309,7 @@ fun RecipeDetailsScreen(
                             "private" -> R.drawable.privatevis to "Private"
                             else -> R.drawable.publicvis to "Public"
                         }
-                        
+
                         Icon(
                             painter = painterResource(id = iconRes),
                             contentDescription = null,
@@ -300,7 +318,7 @@ fun RecipeDetailsScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = visibilityText, 
+                            text = visibilityText,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -383,7 +401,7 @@ fun RecipeDetailsScreen(
                                 else -> "Follow"
                             }
                             val buttonColor = if (status == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                            
+
                             Button(
                                 onClick = {
                                     recipe.author_id?.let { aid ->
@@ -439,8 +457,12 @@ fun RecipeDetailsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = "Ingredients", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        IconButton(onClick = { /* Add to cart */ }) {
-                            Icon(painterResource(id = R.drawable.ic_shopping_cart), null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface)
+                        IconButton(onClick = {
+                            recipe.let {
+                                navController.navigate(Screen.ShoppingListAddFrom.createRoute(recipeId = it.recipe_id ?: recipeId))
+                            }
+                        }) {
+                            Icon(painterResource(id = R.drawable.ic_add_to_shopping_cart), null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     recipe.ingredients.forEach { ingredient ->

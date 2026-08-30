@@ -46,7 +46,9 @@ enum class AppointmentFilterOption(val displayNameRes: Int) {
 fun AppointmentHistoryScreen(
     viewModel: UserAppointmentViewModel,
     onBackClick: () -> Unit,
-    onAppointmentClick: (String) -> Unit
+    onAppointmentClick: (String) -> Unit,
+    onRebookClick: ((Appointment) -> Unit)? = null,
+    rebookingAppointmentId: String? = null
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -202,20 +204,25 @@ fun AppointmentHistoryScreen(
                                 key = { it.AppointmentID ?: it.hashCode().toString() }
                             ) { appointment ->
                                 val chefUser = usersMap[appointment.chefId]
+                                val appointmentId = appointment.AppointmentID.orEmpty()
+                                val isRebookingThis = rebookingAppointmentId != null && rebookingAppointmentId == appointmentId
 
                                 AppointmentHistoryCard(
                                     appointment = appointment,
                                     chefName = chefUser?.name ?: stringResource(R.string.private_chef_name),
                                     chefPicture = chefUser?.profilePicUrl,
+                                    isRebooking = isRebookingThis,
                                     onClick = {
-                                        val id = appointment.AppointmentID.orEmpty()
-                                        if (id.isNotEmpty()) {
-                                            onAppointmentClick(id)
+                                        if (appointmentId.isNotEmpty()) {
+                                            onAppointmentClick(appointmentId)
                                         }
                                     },
                                     onDeleteClick = {
                                         appointmentToDelete = appointment
-                                    }
+                                    },
+                                    onRebookClick = if (onRebookClick != null) {
+                                        { onRebookClick(appointment) }
+                                    } else null
                                 )
                             }
                         }
@@ -348,7 +355,9 @@ fun AppointmentHistoryCard(
     chefName: String,
     chefPicture: String?,
     onClick: () -> Unit,
-    onDeleteClick: (() -> Unit)? = null
+    onDeleteClick: (() -> Unit)? = null,
+    onRebookClick: (() -> Unit)? = null,
+    isRebooking: Boolean = false
 ) {
     val statusLower = appointment.Status.lowercase().trim()
     val isDeletable = statusLower == "completed" || statusLower == "rejected" || statusLower == "cancelled" || statusLower == "cancel"
@@ -504,6 +513,50 @@ fun AppointmentHistoryCard(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
+            }
+
+            val isCompleted = statusLower == "completed"
+            if (isCompleted && onRebookClick != null) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                Button(
+                    onClick = onRebookClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isRebooking,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    if (isRebooking) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.rebooking_in_progress),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_repeat),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.btn_rebook_chef),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
         }
     }

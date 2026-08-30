@@ -46,6 +46,8 @@ class RecipeViewModel(
         private set
     var recipeAuthor by mutableStateOf<User?>(null)
         private set
+    var isNotFound by mutableStateOf(false)
+        private set
     var isNetworkAvailable by mutableStateOf(true)
         private set
 
@@ -203,7 +205,7 @@ class RecipeViewModel(
                 val followRepo = com.example.foodieheal.User.Repo.FollowRepository()
                 val following = followRepo.getFollowing(followerId)
                 val followedIds = following.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
-                
+
                 if (followedIds.isNotEmpty()) {
                     repository.getFollowingRecipes(followedIds).onSuccess { recipes ->
                         followingRecipes = recipes.sortedByDescending { it.lastUpdated ?: "" }
@@ -306,14 +308,14 @@ class RecipeViewModel(
                     if (!isActive) return@launch
 
                     val message = if (isBookmarked) {
-                        if (isNetworkAvailable) "Removed '$recipeName' from favorites" 
+                        if (isNetworkAvailable) "Removed '$recipeName' from favorites"
                         else "Removed locally: $recipeName"
                     } else {
                         if (isNetworkAvailable) "Added to favorites: $recipeName"
                         else "Bookmarked locally: $recipeName"
                     }
                     _bookmarkMessage.emit(message)
-                    // 🌟 REMOVED: fetchBookmarkedRecipes(userId) 
+                    // 🌟 REMOVED: fetchBookmarkedRecipes(userId)
                     // We already did an optimistic update. Refreshing from server causes flickering.
                 }.onFailure { e ->
                     if (!isActive) return@launch
@@ -326,7 +328,7 @@ class RecipeViewModel(
 
                     if (!isNetworkError) {
                         bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
-                        
+
                         // Also revert the list update
                         if (isBookmarked) {
                             recipeList.find { it.recipe_id == recipeId }?.let {
@@ -335,7 +337,7 @@ class RecipeViewModel(
                         } else {
                             bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
                         }
-                        
+
                         _bookmarkMessage.emit("Bookmark failed: ${msg.split("\n").firstOrNull() ?: "Unknown error"}")
                     }
                 }
@@ -352,16 +354,38 @@ class RecipeViewModel(
 
     fun fetchRecipeById(recipeId: String) {
         viewModelScope.launch {
-            // 🌟 1. Clear previous recipe instantly so the loader shows for the new one
             selectedRecipe = null
             recipeAuthor = null
-
+            isNotFound = false
             isLoading = true
             repository.getRecipeById(recipeId)
                 .onSuccess { recipe ->
                     selectedRecipe = recipe
-                    recipe?.author_id?.let { fetchAuthorData(it) }
+                    if (recipe == null) isNotFound = true
+                    else recipe.author_id?.let { fetchAuthorData(it) }
                 }
+                .onFailure { isNotFound = true }
+            isLoading = false
+        }
+    }
+
+    /**
+     * 🌟 EXCLUSIVE FUNCTION: Uses local-first logic for instant meal plan recipe viewing.
+     */
+    fun fetchRecipeLocalFirst(recipeId: String) {
+        viewModelScope.launch {
+            selectedRecipe = null
+            recipeAuthor = null
+            isNotFound = false
+            isLoading = true
+
+            repository.getRecipeByIdLocalFirst(recipeId)
+                .onSuccess { recipe ->
+                    selectedRecipe = recipe
+                    if (recipe == null) isNotFound = true
+                    else recipe.author_id?.let { fetchAuthorData(it) }
+                }
+                .onFailure { isNotFound = true }
             isLoading = false
         }
     }
@@ -373,6 +397,7 @@ class RecipeViewModel(
     fun clearSelectedRecipe() {
         selectedRecipe = null
         recipeAuthor = null
+        isNotFound = false
     }
 
     fun fetchAuthorData(authorId: String) {
@@ -517,7 +542,7 @@ class RecipeViewModel(
                 myRecipes = updatedMyRecipes
                 recipeList = updatedRecipeList
                 bookmarkedRecipes = updatedBookmarkedRecipes
-                
+
                 // Update bookmark IDs set
                 if (bookmarkedRecipeIds.contains(recipeId)) {
                     bookmarkedRecipeIds = bookmarkedRecipeIds.toMutableSet().apply { remove(recipeId) }

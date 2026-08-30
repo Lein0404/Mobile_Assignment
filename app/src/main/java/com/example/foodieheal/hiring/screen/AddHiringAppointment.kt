@@ -90,34 +90,15 @@ fun AddAppointmentFormScreen(
         viewModel.onAppointmentTimeSlotChanged(start, end)
     }
 
-    val hourlyRate = selectedChef?.Pricing ?: 0.0
-    val totalPrice = remember(hourlyRate, uiState.appointmentTime) {
-        viewModel.calculateTotalPrice(hourlyRate, uiState.appointmentTime)
+    val pricingBreakdown by viewModel.pricingBreakdown.collectAsStateWithLifecycle()
+    val totalPrice = pricingBreakdown.finalTotalPrice
+
+    val durationText = remember(pricingBreakdown.hours) {
+        val h = pricingBreakdown.hours
+        if (h % 1.0 == 0.0) "${h.toInt()} hr" else String.format(Locale.US, "%.1f hrs", h)
     }
 
-    val durationText = remember(uiState.appointmentTime) {
-        if (uiState.appointmentTime.contains("-")) {
-            val parts = uiState.appointmentTime.split("-").map { it.trim() }
-            if (parts.size == 2) {
-                val format = SimpleDateFormat("hh:mm a", Locale.US)
-                try {
-                    val start = format.parse(parts[0])
-                    val end = format.parse(parts[1])
-                    if (start != null && end != null) {
-                        val diffMillis = end.time - start.time
-                        val diffHours = diffMillis.toDouble() / (1000 * 60 * 60)
-                        if (diffHours > 0) {
-                            if (diffHours % 1.0 == 0.0) "${diffHours.toInt()} hr" else String.format(Locale.US, "%.1f hrs", diffHours)
-                        } else null
-                    } else null
-                } catch (e: Exception) {
-                    null
-                }
-            } else null
-        } else null
-    }
-
-    val timeError = uiState.timeErrorRes?.let { stringResource(it) }
+    val timeError = uiState.customTimeError ?: uiState.timeErrorRes?.let { stringResource(it) }
     val addressError = uiState.addressErrorRes?.let { stringResource(it) }
     val postcodeError = uiState.postcodeErrorRes?.let { stringResource(it) }
     val stateError = uiState.stateErrorRes?.let { stringResource(it) }
@@ -583,30 +564,73 @@ fun AddAppointmentFormScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = stringResource(R.string.label_hourly_rate),
+                                text = "Chef Labor (${String.format(Locale.US, "%.1f", pricingBreakdown.hours)} hrs)",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = stringResource(R.string.hourly_rate_format, hourlyRate),
+                                text = String.format(Locale.US, "RM %.2f", pricingBreakdown.laborCost),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
+                        // Ingredients Cost (if any dishes attached)
+                        if (pricingBreakdown.ingredientsCost > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Ingredients (${pricingBreakdown.recipeCostItems.size} dishes)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "RM %.2f", pricingBreakdown.ingredientsCost),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Interstate Travel Surcharge (if interstate)
+                        if (pricingBreakdown.travelSurcharge > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Interstate Travel Surcharge",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "RM %.2f", pricingBreakdown.travelSurcharge),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Platform Fee (5%)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = stringResource(R.string.label_estimated_duration),
+                                text = "Service Fee (5%)",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = durationText ?: "--",
+                                text = String.format(Locale.US, "RM %.2f", pricingBreakdown.platformFee),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -630,7 +654,7 @@ fun AddAppointmentFormScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = stringResource(R.string.currency_rm_format, totalPrice),
+                                text = String.format(Locale.US, "RM %.2f", pricingBreakdown.finalTotalPrice),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary

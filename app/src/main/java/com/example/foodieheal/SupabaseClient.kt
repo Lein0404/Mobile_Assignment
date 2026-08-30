@@ -17,4 +17,11 @@ object SupabaseClient {
         install(Postgrest)
         install(Storage)
     }
+
+    val json = kotlinx.serialization.json.Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+        isLenient = true
+    }
 }

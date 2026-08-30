@@ -78,16 +78,23 @@ fun RescheduleAppointmentScreen(
     var servingSize by remember { mutableStateOf(appointment.Serving_Size?.toString().orEmpty()) }
     var description by remember { mutableStateOf(appointment.Note.orEmpty()) }
 
-    // Dynamic Price Calculation using bookingViewModel
-    val hourlyRate = remember(appointment) {
-        val originalPrice = appointment.Total_Price ?: 0.0
-        val originalHours = bookingViewModel.calculateTotalPrice(1.0, "${appointment.Start_Time} - ${appointment.End_Time}")
-        if (originalHours > 0.0) originalPrice / originalHours else originalPrice
+    // Dynamic Price Calculation using AppointmentPricingBreakdown
+    val chefHourlyRate = remember(appointment) {
+        val originalHours = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculateHours(appointment.Start_Time, appointment.End_Time)
+        val origPrice = appointment.Total_Price ?: 0.0
+        if (originalHours > 0.0) origPrice / originalHours else origPrice
     }
 
-    val recalculatedTotalPrice = remember(hourlyRate, startTime, endTime) {
-        bookingViewModel.calculateTotalPrice(hourlyRate, "$startTime - $endTime")
+    val pricingBreakdown = remember(chefHourlyRate, startTime, endTime, selectedState, appointment) {
+        com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculate(
+            chefHourlyRate = chefHourlyRate,
+            appointmentTime = "$startTime - $endTime",
+            selectedRecipes = emptyList(),
+            userState = selectedState,
+            chefState = appointment.State
+        )
     }
+    val recalculatedTotalPrice = pricingBreakdown.finalTotalPrice
 
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
     var validationErrors by remember { mutableStateOf<Set<AppointmentValidationError>>(emptySet()) }

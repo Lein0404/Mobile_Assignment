@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
+import com.example.foodieheal.meal_planner.local.MealPlanDatabase
+import com.example.foodieheal.Recipe.local.RecipeDatabase
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import io.github.jan.supabase.postgrest.postgrest
 
 class MealPlannerViewModelFactory(
@@ -14,11 +17,16 @@ class MealPlannerViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MealPlannerViewModel::class.java)) {
+            val localDao = MealPlanDatabase.getDatabase(application).mealPlanDao()
+            val recipeDao = RecipeDatabase.getDatabase(application).recipeDao()
             val repository = MealPlannerRepository(
                 postgrest = SupabaseClient.client.postgrest,
-                supabaseClient = SupabaseClient.client
+                supabaseClient = SupabaseClient.client,
+                localDao = localDao,
+                recipeDao = recipeDao
             )
-            return MealPlannerViewModel(application, repository) as T
+            val recipeRepository = RecipeRepository(recipeDao)
+            return MealPlannerViewModel(application, repository, recipeRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

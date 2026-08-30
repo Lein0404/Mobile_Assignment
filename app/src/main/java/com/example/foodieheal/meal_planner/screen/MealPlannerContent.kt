@@ -59,6 +59,7 @@ fun MealPlannerContent(
     onRecipeDetails: (String) -> Unit,
     onCopyPlanClick: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onAppointmentClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -104,22 +105,24 @@ fun MealPlannerContent(
         ) { page ->
             val pageDate = remember(page, anchorDate) { anchorDate.plusDays(page.toLong()) }
 
-            LaunchedEffect(pageDate) {
-                onLoadPlanForDate(pageDate)
+            LaunchedEffect(pageDate, isNetworkAvailable) {
+                if (isNetworkAvailable) {
+                    onLoadPlanForDate(pageDate)
+                }
             }
-
-            val dailyPlanForThisPage = mealPlansCache[pageDate]
 
             MealPageContent(
                 pageDate = pageDate,
                 isNetworkAvailable = isNetworkAvailable,
-                dailyPlan = dailyPlanForThisPage,
+                dailyPlan = mealPlansCache[pageDate],
+                isLoaded = mealPlansCache.containsKey(pageDate),
                 appointments = appointments,
                 chefsMap = chefsMap,
                 onAddMealRecipe = { type -> onAddMealRecipe(pageDate, type) },
                 onDeleteMealRecipe = { type, recipe -> onDeleteMealRecipe(pageDate, type, recipe) },
                 onRecipeDetails = onRecipeDetails,
-                onCopyPlanClick = onCopyPlanClick
+                onCopyPlanClick = onCopyPlanClick,
+                onAppointmentClick = onAppointmentClick
             )
         }
     }
@@ -208,12 +211,14 @@ fun MealPageContent(
     pageDate: LocalDate,
     isNetworkAvailable: Boolean,
     dailyPlan: DailyPlan?,
+    isLoaded: Boolean = true,
     appointments: List<Appointment> = emptyList(),
     chefsMap: Map<String, User> = emptyMap(),
     onAddMealRecipe: (MealType) -> Unit,
     onDeleteMealRecipe: (MealType, Recipe) -> Unit,
     onRecipeDetails: (String) -> Unit,
-    onCopyPlanClick: () -> Unit
+    onCopyPlanClick: () -> Unit,
+    onAppointmentClick: (String) -> Unit
 ) {
     val pageScrollState = rememberScrollState()
 
@@ -222,7 +227,7 @@ fun MealPageContent(
             .fillMaxSize()
             .verticalScroll(pageScrollState)
     ) {
-        if (!isNetworkAvailable) {
+        if (!isNetworkAvailable && !isLoaded) {
             OfflinePlaceholder()
         } else {
             val dailyBannerText = remember(pageDate) {
@@ -247,7 +252,7 @@ fun MealPageContent(
                 )
 
                 if (appointments.isNotEmpty()) {
-                    AppointmentSummarySection(appointments, chefsMap)
+                    AppointmentSummarySection(appointments, chefsMap, onAppointmentClick)
                 }
 
                 val sections = remember(breakfastRecipes, lunchRecipes, dinnerRecipes, snackRecipes) {
@@ -263,6 +268,7 @@ fun MealPageContent(
                         MealSection(
                             title = stringResource(title),
                             recipes = recipes,
+                            isNetworkAvailable = isNetworkAvailable,
                             onAddClick = { onAddMealRecipe(type) },
                             onDeleteClick = { recipe -> onDeleteMealRecipe(type, recipe) },
                             onRecipeDetails = onRecipeDetails,
@@ -308,7 +314,8 @@ fun MealPageContent(
 @Composable
 fun AppointmentSummarySection(
     appointments: List<Appointment>,
-    chefsMap: Map<String, User>
+    chefsMap: Map<String, User>,
+    onAppointmentClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -317,7 +324,10 @@ fun AppointmentSummarySection(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-        )
+        ),
+        onClick = {
+            appointments.firstOrNull()?.AppointmentID?.let { onAppointmentClick(it) }
+        }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -329,17 +339,17 @@ fun AppointmentSummarySection(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Scheduled Hiring Appointments",
+                    text = stringResource(R.string.title_scheduled_hiring_appointments),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onTertiary
                 )
             }
-            
+
             Spacer(Modifier.height(12.dp))
 
             appointments.forEach { appointment ->
-                val chefName = chefsMap[appointment.chefId]?.name ?: "Chef"
+                val chefName = chefsMap[appointment.chefId]?.name ?: stringResource(R.string.default_chef_name)
                 val timeSlot = "${formatToAmPm(appointment.Start_Time)} - ${formatToAmPm(appointment.End_Time)}"
                 
                 Row(
@@ -362,20 +372,10 @@ fun AppointmentSummarySection(
                             color = Color.Gray
                         )
                     }
-                    
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = when (appointment.Status.lowercase()) {
-                            "confirmed" -> Color(0xFFE8F5E9)
-                            "pending" -> Color(0xFFFFF3E0)
-                            "completed" -> Color(0xFFE3F2FD)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    ) {
-                        AppointmentStatusBadge(appointment.Status)
-                    }
+
+                    AppointmentStatusBadge(appointment.Status)
                 }
-                
+
                 if (appointment != appointments.last()) {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),

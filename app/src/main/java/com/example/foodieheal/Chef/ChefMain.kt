@@ -1,10 +1,17 @@
 package com.example.foodieheal.Chef
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -16,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
@@ -57,8 +65,14 @@ fun ChefMainScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val chefNavController = rememberNavController()
     val homeViewModel: ChefPortalViewModel = viewModel()
+    val pendingCount by homeViewModel.pendingAppointmentsCount.collectAsState()
 
-    // Ensure chef data is loaded and cleanup service is active upon entry
+    // Android 13+ Notification Permission Launcher
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { }
+
+    // Ensure chef data is loaded, cleanup service is active, and notification permission requested
     LaunchedEffect(Unit) {
         if (authViewModel.currentChef == null) {
             authViewModel.fetchChefData()
@@ -68,6 +82,17 @@ fun ChefMainScreen(
             context.startService(cleanupIntent)
         } catch (e: Exception) {
             android.util.Log.e("ChefMainScreen", "Failed to start ChefCacheCleanupService", e)
+        }
+
+        // Request post notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val isGranted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!isGranted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
@@ -92,12 +117,35 @@ fun ChefMainScreen(
 
                 items.forEach { item ->
                     val labelText = stringResource(id = item.titleRes)
+                    val isAppointmentsTab = item is ChefNavigationItem.Appointments
+
                     NavigationBarItem(
                         icon = {
-                            Icon(
-                                painter = painterResource(id = item.iconRes),
-                                contentDescription = labelText
-                            )
+                            if (isAppointmentsTab && pendingCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                            contentColor = MaterialTheme.colorScheme.onError
+                                        ) {
+                                            Text(
+                                                text = if (pendingCount > 99) "99+" else "$pendingCount",
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = item.iconRes),
+                                        contentDescription = labelText
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    painter = painterResource(id = item.iconRes),
+                                    contentDescription = labelText
+                                )
+                            }
                         },
                         label = { Text(labelText, fontSize = 10.sp) },
                         selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
