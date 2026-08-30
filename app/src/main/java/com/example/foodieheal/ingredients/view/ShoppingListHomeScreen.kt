@@ -132,10 +132,13 @@ fun ShoppingListHomeScreen(
                 }
             } else if (homeState.shoppingLists.isEmpty()) {
                 // Empty state
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
                         modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_xxl))
                     ) {
                         Text(
@@ -158,7 +161,10 @@ fun ShoppingListHomeScreen(
                     }
                 }
             } else if (homeState.filteredShoppingLists.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(dimensionResource(id = R.dimen.padding_xxl)),
+                    contentAlignment = Alignment.TopCenter
+                ) {
                     Text(
                         text = stringResource(R.string.shopping_list_home_no_match),
                         style = MaterialTheme.typography.bodyLarge,

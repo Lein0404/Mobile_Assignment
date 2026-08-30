@@ -424,7 +424,7 @@ fun ShoppingListScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_l)),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
                         modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_xxl))
                     ) {
                         Text(

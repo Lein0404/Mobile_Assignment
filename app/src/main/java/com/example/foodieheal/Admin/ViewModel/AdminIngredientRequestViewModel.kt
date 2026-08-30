@@ -280,7 +280,8 @@ class AdminIngredientRequestViewModel(
                     ingredientCategory = state.category,
                     ingredientDesc = state.description,
                     ingredientImage = imageUrl,
-                    isDefault = true
+                    createdByUserId = current.createdByUserId.takeIf { it.isNotBlank() },
+                    isDefault = false
                 )
                 productionRepository.insertIngredient(ingredient)
 

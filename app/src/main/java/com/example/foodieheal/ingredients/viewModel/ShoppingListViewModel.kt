@@ -128,9 +128,13 @@ class ShoppingListViewModel(
             val filtered = if (query.isEmpty()) {
                 state.homeState.shoppingLists
             } else {
-                state.homeState.shoppingLists.filter {
-                    it.title.contains(query, ignoreCase = true) ||
-                    it.shoppingListId.contains(query, ignoreCase = true)
+                state.homeState.shoppingLists.filter { list ->
+                    list.title.contains(query, ignoreCase = true) ||
+                    list.shoppingListId.contains(query, ignoreCase = true) ||
+                    list.items.any { item ->
+                        item.ingredientName.contains(query, ignoreCase = true) ||
+                        (item.category?.categoryName?.contains(query, ignoreCase = true) == true)
+                    }
                 }
             }
             state.copy(homeState = state.homeState.copy(filteredShoppingLists = filtered))

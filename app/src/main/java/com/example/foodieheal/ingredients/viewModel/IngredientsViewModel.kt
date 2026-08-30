@@ -160,9 +160,12 @@ class IngredientsViewModel(
 
     private fun applyFilters() {
         _uiState.update { state ->
+            val query = state.searchQuery.trim()
             val filtered = state.ingredients.filter { item ->
                 val ingredient = item.ingredient
-                (state.searchQuery.isEmpty() || ingredient.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
+                (query.isEmpty() ||
+                 ingredient.ingredientName.contains(query, ignoreCase = true) ||
+                 ingredient.ingredientDesc.contains(query, ignoreCase = true)) &&
                 (state.selectedCategories.isEmpty() || ingredient.ingredientCategory == null || state.selectedCategories.contains(ingredient.ingredientCategory))
             }
             state.copy(filteredIngredients = filtered)
