@@ -28,8 +28,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -697,6 +701,38 @@ fun DropdownField(value: String, options: List<String>, onSelected: (String) -> 
     }
 }
 
+@Composable
+fun getHighlightedText(
+    fullText: String, 
+    query: String, 
+    highlightColor: Color = MaterialTheme.colorScheme.primary
+): AnnotatedString {
+    val trimmedQuery = query.trim()
+    if (trimmedQuery.isEmpty()) return AnnotatedString(fullText)
+
+    return buildAnnotatedString {
+        var startIndex = 0
+        while (startIndex < fullText.length) {
+            val index = fullText.indexOf(trimmedQuery, startIndex, ignoreCase = true)
+            if (index == -1) {
+                append(fullText.substring(startIndex))
+                break
+            }
+
+            append(fullText.substring(startIndex, index))
+            withStyle(
+                style = SpanStyle(
+                    color = highlightColor, 
+                    fontWeight = FontWeight.Bold,
+                )
+            ) {
+                append(fullText.substring(index, index + trimmedQuery.length))
+            }
+            startIndex = index + trimmedQuery.length
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IngredientRow(
@@ -719,7 +755,10 @@ fun IngredientRow(
                     availableIngredients.take(50)
                 } else {
                     availableIngredients
-                        .filter { it.name?.contains(searchQuery, ignoreCase = true) == true }
+                        .filter { 
+                            it.name?.contains(searchQuery, ignoreCase = true) == true ||
+                            it.description?.contains(searchQuery, ignoreCase = true) == true
+                        }
                         .take(50)
                 }
             }
@@ -809,13 +848,29 @@ fun IngredientRow(
                             enabled = false
                         )
                     } else {
-                        filteredIngredients.forEach { ingredient ->
+                        filteredIngredients.forEachIndexed { index, ingredient ->
                             DropdownMenuItem(
                                 text = { 
                                     Column {
-                                        Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                                        Text(
+                                            text = getHighlightedText(ingredient.name ?: "Unknown", searchQuery),
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (!ingredient.description.isNullOrBlank()) {
+                                            Text(
+                                                text = getHighlightedText(ingredient.description, searchQuery),
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                maxLines = 2 // Increased maxLines to show more context
+                                            )
+                                        }
                                         if (ingredient.defaultUnit != null) {
-                                            Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                text = "Unit: ${ingredient.defaultUnit}", 
+                                                fontSize = 11.sp, 
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         }
                                     }
                                 },
@@ -829,6 +884,13 @@ fun IngredientRow(
                                     nameExpanded = false
                                 }
                             )
+                            if (index < filteredIngredients.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(4.dp),
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                                )
+                            }
                         }
                     }
                 }

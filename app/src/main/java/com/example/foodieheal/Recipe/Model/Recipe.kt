@@ -59,6 +59,7 @@ data class IngredientItem(
 data class Ingredient(
     @SerialName("ingredient_unit_id") val id: String? = null,
     @SerialName("ing_name") val name: String? = "",
+    @SerialName("ing_description") val description: String? = null,
     @SerialName("calories_per_default_quantity") val kcal: Double? = 0.0,
     @SerialName("unit_name") val defaultUnit: String? = null,
     @SerialName("units") val unitDetails: UnitDetails? = null 
