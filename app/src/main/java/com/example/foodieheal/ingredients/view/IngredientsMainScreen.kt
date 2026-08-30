@@ -326,13 +326,19 @@ fun IngredientRequestsScreen(
                 }
             }
         } else if (uiState.filteredRequests.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_xxl))
+                ) {
                     Text(
                         text = stringResource(R.string.ingredients_requests_empty),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_md)))
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
                     Button(
                         onClick = {
                             navController.navigate(Screen.IngredientRequestForm.createRoute())
@@ -523,8 +529,31 @@ fun IngredientsExistingScreen(
             }
         }
         if (uiState.filteredIngredients.isEmpty() && !uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = stringResource(R.string.ingredients_existing_empty))
+            Box(
+                modifier = Modifier.fillMaxSize(), 
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_xxl))
+                ) {
+                    Text(
+                        text = stringResource(R.string.ingredients_existing_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
+                    Button(
+                        onClick = {
+                            navController.navigate(Screen.IngredientRequestForm.createRoute())
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm))
+                    ) {
+                        Icon(painter = painterResource(R.drawable.ic_outline_add), contentDescription = null)
+                        Spacer(Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
+                        Text(stringResource(R.string.ingredients_fab_new_request))
+                    }
+                }
             }
         }
 
