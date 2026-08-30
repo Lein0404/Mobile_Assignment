@@ -179,7 +179,7 @@ fun EditProfileScreen(navController: NavController) {
                     value = description,
                     onValueChange = { 
                         val newlineCount = it.count { char -> char == '\n' }
-                        if (it.length <= 100 && newlineCount <= 4) {
+                        if (it.length <= 150 && newlineCount <= 4) {
                             description = it 
                         }
                     },
@@ -187,8 +187,10 @@ fun EditProfileScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
                     shape = RoundedCornerShape(12.dp),
                     supportingText = {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            Text("${description.length}/100", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            val newlineCount = description.count { char -> char == '\n' }
+                            Text("${newlineCount + 1}/5 lines", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${description.length}/150", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     colors = TextFieldDefaults.colors(
