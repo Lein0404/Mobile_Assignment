@@ -12,12 +12,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -72,6 +69,7 @@ import com.example.foodieheal.meal_planner.model.PlanCategory
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.TemplateViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.ui.components.getHighlightedText
 import kotlinx.coroutines.launch
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -82,10 +80,16 @@ import com.example.foodieheal.Recipe.Repo.RecipeRepository
 fun TemplatesContent(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel,
+    isNetworkAvailable: Boolean,
     onAddTemplateClick: () -> Unit,
     onPlanDetails: (recipeId: String, isMyTemplate: Boolean) -> Unit,
     onEdit: (String) -> Unit
 ) {
+    if (!isNetworkAvailable) {
+        OfflinePlaceholder(modifier = modifier)
+        return
+    }
+
     val tabs = listOf(stringResource(R.string.tab_all), stringResource(R.string.tab_my_templates))
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -207,14 +211,17 @@ fun AllTemplatesScreen(
         }
     }
 
+    val shareText = stringResource(R.string.msg_share_template_text)
+    val shareTitle = stringResource(R.string.title_share_template)
+
     fun shareTemplate(id: String) {
         val shareUrl = "https://tzh652.github.io/template?id=$id"
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_template_text, shareUrl))
+            putExtra(Intent.EXTRA_TEXT, String.format(shareText, shareUrl))
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.title_share_template))
+        val shareIntent = Intent.createChooser(sendIntent, shareTitle)
         context.startActivity(shareIntent)
     }
 
@@ -255,6 +262,7 @@ fun AllTemplatesScreen(
         } else {
             CategorizedTemplatesScreen(
                 weeklyPlans = filteredContacts,
+                searchQuery = query,
                 onPlanDetails = { id -> onPlanDetails(id, false) },
                 onShare = { id -> shareTemplate(id) },
                 onAdd = { id ->
@@ -283,16 +291,18 @@ fun MyTemplatesScreen(
     onEdit: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val isLoading by templateViewModel.isLoading.collectAsStateWithLifecycle()
+
+    val shareText = stringResource(R.string.msg_share_my_template_text)
+    val shareTitle = stringResource(R.string.title_share_template)
 
     fun shareTemplate(id: String) {
         val shareUrl = "https://tzh652.github.io/template?id=$id"
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_my_template_text, shareUrl))
+            putExtra(Intent.EXTRA_TEXT, String.format(shareText, shareUrl))
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.title_share_template))
+        val shareIntent = Intent.createChooser(sendIntent, shareTitle)
         context.startActivity(shareIntent)
     }
 
@@ -320,13 +330,14 @@ fun MyTemplatesScreen(
         ) {
             val userPlans by templateViewModel.userWeeklyPlans.collectAsStateWithLifecycle()
 
+            val templateDeletedMsg = stringResource(R.string.msg_template_deleted)
             CategorizedTemplatesScreen(
                 weeklyPlans = userPlans,
                 onDelete = { id ->
                     templateViewModel.deleteWeeklyPlan(
                         planId = id,
                         onSuccess = {
-                            Toasty.custom(context, context.getString(R.string.msg_template_deleted), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+                            Toasty.custom(context, templateDeletedMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         }
                     )
                 },
@@ -345,6 +356,7 @@ fun CategorizedTemplatesScreen(
     weeklyPlans: List<WeeklyPlan>,
     onPlanDetails:(String)->Unit,
     isMyTemplate: Boolean = false,
+    searchQuery: String = "",
     onEdit: (String) -> Unit = {},
     onDelete:(String)-> Unit = {},
     onShare: (String) -> Unit = {},
@@ -390,8 +402,9 @@ fun CategorizedTemplatesScreen(
             val plans = categorizedPlans[category].orEmpty()
 
             Column(modifier = Modifier.fillMaxWidth()) {
+                val categoryName = stringResource(id = category.displayNameRes)
                 Text(
-                    text = stringResource(id = category.displayNameRes),
+                    text = getHighlightedText(categoryName, searchQuery),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -408,6 +421,7 @@ fun CategorizedTemplatesScreen(
                     ) { plan ->
                         PlanCard(
                             plan = plan,
+                            searchQuery = searchQuery,
                             onPlanDetails = { onPlanDetails(plan.planId) },
                             isMyTemplate = isMyTemplate,
                             onEdit = { onEdit(plan.planId) },
@@ -427,6 +441,7 @@ fun PlanCard(
     plan: WeeklyPlan,
     onPlanDetails: () -> Unit,
     isMyTemplate: Boolean,
+    searchQuery: String = "",
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onShare: () -> Unit = {},
@@ -450,7 +465,7 @@ fun PlanCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = plan.planName,
+                    text = getHighlightedText(plan.planName, searchQuery),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -471,11 +486,13 @@ fun PlanCard(
             // 🌟 Extract unique recipe images to display a preview
             val recipeImages = remember(plan) {
                 plan.dailyPlans.values
+                    .asSequence()
                     .flatten()
                     .flatMap { it.recipes }
                     .mapNotNull { it.recipeImageUrl }
                     .distinct()
                     .take(4)
+                    .toList()
             }
 
             if (recipeImages.isNotEmpty()) {

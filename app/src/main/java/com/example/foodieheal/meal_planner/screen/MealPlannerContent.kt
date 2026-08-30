@@ -83,14 +83,12 @@ fun MealPlannerContent(
 
         Spacer(Modifier.height(12.dp))
 
-        if (isNetworkAvailable) {
-            CalorieProgressBar(
-                currentCalories = totalCalories,
-                maxCalories = maxCalories,
-                onNavigateToProfile = onNavigateToProfile,
-            )
-            Spacer(Modifier.height(12.dp))
-        }
+        CalorieProgressBar(
+            currentCalories = totalCalories,
+            maxCalories = maxCalories,
+            onNavigateToProfile = onNavigateToProfile,
+        )
+        Spacer(Modifier.height(12.dp))
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
@@ -158,14 +156,14 @@ fun MealPlannerHeader(
                 )
                 Spacer(Modifier.weight(1f))
 
-                if (selectedTabIndex == 0) {
+                if (selectedTabIndex == 0 && isNetworkAvailable) {
                     Icon(
                         painter = painterResource(R.drawable.ic_repeat),
                         contentDescription = stringResource(R.string.desc_copy_daily_plan),
                         modifier = Modifier
                             .padding(end = 10.dp)
                             .size(30.dp)
-                            .clickable(onClick = onRepeatClick, enabled = isNetworkAvailable),
+                            .clickable(onClick = onRepeatClick),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
 
@@ -174,7 +172,7 @@ fun MealPlannerHeader(
                         contentDescription = stringResource(R.string.share),
                         modifier = Modifier
                             .size(30.dp)
-                            .clickable(onClick = onShareClick, enabled = isNetworkAvailable),
+                            .clickable(onClick = onShareClick),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -280,7 +278,7 @@ fun MealPageContent(
                 val isPlanEmpty = breakfastRecipes.isEmpty() && lunchRecipes.isEmpty() &&
                         dinnerRecipes.isEmpty() && snackRecipes.isEmpty()
 
-                if (!isPlanEmpty) {
+                if (!isPlanEmpty && isNetworkAvailable) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
