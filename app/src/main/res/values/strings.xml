@@ -263,6 +263,8 @@
     <string name="hiring_schedule_evening">Evening</string>
     <string name="hiring_schedule_today">Today</string>
     <string name="hiring_schedule_off_duty">Off Duty</string>
+    <string name="show_more">Show more</string>
+    <string name="show_less">Show less</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>

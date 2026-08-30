@@ -1,5 +1,6 @@
 package com.example.foodieheal.hiring.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -273,14 +274,39 @@ fun RecipeDetailPreviewSheet(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = recipe.recipeDescription,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis
-                    )
+
+                    var isDescExpanded by remember(recipe.recipeDescription) { mutableStateOf(false) }
+                    var hasDescOverflow by remember(recipe.recipeDescription) { mutableStateOf(false) }
+
+                    Column(modifier = Modifier.animateContentSize()) {
+                        Text(
+                            text = recipe.recipeDescription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 20.sp,
+                            maxLines = if (isDescExpanded) Int.MAX_VALUE else 4,
+                            overflow = TextOverflow.Ellipsis,
+                            onTextLayout = { textLayoutResult ->
+                                if (!isDescExpanded && (textLayoutResult.hasVisualOverflow || textLayoutResult.lineCount > 4)) {
+                                    hasDescOverflow = true
+                                }
+                            }
+                        )
+
+                        if (hasDescOverflow) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (isDescExpanded) stringResource(R.string.show_less) else stringResource(R.string.show_more),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .clickable { isDescExpanded = !isDescExpanded }
+                                    .padding(vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
 
                 if (recipe.ingredients.isNotEmpty()) {
@@ -381,8 +407,14 @@ fun RecipeDetailPreviewSheet(
                         .filter { it.isNotBlank() }
 
                     if (stepsList.size > 1) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            stepsList.forEachIndexed { index, stepText ->
+                        var isStepsExpanded by remember(recipe.recipeStep) { mutableStateOf(false) }
+                        val displaySteps = if (isStepsExpanded) stepsList else stepsList.take(4)
+
+                        Column(
+                            modifier = Modifier.animateContentSize(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            displaySteps.forEachIndexed { index, stepText ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -410,14 +442,54 @@ fun RecipeDetailPreviewSheet(
                                     )
                                 }
                             }
+
+                            if (stepsList.size > 4) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (isStepsExpanded) stringResource(R.string.show_less) else stringResource(R.string.show_more),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .clickable { isStepsExpanded = !isStepsExpanded }
+                                        .padding(vertical = 2.dp)
+                                )
+                            }
                         }
                     } else {
-                        Text(
-                            text = recipe.recipeStep,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 20.sp
-                        )
+                        var isSingleStepExpanded by remember(recipe.recipeStep) { mutableStateOf(false) }
+                        var hasSingleStepOverflow by remember(recipe.recipeStep) { mutableStateOf(false) }
+
+                        Column(modifier = Modifier.animateContentSize()) {
+                            Text(
+                                text = recipe.recipeStep,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 20.sp,
+                                maxLines = if (isSingleStepExpanded) Int.MAX_VALUE else 4,
+                                overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { textLayoutResult ->
+                                    if (!isSingleStepExpanded && (textLayoutResult.hasVisualOverflow || textLayoutResult.lineCount > 4)) {
+                                        hasSingleStepOverflow = true
+                                    }
+                                }
+                            )
+
+                            if (hasSingleStepOverflow) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (isSingleStepExpanded) stringResource(R.string.show_less) else stringResource(R.string.show_more),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .clickable { isSingleStepExpanded = !isSingleStepExpanded }
+                                        .padding(vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
 

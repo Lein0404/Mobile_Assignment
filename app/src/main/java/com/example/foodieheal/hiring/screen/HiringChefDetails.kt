@@ -3,6 +3,7 @@ package com.example.foodieheal.hiring.screen
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +43,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -276,12 +279,38 @@ fun HiringChefDetails(
             // About Section (Reusing DetailSectionCard)
             if (!chef.description.isNullOrBlank()) {
                 DetailSectionCard(title = stringResource(R.string.title_about_chef)) {
-                    Text(
-                        text = chef.description,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                        lineHeight = 20.sp
-                    )
+                    var isExpanded by remember(chef.description) { mutableStateOf(false) }
+                    var hasOverflow by remember(chef.description) { mutableStateOf(false) }
+
+                    Column(modifier = Modifier.animateContentSize()) {
+                        Text(
+                            text = chef.description,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                            lineHeight = 20.sp,
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 4,
+                            overflow = TextOverflow.Ellipsis,
+                            onTextLayout = { textLayoutResult ->
+                                if (!isExpanded && (textLayoutResult.hasVisualOverflow || textLayoutResult.lineCount > 4)) {
+                                    hasOverflow = true
+                                }
+                            }
+                        )
+
+                        if (hasOverflow) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = if (isExpanded) stringResource(R.string.show_less) else stringResource(R.string.show_more),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .clickable { isExpanded = !isExpanded }
+                                    .padding(vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
 
