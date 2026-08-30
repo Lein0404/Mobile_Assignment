@@ -114,7 +114,9 @@ class AdminAddIngredientViewModel(
                     ingredientName = state.ingredientName,
                     ingredientCategory = state.category,
                     ingredientDesc = state.description,
-                    ingredientImage = imageUrl
+                    ingredientImage = imageUrl,
+                    createdByUserId = null,
+                    isDefault = true
                 )
 
                 val ingredientUnitsList = filledRows.mapIndexed { index, row ->
