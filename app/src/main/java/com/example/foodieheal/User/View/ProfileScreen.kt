@@ -745,10 +745,10 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Active filter chips row
-                            com.example.foodieheal.ui.components.ActiveFiltersRow(
+                            ActiveFiltersRow(
                                 filterState = chefFilterState,
                                 onFilterChange = { chefFilterState = it },
-                                onResetAll = { chefFilterState = com.example.foodieheal.ui.components.ChefFilterState(searchQuery = chefFilterState.searchQuery) }
+                                onResetAll = { chefFilterState = ChefFilterState(searchQuery = chefFilterState.searchQuery) }
                             )
                         } else {
                             // 🌟 Compact Recipe Search Bar (matching RecipesScreen style)
