@@ -37,10 +37,10 @@ fun FollowListScreen(
     recipeViewModel: RecipeViewModel
 ) {
     val users = remember { mutableStateListOf<User>() }
-    var isLoading by remember { mutableStateOf(true) }
+    var isFetchingUsers by remember { mutableStateOf(false) }
+    var hasLoadedAtLeastOnce by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId, type) {
-        isLoading = true
         if (type == "followers") {
             followViewModel.fetchFollowers(userId)
         } else {
@@ -59,21 +59,34 @@ fun FollowListScreen(
             }
             
             if (ids.isNotEmpty()) {
+                isFetchingUsers = true
                 val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
                 repo.getUsersByCustomIds(ids).onSuccess { result ->
                     users.clear()
                     users.addAll(result)
+                    isFetchingUsers = false
+                    hasLoadedAtLeastOnce = true
+                }.onFailure {
+                    isFetchingUsers = false
+                    hasLoadedAtLeastOnce = true
                 }
             } else {
                 users.clear()
+                isFetchingUsers = false
+                hasLoadedAtLeastOnce = true
             }
         } else {
             users.clear()
+            // If the viewmodel has finished its fetch and followData is still empty, then we stop loading
+            if (!followViewModel.isLoadingFollowList) {
+                isFetchingUsers = false
+                hasLoadedAtLeastOnce = true
+            }
         }
-        // Small delay to ensure smooth transition
-        kotlinx.coroutines.delay(300)
-        isLoading = false
     }
+
+    // 🌟 Correct Loading Logic: Show spinner until the viewmodel finishes AND the user profile fetch completes
+    val showLoading = followViewModel.isLoadingFollowList || isFetchingUsers || !hasLoadedAtLeastOnce
 
     Scaffold(
         topBar = {
@@ -92,7 +105,7 @@ fun FollowListScreen(
             )
         }
     ) { padding ->
-        if (isLoading) {
+        if (showLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }

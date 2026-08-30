@@ -32,6 +32,12 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
     var followingCount by mutableIntStateOf(0)
         private set
 
+    var isLoadingFollowCounts by mutableStateOf(false)
+        private set
+
+    var isLoadingFollowList by mutableStateOf(false)
+        private set
+
     var isNetworkAvailable by mutableStateOf(true)
         private set
 
@@ -115,21 +121,36 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
 
     fun fetchFollowing(userId: String) {
         viewModelScope.launch {
+            isLoadingFollowList = true
             followingList = repository.getFollowing(userId)
             followingCount = followingList.filter { it.status == "ACCEPTED" }.size
+            isLoadingFollowList = false
         }
     }
 
     fun fetchFollowers(userId: String) {
         viewModelScope.launch {
+            isLoadingFollowList = true
             followersList = repository.getFollowers(userId)
             followerCount = followersList.filter { it.status == "ACCEPTED" }.size
+            isLoadingFollowList = false
         }
     }
 
     fun fetchFollowCounts(userId: String) {
-        fetchFollowers(userId)
-        fetchFollowing(userId)
+        viewModelScope.launch {
+            isLoadingFollowCounts = true
+            // Fetch both in parallel or sequence
+            repository.getFollowers(userId).let { list ->
+                followersList = list
+                followerCount = list.filter { it.status == "ACCEPTED" }.size
+            }
+            repository.getFollowing(userId).let { list ->
+                followingList = list
+                followingCount = list.filter { it.status == "ACCEPTED" }.size
+            }
+            isLoadingFollowCounts = false
+        }
     }
 
     sealed class FollowEvent {
