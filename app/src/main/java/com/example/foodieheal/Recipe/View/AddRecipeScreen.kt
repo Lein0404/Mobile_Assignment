@@ -81,11 +81,12 @@ fun AddRecipeScreen(
     val isFormValid by remember {
         derivedStateOf {
             recipeName.isNotBlank() && recipeName.length <= 30 &&
+            description.length <= 150 &&
             // 🌟 Description and Image are now optional, so they are removed from validation
             totalTime.isNotBlank() &&
             (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
-            steps.isNotBlank() &&
+            steps.isNotBlank() && steps.length <= 1000 &&
             ingredients.isNotEmpty() &&
             ingredients.all { it.name.isNotBlank() && it.quantity.isNotBlank() && it.quantity.toDoubleOrNull() != null }
         }
@@ -246,12 +247,33 @@ fun AddRecipeScreen(
             }
 
             LabelText("Description")
-            AddRecipeTextField(
+            TextField(
                 value = description,
-                onValueChange = { description = it },
-                placeholder = "What inspired you to make this recipe...",
-                singleLine = false,
-                modifier = Modifier.height(100.dp)
+                onValueChange = { 
+                    val newlineCount = it.count { char -> char == '\n' }
+                    if (it.length <= 150 && newlineCount <= 4) {
+                        description = it 
+                    }
+                },
+                placeholder = { Text("What inspired you to make this recipe...", fontSize = 14.sp, color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth().height(160.dp),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
+                supportingText = {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        val newlineCount = description.count { char -> char == '\n' }
+                        Text("${newlineCount + 1}/5 lines", fontSize = 12.sp, color = if (newlineCount >= 4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${description.length}/150", fontSize = 12.sp, color = if (description.length >= 150) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             LabelText("Course")
@@ -392,13 +414,24 @@ fun AddRecipeScreen(
             }
 
             LabelText("Recipe Steps")
-            AddRecipeTextField(
+            Text(
+                text = "Tip: Just press 'Enter' for a new step; numbers are added automatically.",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            TextField(
                 value = steps,
-                onValueChange = { steps = it },
-                placeholder = "1. Cook the Pasta",
-                singleLine = false,
+                onValueChange = { 
+                    val newlineCount = it.count { char -> char == '\n' }
+                    if (it.length <= 1000 && newlineCount <= 19) {
+                        steps = it 
+                    }
+                },
+                placeholder = { Text("1. Cook the Pasta", fontSize = 14.sp, color = Color.Gray) },
                 modifier = Modifier
-                    .height(120.dp)
+                    .fillMaxWidth()
+                    .height(350.dp)
                     .onFocusEvent { focusState ->
                         if (focusState.isFocused) {
                             coroutineScope.launch {
@@ -406,7 +439,24 @@ fun AddRecipeScreen(
                             }
                         }
                     }
-                    .bringIntoViewRequester(bringIntoViewRequester)
+                    .bringIntoViewRequester(bringIntoViewRequester),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
+                supportingText = {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        val newlineCount = steps.count { char -> char == '\n' }
+                        Text("${newlineCount + 1}/20 lines", fontSize = 12.sp, color = if (newlineCount >= 19) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${steps.length}/1000", fontSize = 12.sp, color = if (steps.length >= 1000) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
             LabelText("Visibility")
