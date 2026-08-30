@@ -149,11 +149,16 @@ fun EditProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { if (it.length <= 20) name = it },
                     placeholder = { Text("Username", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
+                    supportingText = {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            Text("${name.length}/20", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -172,10 +177,20 @@ fun EditProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = { 
+                        val newlineCount = it.count { char -> char == '\n' }
+                        if (it.length <= 100 && newlineCount <= 4) {
+                            description = it 
+                        }
+                    },
                     placeholder = { Text("Tell us about yourself...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
                     shape = RoundedCornerShape(12.dp),
+                    supportingText = {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            Text("${description.length}/100", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,

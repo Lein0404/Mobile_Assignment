@@ -124,11 +124,11 @@ class RecipeViewModel(
     }
 
     fun fetchAllRecipes(force: Boolean = false) {
-        if (isFetchingAll) return
+        if (isFetchingAll && !force) return
         viewModelScope.launch {
             try {
                 isFetchingAll = true
-                if (recipeList.isEmpty()) isLoading = true
+                if (recipeList.isEmpty() || force) isLoading = true
                 
                 repository.getAllRecipes()
                     .onSuccess { result ->

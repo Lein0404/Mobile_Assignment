@@ -562,6 +562,17 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
             return
         }
         val uid = currentUser?.id ?: return
+        
+        // 🌟 Character Limit Safeguards
+        if (name.length > 20) {
+            profileMessage = "Username cannot exceed 20 characters"
+            return
+        }
+        if (description.length > 100) {
+            profileMessage = "Description cannot exceed 100 characters"
+            return
+        }
+
         isProcessing = true
         errorMessage = ""
 
