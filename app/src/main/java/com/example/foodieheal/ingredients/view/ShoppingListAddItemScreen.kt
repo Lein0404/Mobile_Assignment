@@ -30,6 +30,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
+import com.example.foodieheal.ui.components.getHighlightedText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,6 +128,7 @@ fun ShoppingListAddItemScreen(
                                 SelectableIngredientCard(
                                     item = item,
                                     isSelected = isSelected,
+                                    searchQuery = uiState.searchQuery,
                                     onToggleSelection = {
                                         shoppingListViewModel.toggleIngredientSelection(item)
                                     }
@@ -218,6 +220,7 @@ fun ShoppingListAddItemScreen(
 fun SelectableIngredientCard(
     item: IngredientItem,
     isSelected: Boolean,
+    searchQuery: String = "",
     onToggleSelection: () -> Unit
 ) {
     Card(
@@ -240,13 +243,13 @@ fun SelectableIngredientCard(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
-                    text = item.ingredient.ingredientName,
+                    text = getHighlightedText(item.ingredient.ingredientName, searchQuery),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = item.ingredient.ingredientDesc,
+                    text = getHighlightedText(item.ingredient.ingredientDesc, searchQuery),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,

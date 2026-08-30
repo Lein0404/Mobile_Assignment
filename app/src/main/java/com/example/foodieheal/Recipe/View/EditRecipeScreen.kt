@@ -111,7 +111,12 @@ fun EditRecipeScreen(
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() && steps.length <= 1000 &&
             ingredients.isNotEmpty() &&
-            ingredients.all { it.name.isNotBlank() && it.quantity.isNotBlank() && it.quantity.toDoubleOrNull() != null }
+            ingredients.all { input ->
+                input.name.isNotBlank() &&
+                input.quantity.isNotBlank() &&
+                input.quantity.toDoubleOrNull() != null &&
+                viewModel.availableIngredients.any { it.name?.equals(input.name, ignoreCase = true) == true }
+            }
         }
     }
 
