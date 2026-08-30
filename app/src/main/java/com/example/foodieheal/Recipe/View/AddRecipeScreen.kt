@@ -88,7 +88,12 @@ fun AddRecipeScreen(
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() && steps.length <= 1000 &&
             ingredients.isNotEmpty() &&
-            ingredients.all { it.name.isNotBlank() && it.quantity.isNotBlank() && it.quantity.toDoubleOrNull() != null }
+            ingredients.all { input ->
+                input.name.isNotBlank() &&
+                input.quantity.isNotBlank() &&
+                input.quantity.toDoubleOrNull() != null &&
+                viewModel.availableIngredients.any { it.name?.equals(input.name, ignoreCase = true) == true }
+            }
         }
     }
 
@@ -707,28 +712,60 @@ fun IngredientRow(
         Column(modifier = Modifier.weight(1f)) {
             Text("Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 4.dp))
             var nameExpanded by remember { mutableStateOf(false) }
-            
-            val filteredIngredients = remember(item.name, availableIngredients) {
-                availableIngredients
-                    .filter { it.name?.contains(item.name, ignoreCase = true) == true }
-                    .take(50)
+            var searchQuery by remember(item.name) { mutableStateOf(item.name) }
+
+            val filteredIngredients = remember(searchQuery, availableIngredients) {
+                if (searchQuery.isBlank()) {
+                    availableIngredients.take(50)
+                } else {
+                    availableIngredients
+                        .filter { it.name?.contains(searchQuery, ignoreCase = true) == true }
+                        .take(50)
+                }
+            }
+
+            val isValidSelection = remember(item.name, availableIngredients) {
+                availableIngredients.any { it.name?.equals(item.name, ignoreCase = true) == true }
             }
 
             ExposedDropdownMenuBox(
-                expanded = nameExpanded && filteredIngredients.isNotEmpty(),
+                expanded = nameExpanded,
                 onExpandedChange = { nameExpanded = it }
             ) {
                 TextField(
-                    value = item.name,
-                    onValueChange = { 
-                        onUpdate(item.copy(name = it))
+                    value = searchQuery,
+                    onValueChange = { input -> 
+                        searchQuery = input
                         nameExpanded = true 
+                        val exactMatch = availableIngredients.find { it.name?.equals(input.trim(), ignoreCase = true) == true }
+                        if (exactMatch != null) {
+                            onUpdate(item.copy(
+                                name = exactMatch.name ?: "",
+                                unit = exactMatch.defaultUnit ?: "pieces"
+                            ))
+                        } else {
+                            onUpdate(item.copy(
+                                name = input,
+                                unit = "-"
+                            ))
+                        }
                     },
                     placeholder = { Text("e.g. Flour", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
+                        .onFocusEvent { focusState ->
+                            if (!focusState.isFocused && !isValidSelection) {
+                                val confirmedMatch = availableIngredients.find { it.name?.equals(item.name, ignoreCase = true) == true }
+                                if (confirmedMatch == null) {
+                                    searchQuery = ""
+                                    onUpdate(item.copy(name = "", unit = "-"))
+                                } else {
+                                    searchQuery = confirmedMatch.name ?: ""
+                                }
+                            }
+                        },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
@@ -745,27 +782,54 @@ fun IngredientRow(
                 
                 ExposedDropdownMenu(
                     expanded = nameExpanded,
-                    onDismissRequest = { nameExpanded = false },
+                    onDismissRequest = { 
+                        nameExpanded = false 
+                        if (!isValidSelection) {
+                            val confirmedMatch = availableIngredients.find { it.name?.equals(item.name, ignoreCase = true) == true }
+                            if (confirmedMatch == null) {
+                                searchQuery = ""
+                                onUpdate(item.copy(name = "", unit = "-"))
+                            } else {
+                                searchQuery = confirmedMatch.name ?: ""
+                            }
+                        }
+                    },
                     modifier = Modifier.heightIn(max = 300.dp).background(MaterialTheme.colorScheme.surface)
                 ) {
-                    filteredIngredients.forEach { ingredient ->
+                    if (filteredIngredients.isEmpty()) {
                         DropdownMenuItem(
                             text = { 
-                                Column {
-                                    Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-                                    if (ingredient.defaultUnit != null) {
-                                        Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
+                                Text(
+                                    "No matching ingredients found", 
+                                    fontSize = 13.sp, 
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ) 
                             },
-                            onClick = {
-                                onUpdate(item.copy(
-                                    name = ingredient.name ?: "",
-                                    unit = ingredient.defaultUnit ?: "pieces"
-                                ))
-                                nameExpanded = false
-                            }
+                            onClick = { },
+                            enabled = false
                         )
+                    } else {
+                        filteredIngredients.forEach { ingredient ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Column {
+                                        Text(ingredient.name ?: "Unknown", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                                        if (ingredient.defaultUnit != null) {
+                                            Text("Unit: ${ingredient.defaultUnit}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    val selectedName = ingredient.name ?: ""
+                                    searchQuery = selectedName
+                                    onUpdate(item.copy(
+                                        name = selectedName,
+                                        unit = ingredient.defaultUnit ?: "pieces"
+                                    ))
+                                    nameExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
