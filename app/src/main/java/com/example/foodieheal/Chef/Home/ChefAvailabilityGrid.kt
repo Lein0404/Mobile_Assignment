@@ -5,9 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +27,7 @@ import com.example.foodieheal.Chef.model.WeeklyAvailability
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun ChefAvailabilityCard(
@@ -40,6 +40,9 @@ fun ChefAvailabilityCard(
         mutableStateOf(WeeklyAvailability.fromJsonElement(chef.availability_hours))
     }
     var isSaving by remember { mutableStateOf(false) }
+
+    val saveSuccessMsg = stringResource(R.string.toast_chef_avail_save_success)
+    val saveErrorFormat = stringResource(R.string.toast_chef_avail_save_error)
 
     val todayKey = remember {
         DayOfWeekKey.fromCalendarDay(Calendar.getInstance().get(Calendar.DAY_OF_WEEK))
@@ -83,13 +86,13 @@ fun ChefAvailabilityCard(
                     }
                     Column {
                         Text(
-                            text = "Working Hours & Schedule",
+                            text = stringResource(R.string.chef_avail_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Tap slots to set when clients can hire you",
+                            text = stringResource(R.string.chef_avail_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -109,9 +112,9 @@ fun ChefAvailabilityCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(text = "Note", fontSize = 14.sp)
+                        Text(text = stringResource(R.string.chef_avail_note_label), fontSize = 14.sp)
                         Text(
-                            text = "Schedule not set yet. Configure your weekly hours below and tap Save so clients can book appointments.",
+                            text = stringResource(R.string.chef_avail_not_configured_warning),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             lineHeight = 16.sp
@@ -128,17 +131,17 @@ fun ChefAvailabilityCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PresetChip(
-                    label = "Weekdays",
+                    label = stringResource(R.string.chef_avail_preset_weekdays),
                     onClick = { availability = WeeklyAvailability.weekdaysOnly() },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
-                    label = "All Days",
+                    label = stringResource(R.string.chef_avail_preset_all_days),
                     onClick = { availability = WeeklyAvailability.allEnabled() },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
-                    label = "Clear",
+                    label = stringResource(R.string.chef_avail_preset_clear),
                     onClick = { availability = WeeklyAvailability.allDisabled() },
                     modifier = Modifier.weight(1f)
                 )
@@ -152,7 +155,7 @@ fun ChefAvailabilityCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Day",
+                    text = stringResource(R.string.chef_avail_col_day),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -174,9 +177,9 @@ fun ChefAvailabilityCard(
                         )
                         Text(
                             text = when (slot) {
-                                TimeSlotKey.MORNING -> "8am-12pm"
-                                TimeSlotKey.AFTERNOON -> "12pm-5pm"
-                                TimeSlotKey.EVENING -> "5pm-9pm"
+                                TimeSlotKey.MORNING -> stringResource(R.string.chef_avail_slot_morning_time)
+                                TimeSlotKey.AFTERNOON -> stringResource(R.string.chef_avail_slot_afternoon_time)
+                                TimeSlotKey.EVENING -> stringResource(R.string.chef_avail_slot_evening_time)
                             },
                             fontSize = 9.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
@@ -254,11 +257,11 @@ fun ChefAvailabilityCard(
                         weeklyAvailability = availability,
                         onSuccess = {
                             isSaving = false
-                            Toast.makeText(context, "Working hours updated successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, saveSuccessMsg, Toast.LENGTH_SHORT).show()
                         },
                         onError = { errorMsg ->
                             isSaving = false
-                            Toast.makeText(context, "Error saving: $errorMsg", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, String.format(Locale.getDefault(), saveErrorFormat, errorMsg), Toast.LENGTH_LONG).show()
                         }
                     )
                 },
@@ -277,7 +280,7 @@ fun ChefAvailabilityCard(
                     )
                 } else {
                     Text(
-                        text = "Save Schedule",
+                        text = stringResource(R.string.chef_avail_save),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )

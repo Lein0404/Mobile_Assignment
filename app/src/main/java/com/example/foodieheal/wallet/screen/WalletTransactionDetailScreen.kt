@@ -1,6 +1,5 @@
 package com.example.foodieheal.wallet.screen
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,11 +7,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -163,7 +159,7 @@ fun WalletTransactionDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Share Image",
+                                text = stringResource(R.string.wallet_detail_share_image),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
                                 softWrap = false,
@@ -182,12 +178,12 @@ fun WalletTransactionDetailScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.pdf),
-                                contentDescription = "Export PDF",
+                                contentDescription = stringResource(R.string.wallet_detail_export_pdf),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Export PDF",
+                                text = stringResource(R.string.wallet_detail_export_pdf),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
                                 softWrap = false,

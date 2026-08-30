@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,16 +26,16 @@ import com.example.foodieheal.R
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.ui.components.getHighlightedText
 
-enum class RateSortOrder(val label: String) {
-    NONE("None"),
-    ASCENDING("Rating: Low to High"),
-    DESCENDING("Rating: High to Low")
+enum class RateSortOrder(val labelRes: Int) {
+    NONE(R.string.filter_all_statuses),
+    ASCENDING(R.string.chef_filter_rating_low_to_high),
+    DESCENDING(R.string.chef_filter_rating_high_to_low)
 }
 
-enum class PriceSortOrder(val label: String) {
-    NONE("None"),
-    ASCENDING("Price: Low to High"),
-    DESCENDING("Price: High to Low")
+enum class PriceSortOrder(val labelRes: Int) {
+    NONE(R.string.filter_all_statuses),
+    ASCENDING(R.string.chef_filter_price_low_to_high),
+    DESCENDING(R.string.chef_filter_price_high_to_low)
 }
 
 enum class AgeRange(val label: String) {
@@ -119,7 +120,7 @@ fun ChefSearchBar(
     onFilterClick: () -> Unit,
     activeFilterCount: Int,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search chef by name, state..."
+    placeholder: String = stringResource(R.string.chef_filter_search_placeholder)
 ) {
     Row(
         modifier = modifier
@@ -142,7 +143,7 @@ fun ChefSearchBar(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(R.string.chef_filter_cd_search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
@@ -151,7 +152,7 @@ fun ChefSearchBar(
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear search",
+                            contentDescription = stringResource(R.string.chef_filter_cd_clear_search),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -194,7 +195,7 @@ fun ChefSearchBar(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.filter),
-                    contentDescription = "Open Filters",
+                    contentDescription = stringResource(R.string.chef_filter_cd_open_filters),
                     tint = if (activeFilterCount > 0) {
                         MaterialTheme.colorScheme.primary
                     } else {
@@ -227,7 +228,7 @@ fun ActiveFiltersRow(
         // Reset All Button
         AssistChip(
             onClick = onResetAll,
-            label = { Text("Clear All", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+            label = { Text(stringResource(R.string.chef_filter_clear_all), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
             colors = AssistChipDefaults.assistChipColors(
                 labelColor = MaterialTheme.colorScheme.error
             )
@@ -238,7 +239,7 @@ fun ActiveFiltersRow(
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(rateSortOrder = RateSortOrder.NONE)) },
-                label = { Text(filterState.rateSortOrder.label, fontSize = 12.sp) },
+                label = { Text(stringResource(filterState.rateSortOrder.labelRes), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -250,7 +251,7 @@ fun ActiveFiltersRow(
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(priceSortOrder = PriceSortOrder.NONE)) },
-                label = { Text(filterState.priceSortOrder.label, fontSize = 12.sp) },
+                label = { Text(stringResource(filterState.priceSortOrder.labelRes), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -262,7 +263,7 @@ fun ActiveFiltersRow(
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(selectedState = null)) },
-                label = { Text("State: $state", fontSize = 12.sp) },
+                label = { Text(stringResource(R.string.chef_filter_chip_state, state), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -274,7 +275,7 @@ fun ActiveFiltersRow(
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(selectedGender = null)) },
-                label = { Text("Gender: $gender", fontSize = 12.sp) },
+                label = { Text(stringResource(R.string.chef_filter_chip_gender, gender), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -286,7 +287,7 @@ fun ActiveFiltersRow(
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(selectedAgeRange = null)) },
-                label = { Text("Age: ${age.label}", fontSize = 12.sp) },
+                label = { Text(stringResource(R.string.chef_filter_chip_age, age.label), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -328,7 +329,7 @@ fun ChefFilterBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Filter & Sort Chefs",
+                text = stringResource(R.string.chef_filter_sheet_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -338,7 +339,7 @@ fun ChefFilterBottomSheet(
                     stateSearchQuery = ""
                 }
             ) {
-                Text("Reset All", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.chef_filter_reset_all), color = MaterialTheme.colorScheme.error)
             }
         }
 
@@ -350,7 +351,7 @@ fun ChefFilterBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 1. Sort by Rating
-            FilterSectionHeader(icon = R.drawable.ic_star, title = "Sort by Rating")
+            FilterSectionHeader(icon = R.drawable.ic_star, title = stringResource(R.string.chef_filter_sort_by_rating))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -362,7 +363,7 @@ fun ChefFilterBottomSheet(
                             rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.DESCENDING) RateSortOrder.NONE else RateSortOrder.DESCENDING
                         )
                     },
-                    label = { Text("High to Low") },
+                    label = { Text(stringResource(R.string.chef_filter_rating_high_to_low)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -375,7 +376,7 @@ fun ChefFilterBottomSheet(
                             rateSortOrder = if (tempState.rateSortOrder == RateSortOrder.ASCENDING) RateSortOrder.NONE else RateSortOrder.ASCENDING
                         )
                     },
-                    label = { Text("Low to High") },
+                    label = { Text(stringResource(R.string.chef_filter_rating_low_to_high)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -385,7 +386,7 @@ fun ChefFilterBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FilterSectionHeader(icon = R.drawable.dollar_symbol, title = "Sort by Hourly Rate")
+            FilterSectionHeader(icon = R.drawable.dollar_symbol, title = stringResource(R.string.chef_filter_sort_by_rate))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -397,7 +398,7 @@ fun ChefFilterBottomSheet(
                             priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.ASCENDING) PriceSortOrder.NONE else PriceSortOrder.ASCENDING
                         )
                     },
-                    label = { Text("Price: Low to High") },
+                    label = { Text(stringResource(R.string.chef_filter_price_low_to_high)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -410,7 +411,7 @@ fun ChefFilterBottomSheet(
                             priceSortOrder = if (tempState.priceSortOrder == PriceSortOrder.DESCENDING) PriceSortOrder.NONE else PriceSortOrder.DESCENDING
                         )
                     },
-                    label = { Text("Price: High to Low") },
+                    label = { Text(stringResource(R.string.chef_filter_price_high_to_low)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -420,7 +421,7 @@ fun ChefFilterBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FilterSectionHeader(icon = null, title = "Chef Gender")
+            FilterSectionHeader(icon = null, title = stringResource(R.string.chef_filter_chef_gender))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -433,7 +434,12 @@ fun ChefFilterBottomSheet(
                                 selectedGender = if (tempState.selectedGender.equals(gender, ignoreCase = true)) null else gender
                             )
                         },
-                        label = { Text(gender) },
+                        label = {
+                            Text(
+                                if (gender.equals("Male", ignoreCase = true)) stringResource(R.string.chef_filter_gender_male)
+                                else stringResource(R.string.chef_filter_gender_female)
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -444,7 +450,7 @@ fun ChefFilterBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FilterSectionHeader(icon = R.drawable.ic_clock, title = "Chef Age")
+            FilterSectionHeader(icon = R.drawable.ic_clock, title = stringResource(R.string.chef_filter_chef_age))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -470,12 +476,12 @@ fun ChefFilterBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FilterSectionHeader(icon = R.drawable.location, title = "State / Location")
+            FilterSectionHeader(icon = R.drawable.location, title = stringResource(R.string.chef_filter_state_location))
 
             OutlinedTextField(
                 value = stateSearchQuery,
                 onValueChange = { stateSearchQuery = it },
-                placeholder = { Text("Search location / state...", fontSize = 14.sp) },
+                placeholder = { Text(stringResource(R.string.chef_filter_search_state_placeholder), fontSize = 14.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -487,7 +493,7 @@ fun ChefFilterBottomSheet(
                 trailingIcon = {
                     if (stateSearchQuery.isNotEmpty()) {
                         IconButton(onClick = { stateSearchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.chef_filter_cd_clear_search))
                         }
                     }
                 },
@@ -536,7 +542,7 @@ fun ChefFilterBottomSheet(
                 tempState.selectedState?.let { selected ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Selected Location:",
+                        text = stringResource(R.string.chef_filter_selected_location),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -549,7 +555,7 @@ fun ChefFilterBottomSheet(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Remove",
+                                contentDescription = stringResource(R.string.chef_filter_remove),
                                 modifier = Modifier.size(14.dp)
                             )
                         },
@@ -578,7 +584,7 @@ fun ChefFilterBottomSheet(
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
-                text = "Apply Filters",
+                text = stringResource(R.string.chef_filter_apply_filters),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )

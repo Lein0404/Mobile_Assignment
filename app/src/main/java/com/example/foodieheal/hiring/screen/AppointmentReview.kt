@@ -395,7 +395,7 @@ fun AppointmentReviewScreen(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                         ) {
                             Text(
-                                text = "Itemized Receipt",
+                                text = stringResource(R.string.hiring_review_itemized_receipt),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -408,7 +408,11 @@ fun AppointmentReviewScreen(
 
                     // 1. Chef Labor
                     PriceSummaryRow(
-                        label = "Chef Labor (RM ${String.format(Locale.US, "%.2f", pricingBreakdown.hourlyRate)}/hr × ${String.format(Locale.US, "%.1f", pricingBreakdown.hours)} hrs)",
+                        label = stringResource(
+                            R.string.hiring_review_chef_labor,
+                            String.format(Locale.US, "%.2f", pricingBreakdown.hourlyRate),
+                            String.format(Locale.US, "%.1f", pricingBreakdown.hours)
+                        ),
                         value = String.format(Locale.US, "RM %.2f", pricingBreakdown.laborCost)
                     )
 
@@ -421,7 +425,10 @@ fun AppointmentReviewScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Ingredients Cost (${pricingBreakdown.recipeCostItems.size} dishes)",
+                                    text = stringResource(
+                                        R.string.hiring_review_ingredients_cost,
+                                        pricingBreakdown.recipeCostItems.size
+                                    ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -439,6 +446,11 @@ fun AppointmentReviewScreen(
                                 )
                             }
                             pricingBreakdown.recipeCostItems.forEach { dish ->
+                                val portionText = if (dish.portions > 1) {
+                                    stringResource(R.string.hiring_review_servings_plural, dish.portions)
+                                } else {
+                                    stringResource(R.string.hiring_review_serving_singular, dish.portions)
+                                }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -447,7 +459,7 @@ fun AppointmentReviewScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "• ${dish.recipeName} (${dish.portions} ${if (dish.portions > 1) "servings" else "serving"})",
+                                        text = "• ${dish.recipeName} ($portionText)",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier
@@ -481,7 +493,7 @@ fun AppointmentReviewScreen(
                                     .padding(end = 8.dp)
                             ) {
                                 Text(
-                                    text = "Interstate Travel Surcharge",
+                                    text = stringResource(R.string.hiring_review_interstate_travel_surcharge),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -504,13 +516,13 @@ fun AppointmentReviewScreen(
 
                     // Subtotal
                     PriceSummaryRow(
-                        label = "Subtotal",
+                        label = stringResource(R.string.hiring_review_subtotal),
                         value = String.format(Locale.US, "RM %.2f", pricingBreakdown.subtotal)
                     )
 
                     // 4. Platform Service Fee (5%)
                     PriceSummaryRow(
-                        label = "Platform Service Fee (5%)",
+                        label = stringResource(R.string.hiring_review_platform_service_fee),
                         value = String.format(Locale.US, "RM %.2f", pricingBreakdown.platformFee)
                     )
 

@@ -564,7 +564,10 @@ fun AddAppointmentFormScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Chef Labor (${String.format(Locale.US, "%.1f", pricingBreakdown.hours)} hrs)",
+                                text = stringResource(
+                                    R.string.hiring_pricing_chef_labor,
+                                    String.format(Locale.US, "%.1f", pricingBreakdown.hours)
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -584,7 +587,10 @@ fun AddAppointmentFormScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Ingredients (${pricingBreakdown.recipeCostItems.size} dishes)",
+                                    text = stringResource(
+                                        R.string.hiring_pricing_ingredients,
+                                        pricingBreakdown.recipeCostItems.size
+                                    ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -605,7 +611,7 @@ fun AddAppointmentFormScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Interstate Travel Surcharge",
+                                    text = stringResource(R.string.hiring_pricing_interstate_surcharge),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -625,7 +631,7 @@ fun AddAppointmentFormScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Service Fee (5%)",
+                                text = stringResource(R.string.hiring_pricing_service_fee),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

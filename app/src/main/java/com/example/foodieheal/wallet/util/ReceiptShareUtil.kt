@@ -7,6 +7,7 @@ import android.graphics.pdf.PdfDocument
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.example.foodieheal.R
 import com.example.foodieheal.wallet.model.WalletTransaction
 import com.example.foodieheal.wallet.model.WalletTransactionType
 import java.io.File
@@ -37,7 +38,7 @@ object ReceiptShareUtil {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/png"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "FoodieHeal Transaction Receipt")
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.receipt_share_subject))
                 putExtra(
                     Intent.EXTRA_TEXT,
                     "FoodieHeal Official Receipt\n" +
@@ -47,10 +48,10 @@ object ReceiptShareUtil {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            context.startActivity(Intent.createChooser(shareIntent, "Share Receipt via"))
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.receipt_share_chooser_image)))
         } catch (e: Exception) {
             Log.e(TAG, "Error sharing receipt", e)
-            Toast.makeText(context, "Failed to generate receipt image: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.receipt_share_err_generate_image, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -92,7 +93,7 @@ object ReceiptShareUtil {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "FoodieHeal Transaction Receipt")
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.receipt_share_subject))
                 putExtra(
                     Intent.EXTRA_TEXT,
                     "FoodieHeal Official Receipt (PDF)\n" +
@@ -102,10 +103,10 @@ object ReceiptShareUtil {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            context.startActivity(Intent.createChooser(shareIntent, "Export PDF via"))
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.receipt_share_chooser_pdf)))
         } catch (e: Exception) {
             Log.e(TAG, "Error generating PDF receipt", e)
-            Toast.makeText(context, "Failed to generate PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.receipt_share_err_generate_pdf, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 

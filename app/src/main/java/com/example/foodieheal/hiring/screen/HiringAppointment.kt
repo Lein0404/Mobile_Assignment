@@ -268,7 +268,7 @@ private fun DayScheduleSection(
                         )
                         if (!isChefAvailableOnDate) {
                             Text(
-                                text = "Chef Off Duty on this day",
+                                text = stringResource(R.string.hiring_chef_off_duty_title),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error
@@ -299,7 +299,7 @@ private fun DayScheduleSection(
                     ) {
                         Text(
                             text = if (!isChefAvailableOnDate) {
-                                "Chef is off duty on this day. Please select another date on the calendar."
+                                stringResource(R.string.hiring_chef_off_duty_desc)
                             } else {
                                 stringResource(R.string.empty_no_appointments_for_date)
                             },

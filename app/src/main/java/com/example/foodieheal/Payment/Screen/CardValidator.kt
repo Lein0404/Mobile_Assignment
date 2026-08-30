@@ -1,5 +1,8 @@
 package com.example.foodieheal.Payment.Screen
 
+import androidx.annotation.StringRes
+import com.example.foodieheal.R
+
 fun luhnCheck(cardNumber: String): Boolean {
     val digits = cardNumber.filter { it.isDigit() }
     if (digits.length < 13) return false          // too short to be any real card
@@ -20,11 +23,12 @@ fun luhnCheck(cardNumber: String): Boolean {
     return sum % 10 == 0
 }
 
-fun cardNumberError(cardNumber: String): String? {
+@StringRes
+fun cardNumberError(cardNumber: String): Int? {
     val digits = cardNumber.filter { it.isDigit() }
     return when {
         digits.length < 13 -> null
-        !luhnCheck(digits) -> "Invalid card number"
+        !luhnCheck(digits) -> R.string.add_card_error_invalid_number
         else -> null
     }
 }

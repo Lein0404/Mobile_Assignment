@@ -257,6 +257,12 @@
     <string name="search_bookmarks_placeholder">Search bookmarks...</string>
     <string name="no_bookmarks_match_filters">No bookmarks match your filters</string>
     <string name="chefs_saved_count">%1$d saved</string>
+    <string name="hiring_weekly_working_schedule">Weekly Working Schedule</string>
+    <string name="hiring_schedule_morning">Morning</string>
+    <string name="hiring_schedule_afternoon">Afternoon</string>
+    <string name="hiring_schedule_evening">Evening</string>
+    <string name="hiring_schedule_today">Today</string>
+    <string name="hiring_schedule_off_duty">Off Duty</string>
 
     <string name="cd_previous_week">Previous Week</string>
     <string name="cd_next_week">Next Week</string>
@@ -321,6 +327,8 @@
     <string name="custom_request_chef_placeholder">Custom request for chef (e.g. less spicy)</string>
     <string name="remove_dish_btn">Remove Dish</string>
     <string name="select_recipe_for_appointment_btn">Select this Recipe for Appointment</string>
+    <string name="hiring_chef_off_duty_title">Chef Off Duty on this day</string>
+    <string name="hiring_chef_off_duty_desc">Chef is off duty on this day. Please select another date on the calendar.</string>
 
     <string name="placeholder_address">Address</string>
     <string name="placeholder_postcode">Postcode</string>
@@ -340,6 +348,10 @@
     <string name="label_estimated_duration">Duration</string>
     <string name="estimated_price_summary">Price Summary</string>
     <string name="hourly_rate_format">RM %.2f / hr</string>
+    <string name="hiring_pricing_chef_labor">Chef Labor (%s hrs)</string>
+    <string name="hiring_pricing_ingredients">Ingredients (%d dishes)</string>
+    <string name="hiring_pricing_interstate_surcharge">Interstate Travel Surcharge</string>
+    <string name="hiring_pricing_service_fee">Service Fee (5%)</string>
 
     <!-- Appointment History-->
     <string name="appointment_history_title">Appointment History</string>
@@ -526,6 +538,7 @@
     <string name="no_upcoming_appointments">No upcoming appointments scheduled.</string>
     <string name="error_loading_appointments">Unable to load appointments.</string>
     <string name="msg_loading">Loading...</string>
+    <string name="chef_home_offline_cached_appointments">Offline: Showing cached appointments</string>
 
     <!-- Chef Appointment Screen -->
     <string name="bookings_and_events">Bookings &amp; Events</string>
@@ -768,13 +781,15 @@
     <string name="placeholder_enter_postcode">Enter your postcode</string>
     <string name="placeholder_experience">Enter your years of experience</string>
     <string name="prompt_upload_picture">Please upload a clear profile picture so clients can recognize you.</string>
-    <string name="btn_choose_photo">Choose Photo</string>
-    <string name="btn_change_photo">Change Photo</string>
+    <string name="choose_photo">Choose Photo</string>
+    <string name="change_photo">Change Photo</string>
     <string name="no_photo">No Photo</string>
     <string name="section_personal_details">Personal Details</string>
     <string name="section_address">Address</string>
     <string name="section_professional_bg">Professional Background</string>
     <string name="years_format">%1$s Years</string>
+    <string name="chef_basic_info_linked_credentials">Linked to your current FoodieHeal account credentials.</string>
+    <string name="chef_contact_account_email_reused">Account email (reused from your profile)</string>
 
     <!-- SHOPPING LIST MODULE -->
     <!-- Shopping List Home Screen -->
@@ -1173,4 +1188,202 @@
     <string name="error_source_plan_not_found">Source plan not found</string>
     <string name="label_copy_suffix">(Copy)</string>
     <string name="error_failed_to_copy_template">Failed to copy template</string>
+
+    <!-- ChefEarningsChart -->
+    <string name="chef_earnings_overview">Earnings Overview</string>
+    <string name="chef_earnings_last_months_format">Last %1$d months • Net Payout</string>
+    <string name="chef_earnings_total_gross">Total Gross</string>
+    <string name="chef_earnings_platform_fee">Platform Fee (5%)</string>
+    <string name="chef_earnings_net_payout">Net Payout</string>
+    <string name="chef_earnings_breakdown_format">%1$s Breakdown</string>
+    <string name="chef_earnings_appointment_single">1 appointment</string>
+    <string name="chef_earnings_appointment_plural_format">%1$d appointments</string>
+    <string name="chef_earnings_fee_deduction_format">" • Fee: -RM %1$.2f"</string>
+
+    <!-- AppointmentScreen -->
+    <string name="chef_appt_offline_cached_bookings">Offline: Showing cached bookings</string>
+    <string name="chef_appt_search_placeholder">Search client, location, diet…</string>
+    <string name="chef_appt_clear_search">Clear</string>
+    <string name="chef_appt_reset_filters">Reset Filters</string>
+    <string name="chef_appt_client_booking">Client Booking</string>
+    <string name="chef_appt_serving_format">%1$d Serving</string>
+    <string name="chef_appt_servings_format">%1$d Servings</string>
+    <string name="chef_appt_note_format">Note: %1$s</string>
+    <string name="chef_appt_net_payout">Net Payout</string>
+    <string name="chef_appt_total_charged">Total Charged</string>
+
+    <!-- AppointmentDetailsScreen -->
+    <string name="chef_details_earnings_desc">Earnings</string>
+    <string name="chef_details_status_paid">Paid</string>
+    <string name="chef_details_status_cancelled">Cancelled</string>
+    <string name="chef_details_status_na">N/A</string>
+    <string name="chef_details_status_awaiting_payment">Awaiting Payment</string>
+    <string name="chef_details_status_pending">Pending</string>
+    <string name="chef_details_open_with_maps">Open with Maps</string>
+    <string name="chef_details_recipe_image_desc">Recipe image</string>
+    <string name="chef_details_view_details_desc">View Details</string>
+    <string name="chef_details_scan_qr_desc">Scan QR</string>
+    <string name="toast_service_verified_completed">Service verified via QR! Booking marked as Completed.</string>
+
+    <!-- ChefAvailabilityGrid -->
+    <string name="chef_avail_title">Working Hours &amp; Schedule</string>
+    <string name="chef_avail_subtitle">Tap slots to set when clients can hire you</string>
+    <string name="chef_avail_note_label">Note</string>
+    <string name="chef_avail_not_configured_warning">Schedule not set yet. Configure your weekly hours below and tap Save so clients can book appointments.</string>
+    <string name="chef_avail_preset_weekdays">Weekdays</string>
+    <string name="chef_avail_preset_all_days">All Days</string>
+    <string name="chef_avail_preset_clear">Clear</string>
+    <string name="chef_avail_col_day">Day</string>
+    <string name="chef_avail_slot_morning_time">8am-12pm</string>
+    <string name="chef_avail_slot_afternoon_time">12pm-5pm</string>
+    <string name="chef_avail_slot_evening_time">5pm-9pm</string>
+    <string name="toast_chef_avail_save_success">Working hours updated successfully!</string>
+    <string name="toast_chef_avail_save_error">Error saving: %1$s</string>
+    <string name="chef_avail_save">Save Schedule</string>
+
+    <!-- ChefQrScannerDialog -->
+    <string name="toast_camera_permission_required">Camera permission is required to scan QR code.</string>
+    <string name="chef_qr_permission_required_title">Camera Permission Required</string>
+    <string name="chef_qr_permission_required_desc">Camera access is needed to scan the client\'s service completion QR code.</string>
+    <string name="chef_qr_btn_grant_permission">Grant Permission</string>
+    <string name="toast_scanned_qr_mismatch">Scanned QR is for a different booking.</string>
+    <string name="chef_qr_desc_close">Close</string>
+    <string name="chef_qr_title_scan_completion">Scan Completion QR</string>
+    <string name="chef_qr_desc_torch">Torch</string>
+    <string name="chef_qr_instruction_align">Align Client QR Code within frame</string>
+    <string name="chef_qr_instruction_subtitle">Scanning verifies completion and changes status to Completed.</string>
+
+    <!-- ChefLoginScreen -->
+    <string name="chef_login_portal_title">Chef Portal</string>
+    <string name="chef_login_portal_subtitle">Sign in to manage your culinary profile &amp; bookings</string>
+    <string name="chef_login_email_label">Chef Email</string>
+    <string name="chef_login_email_placeholder">chef@example.com</string>
+    <string name="chef_login_invalid_email">Invalid email format</string>
+    <string name="chef_login_password_placeholder">Enter your password</string>
+    <string name="chef_login_forgot_password">Forgot Password?</string>
+    <string name="chef_login_btn_submit">CHEF LOGIN</string>
+    <string name="chef_login_new_chef_prompt">"New chef? "</string>
+    <string name="chef_login_apply_here">Apply directly here</string>
+    <string name="chef_login_back_to_customer">Back to Customer Login</string>
+
+    <!-- AppointmentReview -->
+    <string name="hiring_review_itemized_receipt">Itemized Receipt</string>
+    <string name="hiring_review_chef_labor">Chef Labor (RM %1$s/hr × %2$s hrs)</string>
+    <string name="hiring_review_ingredients_cost">Ingredients Cost (%d dishes)</string>
+    <string name="hiring_review_serving_singular">%d serving</string>
+    <string name="hiring_review_servings_plural">%d servings</string>
+    <string name="hiring_review_interstate_travel_surcharge">Interstate Travel Surcharge</string>
+    <string name="hiring_review_subtotal">Subtotal</string>
+    <string name="hiring_review_platform_service_fee">Platform Service Fee (5%)</string>
+
+    <!-- UserAppointmentDetails -->
+    <string name="user_app_details_your_rating">Your Rating</string>
+    <string name="user_app_details_edit_review">Edit Review</string>
+    <string name="user_app_details_experience_question">How was your experience?</string>
+    <string name="user_app_details_share_feedback_prompt">Share your feedback and rate Chef %s to help others.</string>
+    <string name="user_app_details_fallback_chef">Chef</string>
+    <string name="user_app_details_rate_chef_now">Rate Chef Now</string>
+    <string name="user_app_details_show_completion_qr">Show Completion QR Code</string>
+    <string name="user_app_details_cd_show_completion_qr">Show Completion QR</string>
+    <string name="user_app_details_recipe_image">Recipe Image</string>
+
+    <!-- AppointmentQrCodeDialog -->
+    <string name="qr_dialog_service_completion_title">Service Completion QR</string>
+    <string name="qr_dialog_chef_prefix">Chef: %s</string>
+    <string name="qr_dialog_cd_close">Close</string>
+    <string name="qr_dialog_cd_qr_code">Completion QR Code</string>
+    <string name="qr_dialog_booking_id">Booking ID</string>
+    <string name="qr_dialog_appointment_date">Appointment Date</string>
+    <string name="qr_dialog_instruction">Present this QR code to your Chef upon service completion. Once scanned, the booking will be verified and marked as Completed.</string>
+    <string name="qr_dialog_btn_done">Done</string>
+
+    <!-- ChefFilterComponents -->
+    <string name="chef_filter_search_placeholder">Search chef by name, state...</string>
+    <string name="chef_filter_cd_search">Search</string>
+    <string name="chef_filter_cd_clear_search">Clear search</string>
+    <string name="chef_filter_cd_open_filters">Open Filters</string>
+    <string name="chef_filter_clear_all">Clear All</string>
+    <string name="chef_filter_chip_state">State: %s</string>
+    <string name="chef_filter_chip_gender">Gender: %s</string>
+    <string name="chef_filter_chip_age">Age: %s</string>
+    <string name="chef_filter_sheet_title">Filter &amp; Sort Chefs</string>
+    <string name="chef_filter_reset_all">Reset All</string>
+    <string name="chef_filter_sort_by_rating">Sort by Rating</string>
+    <string name="chef_filter_rating_high_to_low">High to Low</string>
+    <string name="chef_filter_rating_low_to_high">Low to High</string>
+    <string name="chef_filter_sort_by_rate">Sort by Hourly Rate</string>
+    <string name="chef_filter_price_low_to_high">Price: Low to High</string>
+    <string name="chef_filter_price_high_to_low">Price: High to Low</string>
+    <string name="chef_filter_chef_gender">Chef Gender</string>
+    <string name="chef_filter_gender_male">Male</string>
+    <string name="chef_filter_gender_female">Female</string>
+    <string name="chef_filter_chef_age">Chef Age</string>
+    <string name="chef_filter_state_location">State / Location</string>
+    <string name="chef_filter_search_state_placeholder">Search location / state...</string>
+    <string name="chef_filter_selected_location">Selected Location:</string>
+    <string name="chef_filter_remove">Remove</string>
+    <string name="chef_filter_apply_filters">Apply Filters</string>
+
+    <!-- PaymentScreen -->
+    <string name="payment_method_in_app_wallet">In-App Wallet</string>
+    <string name="payment_method_card_format">Card (•••• %s)</string>
+    <string name="payment_method_selected_fallback">Selected Payment Method</string>
+    <string name="payment_calendar_event_title">FoodieHeal Appointment Session</string>
+
+    <!-- PaymentMethod.kt -->
+    <string name="payment_method_wallet_balance_format">Balance: RM %s</string>
+    <string name="payment_saved_card">Saved Card</string>
+
+    <!-- AnimatedPriceBreakdown -->
+    <string name="breakdown_title_price_breakdown">Price Breakdown</string>
+    <string name="breakdown_base_rate">Base Rate</string>
+    <string name="breakdown_serving_premium">Serving Premium (%d extra guests)</string>
+    <string name="breakdown_recipes_add_on">Recipes &amp; Add-ons</string>
+    <string name="breakdown_total">Total</string>
+    <string name="breakdown_currency_format">RM %s</string>
+
+    <!-- AddNewCard -->
+    <string name="add_card_clear_all">Clear All</string>
+    <string name="add_card_section_card_info">Card Information</string>
+    <string name="add_card_holder_placeholder">e.g. John Doe</string>
+    <string name="add_card_section_expiry_security">Expiry &amp; Security</string>
+    <string name="add_card_error_month">Month must be 01-12</string>
+    <string name="add_card_error_format_mmyy">Format: MM/YY</string>
+    <string name="add_card_error_invalid_year">Invalid year</string>
+    <string name="add_card_error_card_expired">Card has expired</string>
+    <string name="add_card_error_invalid_expiry_year">Invalid expiry year</string>
+    <string name="add_card_error_invalid_number">Invalid card number</string>
+
+    <!-- WalletTransactionDetailScreen -->
+    <string name="wallet_detail_share_image">Share Image</string>
+    <string name="wallet_detail_export_pdf">Export PDF</string>
+
+    <!-- TransactionReceiptCard -->
+    <string name="receipt_date_recent">Recent</string>
+
+    <!-- SpendingAnalyticsCard -->
+    <string name="analytics_title">Spending Analytics</string>
+    <string name="analytics_subtitle_monthly">Monthly Breakdown</string>
+    <string name="analytics_total_spent">Total Spent</string>
+    <string name="analytics_total_top_up">Total Top-Up</string>
+    <string name="analytics_total_refunds">Refunds</string>
+    <string name="analytics_legend_payments">Payments</string>
+    <string name="analytics_legend_top_ups">Top-Ups</string>
+    <string name="analytics_legend_refunds">Refunds</string>
+    <string name="analytics_month_breakdown_format">%s Breakdown</string>
+    <string name="analytics_net_format">Net: %1$sRM %2$s</string>
+
+    <!-- WalletScreen -->
+    <string name="wallet_tab_transaction_history">Transaction History</string>
+    <string name="wallet_tab_spending_analytics">Spending Analytics</string>
+    <string name="wallet_top_up_via_format">Top-up via %s</string>
+    <string name="wallet_top_up_default_desc">Wallet Top Up</string>
+    <string name="wallet_reset">Reset</string>
+
+    <!-- ReceiptShareUtil -->
+    <string name="receipt_share_subject">FoodieHeal Transaction Receipt</string>
+    <string name="receipt_share_chooser_image">Share Receipt via</string>
+    <string name="receipt_share_chooser_pdf">Share PDF Receipt via</string>
+    <string name="receipt_share_err_generate_image">Failed to generate receipt image: %s</string>
+    <string name="receipt_share_err_generate_pdf">Failed to generate PDF receipt: %s</string>
 </resources>

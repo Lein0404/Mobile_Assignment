@@ -174,9 +174,9 @@ fun ChefPictureScreen(
             ) {
                 Text(
                     text = if (chefViewModel.selectedImageUri == null) {
-                        stringResource(R.string.btn_choose_photo)
+                        stringResource(R.string.choose_photo)
                     } else {
-                        stringResource(R.string.btn_change_photo)
+                        stringResource(R.string.change_photo)
                     }
                 )
             }

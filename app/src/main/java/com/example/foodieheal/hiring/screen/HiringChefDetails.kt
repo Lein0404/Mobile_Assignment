@@ -335,7 +335,10 @@ fun HiringChefDetails(
             val weeklyAvail = remember(chef.availability_hours) {
                 com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
             }
-            DetailSectionCard(title = "Weekly Working Schedule") {
+            val morningLabel = stringResource(R.string.hiring_schedule_morning)
+            val afternoonLabel = stringResource(R.string.hiring_schedule_afternoon)
+            val eveningLabel = stringResource(R.string.hiring_schedule_evening)
+            DetailSectionCard(title = stringResource(R.string.hiring_weekly_working_schedule)) {
                 val todayKey = remember {
                     com.example.foodieheal.Chef.model.DayOfWeekKey.fromCalendarDay(java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK))
                 }
@@ -344,9 +347,9 @@ fun HiringChefDetails(
                         val isToday = day == todayKey
                         val daySlots = weeklyAvail.getDay(day)
                         val activeSlots = buildList {
-                            if (daySlots.morning) add("Morning")
-                            if (daySlots.afternoon) add("Afternoon")
-                            if (daySlots.evening) add("Evening")
+                            if (daySlots.morning) add(morningLabel)
+                            if (daySlots.afternoon) add(afternoonLabel)
+                            if (daySlots.evening) add(eveningLabel)
                         }
 
                         Row(
@@ -374,7 +377,7 @@ fun HiringChefDetails(
                                         color = MaterialTheme.colorScheme.primary
                                     ) {
                                         Text(
-                                            text = "Today",
+                                            text = stringResource(R.string.hiring_schedule_today),
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onPrimary,
@@ -386,7 +389,7 @@ fun HiringChefDetails(
 
                             if (activeSlots.isEmpty()) {
                                 Text(
-                                    text = "Off Duty",
+                                    text = stringResource(R.string.hiring_schedule_off_duty),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )

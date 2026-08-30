@@ -1,13 +1,8 @@
 package com.example.foodieheal.wallet.component
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,8 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,7 +50,6 @@ import com.example.foodieheal.wallet.model.WalletTransaction
 import com.example.foodieheal.wallet.model.WalletTransactionType
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -215,7 +208,7 @@ fun SpendingAnalyticsCard(
                     }
                     Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
-                            text = "Spending Analytics",
+                            text = stringResource(R.string.analytics_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -223,7 +216,7 @@ fun SpendingAnalyticsCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Monthly Breakdown",
+                            text = stringResource(R.string.analytics_subtitle_monthly),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -271,19 +264,19 @@ fun SpendingAnalyticsCard(
             ) {
                 MetricSummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Total Spent",
+                    title = stringResource(R.string.analytics_total_spent),
                     amount = totalSpent,
                     accentColor = ColorPayment
                 )
                 MetricSummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Total Top-Up",
+                    title = stringResource(R.string.analytics_total_top_up),
                     amount = totalTopUp,
                     accentColor = ColorTopUp
                 )
                 MetricSummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Refunds",
+                    title = stringResource(R.string.analytics_total_refunds),
                     amount = totalRefund,
                     accentColor = ColorRefund
                 )
@@ -297,9 +290,9 @@ fun SpendingAnalyticsCard(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ChartLegendItem(color = ColorPayment, label = "Payments")
-                ChartLegendItem(color = ColorTopUp, label = "Top-Ups")
-                ChartLegendItem(color = ColorRefund, label = "Refunds")
+                ChartLegendItem(color = ColorPayment, label = stringResource(R.string.analytics_legend_payments))
+                ChartLegendItem(color = ColorTopUp, label = stringResource(R.string.analytics_legend_top_ups))
+                ChartLegendItem(color = ColorRefund, label = stringResource(R.string.analytics_legend_refunds))
             }
 
             // Interactive Bar Chart
@@ -570,7 +563,7 @@ private fun SelectedMonthDetailView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${selectedMonth.fullLabel} Breakdown",
+                    text = stringResource(R.string.analytics_month_breakdown_format, selectedMonth.fullLabel),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -580,7 +573,11 @@ private fun SelectedMonthDetailView(
                 )
                 val isPositiveFlow = selectedMonth.netFlow >= 0
                 Text(
-                    text = "Net: ${if (isPositiveFlow) "+" else ""}RM ${String.format(Locale.US, "%.2f", selectedMonth.netFlow)}",
+                    text = stringResource(
+                        R.string.analytics_net_format,
+                        if (isPositiveFlow) "+" else "",
+                        String.format(Locale.US, "%.2f", selectedMonth.netFlow)
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = if (isPositiveFlow) ColorTopUp else ColorPayment,
@@ -596,19 +593,19 @@ private fun SelectedMonthDetailView(
             ) {
                 MonthDetailRow(
                     modifier = Modifier.weight(1f),
-                    label = "Payments",
+                    label = stringResource(R.string.analytics_legend_payments),
                     amount = selectedMonth.payments,
                     color = ColorPayment
                 )
                 MonthDetailRow(
                     modifier = Modifier.weight(1f),
-                    label = "Top-Ups",
+                    label = stringResource(R.string.analytics_legend_top_ups),
                     amount = selectedMonth.topUps,
                     color = ColorTopUp
                 )
                 MonthDetailRow(
                     modifier = Modifier.weight(1f),
-                    label = "Refunds",
+                    label = stringResource(R.string.analytics_legend_refunds),
                     amount = selectedMonth.refunds,
                     color = ColorRefund
                 )

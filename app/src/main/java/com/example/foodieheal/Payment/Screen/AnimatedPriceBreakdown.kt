@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.example.foodieheal.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -129,7 +131,7 @@ fun AnimatedPriceBreakdownBar(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Price Breakdown",
+            text = stringResource(R.string.breakdown_title_price_breakdown),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -177,14 +179,14 @@ fun AnimatedPriceBreakdownBar(
         // Legend rows
         BreakdownLegendRow(
             color      = ColorBase,
-            label      = "Base Rate",
+            label      = stringResource(R.string.breakdown_base_rate),
             amount     = breakdown.baseRate,
             percentage = breakdown.baseFraction
         )
         if (breakdown.servingPremium > 0) {
             BreakdownLegendRow(
                 color      = ColorPremium,
-                label      = "Serving Premium (${(servingSize - 4).coerceAtLeast(0)} extra guests)",
+                label      = stringResource(R.string.breakdown_serving_premium, (servingSize - 4).coerceAtLeast(0)),
                 amount     = breakdown.servingPremium,
                 percentage = breakdown.premiumFraction
             )
@@ -192,7 +194,7 @@ fun AnimatedPriceBreakdownBar(
         if (breakdown.recipesAddOn > 0) {
             BreakdownLegendRow(
                 color      = ColorRecipes,
-                label      = "Recipes & Add-ons",
+                label      = stringResource(R.string.breakdown_recipes_add_on),
                 amount     = breakdown.recipesAddOn,
                 percentage = breakdown.recipesFraction
             )
@@ -205,12 +207,12 @@ fun AnimatedPriceBreakdownBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Total",
+                text = stringResource(R.string.breakdown_total),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "RM ${String.format(Locale.US, "%.2f", totalPrice)}",
+                text = stringResource(R.string.breakdown_currency_format, String.format(Locale.US, "%.2f", totalPrice)),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -259,7 +261,7 @@ private fun BreakdownLegendRow(
                 fontSize = 11.sp
             )
             Text(
-                text = "RM ${String.format(Locale.US, "%.2f", amount)}",
+                text = stringResource(R.string.breakdown_currency_format, String.format(Locale.US, "%.2f", amount)),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp

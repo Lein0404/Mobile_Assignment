@@ -2,7 +2,6 @@ package com.example.foodieheal.Chef.components
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.util.Size
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,10 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -71,7 +70,7 @@ fun ChefQrScannerDialog(
         onResult = { granted ->
             hasCameraPermission = granted
             if (!granted) {
-                Toast.makeText(context, "Camera permission is required to scan QR code.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.toast_camera_permission_required, Toast.LENGTH_SHORT).show()
             }
         }
     )
@@ -114,14 +113,14 @@ fun ChefQrScannerDialog(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Camera Permission Required",
+                        text = stringResource(R.string.chef_qr_permission_required_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Camera access is needed to scan the client's service completion QR code.",
+                        text = stringResource(R.string.chef_qr_permission_required_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -131,11 +130,11 @@ fun ChefQrScannerDialog(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Grant Permission")
+                        Text(stringResource(R.string.chef_qr_btn_grant_permission))
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = Color.White)
+                        Text(stringResource(R.string.dialog_cancel), color = Color.White)
                     }
                 }
             }
@@ -202,7 +201,7 @@ private fun CameraPreviewWithAnalyzer(
                                             ContextCompat.getMainExecutor(ctx).execute {
                                                 Toast.makeText(
                                                     ctx,
-                                                    "Scanned QR is for a different booking.",
+                                                    ctx.getString(R.string.toast_scanned_qr_mismatch),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }
@@ -284,14 +283,14 @@ private fun CameraPreviewWithAnalyzer(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.cancel),
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.chef_qr_desc_close),
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
 
             Text(
-                text = "Scan Completion QR",
+                text = stringResource(R.string.chef_qr_title_scan_completion),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -316,7 +315,7 @@ private fun CameraPreviewWithAnalyzer(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_star),
-                    contentDescription = "Torch",
+                    contentDescription = stringResource(R.string.chef_qr_desc_torch),
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
@@ -337,14 +336,14 @@ private fun CameraPreviewWithAnalyzer(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Align Client QR Code within frame",
+                    text = stringResource(R.string.chef_qr_instruction_align),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Scanning verifies completion and changes status to Completed.",
+                    text = stringResource(R.string.chef_qr_instruction_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center

@@ -24,9 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
-import com.example.foodieheal.User.Model.User
-import com.example.foodieheal.Recipe.Repo.RecipeRepository
-import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.HomeUiState
@@ -220,7 +217,7 @@ fun ChefMainScreen(
                         ?: (homeUiState as? HomeUiState.Success)?.usersMap
                         ?: emptyMap()
 
-                    val userName = usersMap[appointment.userId]?.name ?: "Unknown Client"
+                    val userName = usersMap[appointment.userId]?.name ?: stringResource(R.string.unknown_client)
 
                     val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
                     val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()

@@ -1,6 +1,7 @@
 package com.example.foodieheal.Payment.Screen
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,23 +64,23 @@ fun AddNewCardBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var formState by remember { mutableStateOf(NewCardFormState()) }
-    val defaultExpiryError = stringResource(R.string.error_invalid_expiry_date)
+    val defaultExpiryError = R.string.error_invalid_expiry_date
 
-    val expiryError = validateExpiryDate(formState.expiryDate)
+    val expiryErrorRes = validateExpiryDate(formState.expiryDate)
     val isExpiryComplete = formState.expiryDate.length == 5
     val isExpiryInvalid = formState.expiryDate.isNotEmpty() && (
-            (isExpiryComplete && expiryError != null) ||
+            (isExpiryComplete && expiryErrorRes != null) ||
                     (!isExpiryComplete && formState.expiryDate.length >= 2 && validateMonth(formState.expiryDate) != null)
             )
 
-    val cardError = cardNumberError(formState.cardNumber)
-    val isCardNumberInvalid = cardError != null
+    val cardErrorRes = cardNumberError(formState.cardNumber)
+    val isCardNumberInvalid = cardErrorRes != null
 
     val isFormValid = formState.cardNumber.length in 13..16 &&
             !isCardNumberInvalid &&
             formState.cardHolderName.isNotBlank() &&
             formState.expiryDate.length == 5 &&
-            expiryError == null &&
+            expiryErrorRes == null &&
             formState.cvv.length in 3..4
 
     ModalBottomSheet(
@@ -115,7 +116,7 @@ fun AddNewCardBottomSheet(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Clear All",
+                        text = stringResource(R.string.add_card_clear_all),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1
@@ -132,7 +133,7 @@ fun AddNewCardBottomSheet(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Card Information Section
-                CardSectionHeader(icon = R.drawable.dollar_symbol, title = "Card Information")
+                CardSectionHeader(icon = R.drawable.dollar_symbol, title = stringResource(R.string.add_card_section_card_info))
 
                 // Card Number
                 OutlinedTextField(
@@ -145,7 +146,7 @@ fun AddNewCardBottomSheet(
                     placeholder = { Text(stringResource(R.string.placeholder_card_number), fontSize = 14.sp) },
                     isError = isCardNumberInvalid,
                     supportingText = if (isCardNumberInvalid) {
-                        { Text(cardError!!, color = MaterialTheme.colorScheme.error) }
+                        { Text(stringResource(cardErrorRes!!), color = MaterialTheme.colorScheme.error) }
                     } else null,
                     trailingIcon = {
                         if (formState.cardNumber.isNotEmpty()) {
@@ -177,7 +178,7 @@ fun AddNewCardBottomSheet(
                     value = formState.cardHolderName,
                     onValueChange = { formState = formState.copy(cardHolderName = it) },
                     label = { Text(stringResource(R.string.label_cardholder_name)) },
-                    placeholder = { Text("e.g. John Doe", fontSize = 14.sp) },
+                    placeholder = { Text(stringResource(R.string.add_card_holder_placeholder), fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -192,7 +193,7 @@ fun AddNewCardBottomSheet(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Expiry & Security Section
-                CardSectionHeader(icon = R.drawable.ic_clock, title = "Expiry & Security")
+                CardSectionHeader(icon = R.drawable.ic_clock, title = stringResource(R.string.add_card_section_expiry_security))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -208,7 +209,8 @@ fun AddNewCardBottomSheet(
                         placeholder = { Text(stringResource(R.string.placeholder_expiry_date), fontSize = 14.sp) },
                         isError = isExpiryInvalid,
                         supportingText = if (isExpiryInvalid) {
-                            { Text(expiryError ?: validateMonth(formState.expiryDate) ?: defaultExpiryError, color = MaterialTheme.colorScheme.error) }
+                            val errRes = expiryErrorRes ?: validateMonth(formState.expiryDate) ?: defaultExpiryError
+                            { Text(stringResource(errRes), color = MaterialTheme.colorScheme.error) }
                         } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -310,32 +312,34 @@ fun formatExpiryDateInput(input: String): String {
 }
 
 // Validate month (01-12)
-fun validateMonth(expiry: String): String? {
+@StringRes
+fun validateMonth(expiry: String): Int? {
     if (expiry.length < 2) return null
     val month = expiry.take(2).toIntOrNull()
     if (month == null || month < 1 || month > 12) {
-        return "Month must be 01-12"
+        return R.string.add_card_error_month
     }
     return null
 }
 
 // Validate complete MM/YY format & check if expired
-fun validateExpiryDate(expiry: String): String? {
+@StringRes
+fun validateExpiryDate(expiry: String): Int? {
     if (expiry.isBlank()) return null
     if (expiry.length < 5) {
         return validateMonth(expiry)
     }
     val parts = expiry.split("/")
     if (parts.size != 2 || parts[0].length != 2 || parts[1].length != 2) {
-        return "Format: MM/YY"
+        return R.string.add_card_error_format_mmyy
     }
     val month = parts[0].toIntOrNull()
     val yearShort = parts[1].toIntOrNull()
     if (month == null || month < 1 || month > 12) {
-        return "Month must be 01-12"
+        return R.string.add_card_error_month
     }
     if (yearShort == null) {
-        return "Invalid year"
+        return R.string.add_card_error_invalid_year
     }
 
     val calendar = Calendar.getInstance()
@@ -343,10 +347,10 @@ fun validateExpiryDate(expiry: String): String? {
     val currentMonth = calendar.get(Calendar.MONTH) + 1 // 1-12
 
     if (yearShort < currentYearShort || (yearShort == currentYearShort && month < currentMonth)) {
-        return "Card has expired"
+        return R.string.add_card_error_card_expired
     }
     if (yearShort > currentYearShort + 25) {
-        return "Invalid expiry year"
+        return R.string.add_card_error_invalid_expiry_year
     }
 
     return null
@@ -390,8 +394,12 @@ fun PaymentMethodItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val methodTitle = when (method) {
+                    is PaymentMethod.InAppWallet -> stringResource(R.string.payment_method_in_app_wallet)
+                    is PaymentMethod.CreditCard -> "${method.cardBrand} •••• ${method.last4Digits}"
+                }
                 Text(
-                    text = method.title,
+                    text = methodTitle,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     modifier = Modifier.weight(1f, fill = false),
@@ -428,13 +436,34 @@ fun PaymentMethodItem(
                     }
                 }
             }
-            method.subtitle?.let { subtitleText ->
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = subtitleText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isWallet) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            when (method) {
+                is PaymentMethod.InAppWallet -> {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.payment_method_wallet_balance_format,
+                            String.format(java.util.Locale.US, "%.2f", method.balance)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                is PaymentMethod.CreditCard -> {
+                    val formattedExpiry = method.expiryDate?.let { exp ->
+                        if (exp.length == 4 && !exp.contains("/")) "${exp.take(2)}/${exp.takeLast(2)}" else exp
+                    }
+                    val subtitleText = if (formattedExpiry != null) {
+                        stringResource(R.string.card_expires_format, formattedExpiry)
+                    } else {
+                        stringResource(R.string.payment_saved_card)
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitleText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

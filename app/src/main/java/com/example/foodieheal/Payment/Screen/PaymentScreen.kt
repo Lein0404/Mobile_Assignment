@@ -202,6 +202,7 @@ fun PaymentScreen(
     val isPayButtonEnabled = !paymentState.isLoading && methodState.selectedMethod != null && !isWalletInactiveSelected && !isInsufficientWalletBalance && isOnline
 
     val biometricPromptTitle = stringResource(R.string.biometric_prompt_title)
+    val calendarTitle = stringResource(R.string.payment_calendar_event_title)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -319,10 +320,12 @@ fun PaymentScreen(
                     }
 
                     val formattedPrice = String.format(Locale.US, "RM %.2f", totalPrice)
+                    val inAppWalletDesc = stringResource(R.string.payment_method_in_app_wallet)
+                    val fallbackMethodDesc = stringResource(R.string.payment_method_selected_fallback)
                     val methodDescription = when (val m = methodState.selectedMethod) {
-                        is PaymentMethod.InAppWallet -> "In-App Wallet"
-                        is PaymentMethod.CreditCard -> "Card (•••• ${m.last4Digits})"
-                        else -> "Selected Payment Method"
+                        is PaymentMethod.InAppWallet -> inAppWalletDesc
+                        is PaymentMethod.CreditCard -> stringResource(R.string.payment_method_card_format, m.last4Digits)
+                        else -> fallbackMethodDesc
                     }
                     val biometricPromptSubtitle = stringResource(
                         R.string.biometric_prompt_subtitle,
@@ -559,7 +562,7 @@ fun PaymentScreen(
 
                         CalendarSyncHelper.addAppointmentToCalendar(
                             context = context,
-                            title = "FoodieHeal Appointment Session",
+                            title = calendarTitle,
                             description = desc.trim(),
                             location = loc,
                             dateStr = appointment.Date,

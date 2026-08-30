@@ -63,6 +63,9 @@ fun WalletScreen(
     var showTopUpSheet by remember { mutableStateOf(false) }
     var selectedMainTab by remember { mutableIntStateOf(0) } // 0 = History, 1 = Analytics
 
+    val defaultTopUpDesc = stringResource(R.string.wallet_top_up_default_desc)
+    val topUpViaFormat = stringResource(R.string.wallet_top_up_via_format)
+
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
             viewModel.initialize(userId)
@@ -184,7 +187,10 @@ fun WalletScreen(
                                 .padding(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            val tabs = listOf("Transaction History", "Spending Analytics")
+                            val tabs = listOf(
+                                stringResource(R.string.wallet_tab_transaction_history),
+                                stringResource(R.string.wallet_tab_spending_analytics)
+                            )
                             tabs.forEachIndexed { index, title ->
                                 val isSelected = selectedMainTab == index
                                 Box(
@@ -276,7 +282,7 @@ fun WalletScreen(
             onDismiss = { showTopUpSheet = false },
             onConfirmTopUp = { amount, paymentMethodId ->
                 val selectedCard = paymentUiState?.availableMethods?.firstOrNull { it.id == paymentMethodId }
-                val methodDesc = if (selectedCard != null) "Top-up via ${selectedCard.title}" else "Wallet Top Up"
+                val methodDesc = if (selectedCard != null) String.format(Locale.getDefault(), topUpViaFormat, selectedCard.title) else defaultTopUpDesc
                 viewModel.topUp(
                     amount = amount,
                     paymentMethodId = paymentMethodId,
@@ -722,7 +728,7 @@ fun TopUpBottomSheet(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Reset",
+                        text = stringResource(R.string.wallet_reset),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1

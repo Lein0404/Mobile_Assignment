@@ -159,7 +159,7 @@ fun basicInfo(
                             modifier = Modifier.padding(end = 10.dp)
                         )
                         Text(
-                            text = "Linked to your current FoodieHeal account credentials.",
+                            text = stringResource(R.string.chef_basic_info_linked_credentials),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -605,7 +604,7 @@ fun UserAppointmentDetailScreen(
                                     ) {
                                         AsyncImage(
                                             model = recipe?.recipeImageUrl,
-                                            contentDescription = recipe?.recipeName ?: "Recipe Image",
+                                            contentDescription = recipe?.recipeName ?: stringResource(R.string.user_app_details_recipe_image),
                                             modifier = Modifier
                                                 .size(46.dp)
                                                 .clip(RoundedCornerShape(8.dp))
@@ -728,7 +727,7 @@ fun UserAppointmentDetailScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Your Rating",
+                                        text = stringResource(R.string.user_app_details_your_rating),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -777,7 +776,7 @@ fun UserAppointmentDetailScreen(
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
-                                        text = "Edit Review",
+                                        text = stringResource(R.string.user_app_details_edit_review),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold
                                     )
@@ -803,13 +802,17 @@ fun UserAppointmentDetailScreen(
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Text(
-                                    text = "How was your experience?",
+                                    text = stringResource(R.string.user_app_details_experience_question),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
+                                val fallbackChefName = stringResource(R.string.user_app_details_fallback_chef)
                                 Text(
-                                    text = "Share your feedback and rate Chef ${chefUser?.name ?: "Chef"} to help others.",
+                                    text = stringResource(
+                                        R.string.user_app_details_share_feedback_prompt,
+                                        chefUser?.name ?: fallbackChefName
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.Center
@@ -821,7 +824,7 @@ fun UserAppointmentDetailScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        text = "Rate Chef Now",
+                                        text = stringResource(R.string.user_app_details_rate_chef_now),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
@@ -882,11 +885,11 @@ fun UserAppointmentDetailScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_check),
-                            contentDescription = "Show Completion QR",
+                            contentDescription = stringResource(R.string.user_app_details_cd_show_completion_qr),
                             modifier = Modifier.padding(end = 8.dp).size(20.dp)
                         )
                         Text(
-                            text = "Show Completion QR Code",
+                            text = stringResource(R.string.user_app_details_show_completion_qr),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )

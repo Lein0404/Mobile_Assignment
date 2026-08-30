@@ -79,13 +79,13 @@ fun AppointmentQrCodeDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Service Completion QR",
+                            text = stringResource(R.string.qr_dialog_service_completion_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Chef: $chefName",
+                            text = stringResource(R.string.qr_dialog_chef_prefix, chefName),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -94,7 +94,7 @@ fun AppointmentQrCodeDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             painter = painterResource(id = R.drawable.cancel),
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.qr_dialog_cd_close),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -125,7 +125,7 @@ fun AppointmentQrCodeDialog(
                     } else {
                         Image(
                             bitmap = qrBitmap!!.asImageBitmap(),
-                            contentDescription = "Completion QR Code",
+                            contentDescription = stringResource(R.string.qr_dialog_cd_qr_code),
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -146,12 +146,12 @@ fun AppointmentQrCodeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Booking ID",
+                                text = stringResource(R.string.qr_dialog_booking_id),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = appointment.AppointmentID?.take(10)?.uppercase() ?: "N/A",
+                                text = appointment.AppointmentID?.take(10)?.uppercase() ?: stringResource(R.string.not_available),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -162,7 +162,7 @@ fun AppointmentQrCodeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Appointment Date",
+                                text = stringResource(R.string.qr_dialog_appointment_date),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -177,7 +177,7 @@ fun AppointmentQrCodeDialog(
                 }
 
                 Text(
-                    text = "Present this QR code to your Chef upon service completion. Once scanned, the booking will be verified and marked as Completed.",
+                    text = stringResource(R.string.qr_dialog_instruction),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -193,7 +193,7 @@ fun AppointmentQrCodeDialog(
                         .height(48.dp)
                 ) {
                     Text(
-                        text = "Done",
+                        text = stringResource(R.string.qr_dialog_btn_done),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -190,7 +191,7 @@ fun ChefEarningsChart(
                     }
                     Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
-                            text = "Earnings Overview",
+                            text = stringResource(R.string.chef_earnings_overview),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -198,7 +199,7 @@ fun ChefEarningsChart(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Last ${selectedRange.monthCount} months • Net Payout",
+                            text = stringResource(R.string.chef_earnings_last_months_format, selectedRange.monthCount),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -246,19 +247,19 @@ fun ChefEarningsChart(
             ) {
                 EarningsMetricCard(
                     modifier = Modifier.weight(1f),
-                    title = "Total Gross",
+                    title = stringResource(R.string.chef_earnings_total_gross),
                     amount = totalGross,
                     accentColor = MaterialTheme.colorScheme.onSurface
                 )
                 EarningsMetricCard(
                     modifier = Modifier.weight(1f),
-                    title = "Platform Fee (5%)",
+                    title = stringResource(R.string.chef_earnings_platform_fee),
                     amount = totalFee,
                     accentColor = MaterialTheme.colorScheme.error
                 )
                 EarningsMetricCard(
                     modifier = Modifier.weight(1f),
-                    title = "Net Payout",
+                    title = stringResource(R.string.chef_earnings_net_payout),
                     amount = totalEarnings,
                     accentColor = accentColor
                 )
@@ -452,7 +453,7 @@ private fun EarningsDetailCard(
         ) {
             Column(modifier = Modifier.weight(1f, fill = false)) {
                 Text(
-                    text = "${month.fullLabel} Breakdown",
+                    text = stringResource(R.string.chef_earnings_breakdown_format, month.fullLabel),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -460,16 +461,23 @@ private fun EarningsDetailCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(2.dp))
+                val apptCountStr = if (month.appointmentCount == 1) {
+                    stringResource(R.string.chef_earnings_appointment_single)
+                } else {
+                    stringResource(R.string.chef_earnings_appointment_plural_format, month.appointmentCount)
+                }
+                val feeStr = if (month.grossEarnings > 0) {
+                    stringResource(R.string.chef_earnings_fee_deduction_format, month.platformFee)
+                } else ""
                 Text(
-                    text = "${month.appointmentCount} appointment${if (month.appointmentCount != 1) "s" else ""}" +
-                            if (month.grossEarnings > 0) " • Fee: -RM %.2f".format(Locale.US, month.platformFee) else "",
+                    text = apptCountStr + feeStr,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Net Payout",
+                    text = stringResource(R.string.chef_earnings_net_payout),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 10.sp

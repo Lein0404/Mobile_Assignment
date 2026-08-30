@@ -17,7 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.foodieheal.Payment.ViewModel.PaymentMethod
 import com.example.foodieheal.Payment.ViewModel.PaymentMethodViewModel
@@ -272,24 +271,25 @@ private fun PaymentMethodManagementItem(
                     when (method) {
                         is PaymentMethod.InAppWallet -> {
                             Text(
-                                text = method.title,
+                                text = stringResource(R.string.payment_method_in_app_wallet),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyLarge,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            method.subtitle?.let { subtitleText ->
-                                Text(
-                                    text = subtitleText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                            Text(
+                                text = stringResource(
+                                    R.string.payment_method_wallet_balance_format,
+                                    String.format(java.util.Locale.US, "%.2f", method.balance)
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                         is PaymentMethod.CreditCard -> {
                             val formattedExpiry = method.expiryDate?.let { exp ->
                                 if (exp.length == 4 && !exp.contains("/")) "${exp.take(2)}/${exp.takeLast(2)}" else exp
-                            } ?: "N/A"
+                            } ?: stringResource(R.string.not_available)
 
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

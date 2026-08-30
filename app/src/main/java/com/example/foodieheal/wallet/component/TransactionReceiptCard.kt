@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -46,8 +45,9 @@ fun TransactionReceiptCard(
     val statusColor = if (isCredit) Color(0xFF2E7D32) else Color(0xFFC62828)
     val statusBg = if (isCredit) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
     val transactionIdLabel = stringResource(R.string.receipt_label_transaction_id)
+    val recentFallback = stringResource(R.string.receipt_date_recent)
 
-    val formattedDate = formatReceiptDate(transaction.createdAt)
+    val formattedDate = formatReceiptDate(transaction.createdAt, recentFallback)
 
     Card(
         modifier = modifier
@@ -385,8 +385,8 @@ private fun ReceiptRow(
     }
 }
 
-private fun formatReceiptDate(isoString: String?): String {
-    if (isoString.isNullOrBlank()) return "Recent"
+private fun formatReceiptDate(isoString: String?, recentFallback: String = "Recent"): String {
+    if (isoString.isNullOrBlank()) return recentFallback
     return try {
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -399,6 +399,6 @@ private fun formatReceiptDate(isoString: String?): String {
             isoString
         }
     } catch (_: Exception) {
-        isoString ?: "Recent"
+        isoString ?: recentFallback
     }
 }

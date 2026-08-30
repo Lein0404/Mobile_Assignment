@@ -1,9 +1,6 @@
 package com.example.foodieheal.Chef
 
 import android.app.Activity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
@@ -207,7 +203,7 @@ fun AppointmentsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Text(
-                                            text = "Offline: Showing cached bookings",
+                                            text = stringResource(R.string.chef_appt_offline_cached_bookings),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onErrorContainer
                                         )
@@ -223,7 +219,7 @@ fun AppointmentsScreen(
                                 onValueChange = { searchQuery = it },
                                 placeholder = {
                                     Text(
-                                        text = "Search client, location, diet…",
+                                        text = stringResource(R.string.chef_appt_search_placeholder),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                     )
@@ -231,7 +227,7 @@ fun AppointmentsScreen(
                                 leadingIcon = {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_search),
-                                        contentDescription = "Search",
+                                        contentDescription = stringResource(R.string.search),
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -241,7 +237,7 @@ fun AppointmentsScreen(
                                         IconButton(onClick = { searchQuery = "" }) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.cancel),
-                                                contentDescription = "Clear",
+                                                contentDescription = stringResource(R.string.chef_appt_clear_search),
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.size(16.dp)
                                             )
@@ -348,7 +344,7 @@ fun AppointmentsScreen(
                                                 searchQuery = ""
                                                 selectedStatusFilter = "All"
                                             }) {
-                                                Text("Reset Filters")
+                                                Text(stringResource(R.string.chef_appt_reset_filters))
                                             }
                                         }
                                     }
@@ -437,7 +433,7 @@ fun AppointmentCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Client Booking",
+                            text = stringResource(R.string.chef_appt_client_booking),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -504,8 +500,13 @@ fun AppointmentCard(
                     shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                 ) {
+                    val servingText = if (appointment.Serving_Size > 1) {
+                        stringResource(R.string.chef_appt_servings_format, appointment.Serving_Size)
+                    } else {
+                        stringResource(R.string.chef_appt_serving_format, appointment.Serving_Size)
+                    }
                     Text(
-                        text = "${appointment.Serving_Size} ${if (appointment.Serving_Size > 1) "Servings" else "Serving"}",
+                        text = servingText,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -534,7 +535,7 @@ fun AppointmentCard(
             if (appointment.Note.isNotBlank()) {
                 Text(
                     text = getHighlightedText(
-                        fullText = "Note: ${appointment.Note}",
+                        fullText = stringResource(R.string.chef_appt_note_format, appointment.Note),
                         query = searchQuery
                     ),
                     style = MaterialTheme.typography.bodySmall,
@@ -554,7 +555,7 @@ fun AppointmentCard(
             ) {
                 Column {
                     Text(
-                        text = "Net Payout",
+                        text = stringResource(R.string.chef_appt_net_payout),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -568,7 +569,7 @@ fun AppointmentCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Total Charged",
+                        text = stringResource(R.string.chef_appt_total_charged),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -10,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -280,7 +279,7 @@ fun AppointmentDetailScreen(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         painter = painterResource(R.drawable.wallet),
-                                        contentDescription = "Earnings",
+                                        contentDescription = stringResource(R.string.chef_details_earnings_desc),
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -305,11 +304,11 @@ fun AppointmentDetailScreen(
                         val isPaid = appointment.Status.equals("confirmed", ignoreCase = true) ||
                                 appointment.Status.equals("completed", ignoreCase = true)
                         val payStatusText = when {
-                            isPaid -> "Paid"
-                            appointment.Status.equals("cancelled", ignoreCase = true) -> "Cancelled"
-                            appointment.Status.equals("rejected", ignoreCase = true) -> "N/A"
-                            appointment.Status.equals("unpaid", ignoreCase = true) -> "Awaiting Payment"
-                            else -> "Pending"
+                            isPaid -> stringResource(R.string.chef_details_status_paid)
+                            appointment.Status.equals("cancelled", ignoreCase = true) -> stringResource(R.string.chef_details_status_cancelled)
+                            appointment.Status.equals("rejected", ignoreCase = true) -> stringResource(R.string.chef_details_status_na)
+                            appointment.Status.equals("unpaid", ignoreCase = true) -> stringResource(R.string.chef_details_status_awaiting_payment)
+                            else -> stringResource(R.string.chef_details_status_pending)
                         }
                         val payStatusColor = when {
                             isPaid -> Color(0xFF2E7D32)
@@ -440,15 +439,16 @@ fun AppointmentDetailScreen(
             }
 
             // Location & Navigation Section
+            val openWithMapsChooserTitle = stringResource(R.string.chef_details_open_with_maps)
             DetailSectionCard(title = stringResource(R.string.event_location)) {
                 DetailRow(
                     iconRes = R.drawable.location,
                     label = stringResource(R.string.label_address),
-                    value = stringResource(
-                        R.string.appointment_address_format,
-                        appointment.Address,
+                    value = listOfNotNull(
+                        appointment.Address.takeIf { it.isNotBlank() },
+                        appointment.Postcode.takeIf { it.isNotBlank() },
                         appointment.State
-                    )
+                    ).joinToString(", ")
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -457,7 +457,7 @@ fun AppointmentDetailScreen(
                     onClick = {
                         val mapUri = Uri.parse("geo:0,0?q=${Uri.encode("${appointment.Address}, ${appointment.State}")}")
                         val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
-                        context.startActivity(Intent.createChooser(mapIntent, "Open with Maps"))
+                        context.startActivity(Intent.createChooser(mapIntent, openWithMapsChooserTitle))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
@@ -556,7 +556,7 @@ fun AppointmentDetailScreen(
                                 ) {
                                     AsyncImage(
                                         model = recipe?.recipeImageUrl,
-                                        contentDescription = recipe?.recipeName ?: "Recipe image",
+                                        contentDescription = recipe?.recipeName ?: stringResource(R.string.chef_details_recipe_image_desc),
                                         modifier = Modifier
                                             .size(46.dp)
                                             .clip(RoundedCornerShape(8.dp))
@@ -644,7 +644,7 @@ fun AppointmentDetailScreen(
                                         ) {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_recipe),
-                                                contentDescription = "View Details",
+                                                contentDescription = stringResource(R.string.chef_details_view_details_desc),
                                                 tint = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(16.dp)
                                             )
@@ -877,7 +877,7 @@ fun AppointmentDetailScreen(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_check),
-                            contentDescription = "Scan QR",
+                            contentDescription = stringResource(R.string.chef_details_scan_qr_desc),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -1093,7 +1093,7 @@ fun AppointmentDetailScreen(
                 onStatusChange("Completed", null)
                 Toast.makeText(
                     context,
-                    "Service verified via QR! Booking marked as Completed.",
+                    R.string.toast_service_verified_completed,
                     Toast.LENGTH_LONG
                 ).show()
             },

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -121,7 +122,7 @@ fun ChefLoginScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_hiring),
-                        contentDescription = "Chef Portal",
+                        contentDescription = stringResource(R.string.chef_login_portal_title),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(40.dp)
                     )
@@ -131,14 +132,14 @@ fun ChefLoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Chef Portal",
+                text = stringResource(R.string.chef_login_portal_title),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Sign in to manage your culinary profile & bookings",
+                text = stringResource(R.string.chef_login_portal_subtitle),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -150,7 +151,7 @@ fun ChefLoginScreen(
             // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Chef Email",
+                    text = stringResource(R.string.chef_login_email_label),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -165,7 +166,7 @@ fun ChefLoginScreen(
                     },
                     placeholder = {
                         Text(
-                            "chef@example.com",
+                            stringResource(R.string.chef_login_email_placeholder),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -185,7 +186,7 @@ fun ChefLoginScreen(
 
                 if (hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty()) {
                     Text(
-                        text = "Invalid email format",
+                        text = stringResource(R.string.chef_login_invalid_email),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -198,7 +199,7 @@ fun ChefLoginScreen(
             // Password Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Password",
+                    text = stringResource(R.string.password),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -213,7 +214,7 @@ fun ChefLoginScreen(
                     },
                     placeholder = {
                         Text(
-                            "Enter your password",
+                            stringResource(R.string.chef_login_password_placeholder),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -250,7 +251,7 @@ fun ChefLoginScreen(
                     .padding(top = 12.dp)
             ) {
                 Text(
-                    text = "Forgot Password?",
+                    text = stringResource(R.string.chef_login_forgot_password),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary,
@@ -289,7 +290,7 @@ fun ChefLoginScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text("CHEF LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.chef_login_btn_submit), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
@@ -325,12 +326,12 @@ fun ChefLoginScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "New chef? ",
+                    text = stringResource(R.string.chef_login_new_chef_prompt),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Apply directly here",
+                    text = stringResource(R.string.chef_login_apply_here),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -361,7 +362,7 @@ fun ChefLoginScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Back to Customer Login", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.chef_login_back_to_customer), fontWeight = FontWeight.Medium)
             }
 
             Spacer(modifier = Modifier.height(24.dp))

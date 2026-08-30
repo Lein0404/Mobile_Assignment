@@ -90,7 +90,7 @@ fun contactInfo(
                     enabled = false,
                     supportingText = {
                         Text(
-                            "Account email (reused from your profile)",
+                            stringResource(R.string.chef_contact_account_email_reused),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall
                         )
