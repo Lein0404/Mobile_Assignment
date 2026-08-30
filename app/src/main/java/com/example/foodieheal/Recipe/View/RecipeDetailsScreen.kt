@@ -431,14 +431,15 @@ fun RecipeDetailsScreen(
                             text = recipe.recipeDescription,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 18.sp,
                             modifier = Modifier
                                 .padding(top = 8.dp)
                                 .animateContentSize()
                                 .clickable { isExpanded = !isExpanded },
-                            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 5,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (!isExpanded && recipe.recipeDescription.length > 100) {
+                        if (!isExpanded && (recipe.recipeDescription.length > 150 || recipe.recipeDescription.count { it == '\n' } >= 5)) {
                             Text(
                                 text = "... See More",
                                 fontSize = 14.sp,
