@@ -264,8 +264,11 @@ class IngredientRequestViewModel(
 
     private fun applyFilters() {
         _uiState.update { state ->
+            val query = state.searchQuery.trim()
             val filtered = state.requests.filter { item ->
-                (state.searchQuery.isEmpty() || item.request.ingredientName.contains(state.searchQuery, ignoreCase = true)) &&
+                (query.isEmpty() ||
+                 item.request.ingredientName.contains(query, ignoreCase = true) ||
+                 item.request.ingredientDesc.contains(query, ignoreCase = true)) &&
                 (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory)) &&
                 (state.selectedStatus == null || item.request.requestStatus == state.selectedStatus)
             }
