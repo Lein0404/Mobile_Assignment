@@ -41,6 +41,7 @@ import com.example.foodieheal.ingredients.shared.ShoppingListShareHelper
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
 import com.example.foodieheal.ingredients.viewModel.ShoppingListViewModel
 import com.example.foodieheal.navigation.Screen
+import com.example.foodieheal.ui.components.getHighlightedText
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -488,6 +489,7 @@ fun ShoppingListScreen(
                         items(items, key = { it.id }) { item ->
                             ShoppingListItemRow(
                                 item = item,
+                                searchQuery = detailState.searchQuery,
                                 onCheckedChange = { viewModel.toggleChecked(item) }
                             )
                         }
@@ -627,6 +629,7 @@ fun ShoppingListScreen(
 @Composable
 fun ShoppingListItemRow(
     item: ShoppingListItem,
+    searchQuery: String = "",
     onCheckedChange: () -> Unit
 ) {
     CompositionLocalProvider(
@@ -649,7 +652,7 @@ fun ShoppingListItemRow(
             )
 
             Text(
-                text = item.ingredientName,
+                text = getHighlightedText(item.ingredientName, searchQuery),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None
                 ),

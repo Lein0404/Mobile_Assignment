@@ -186,6 +186,7 @@ class RecipeRepository(
                             Ingredient(
                                 id = ing.ingredientId,
                                 name = ing.ingredientName,
+                                description = ing.ingredientDesc,
                                 kcal = 0.0,
                                 defaultUnit = "pieces",
                                 unitDetails = UnitDetails(defaultQuantity = 1.0)
@@ -197,6 +198,7 @@ class RecipeRepository(
                             Ingredient(
                                 id = iu.ingredientUnitId,
                                 name = ing.ingredientName,
+                                description = ing.ingredientDesc,
                                 kcal = iu.caloriesPerDefaultQuantity,
                                 defaultUnit = unit?.unitDisplay?.ifEmpty { unit.unitName } ?: "pieces",
                                 unitDetails = UnitDetails(defaultQuantity = unit?.defaultQuantity ?: 1.0)

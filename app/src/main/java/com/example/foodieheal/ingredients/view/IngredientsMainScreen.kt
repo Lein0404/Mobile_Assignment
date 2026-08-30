@@ -42,6 +42,7 @@ import com.example.foodieheal.ingredients.viewModel.IngredientRequestItem
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestUiState
 import com.example.foodieheal.ingredients.viewModel.IngredientsUiState
 import com.example.foodieheal.ui.components.StatusBadge
+import com.example.foodieheal.ui.components.getHighlightedText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -374,7 +375,7 @@ fun IngredientRequestsScreen(
                             Text(category.categoryName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         }
                         items(items) { item ->
-                            IngredientRequestCard(item) {
+                            IngredientRequestCard(item, uiState.searchQuery) {
                                 navController.navigate(Screen.IngredientDetail.createRoute(item.request.ingredientRequestId, true))
                             }
                         }
@@ -447,6 +448,7 @@ fun IngredientRequestsScreen(
 @Composable
 fun IngredientRequestCard(
     item: IngredientRequestItem,
+    searchQuery: String = "",
     onClick: () -> Unit
 ) {
     Card(
@@ -469,11 +471,11 @@ fun IngredientRequestCard(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
-                    text = item.request.ingredientName,
+                    text = getHighlightedText(item.request.ingredientName, searchQuery),
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = item.request.ingredientDesc,
+                    text = getHighlightedText(item.request.ingredientDesc, searchQuery),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -580,6 +582,7 @@ fun IngredientsExistingScreen(
                     items(items) { item ->
                         IngredientCard(
                             item = item,
+                            searchQuery = uiState.searchQuery,
                             onClick = {
                                 navController.navigate(Screen.IngredientDetail.createRoute(item.ingredient.ingredientId, showAddToCart = showAddToCart))
                             },
@@ -596,6 +599,7 @@ fun IngredientsExistingScreen(
 @Composable
 fun IngredientCard(
     item: IngredientItem,
+    searchQuery: String = "",
     onClick: () -> Unit,
     onAddToCart: () -> Unit = {},
     showAddToCart: Boolean = true
@@ -620,11 +624,11 @@ fun IngredientCard(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
             ) {
                 Text(
-                    text = item.ingredient.ingredientName,
+                    text = getHighlightedText(item.ingredient.ingredientName, searchQuery),
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = item.ingredient.ingredientDesc,
+                    text = getHighlightedText(item.ingredient.ingredientDesc, searchQuery),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
