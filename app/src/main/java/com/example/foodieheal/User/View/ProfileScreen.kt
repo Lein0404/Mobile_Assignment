@@ -486,12 +486,22 @@ fun ProfileScreen(
                                             }
                                         }
                                     ) {
-                                        Text(
-                                            text = "${followViewModel.followerCount}",
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.height(24.dp)) {
+                                            if (followViewModel.isLoadingFollowCounts) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(14.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.onPrimary
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "${followViewModel.followerCount}",
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = "Followers",
                                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
@@ -507,12 +517,22 @@ fun ProfileScreen(
                                             }
                                         }
                                     ) {
-                                        Text(
-                                            text = "${followViewModel.followingCount}",
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.height(24.dp)) {
+                                            if (followViewModel.isLoadingFollowCounts) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(14.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.onPrimary
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "${followViewModel.followingCount}",
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = "Following",
                                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
