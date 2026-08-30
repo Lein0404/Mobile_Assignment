@@ -18,11 +18,12 @@ private val DarkColorScheme = darkColorScheme(
     secondary = Color(0X33EC5E3A),
     onSecondary = Color(0XFFEC5E3A),
 
-    tertiary = Color(0xFF2E2E2E),     // neutral card/surface tone
+    tertiary = Color(0xFF252525),     // deeper background for sections
     onTertiary = Color.White,
 
     surface = Color(0XFF303030),      // general surface background
     onSurface = Color(0XFFE6E6E6),    // soft white text (not too bright)
+    surfaceVariant = Color(0xFF3D3D3D), // lighter color for cards to pop
 
     background = Color(0XFF1C1C1C),   // main dark background
     onBackground = Color(0XFFF2F2F2),
@@ -40,6 +41,7 @@ private val LightColorScheme = lightColorScheme(
 
     surface = Color(0XFFFFFFFF),      // standard white surface
     onSurface = Color(0XFF1B1B1B),
+    surfaceVariant = Color(0xFFF5F5F5),
 
     background = Color(0XFFF2F2F2),   // soft light background
     onBackground = Color(0XFF1B1B1B),

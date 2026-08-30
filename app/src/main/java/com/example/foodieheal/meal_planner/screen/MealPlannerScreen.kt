@@ -359,7 +359,8 @@ fun MealPlannerScreen(
                     onAddTemplateClick = { onAddTemplateClick() },
                     authViewModel = authViewModel,
                     onPlanDetails = onPlanDetails,
-                    onEdit = onEdit
+                    onEdit = onEdit,
+                    isNetworkAvailable = isNetworkAvailable
                 )
             }
         }

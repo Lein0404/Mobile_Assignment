@@ -68,7 +68,7 @@ fun RecipeCard(
                 .clickable(enabled = !isSelectionMode, onClick = { onClick() }),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp),
-            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Row(
                 modifier = Modifier
@@ -200,14 +200,11 @@ fun MealSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp)
-            .background(
-                MaterialTheme.colorScheme.tertiary,
-                RoundedCornerShape(20.dp)
-            )
             .clickable(enabled = isSelectionMode) { onSelectionChange(!isSelected) },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-        )
+            containerColor = MaterialTheme.colorScheme.tertiary
+        ),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
             modifier = Modifier
