@@ -568,8 +568,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
             profileMessage = "Username cannot exceed 20 characters"
             return
         }
-        if (description.length > 100) {
-            profileMessage = "Description cannot exceed 100 characters"
+        if (description.length > 150) {
+            profileMessage = "Description cannot exceed 150 characters"
             return
         }
 
