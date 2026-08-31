@@ -55,7 +55,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.foodieheal.Admin.AdminAddIngredientScreen
-import com.example.foodieheal.Admin.AdminApprovalScreen
+import com.example.foodieheal.Admin.AdminMainScreen
 import com.example.foodieheal.Admin.ChefDetailScreen
 import com.example.foodieheal.Chef.ChefMainScreen
 import com.example.foodieheal.Chef.Register.*
@@ -1146,7 +1146,7 @@ class MainActivity : FragmentActivity() {
                                     arguments = listOf(navArgument("tab") { defaultValue = 0; type = NavType.IntType })
                                 ) { backStackEntry ->
                                     val tab = backStackEntry.arguments?.getInt("tab") ?: 0
-                                    AdminApprovalScreen(navController, authViewModel = sharedAuthViewModel, initialTab = tab)
+                                    AdminMainScreen(navController, authViewModel = sharedAuthViewModel, initialTab = tab)
                                 }
                                 composable(
                                     route = Screen.AdminIngredient.route,
