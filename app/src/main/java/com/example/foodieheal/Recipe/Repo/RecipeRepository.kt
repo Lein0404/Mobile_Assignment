@@ -306,6 +306,11 @@ class RecipeRepository(
         }
     }
 
+    suspend fun getLocalBookmarkedRecipes(userId: String): List<Recipe> = withContext(Dispatchers.IO) {
+        if (userId.isBlank()) return@withContext emptyList()
+        recipeDao?.getBookmarkedRecipes(userId)?.map { it.toDomain(json) } ?: emptyList()
+    }
+
     suspend fun getUserBookmarkIds(userId: String): Result<List<String>> = withContext(Dispatchers.IO) {
         runCatching {
             if (userId.isBlank()) return@runCatching emptyList()

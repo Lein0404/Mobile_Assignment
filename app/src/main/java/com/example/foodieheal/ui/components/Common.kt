@@ -288,6 +288,7 @@ fun PasswordInputField(
         )
     }
 }
+@JvmName("DropDownListIntOptions")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
@@ -297,6 +298,73 @@ fun DropDownList(
     selectedValue: String,
     options: List<String>,
     onOptionSelected: (String) -> Unit,
+    isError: Boolean = false,
+    @StringRes errorMessageId: Int? = null
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp) // gap between items in a Column
+    ) {
+        Text(
+            text = stringResource(labelId),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedValue ,
+                onValueChange = { },
+                readOnly = true,
+                placeholder = {
+                    Text(stringResource(placeholderId),
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
+                    ) },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                isError = isError
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+        if (isError && errorMessageId != null) {
+            ErrorMessageCard(
+                textId = errorMessageId
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropDownList(
+    modifier: Modifier = Modifier,
+    @StringRes labelId: Int,
+    @StringRes placeholderId: Int,
+    selectedValue: String,
+    options: List<Int>,
+    onOptionSelected: (Int) -> Unit,
     isError: Boolean = false,
     @StringRes errorMessageId: Int? = null
 ) {
@@ -338,7 +406,7 @@ fun DropDownList(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(stringResource(option)) },
                         onClick = {
                             onOptionSelected(option)
                             expanded = false

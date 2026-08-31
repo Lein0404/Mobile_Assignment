@@ -261,7 +261,17 @@ class RecipeViewModel(
         viewModelScope.launch {
             try {
                 isFetchingBookmarks = true
-                if (bookmarkedRecipes.isEmpty()) isLoading = true
+                // 🌟 Local-first: immediately load cached bookmarks from Room so UI is populated with zero delay
+                val local = repository.getLocalBookmarkedRecipes(userId)
+                if (local.isNotEmpty()) {
+                    val currentIds = bookmarkedRecipes.mapNotNull { it.recipe_id }.toSet()
+                    val merged = (local + bookmarkedRecipes).distinctBy { it.recipe_id }.sortedBy { it.recipe_id }
+                    bookmarkedRecipes = merged
+                    bookmarkedRecipeIds = bookmarkedRecipes.mapNotNull { it.recipe_id }.toSet()
+                } else if (bookmarkedRecipes.isEmpty()) {
+                    isLoading = true
+                }
+
                 repository.getBookmarkedRecipes(userId)
                     .onSuccess { result ->
                         bookmarkedRecipes = result.sortedBy { it.recipe_id }
@@ -307,8 +317,15 @@ class RecipeViewModel(
         if (isBookmarked) {
             bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
         } else {
-            recipeList.find { it.recipe_id == recipeId }?.let {
-                bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
+            val recipe = recipeList.find { it.recipe_id == recipeId }
+                ?: myRecipes.find { it.recipe_id == recipeId }
+                ?: followingRecipes.find { it.recipe_id == recipeId }
+                ?: selectedRecipe?.takeIf { it.recipe_id == recipeId }
+
+            if (recipe != null) {
+                if (bookmarkedRecipes.none { it.recipe_id == recipeId }) {
+                    bookmarkedRecipes = (bookmarkedRecipes + recipe).sortedBy { r -> r.recipe_id }
+                }
             }
         }
 
