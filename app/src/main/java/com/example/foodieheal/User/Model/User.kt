@@ -3,6 +3,8 @@ package com.example.foodieheal.User.Model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+//serializable means it can be converted to/from JSON data
+//the name inside the serial name need to match the supabase table column
 @Serializable
 data class User(
     @SerialName("id") val id: String? = "",
