@@ -119,7 +119,7 @@ class BookmarkRepository(
             "id" to userId,
             "chefId" to chefId
         )
-        client.from("Chef_Bookmark").insert(bookmarkData)
+        client.from("Chef_Bookmark").upsert(bookmarkData)
         getBookmarkDao()?.insertBookmark(
             ChefBookmark(
                 id = "${userId}_${chefId}",

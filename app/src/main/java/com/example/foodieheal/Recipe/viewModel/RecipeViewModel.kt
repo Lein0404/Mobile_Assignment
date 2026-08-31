@@ -70,6 +70,7 @@ class RecipeViewModel(
 
     // 🌟 Track active toggle jobs to allow cancellation/restarts
     private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+    private var currentCustomId: String? = null
 
     init {
         observeNetworkStatus()
@@ -82,9 +83,9 @@ class RecipeViewModel(
                 isNetworkAvailable = connected
                 if (connected) {
                     refreshAll()
-                    // 🌟 Sync bookmarks when network returns
-                    repository.getCurrentUserId()?.let { uid ->
-                        repository.syncBookmarks(uid)
+                    currentCustomId?.let { cid ->
+                        fetchBookmarkIds(cid)
+                        repository.syncBookmarks(cid)
                     }
                 }
             }
@@ -97,6 +98,7 @@ class RecipeViewModel(
      */
     fun syncRecipeAuthorInfo(user: User) {
         val cid = user.customId ?: return
+        currentCustomId = cid
         val updater: (Recipe) -> Recipe = { r ->
             if (r.author_id == cid) {
                 r.copy(
@@ -251,6 +253,8 @@ class RecipeViewModel(
     }
 
     fun fetchBookmarkedRecipes(userId: String, force: Boolean = false) {
+        if (userId.isBlank()) return
+        currentCustomId = userId
         if (isFetchingBookmarks) return
         if (force) bookmarkedRecipes = emptyList()
 
@@ -272,6 +276,8 @@ class RecipeViewModel(
     }
 
     fun fetchBookmarkIds(userId: String) {
+        if (userId.isBlank()) return
+        currentCustomId = userId
         viewModelScope.launch {
             repository.getUserBookmarkIds(userId).onSuccess { ids ->
                 bookmarkedRecipeIds = ids.toSet()
@@ -280,6 +286,9 @@ class RecipeViewModel(
     }
 
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
+        if (userId.isBlank() || recipeId.isBlank()) return
+        currentCustomId = userId
+
         if (!isNetworkAvailable) {
             viewModelScope.launch {
                 _bookmarkMessage.emit("Wifi connection required to bookmark recipes.")
@@ -319,35 +328,13 @@ class RecipeViewModel(
                         else "Bookmarked locally: $recipeName"
                     }
                     _bookmarkMessage.emit(message)
-                    // 🌟 REMOVED: fetchBookmarkedRecipes(userId)
-                    // We already did an optimistic update. Refreshing from server causes flickering.
                 }.onFailure { e ->
                     if (!isActive) return@launch
-
-                    // Revert UI only if it's NOT a network error
-                    val msg = e.localizedMessage ?: ""
-                    val isNetworkError = msg.contains("Unable to resolve host", true) ||
-                                       msg.contains("Failed to connect", true) ||
-                                       msg.contains("connection", true)
-
-                    if (!isNetworkError) {
-                        bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds + recipeId else bookmarkedRecipeIds - recipeId
-
-                        // Also revert the list update
-                        if (isBookmarked) {
-                            recipeList.find { it.recipe_id == recipeId }?.let {
-                                bookmarkedRecipes = (bookmarkedRecipes + it).sortedBy { r -> r.recipe_id }
-                            }
-                        } else {
-                            bookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
-                        }
-
-                        _bookmarkMessage.emit("Bookmark failed: ${msg.split("\n").firstOrNull() ?: "Unknown error"}")
-                    }
+                    Log.e("RecipeViewModel", "Toggle bookmark error", e)
                 }
             } catch (e: Exception) {
                 if (isActive) {
-                    _bookmarkMessage.emit("Error: ${e.localizedMessage}")
+                    Log.e("RecipeViewModel", "Bookmark exception", e)
                 }
             } finally {
                 // Cleanup job map

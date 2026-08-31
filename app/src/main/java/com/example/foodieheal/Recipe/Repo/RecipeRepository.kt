@@ -214,6 +214,8 @@ class RecipeRepository(
 
     suspend fun toggleBookmark(userId: String, recipeId: String, isBookmarked: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            if (userId.isBlank() || recipeId.isBlank()) return@runCatching
+
             // 1. Update Room first (Instant UI)
             if (isBookmarked) {
                 recipeDao?.deleteBookmark(userId, recipeId)
@@ -232,17 +234,11 @@ class RecipeRepository(
                         }
                     }
                 } else {
-                    table.insert(mapOf("user_id" to userId, "recipe_id" to recipeId))
+                    table.upsert(mapOf("user_id" to userId, "recipe_id" to recipeId))
                 }
             } catch (e: Exception) {
-                // If network failure, we don't throw error. Room is already updated.
-                val msg = e.message ?: ""
-                val isNetworkError = msg.contains("Unable to resolve host", true) ||
-                                   msg.contains("Failed to connect", true) ||
-                                   msg.contains("connection", true)
-
-                if (!isNetworkError) throw e
-                else Log.d("RecipeRepository", "Bookmark saved locally. Sync pending.")
+                // If network failure or sync conflict, local Room is already updated successfully.
+                Log.w("RecipeRepository", "Supabase bookmark sync notice: ${e.message}")
             }
             Unit
         }
@@ -254,6 +250,8 @@ class RecipeRepository(
      */
     suspend fun syncBookmarks(userId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            if (userId.isBlank()) return@runCatching
+
             // 1. Get server state
             val response = client.from("recipe_bookmarks")
                 .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
@@ -270,12 +268,16 @@ class RecipeRepository(
 
     suspend fun getBookmarkedRecipes(userId: String): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
+            if (userId.isBlank()) return@runCatching emptyList()
             try {
                 val response = client.from("recipe_bookmarks")
                     .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
                 val bookmarkedIds = response.decodeList<BookmarkId>().map { it.recipeId }
 
-                if (bookmarkedIds.isEmpty()) return@runCatching emptyList()
+                if (bookmarkedIds.isEmpty()) {
+                    recipeDao?.clearBookmarks(userId)
+                    return@runCatching emptyList()
+                }
 
                 val recipes = try {
                     client.from("recipes")
@@ -293,6 +295,8 @@ class RecipeRepository(
                 }
 
                 recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
+                recipeDao?.clearBookmarks(userId)
+                recipeDao?.insertBookmarks(bookmarkedIds.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
 
                 recipes
             } catch (e: Exception) {
@@ -304,9 +308,20 @@ class RecipeRepository(
 
     suspend fun getUserBookmarkIds(userId: String): Result<List<String>> = withContext(Dispatchers.IO) {
         runCatching {
+            if (userId.isBlank()) return@runCatching emptyList()
             val response = client.from("recipe_bookmarks")
                 .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
-            response.decodeList<BookmarkId>().map { it.recipeId }
+            val ids = response.decodeList<BookmarkId>().map { it.recipeId }
+            recipeDao?.clearBookmarks(userId)
+            recipeDao?.insertBookmarks(ids.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
+            ids
+        }.recoverCatching { e ->
+            Log.w("RecipeRepository", "Server fetch failed for bookmark IDs, falling back to local: ${e.message}")
+            if (userId.isNotBlank()) {
+                recipeDao?.getBookmarkIds(userId) ?: emptyList()
+            } else {
+                emptyList()
+            }
         }
     }
 
