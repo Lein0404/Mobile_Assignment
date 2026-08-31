@@ -1,12 +1,14 @@
 package com.example.foodieheal.Recipe.viewModel
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.User.Model.User
@@ -20,9 +22,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
 
 class RecipeViewModel(
+    application: Application,
     private val repository: RecipeRepository,
     private val networkMonitor: NetworkMonitor? = null
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     // 🌟 UI States
     var activeTab by mutableIntStateOf(0)
@@ -301,7 +304,7 @@ class RecipeViewModel(
 
         if (!isNetworkAvailable) {
             viewModelScope.launch {
-                _bookmarkMessage.emit("Wifi connection required to bookmark recipes.")
+                _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_wifi_required_bookmark))
             }
             return
         }
@@ -338,11 +341,11 @@ class RecipeViewModel(
                     if (!isActive) return@launch
 
                     val message = if (isBookmarked) {
-                        if (isNetworkAvailable) "Removed '$recipeName' from favorites"
-                        else "Removed locally: $recipeName"
+                        if (isNetworkAvailable) getApplication<Application>().getString(R.string.msg_removed_from_favorites, recipeName)
+                        else getApplication<Application>().getString(R.string.msg_removed_locally, recipeName)
                     } else {
-                        if (isNetworkAvailable) "Added to favorites: $recipeName"
-                        else "Bookmarked locally: $recipeName"
+                        if (isNetworkAvailable) getApplication<Application>().getString(R.string.msg_added_to_favorites, recipeName)
+                        else getApplication<Application>().getString(R.string.msg_bookmarked_locally, recipeName)
                     }
                     _bookmarkMessage.emit(message)
                 }.onFailure { e ->
@@ -428,7 +431,7 @@ class RecipeViewModel(
     fun addRecipe(recipe: Recipe, imageBytes: ByteArray? = null) {
         viewModelScope.launch {
             if (!isNetworkAvailable) {
-                _bookmarkMessage.emit("No internet connection. Cannot add recipe.")
+                _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_no_internet_add_recipe))
                 return@launch
             }
 
@@ -453,7 +456,7 @@ class RecipeViewModel(
                 repository.insertRecipe(finalRecipe)
                     .onSuccess {
                         _addRecipeSuccess.emit(true)
-                        _bookmarkMessage.emit("Successfully added: ${finalRecipe.recipeName}")
+                        _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_recipe_added_success, finalRecipe.recipeName))
                         refreshAll()
                     }
                     .onFailure { e ->
@@ -476,7 +479,7 @@ class RecipeViewModel(
     fun updateRecipe(recipe: Recipe, imageBytes: ByteArray? = null) {
         viewModelScope.launch {
             if (!isNetworkAvailable) {
-                _bookmarkMessage.emit("No internet connection. Cannot update recipe.")
+                _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_no_internet_update_recipe))
                 return@launch
             }
 
@@ -513,7 +516,7 @@ class RecipeViewModel(
                 repository.updateRecipe(finalRecipe)
                     .onSuccess {
                         _updateRecipeSuccess.emit(true)
-                        _bookmarkMessage.emit("Successfully updated: ${finalRecipe.recipeName}")
+                        _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_recipe_updated_success, finalRecipe.recipeName))
 
                         // 2. Background Refresh to sync with DB exactly
                         refreshAll()
@@ -535,7 +538,7 @@ class RecipeViewModel(
     fun deleteRecipe(recipeId: String, userId: String) {
         viewModelScope.launch {
             if (!isNetworkAvailable) {
-                _bookmarkMessage.emit("No internet connection. Cannot delete recipe.")
+                _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_no_internet_delete_recipe))
                 return@launch
             }
             isLoading = true
@@ -556,7 +559,7 @@ class RecipeViewModel(
                     bookmarkedRecipeIds = bookmarkedRecipeIds.toMutableSet().apply { remove(recipeId) }
                 }
 
-                _bookmarkMessage.emit("Recipe deleted successfully.")
+                _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_recipe_deleted_success))
 
                 // 🌟 Delay the background refresh slightly to give Supabase DB time to propagate the deletion
                 // and to prevent a race condition where the fetch returns the old data.
@@ -580,7 +583,7 @@ class RecipeViewModel(
 
     fun showOfflinePlannerMessage() {
         viewModelScope.launch {
-            _bookmarkMessage.emit("Wifi connection required to add recipes to planner.")
+            _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_wifi_required_planner))
         }
     }
 

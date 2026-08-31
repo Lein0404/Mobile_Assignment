@@ -65,12 +65,26 @@ fun RecipesScreen(
 
     val selectedTab = viewModel.activeTab
     // 🌟 3 Main Tabs to keep it from looking "scratchy"
-    val tabs = listOf("Popular", "My Recipes", "Favorites")
+    val tabs = listOf(
+        stringResource(R.string.tab_popular_recipes),
+        stringResource(R.string.tab_my_recipes_title),
+        stringResource(R.string.tab_favorites_title)
+    )
     var showFollowingFeed by remember { mutableStateOf(true) } // Toggle between Following and Saved
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf("All") }
-    val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
+    val courseKeys = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
+    val courses = courseKeys.map { key ->
+        when(key) {
+            "All" -> stringResource(R.string.tab_all)
+            "Breakfast" -> stringResource(R.string.breakfast)
+            "Lunch" -> stringResource(R.string.lunch)
+            "Dinner" -> stringResource(R.string.dinner)
+            "Snack" -> stringResource(R.string.snack)
+            else -> key
+        }
+    }
 
     val selectedRecipeIds = remember { mutableStateListOf<String>() }
 
@@ -227,7 +241,7 @@ fun RecipesScreen(
                             text = if (isSelectionMode) {
                                 if (selectedRecipeIds.isEmpty()) stringResource(R.string.title_select_recipes)
                                 else stringResource(R.string.title_selected_count, selectedRecipeIds.size)
-                            } else "Recipe",
+                            } else stringResource(R.string.title_recipe_main),
                             color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
@@ -349,7 +363,7 @@ fun RecipesScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search recipes/authors", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        placeholder = { Text(stringResource(R.string.placeholder_search_recipes_authors), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
@@ -431,7 +445,7 @@ fun RecipesScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Followed",
+                                stringResource(R.string.label_followed),
                                 color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
@@ -445,7 +459,7 @@ fun RecipesScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Bookmarks",
+                                stringResource(R.string.label_bookmarks_toggle),
                                 color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
@@ -462,14 +476,14 @@ fun RecipesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     item { Spacer(modifier = Modifier.width(12.dp)) }
-                    lazyItems(courses) { course: String ->
-                        val isSelected = selectedCourse == course
+                    lazyItems(courseKeys.zip(courses)) { (key, display) ->
+                        val isSelected = selectedCourse == key
                         FilterChip(
                             selected = isSelected,
-                            onClick = { selectedCourse = course },
+                            onClick = { selectedCourse = key },
                             label = {
                                 Text(
-                                    text = course,
+                                    text = display,
                                     fontSize = 15.sp,
                                     modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
                                 )
@@ -503,13 +517,13 @@ fun RecipesScreen(
                     val (icon, title, subtitle) = when {
                         searchQuery.isNotEmpty() || isFilterActive -> Triple(
                             R.drawable.filter, 
-                            "No recipes match filters", 
-                            "Try adjusting your search or filters"
+                            stringResource(R.string.empty_no_recipes_match), 
+                            stringResource(R.string.empty_no_recipes_match_sub)
                         )
                         selectedTab == 0 -> Triple(
                             R.drawable.ic_recipe, 
-                            "No popular recipes found", 
-                            "Check back later for trending delicious dishes!"
+                            stringResource(R.string.empty_no_popular_recipes), 
+                            stringResource(R.string.empty_no_popular_recipes_sub)
                         )
                         selectedTab == 1 -> Triple(
                             R.drawable.ic_recipe, 
@@ -518,15 +532,15 @@ fun RecipesScreen(
                         )
                         selectedTab == 2 && showFollowingFeed -> Triple(
                             R.drawable.follower, 
-                            "No following recipes", 
-                            "Follow your favorite authors to see their latest recipes here!"
+                            stringResource(R.string.empty_no_followed_recipes), 
+                            stringResource(R.string.empty_no_followed_recipes_sub)
                         )
                         selectedTab == 2 && !showFollowingFeed -> Triple(
                             R.drawable.bookmark, 
                             stringResource(R.string.empty_no_bookmarked_recipes), 
                             stringResource(R.string.empty_bookmarked_recipes_sub)
                         )
-                        else -> Triple(R.drawable.ic_recipe, "No recipes found", "")
+                        else -> Triple(R.drawable.ic_recipe, stringResource(R.string.label_recipe_not_found), "")
                     }
 
                     EmptyState(iconRes = icon, title = title, subtitle = subtitle)
@@ -636,7 +650,7 @@ fun RecipesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Filter Recipes",
+                        text = stringResource(R.string.title_filter_recipes),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -648,15 +662,15 @@ fun RecipesScreen(
                         filterIngredients = emptySet()
                         ingredientSearchQuery = ""
                     }) {
-                        Text("Reset All", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.btn_reset_all), color = MaterialTheme.colorScheme.error)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 1. Max Prep Time
-                FilterSectionHeader(icon = R.drawable.ic_clock, title = "Max Prep Time")
-                val timeDisplay = if (filterMaxTime >= 240f) "Any Time" else "${filterMaxTime.toInt()} mins"
+                FilterSectionHeader(icon = R.drawable.ic_clock, title = stringResource(R.string.label_max_prep_time))
+                val timeDisplay = if (filterMaxTime >= 240f) stringResource(R.string.label_any_time) else "${filterMaxTime.toInt()} ${stringResource(R.string.label_mins_suffix)}"
                 Text(timeDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Slider(
                     value = filterMaxTime,
@@ -672,8 +686,8 @@ fun RecipesScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 2. Max Calories
-                FilterSectionHeader(icon = R.drawable.ic_fire, title = "Max Calories")
-                val calDisplay = if (filterMaxCalories >= 5000f) "Any Calories" else "${filterMaxCalories.toInt()} kcal"
+                FilterSectionHeader(icon = R.drawable.ic_fire, title = stringResource(R.string.label_max_calories))
+                val calDisplay = if (filterMaxCalories >= 5000f) stringResource(R.string.label_any_calories) else "${filterMaxCalories.toInt()} ${stringResource(R.string.label_kcal_suffix)}"
                 Text(calDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Slider(
                     value = filterMaxCalories,
@@ -689,13 +703,13 @@ fun RecipesScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 3. Ingredients
-                FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = "Ingredients")
+                FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = stringResource(R.string.label_ingredients_list))
 
                 // 🌟 ENLARGED: Ingredient Search Bar
                 OutlinedTextField(
                     value = ingredientSearchQuery,
                     onValueChange = { ingredientSearchQuery = it },
-                    placeholder = { Text("Search ingredients...", fontSize = 14.sp) },
+                    placeholder = { Text(stringResource(R.string.placeholder_search_ingredients_filter), fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth().height(56.dp), // Increased height
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -740,7 +754,7 @@ fun RecipesScreen(
                     if (filterIngredients.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Selected (${filterIngredients.size}):",
+                            text = stringResource(R.string.label_selected_ingredients, filterIngredients.size),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -772,22 +786,30 @@ fun RecipesScreen(
                         }
                     }
                 } else {
-                    Text("Loading ingredients...", fontSize = 12.sp, color = Color.Gray)
+                    Text(stringResource(R.string.msg_loading_ingredients), fontSize = 12.sp, color = Color.Gray)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 4. Cooking Skill
-                FilterSectionHeader(icon = R.drawable.skill, title = "Cooking Skill")
+                FilterSectionHeader(icon = R.drawable.skill, title = stringResource(R.string.label_cooking_skill_level))
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("Beginner", "Intermediate", "Master/Expert").forEach { skill ->
+                    val skillKeys = listOf("Beginner", "Intermediate", "Master/Expert")
+                    skillKeys.forEach { skill ->
                         FilterChip(
                             selected = filterSkill == skill,
                             onClick = { filterSkill = if (filterSkill == skill) null else skill },
-                            label = { Text(skill) },
+                            label = { 
+                                val label = when(skill) {
+                                    "Beginner" -> stringResource(R.string.skill_beginner)
+                                    "Intermediate" -> stringResource(R.string.skill_intermediate)
+                                    else -> stringResource(R.string.skill_expert)
+                                }
+                                Text(label) 
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -799,7 +821,7 @@ fun RecipesScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 4. Budget
-                FilterSectionHeader(icon = R.drawable.dollar_symbol, title = "Budget (RM)")
+                FilterSectionHeader(icon = R.drawable.dollar_symbol, title = stringResource(R.string.label_budget_rm))
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -826,7 +848,7 @@ fun RecipesScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Apply Filters", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.btn_apply_filters_action), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -856,21 +878,21 @@ fun RecipesScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("No Internet Connection")
+                        Text(stringResource(R.string.title_no_internet))
                     }
                 },
-                text = { Text("You cannot delete recipes while offline. Please check your network settings.") },
+                text = { Text(stringResource(R.string.msg_no_internet_delete_warning)) },
                 confirmButton = {
                     TextButton(onClick = { recipeToDelete = null }) {
-                        Text("OK", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                     }
                 }
             )
         } else {
             AlertDialog(
                 onDismissRequest = { recipeToDelete = null },
-                title = { Text("Delete Recipe") },
-                text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+                title = { Text(stringResource(R.string.dialog_delete_recipe_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_recipe_msg, recipeToDelete?.recipeName ?: "")) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -883,12 +905,12 @@ fun RecipesScreen(
                             recipeToDelete = null
                         }
                     ) {
-                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.dialog_delete_recipe_confirm), color = Color.Red, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { recipeToDelete = null }) {
-                        Text("Cancel", color = Color.Gray)
+                        Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                     }
                 }
             )

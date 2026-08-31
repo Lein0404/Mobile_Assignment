@@ -71,7 +71,11 @@ fun EditRecipeScreen(
     var description by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("Breakfast") }
     var visibility by remember { mutableStateOf("public") }
+
+    val courseOptions = listOf("Breakfast", "Lunch", "Dinner", "Snack")
     val visibilityOptions = listOf("public", "followers", "private")
+    val cookingSkillOptions = listOf("Beginner", "Intermediate", "Master/Expert")
+
     var totalTime by remember { mutableStateOf("") }
     var cookingSkill by remember { mutableStateOf("Beginner") }
     var budget by remember { mutableStateOf("0 - 10") }
@@ -188,10 +192,14 @@ fun EditRecipeScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Edit Recipe", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text(stringResource(R.string.title_edit_recipe), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
+                    IconButton(onClick = { 
+                        // 🌟 BACK: ensure we go back to "My Recipes" tab
+                        viewModel.activeTab = 1
+                        navController.popBackStack() 
+                    }) {
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -254,18 +262,18 @@ fun EditRecipeScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Change Recipe Image", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                            Text(stringResource(R.string.label_upload_image), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LabelText("Recipe Name")
+                LabelText(stringResource(R.string.label_recipe_name))
                 AddRecipeTextField(
                     value = recipeName,
                     onValueChange = { if (it.length <= 30) recipeName = it },
-                    placeholder = "Recipe Name"
+                    placeholder = stringResource(R.string.hint_recipe_name)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -278,7 +286,7 @@ fun EditRecipeScreen(
                     )
                 }
 
-                LabelText("Description")
+                LabelText(stringResource(R.string.label_description_optional))
                 TextField(
                     value = description,
                     onValueChange = { 
@@ -287,15 +295,15 @@ fun EditRecipeScreen(
                             description = it 
                         }
                     },
-                    placeholder = { Text("What inspired you to make this recipe...", fontSize = 14.sp, color = Color.Gray) },
+                    placeholder = { Text(stringResource(R.string.hint_description), fontSize = 14.sp, color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth().height(160.dp),
                     shape = RoundedCornerShape(12.dp),
                     textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
                     supportingText = {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             val newlineCount = description.count { char -> char == '\n' }
-                            Text("${newlineCount + 1}/5 lines", fontSize = 12.sp, color = if (newlineCount >= 4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${description.length}/150", fontSize = 12.sp, color = if (description.length >= 150) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.label_recipe_lines_format, newlineCount + 1), fontSize = 12.sp, color = if (newlineCount >= 4) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.label_recipe_chars_format, description.length, 150), fontSize = 12.sp, color = if (description.length >= 150) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     colors = TextFieldDefaults.colors(
@@ -308,16 +316,25 @@ fun EditRecipeScreen(
                     )
                 )
 
-                LabelText("Course")
+                LabelText(stringResource(R.string.label_course_type))
                 DropdownField(
                     value = course,
-                    options = listOf("Breakfast", "Lunch", "Dinner", "Snack"),
-                    onSelected = { course = it }
+                    options = courseOptions,
+                    onSelected = { course = it },
+                    labelProvider = { key ->
+                        when(key) {
+                            "Breakfast" -> stringResource(R.string.breakfast)
+                            "Lunch" -> stringResource(R.string.lunch)
+                            "Dinner" -> stringResource(R.string.dinner)
+                            "Snack" -> stringResource(R.string.snack)
+                            else -> key
+                        }
+                    }
                 )
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(modifier = Modifier.weight(1f)) {
-                        LabelText("Total Time (min)")
+                        LabelText(stringResource(R.string.label_total_time_min))
                         AddRecipeTextField(
                             value = totalTime,
                             onValueChange = { input ->
@@ -325,7 +342,7 @@ fun EditRecipeScreen(
                                     totalTime = input
                                 }
                             },
-                            placeholder = "e.g. 30",
+                            placeholder = stringResource(R.string.hint_total_time),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             trailingIcon = {
                                 Icon(
@@ -338,7 +355,7 @@ fun EditRecipeScreen(
                         // 🌟 Added time limit hint
                         if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
                             Text(
-                                text = "Time cannot exceed 24 hours.",
+                                text = stringResource(R.string.error_time_limit),
                                 color = MaterialTheme.colorScheme.error,
                                 fontSize = 10.sp,
                                 modifier = Modifier.padding(top = 2.dp)
@@ -346,27 +363,35 @@ fun EditRecipeScreen(
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        LabelText("Calories (kcal)")
+                        LabelText(stringResource(R.string.label_calories_kcal))
                         AddRecipeTextField(
                             value = "$totalCalories",
                             onValueChange = { },
                             readOnly = true,
-                            placeholder = "0"
+                            placeholder = stringResource(R.string.placeholder_zero)
                         )
                     }
                 }
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(modifier = Modifier.weight(1f)) {
-                        LabelText("Cooking Skill")
+                        LabelText(stringResource(R.string.label_cooking_skill_level))
                         DropdownField(
                             value = cookingSkill,
-                            options = listOf("Beginner", "Intermediate", "Master/Expert"),
-                            onSelected = { cookingSkill = it }
+                            options = cookingSkillOptions,
+                            onSelected = { cookingSkill = it },
+                            labelProvider = { key ->
+                                when(key) {
+                                    "Beginner" -> stringResource(R.string.skill_beginner)
+                                    "Intermediate" -> stringResource(R.string.skill_intermediate)
+                                    "Master/Expert" -> stringResource(R.string.skill_expert)
+                                    else -> key
+                                }
+                            }
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        LabelText("Budget (RM)")
+                        LabelText(stringResource(R.string.label_budget_rm_range))
                         DropdownField(
                             value = budget,
                             options = listOf("0 - 20", "20 - 40", "40 - 60", "60 - 80", "80 - 100"),
@@ -381,9 +406,9 @@ fun EditRecipeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    LabelText("Ingredients")
+                    LabelText(stringResource(R.string.label_ingredients_list))
                     TextButton(onClick = { ingredients.clear(); ingredients.add(IngredientInputState()) }) {
-                        Text("Reset Ingredients", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.btn_reset_ingredients), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 }
                 
@@ -403,12 +428,12 @@ fun EditRecipeScreen(
                 ) {
                     Icon(painterResource(id = R.drawable.ic_outline_add), null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Ingredient", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.btn_add_ingredient), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
 
-                LabelText("Recipe Steps")
+                LabelText(stringResource(R.string.label_recipe_steps))
                 Text(
-                    text = "Tip: Just press 'Enter' for a new step; numbers are added automatically.",
+                    text = stringResource(R.string.tip_recipe_steps),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -421,7 +446,7 @@ fun EditRecipeScreen(
                             steps = it 
                         }
                     },
-                    placeholder = { Text("1. Cook the Pasta", fontSize = 14.sp, color = Color.Gray) },
+                    placeholder = { Text(stringResource(R.string.hint_recipe_steps), fontSize = 14.sp, color = Color.Gray) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(350.dp)
@@ -438,8 +463,8 @@ fun EditRecipeScreen(
                     supportingText = {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             val newlineCount = steps.count { char -> char == '\n' }
-                            Text("${newlineCount + 1}/20 lines", fontSize = 12.sp, color = if (newlineCount >= 19) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${steps.length}/1000", fontSize = 12.sp, color = if (steps.length >= 1000) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.label_recipe_steps_format, newlineCount + 1), fontSize = 12.sp, color = if (newlineCount >= 19) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.label_recipe_chars_format, steps.length, 1000), fontSize = 12.sp, color = if (steps.length >= 1000) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     colors = TextFieldDefaults.colors(
@@ -452,7 +477,7 @@ fun EditRecipeScreen(
                     )
                 )
 
-                LabelText("Visibility")
+                LabelText(stringResource(R.string.label_visibility))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -462,8 +487,14 @@ fun EditRecipeScreen(
                             selected = visibility == option,
                             onClick = { visibility = option },
                             label = { 
+                                val label = when(option) {
+                                    "public" -> stringResource(R.string.visibility_public)
+                                    "followers" -> stringResource(R.string.visibility_followers)
+                                    "private" -> stringResource(R.string.visibility_private)
+                                    else -> option.replaceFirstChar { it.uppercase() }
+                                }
                                 Text(
-                                    text = option.replaceFirstChar { it.uppercase() },
+                                    text = label,
                                     modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
@@ -481,7 +512,7 @@ fun EditRecipeScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 if (viewModel.errorMessage != null) {
-                    val cleanError = viewModel.errorMessage!!.split("\n").firstOrNull() ?: "An error occurred"
+                    val cleanError = viewModel.errorMessage!!.split("\n").firstOrNull() ?: stringResource(R.string.error_unknown_occurred)
                     Surface(
                         color = Color(0xFFFFEBEE),
                         shape = RoundedCornerShape(8.dp),
@@ -499,7 +530,7 @@ fun EditRecipeScreen(
 
                 if (!isFormValid) {
                     Text(
-                        text = "Please fill in all fields with valid information.",
+                        text = stringResource(R.string.msg_fill_all_fields),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
@@ -545,7 +576,7 @@ fun EditRecipeScreen(
                     if (viewModel.isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text("UPDATE RECIPE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.btn_save_changes), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
                 

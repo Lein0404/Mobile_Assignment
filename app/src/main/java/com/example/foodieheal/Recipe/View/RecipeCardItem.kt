@@ -163,17 +163,17 @@ fun RecipeCardItem(
                             }
                             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                 DropdownMenuItem(
-                                    text = { Text("Edit Recipe") },
+                                    text = { Text(stringResource(R.string.menu_edit_recipe)) },
                                     onClick = { expanded = false; onEditClick() },
                                     leadingIcon = { Icon(painterResource(id = R.drawable.ic_square_edit), null, modifier = Modifier.size(18.dp)) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Share Recipe") },
+                                    text = { Text(stringResource(R.string.menu_share_recipe)) },
                                     onClick = { expanded = false; onShareClick(recipe) },
                                     leadingIcon = { Icon(painterResource(id = R.drawable.ic_share), null, modifier = Modifier.size(18.dp)) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) },
+                                    text = { Text(stringResource(R.string.menu_delete_recipe), color = MaterialTheme.colorScheme.error) },
                                     onClick = { expanded = false; onDeleteClick() },
                                     leadingIcon = { Icon(painterResource(id = R.drawable.ic_delete), null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                                 )
@@ -197,7 +197,7 @@ fun RecipeCardItem(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "${recipe.calories} kcal",
+                            text = "${recipe.calories} ${stringResource(R.string.label_kcal_suffix)}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -216,7 +216,7 @@ fun RecipeCardItem(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${recipe.time} mins",
+                            text = "${recipe.time} ${stringResource(R.string.label_mins_suffix)}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -228,7 +228,7 @@ fun RecipeCardItem(
                     val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
                         currentUser.name
                     } else {
-                        recipe.authorName ?: recipe.authorInfo?.name ?: "Chef"
+                        recipe.authorName ?: recipe.authorInfo?.name ?: stringResource(R.string.default_chef_name)
                     }
 
                     val authorImageToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {

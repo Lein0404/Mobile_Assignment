@@ -36,6 +36,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.hiring.viewmodel.HiringViewModel
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun  HomeScreen(
@@ -47,7 +48,7 @@ fun  HomeScreen(
 ) {
     val user = viewModel.currentUser
     
-    // 🌟 FIX: Stable Random Selection
+    // Stable Random Selection
     // We use a separate state to "latch" the random recipes once they are loaded.
     // This prevents them from reshuffling every time the database refreshes
     // or when you return from the Detail screen.
@@ -55,7 +56,7 @@ fun  HomeScreen(
 
     // Sync with the master list once data is available
     LaunchedEffect(recipeViewModel.recipeList) {
-        // 🌟 FIX: If names are fetched later, update our local random selection automatically
+        // If names are fetched later, update our local random selection automatically
         if (randomRecipes.isNotEmpty()) {
             val updated = randomRecipes.map { old ->
                 recipeViewModel.recipeList.find { it.recipe_id == old.recipe_id } ?: old
@@ -129,7 +130,7 @@ fun  HomeScreen(
                 )
             }
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0), // 🌟 Remove status bar gap
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.primary // Match orange header
     ) { paddingValues ->
         Column(
@@ -144,9 +145,9 @@ fun  HomeScreen(
                     .padding(top = 48.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
             ) {
                 Column {
-                    Text(text = "Good Morning", color = Color.White, fontSize = 14.sp)
+                    Text(text = stringResource(id = viewModel.greetingResId), color = Color.White, fontSize = 14.sp)
                     Text(
-                        text = user?.name ?: "Username",
+                        text = user?.name ?: stringResource(id = R.string.default_username),
                         color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -158,7 +159,7 @@ fun  HomeScreen(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(0.dp),
-                color = MaterialTheme.colorScheme.background // 🌟 Themed Background
+                color = MaterialTheme.colorScheme.background
             ) {
                 Column(
                     modifier = Modifier
@@ -168,11 +169,11 @@ fun  HomeScreen(
                 ) {
                     // Chef Section
                     Text(
-                        text = "Chef",
+                        text = stringResource(id = R.string.home_section_chef),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.onBackground // 🌟 Themed Text
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -201,10 +202,10 @@ fun  HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Popular Recipes",
+                            text = stringResource(id = R.string.home_section_popular_recipes),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Button(
                             onClick = {
@@ -222,11 +223,11 @@ fun  HomeScreen(
                             modifier = Modifier.height(32.dp)
                         ) {
                             Text(
-                                "See All",
+                                text = stringResource(id = R.string.home_btn_see_all),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
-                            ) // 🌟 Themed Text
+                            )
                         }
                     }
 
@@ -235,7 +236,7 @@ fun  HomeScreen(
                     RecipeListSection(
                         recipes = randomRecipes,
                         isLoading = recipeViewModel.isLoading,
-                        currentUser = user, // 🌟 Pass current user for card name sync
+                        currentUser = user,
                         bookmarkedIds = recipeViewModel.bookmarkedRecipeIds,
                         onRecipeClick = { recipe ->
                             recipe.recipe_id?.let { id ->
@@ -316,7 +317,7 @@ fun ChefListSection(
             ) {
                 Text(
                     text = errorMessage,
-                    color = MaterialTheme.colorScheme.error, // 🌟 Themed Error
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -325,7 +326,7 @@ fun ChefListSection(
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
-                        text = "Tap to retry",
+                        text = stringResource(id = R.string.tap_to_retry),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -337,7 +338,7 @@ fun ChefListSection(
         // Empty State
         else -> {
             Text(
-                text = if (!isNetworkAvailable) "No cached chefs available offline" else "No chefs available",
+                text = if (!isNetworkAvailable) stringResource(id = R.string.no_cached_chefs_offline) else stringResource(id = R.string.no_chefs_available),
                 color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -354,7 +355,7 @@ fun ChefCard(
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .width(165.dp)
@@ -366,7 +367,7 @@ fun ChefCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(135.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // 🌟 Themed Background
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (!chef.profilePictureUrl.isNullOrEmpty()) {
                     AsyncImage(
@@ -385,7 +386,7 @@ fun ChefCard(
                 ) {
                     Text(
                         text = "$${chef.Pricing?.toInt() ?: 0}/hr",
-                        color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -400,10 +401,10 @@ fun ChefCard(
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = chef.name?.ifEmpty { "Chef" } ?: "Chef",
+                    text = chef.name?.ifEmpty { stringResource(id = R.string.home_section_chef) } ?: stringResource(id = R.string.home_section_chef),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -428,20 +429,20 @@ fun ChefCard(
                             text = "${chef.averagerating ?: "N/A"}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     // Experience Tag
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             text = "${chef.experience ?: "0"} yrs exp",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -456,17 +457,17 @@ fun ChefCard(
 fun PromoBanner(navController: NavController) {
     Card(
         onClick = { navController.navigate(Screen.Ingredients.createRoute(1)) },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(165.dp), // 🌟 Increased height to prevent clipping
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(165.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), // 🌟 Refined padding
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Missing an Ingredient?", 
+                text = stringResource(id = R.string.home_banner_title), 
                 fontWeight = FontWeight.ExtraBold, 
                 fontSize = 17.sp, 
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -474,7 +475,7 @@ fun PromoBanner(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Help us expand! Register new items and unlock more delicious possibilities.", 
+                text = stringResource(id = R.string.home_banner_desc), 
                 fontSize = 13.sp, 
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f), 
                 textAlign = TextAlign.Center,
@@ -488,7 +489,7 @@ fun PromoBanner(navController: NavController) {
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
-                    text = "Contribute Now",
+                    text = stringResource(id = R.string.home_banner_btn),
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -504,14 +505,14 @@ fun PromoBanner(navController: NavController) {
 fun RecipeListSection(
     recipes: List<Recipe>,
     isLoading: Boolean,
-    currentUser: User? = null, // 🌟 Added for card name sync
+    currentUser: User? = null,
     bookmarkedIds: Set<String>,
     onRecipeClick: (Recipe) -> Unit,
     onBookmarkClick: (Recipe) -> Unit,
     onAddClick: (Recipe) -> Unit
 ) {
     when {
-        // 🌟 Data State: Show recipes if we have them
+        // Data State: Show recipes if we have them
         recipes.isNotEmpty() -> {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
@@ -521,7 +522,7 @@ fun RecipeListSection(
                     RecipeCardItem(
                         recipe = recipe,
                         modifier = Modifier.width(165.dp),
-                        currentUser = currentUser, // 🌟 FIX: Pass current user for live sync
+                        currentUser = currentUser,
                         isBookmarked = bookmarkedIds.contains(recipe.recipe_id),
                         onBookmarkClick = { onBookmarkClick(recipe) },
                         onAddClick = { onAddClick(recipe) },
@@ -531,7 +532,7 @@ fun RecipeListSection(
             }
         }
 
-        // 🌟 Loading State: Only when list is empty
+        // Loading State: Only when list is empty
         isLoading -> {
             Box(
                 modifier = Modifier
@@ -543,10 +544,10 @@ fun RecipeListSection(
             }
         }
 
-        // 🌟 Empty State
+        // Empty State
         else -> {
             Text(
-                text = "No recipes found for this category",
+                text = stringResource(id = R.string.no_recipes_available),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
                 fontSize = 13.sp
@@ -555,4 +556,4 @@ fun RecipeListSection(
     }
 }
 
-data class ChefData(val name: String, val rating: String, val exp: String)
+

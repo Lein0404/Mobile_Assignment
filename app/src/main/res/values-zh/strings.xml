@@ -1400,6 +1400,130 @@
     <string name="receipt_share_err_generate_image">生成收据图片失败：%s</string>
     <string name="receipt_share_err_generate_pdf">生成 PDF 收据失败：%s</string>
 
+    <!-- HomeScreen -->
+    <string name="greeting_morning">早上好</string>
+    <string name="greeting_afternoon">下午好</string>
+    <string name="greeting_evening">晚上好</string>
+    <string name="greeting_night">晚安</string>
+    <string name="default_username">用户</string>
+    <string name="home_section_chef">厨师</string>
+    <string name="home_section_popular_recipes">热门食谱</string>
+    <string name="home_btn_see_all">查看全部</string>
+    <string name="home_banner_title">缺少食材？</string>
+    <string name="home_banner_desc">帮助我们扩展！注册新食材并解锁更多美味可能。</string>
+    <string name="home_banner_btn">立即贡献</string>
+    <string name="tap_to_retry">点击重试</string>
+    <string name="no_cached_chefs_offline">离线无缓存厨师</string>
+    <string name="no_chefs_available">暂无厨师</string>
+    <string name="no_recipes_available">此分类下暂无食谱</string>
+
+    <!-- Recipe Messaging -->
+    <string name="msg_wifi_required_bookmark">收藏食谱需要 Wifi 连接。</string>
+    <string name="msg_removed_from_favorites">已从收藏中移除 \'%1$s\'</string>
+    <string name="msg_removed_locally">已在本地移除: %1$s</string>
+    <string name="msg_added_to_favorites">已添加到收藏: %1$s</string>
+    <string name="msg_bookmarked_locally">已在本地收藏: %1$s</string>
+    <string name="msg_no_internet_add_recipe">无网络连接。无法添加食谱。</string>
+    <string name="msg_recipe_added_success">成功添加: %1$s</string>
+    <string name="msg_no_internet_update_recipe">无网络连接。无法更新食谱。</string>
+    <string name="msg_recipe_updated_success">成功更新: %1$s</string>
+    <string name="msg_no_internet_delete_recipe">无网络连接。无法删除食谱。</string>
+    <string name="msg_recipe_deleted_success">食谱删除成功。</string>
+    <string name="msg_wifi_required_planner">将食谱添加到计划需要 Wifi 连接。</string>
+
+    <!-- Recipe Empty States -->
+    <string name="empty_no_recipes_match">没有符合筛选条件的食谱</string>
+    <string name="empty_no_recipes_match_sub">尝试调整您的搜索或筛选条件</string>
+    <string name="empty_no_popular_recipes">未找到热门食谱</string>
+    <string name="empty_no_popular_recipes_sub">稍后再来查看最新的美味佳肴吧！</string>
+    <string name="empty_no_followed_recipes">暂无关注的食谱</string>
+    <string name="empty_no_followed_recipes_sub">关注您喜爱的作者，在这里查看他们的最新食谱！</string>
+
+    <!-- Recipes Screen -->
+    <string name="tab_popular_recipes">热门</string>
+    <string name="tab_my_recipes_title">我的食谱</string>
+    <string name="tab_favorites_title">收藏</string>
+    <string name="placeholder_search_recipes_authors">搜索食谱/作者</string>
+    <string name="label_followed">关注中</string>
+    <string name="label_bookmarks_toggle">收藏夹</string>
+    <string name="btn_reset_all">重置全部</string>
+    <string name="label_any_time">不限时长</string>
+    <string name="label_mins_suffix">分钟</string>
+    <string name="label_any_calories">不限热量</string>
+    <string name="label_kcal_suffix">千卡</string>
+    <string name="placeholder_search_ingredients_filter">搜索食材...</string>
+    <string name="msg_loading_ingredients">正在加载食材...</string>
+    <string name="btn_apply_filters_action">应用筛选</string>
+    <string name="dialog_delete_recipe_title">删除食谱</string>
+    <string name="dialog_delete_recipe_msg">确定要删除 ‘%1$s’ 吗？</string>
+    <string name="dialog_delete_recipe_confirm">删除</string>
+    <string name="msg_no_internet_delete_warning">离线时无法删除食谱。请检查网络设置。</string>
+    <string name="title_recipe_main">食谱</string>
+    <string name="label_selected_ingredients">已选择 (%1$d):</string>
+
+    <!-- Recipe Card Menu -->
+    <string name="menu_edit_recipe">编辑食谱</string>
+    <string name="menu_share_recipe">分享食谱</string>
+    <string name="menu_delete_recipe">删除食谱</string>
+
+    <!-- Add/Edit Recipe -->
+    <string name="title_add_recipe">添加食谱</string>
+    <string name="title_edit_recipe">编辑食谱</string>
+    <string name="label_upload_image">上传食谱图片</string>
+    <string name="label_recipe_name">食谱名称</string>
+    <string name="hint_recipe_name">食谱名称</string>
+    <string name="label_description_optional">描述</string>
+    <string name="hint_description">是什么启发了你创作这份食谱...</string>
+    <string name="label_course_type">课程</string>
+    <string name="label_total_time_min">总时长 (分钟)</string>
+    <string name="hint_total_time">例如：30</string>
+    <string name="error_time_limit">时长不能超过 24 小时。</string>
+    <string name="label_calories_kcal">卡路里 (kcal)</string>
+    <string name="label_cooking_skill_level">烹饪难度</string>
+    <string name="skill_beginner">初学者</string>
+    <string name="skill_intermediate">中级</string>
+    <string name="skill_expert">专家</string>
+    <string name="label_budget_rm_range">预算 (RM)</string>
+    <string name="label_ingredients_list">食材</string>
+    <string name="help_ingredient_title">找不到食材？</string>
+    <string name="help_ingredient_desc">您可以在个人资料下的“查看与申请食材”菜单选项中申请缺失的食材。我们会立即审核并批准！</string>
+    <string name="btn_reset_ingredients">重置食材</string>
+    <string name="btn_add_ingredient">添加食材</string>
+    <string name="label_recipe_steps">食谱步骤</string>
+    <string name="tip_recipe_steps">提示：按下“回车”即可开始新的一步；编号会自动添加。</string>
+    <string name="hint_recipe_steps">1. 煮意面</string>
+    <string name="label_visibility">可见性</string>
+    <string name="visibility_public">公开</string>
+    <string name="visibility_followers">粉丝可见</string>
+    <string name="visibility_private">私密</string>
+    <string name="msg_fill_all_fields">请在所有字段中填写有效信息。</string>
+    <string name="btn_add_recipe_submit">添加食谱</string>
+    <string name="btn_save_changes">保存更改</string>
+    <string name="dialog_clear_ingredients_title">清空食材？</string>
+    <string name="dialog_clear_ingredients_msg">确定要清空您输入的所有食材吗？</string>
+    <string name="label_ingredient_name">名称</string>
+    <string name="hint_ingredient_name">例如：面粉</string>
+    <string name="label_ingredient_qty">数量</string>
+    <string name="label_ingredient_unit">单位</string>
+    <string name="msg_no_matching_ingredients">未找到匹配的食材</string>
+    <string name="label_unit_prefix">单位: %1$s</string>
+
+    <!-- Recipe Details -->
+    <string name="title_view_recipe">查看食谱</string>
+    <string name="label_recipe_by">食谱作者：</string>
+    <string name="label_updated_at_format">最后更新：%1$s</string>
+    <string name="btn_follow">关注</string>
+    <string name="btn_unfollow">取消关注</string>
+    <string name="btn_request_sent">已发送请求</string>
+    <string name="label_recipe_not_found">未找到食谱。</string>
+    <string name="label_recipe_offline_unavailable">离线时无法获取食谱数据。</string>
+    <string name="label_recipe_lines_format">%1$d/5 行</string>
+    <string name="label_recipe_steps_format">%1$d/20 行</string>
+    <string name="label_recipe_chars_format">%1$d/%2$d</string>
+    <string name="placeholder_zero">0</string>
+    <string name="placeholder_hyphen">-</string>
+    <string name="error_unknown_occurred">发生未知错误</string>
+    <string name="unknown_author">未知作者</string>
     <!-- BookmarkViewModel.kt -->
     <string name="toast_bookmark_removed">已从收藏中移除 %1$s</string>
     <string name="toast_bookmark_added">已将厨师 %1$s 加入收藏</string>
