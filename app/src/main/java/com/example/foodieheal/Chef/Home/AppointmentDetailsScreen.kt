@@ -1,8 +1,12 @@
 package com.example.foodieheal.Chef.Home
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.layout.widthIn
 import es.dmoral.toasty.Toasty
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
@@ -371,55 +375,6 @@ fun AppointmentDetailScreen(
                 }
             }
 
-            // Customer Review & Rating Banner (if completed with rating)
-            if (appointment.Status.equals("completed", ignoreCase = true) && (appointment.rating ?: 0) > 0) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.client_review_and_rating),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                (1..5).forEach { starIndex ->
-                                    val isFilled = starIndex <= (appointment.rating ?: 0)
-                                    Icon(
-                                        painter = painterResource(
-                                            if (isFilled) R.drawable.ic_star else R.drawable.ic_outline_star
-                                        ),
-                                        contentDescription = null,
-                                        tint = if (isFilled) Color(0xFFFFB300) else MaterialTheme.colorScheme.outlineVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        if (!appointment.Comment.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.quoted_text_format, appointment.Comment),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
             // Schedule & Time Section
             DetailSectionCard(title = stringResource(R.string.date_time)) {
                 DetailRow(
@@ -443,29 +398,62 @@ fun AppointmentDetailScreen(
 
             // Location & Navigation Section
             val openWithMapsChooserTitle = stringResource(R.string.chef_details_open_with_maps)
+            val fullAddress = listOfNotNull(
+                appointment.Address.takeIf { !it.isNullOrBlank() },
+                appointment.Postcode.takeIf { !it.isNullOrBlank() },
+                appointment.State.takeIf { !it.isNullOrBlank() }
+            ).joinToString(", ")
+            val hasAddress = fullAddress.isNotBlank()
+            val addressCopiedToast = stringResource(R.string.toast_address_copied)
+
             DetailSectionCard(title = stringResource(R.string.event_location)) {
-                DetailRow(
-                    iconRes = R.drawable.location,
-                    label = stringResource(R.string.label_address),
-                    value = listOfNotNull(
-                        appointment.Address.takeIf { it.isNotBlank() },
-                        appointment.Postcode.takeIf { it.isNotBlank() },
-                        appointment.State
-                    ).joinToString(", ")
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable(enabled = hasAddress) {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Address", fullAddress))
+                            Toasty.custom(
+                                context,
+                                addressCopiedToast,
+                                R.drawable.foodieheallogo_removebg_and_word,
+                                R.color.black,
+                                Toast.LENGTH_SHORT,
+                                true,
+                                true
+                            ).show()
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = {
-                        val mapUri = Uri.parse("geo:0,0?q=${Uri.encode("${appointment.Address}, ${appointment.State}")}")
-                        val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
-                        context.startActivity(Intent.createChooser(mapIntent, openWithMapsChooserTitle))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
+                            try {
+                                val mapUri = Uri.parse("geo:0,0?q=${Uri.encode(fullAddress)}")
+                                val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
+                                context.startActivity(Intent.createChooser(mapIntent, openWithMapsChooserTitle))
+                            } catch (_: Exception) {
+                                // Address copied to clipboard
+                            }
+                        }
+                        .padding(vertical = 4.dp, horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(stringResource(R.string.open_in_maps))
+                    Text(
+                        text = stringResource(R.string.label_address),
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier
+                            .widthIn(min = 52.dp)
+                            .padding(top = 1.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = fullAddress.ifBlank { stringResource(R.string.not_available) },
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (hasAddress) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.End,
+                        lineHeight = 19.sp,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
