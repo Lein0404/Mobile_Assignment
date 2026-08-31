@@ -526,7 +526,10 @@
     <!-- Chef Home -->
     <!-- Navigation Bar -->
     <string name="nav_appointments">Appointments</string>
+    <string name="nav_hiring">Hiring</string>
     <string name="nav_profile">Profile</string>
+    <string name="nav_recipes">recipes</string>
+
 
     <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>

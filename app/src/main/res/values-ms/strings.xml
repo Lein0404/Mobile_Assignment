@@ -527,7 +527,9 @@
     <!-- Chef Home -->
     <!-- Navigation Bar -->
     <string name="nav_appointments">Tempahan</string>
+    <string name="nav_hiring">Pengambilan</string>
     <string name="nav_profile">Profil</string>
+    <string name="nav_recipes">Resipi</string>
 
     <string name="greeting">Selamat kembali</string>
     <string name="unknown_client">Pelanggan tidak diketahui</string>

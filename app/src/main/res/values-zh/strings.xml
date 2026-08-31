@@ -527,7 +527,9 @@
     <!-- Chef Home -->
     <!-- Navigation Bar -->
     <string name="nav_appointments">预约</string>
+    <string name="nav_hiring">雇佣</string>
     <string name="nav_profile">个人资料</string>
+    <string name="nav_recipes">食谱</string>
 
     <string name="greeting">欢迎回来</string>
     <string name="unknown_client">未知客户</string>

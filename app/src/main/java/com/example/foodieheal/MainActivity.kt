@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -358,16 +359,16 @@ class MainActivity : FragmentActivity() {
                                     windowInsets = WindowInsets.navigationBars
                                 ) {
                                     val items = listOf(
-                                        NavigationItem(Screen.Home.route, "Home", R.drawable.ic_home),
-                                        NavigationItem(Screen.Recipes.route, "Recipes", R.drawable.ic_recipe),
-                                        NavigationItem(Screen.Planner.route, "Planner", R.drawable.ic_planner),
-                                        NavigationItem(Screen.Hiring.route, "Hiring", R.drawable.ic_hiring),
-                                        NavigationItem(Screen.Profile.route, "Profile", R.drawable.ic_outline_account_circle)
+                                        NavigationItem(Screen.Home.route, R.string.nav_home, R.drawable.ic_home),
+                                        NavigationItem(Screen.Recipes.route, R.string.nav_recipes, R.drawable.ic_recipe),
+                                        NavigationItem(Screen.Planner.route, R.string.meal_planner, R.drawable.ic_planner),
+                                        NavigationItem(Screen.Hiring.route, R.string.nav_hiring, R.drawable.ic_hiring),
+                                        NavigationItem(Screen.Profile.route, R.string.nav_profile, R.drawable.ic_outline_account_circle)
                                     )
                                     items.forEach { item ->
                                         NavigationBarItem(
-                                            icon = { Icon(painterResource(id = item.icon), contentDescription = item.label) },
-                                            label = { Text(item.label, fontSize = 10.sp) },
+                                            icon = { Icon(painterResource(id = item.icon), contentDescription = stringResource(item.label)) },
+                                            label = { Text(stringResource(item.label), fontSize = 10.sp) },
                                             selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                                             colors = NavigationBarItemDefaults.colors(
                                                 selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -1400,7 +1401,7 @@ class MainActivity : FragmentActivity() {
     }
 }
 
-data class NavigationItem(val route: String, val label: String, val icon: Int)
+data class NavigationItem(val route: String, val label: Int, val icon: Int)
 
 
 // PLEASE DON'T DELETE IT, IT CAN PREVENT THE SCREEN FLASH YOUR EYE
