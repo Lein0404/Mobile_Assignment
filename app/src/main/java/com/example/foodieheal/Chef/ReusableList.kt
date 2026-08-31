@@ -113,3 +113,24 @@ fun getGenderResId(gender: String): Int? = when (gender.trim().lowercase()) {
     else -> null
 }
 
+fun getRecipeCourseResId(course: String): Int? = when (course.trim().lowercase()) {
+    "all" -> R.string.recipe_course_all
+    "breakfast" -> R.string.recipe_course_breakfast
+    "lunch" -> R.string.recipe_course_lunch
+    "dinner" -> R.string.recipe_course_dinner
+    "snack", "snacks" -> R.string.recipe_course_snack
+    "dessert", "desserts" -> R.string.recipe_course_dessert
+    "beverage", "beverages", "drink", "drinks" -> R.string.recipe_course_beverage
+    else -> null
+}
+
+fun getCookingSkillResId(skill: String): Int? = when (skill.trim().lowercase()) {
+    "standard" -> R.string.recipe_skill_standard
+    "beginner" -> R.string.recipe_skill_beginner
+    "intermediate" -> R.string.recipe_skill_intermediate
+    "advanced" -> R.string.recipe_skill_advanced
+    "master/expert", "master", "expert" -> R.string.recipe_skill_master_expert
+    else -> null
+}
+
+

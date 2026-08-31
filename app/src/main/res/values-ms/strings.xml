@@ -1550,4 +1550,23 @@
     <string name="health_pref_halal">Halal</string>
     <string name="health_pref_keto">Keto</string>
     <string name="health_pref_gluten_free">Bebas Gluten</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">Semua</string>
+    <string name="recipe_course_breakfast">Sarapan</string>
+    <string name="recipe_course_lunch">Makan Tengah Hari</string>
+    <string name="recipe_course_dinner">Makan Malam</string>
+    <string name="recipe_course_snack">Snek</string>
+    <string name="recipe_course_dessert">Pencuci Mulut</string>
+    <string name="recipe_course_beverage">Minuman</string>
+    <string name="recipe_tab_popular">Popular</string>
+    <string name="recipe_tab_my_recipes">Resipi Saya</string>
+    <string name="recipe_tab_bookmarks">Penanda Buku</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">Standard</string>
+    <string name="recipe_skill_beginner">Pemula</string>
+    <string name="recipe_skill_intermediate">Pertengahan</string>
+    <string name="recipe_skill_advanced">Lanjutan</string>
+    <string name="recipe_skill_master_expert">Pakar</string>
 </resources>

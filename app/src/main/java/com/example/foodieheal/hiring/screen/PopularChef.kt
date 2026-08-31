@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Chef.model.WeeklyAvailability
 import com.example.foodieheal.R
@@ -339,7 +340,9 @@ fun ChefHireItem(
 
             // Experience & Location Details
             val expText = stringResource(R.string.experience_years_short, chef.experience ?: 0)
-            val locationText = chef.state?.takeIf { it.isNotBlank() }
+            val locationText = chef.state?.takeIf { it.isNotBlank() }?.let { state ->
+                getStateResId(state)?.let { stringResource(it) } ?: state
+            }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

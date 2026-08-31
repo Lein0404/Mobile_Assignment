@@ -56,6 +56,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getCookingSkillResId
+import com.example.foodieheal.Chef.getRecipeCourseResId
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
@@ -72,7 +74,7 @@ fun RecipeDetailPreviewSheet(
     onUpdateNote: ((recipeId: String, note: String) -> Unit)? = null,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
-    val isSelected = selectedRecipeState != null
+
     var customNoteText by remember(selectedRecipeState?.customNote) {
         mutableStateOf(selectedRecipeState?.customNote.orEmpty())
     }
@@ -142,6 +144,7 @@ fun RecipeDetailPreviewSheet(
 
                     // Course Badge
                     if (recipe.recipeCourse.isNotBlank()) {
+                        val courseDisplay = getRecipeCourseResId(recipe.recipeCourse)?.let { stringResource(it) } ?: recipe.recipeCourse
                         Surface(
                             modifier = Modifier
                                 .align(Alignment.TopStart)
@@ -150,7 +153,7 @@ fun RecipeDetailPreviewSheet(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f)
                         ) {
                             Text(
-                                text = recipe.recipeCourse,
+                                text = courseDisplay,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
@@ -234,13 +237,13 @@ fun RecipeDetailPreviewSheet(
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.ic_fire,
                         label = stringResource(R.string.label_calories_badge),
-                        value = if (recipe.calories > 0) "${recipe.calories} kcal" else "--",
+                        value = if (recipe.calories > 0) stringResource(R.string.format_recipe_calories, recipe.calories) else "--",
                         modifier = Modifier.weight(1f)
                     )
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.ic_clock,
                         label = stringResource(R.string.label_prep_time_badge),
-                        value = if (recipe.time > 0) "${recipe.time} mins" else "--",
+                        value = if (recipe.time > 0) stringResource(R.string.format_recipe_duration, recipe.time) else "--",
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -251,10 +254,11 @@ fun RecipeDetailPreviewSheet(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    val skillDisplay = getCookingSkillResId(recipe.cookingSkill)?.let { stringResource(it) } ?: recipe.cookingSkill.ifBlank { stringResource(R.string.recipe_skill_standard) }
                     RecipeDetailStatBadge(
                         iconRes = R.drawable.skill,
                         label = stringResource(R.string.label_skill_badge),
-                        value = recipe.cookingSkill.ifBlank { "Standard" },
+                        value = skillDisplay,
                         modifier = Modifier.weight(1f)
                     )
                     RecipeDetailStatBadge(

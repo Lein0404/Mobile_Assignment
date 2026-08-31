@@ -1551,4 +1551,23 @@
     <string name="health_pref_halal">Halal</string>
     <string name="health_pref_keto">Keto</string>
     <string name="health_pref_gluten_free">Gluten-Free</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">All</string>
+    <string name="recipe_course_breakfast">Breakfast</string>
+    <string name="recipe_course_lunch">Lunch</string>
+    <string name="recipe_course_dinner">Dinner</string>
+    <string name="recipe_course_snack">Snack</string>
+    <string name="recipe_course_dessert">Dessert</string>
+    <string name="recipe_course_beverage">Beverage</string>
+    <string name="recipe_tab_popular">Popular</string>
+    <string name="recipe_tab_my_recipes">My Recipes</string>
+    <string name="recipe_tab_bookmarks">Bookmarks</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">Standard</string>
+    <string name="recipe_skill_beginner">Beginner</string>
+    <string name="recipe_skill_intermediate">Intermediate</string>
+    <string name="recipe_skill_advanced">Advanced</string>
+    <string name="recipe_skill_master_expert">Master/Expert</string>
 </resources>

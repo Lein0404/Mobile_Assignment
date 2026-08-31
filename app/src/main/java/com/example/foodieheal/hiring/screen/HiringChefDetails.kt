@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.ReviewsUiState
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
@@ -354,10 +355,13 @@ fun HiringChefDetails(
                         }
                     )
 
+                    val stateDisplay = chef.state?.ifBlank { null }?.let { state ->
+                        getStateResId(state)?.let { stringResource(it) } ?: state
+                    }
                     val fullAddress = listOfNotNull(
                         chef.address?.ifBlank { null },
                         chef.postcode?.ifBlank { null },
-                        chef.state?.ifBlank { null }
+                        stateDisplay
                     ).joinToString(", ")
 
                     val hasAddress = fullAddress.isNotBlank()

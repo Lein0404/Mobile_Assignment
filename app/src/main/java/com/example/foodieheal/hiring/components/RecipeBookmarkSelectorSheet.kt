@@ -77,6 +77,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getRecipeCourseResId
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.ui.components.getHighlightedText
@@ -104,7 +105,11 @@ fun RecipeBookmarkSelectorSheet(
 
     var previewingRecipe by remember { mutableStateOf<Recipe?>(null) }
 
-    val tabs = listOf("Popular", "My Recipes", "Bookmarks")
+    val tabTitles = listOf(
+        R.string.recipe_tab_popular,
+        R.string.recipe_tab_my_recipes,
+        R.string.recipe_tab_bookmarks
+    )
     var localSelectedTab by remember { mutableIntStateOf(recipeViewModel?.activeTab ?: 0) }
     val currentUserId = authViewModel?.currentUser?.id
 
@@ -136,13 +141,24 @@ fun RecipeBookmarkSelectorSheet(
     val isDataLoading = (recipeViewModel?.isLoading ?: false) || isLoading
     val focusManager = LocalFocusManager.current
 
-    val filteredRecipes by remember(currentDataList, searchQuery, selectedCourse) {
+    val courseTranslations = mapOf(
+        "breakfast" to stringResource(R.string.recipe_course_breakfast),
+        "lunch" to stringResource(R.string.recipe_course_lunch),
+        "dinner" to stringResource(R.string.recipe_course_dinner),
+        "snack" to stringResource(R.string.recipe_course_snack),
+        "dessert" to stringResource(R.string.recipe_course_dessert),
+        "beverage" to stringResource(R.string.recipe_course_beverage)
+    )
+
+    val filteredRecipes by remember(currentDataList, searchQuery, selectedCourse, courseTranslations) {
         derivedStateOf {
             currentDataList.filter { recipe ->
                 val matchesSearch = if (searchQuery.isBlank()) true else {
                     val query = searchQuery.trim().lowercase()
+                    val localizedCourse = courseTranslations[recipe.recipeCourse.trim().lowercase()]?.lowercase().orEmpty()
                     recipe.recipeName.lowercase().contains(query) ||
                             recipe.recipeCourse.lowercase().contains(query) ||
+                            localizedCourse.contains(query) ||
                             recipe.cookingSkill.lowercase().contains(query)
                 }
                 val matchesCourse = if (selectedCourse == "All") true else {
@@ -233,7 +249,7 @@ fun RecipeBookmarkSelectorSheet(
                     },
                     divider = {}
                 ) {
-                    tabs.forEachIndexed { index, title ->
+                    tabTitles.forEachIndexed { index, titleRes ->
                         Tab(
                             selected = localSelectedTab == index,
                             onClick = {
@@ -242,7 +258,7 @@ fun RecipeBookmarkSelectorSheet(
                             },
                             text = {
                                 Text(
-                                    text = title,
+                                    text = stringResource(titleRes),
                                     fontSize = 13.sp,
                                     fontWeight = if (localSelectedTab == index) FontWeight.Bold else FontWeight.Medium
                                 )
@@ -308,6 +324,7 @@ fun RecipeBookmarkSelectorSheet(
             ) {
                 items(courses) { course ->
                     val isSelected = selectedCourse == course
+                    val courseDisplay = getRecipeCourseResId(course)?.let { stringResource(it) } ?: course
                     Surface(
                         onClick = { selectedCourse = course },
                         shape = RoundedCornerShape(12.dp),
@@ -315,7 +332,7 @@ fun RecipeBookmarkSelectorSheet(
                         border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     ) {
                         Text(
-                            text = course,
+                            text = courseDisplay,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                             fontSize = 12.sp,
@@ -355,9 +372,9 @@ fun RecipeBookmarkSelectorSheet(
                                 tint = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(40.dp)
                             )
-                            Spacer(modifier = Modifier.height(10.dp))
+                            val currentTabName = tabTitles.getOrNull(localSelectedTab)?.let { stringResource(it) } ?: ""
                             Text(
-                                text = stringResource(R.string.no_recipes_in_tab, tabs.getOrElse(localSelectedTab) { "this tab" }),
+                                text = stringResource(R.string.no_recipes_in_tab, currentTabName),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -549,9 +566,10 @@ private fun RecipeSelectableCard(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.secondaryContainer
                             ) {
+                                val courseDisplay = getRecipeCourseResId(recipe.recipeCourse)?.let { stringResource(it) } ?: recipe.recipeCourse
                                 Text(
                                     text = getHighlightedText(
-                                        fullText = recipe.recipeCourse,
+                                        fullText = courseDisplay,
                                         query = searchQuery
                                     ),
                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
@@ -566,7 +584,7 @@ private fun RecipeSelectableCard(
 
                         if (recipe.calories > 0) {
                             Text(
-                                text = "${recipe.calories} kcal",
+                                text = stringResource(R.string.format_recipe_calories, recipe.calories),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,
@@ -577,7 +595,7 @@ private fun RecipeSelectableCard(
 
                         if (recipe.time > 0) {
                             Text(
-                                text = "• ${recipe.time}m",
+                                text = "• ${stringResource(R.string.format_recipe_duration, recipe.time)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,

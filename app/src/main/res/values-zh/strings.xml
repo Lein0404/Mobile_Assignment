@@ -1550,4 +1550,23 @@
     <string name="health_pref_halal">清真</string>
     <string name="health_pref_keto">生酮</string>
     <string name="health_pref_gluten_free">无麸质</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">全部</string>
+    <string name="recipe_course_breakfast">早餐</string>
+    <string name="recipe_course_lunch">午餐</string>
+    <string name="recipe_course_dinner">晚餐</string>
+    <string name="recipe_course_snack">点心/小吃</string>
+    <string name="recipe_course_dessert">甜品</string>
+    <string name="recipe_course_beverage">饮品</string>
+    <string name="recipe_tab_popular">热门</string>
+    <string name="recipe_tab_my_recipes">我的食谱</string>
+    <string name="recipe_tab_bookmarks">我的收藏</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">标准</string>
+    <string name="recipe_skill_beginner">初级</string>
+    <string name="recipe_skill_intermediate">中级</string>
+    <string name="recipe_skill_advanced">高级</string>
+    <string name="recipe_skill_master_expert">专家/大师</string>
 </resources>
