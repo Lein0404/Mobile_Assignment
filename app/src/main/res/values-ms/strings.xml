@@ -974,6 +974,15 @@
     <string name="admin_categories_header">Kategori</string>
     <string name="admin_no_requests_found">Tiada permohonan.</string>
     <string name="admin_filter_status_title">Tapis mengikut status</string>
+    <string name="admin_filter_sheet_title">Tapis Permohonan</string>
+    <string name="admin_filter_reset_all">Set Semula Semua</string>
+    <string name="admin_filter_section_status">Status Permohonan</string>
+    <string name="admin_filter_section_created_date">Tarikh Permohonan</string>
+    <string name="admin_filter_section_processed_date">Tarikh Diproses</string>
+    <string name="admin_filter_from">Dari</string>
+    <string name="admin_filter_to">Hingga</string>
+    <string name="admin_filter_select_date">Pilih Tarikh</string>
+    <string name="admin_filter_apply_btn">Gunakan Penapis</string>
     <string name="admin_filter_all">Semua</string>
     <string name="admin_filter_pending">Menunggu tindakan</string>
     <string name="admin_filter_approved">Diluluskan</string>

@@ -8,8 +8,13 @@ import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
+import com.example.foodieheal.ingredients.shared.IngredientRequestFilterHelper
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.User.Repo.UserRepository
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,14 +26,22 @@ data class AdminIngredientsUiState(
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
     val selectedStatus: Status? = null, // null means "All"
+    val createdDateStart: LocalDate? = null,
+    val createdDateEnd: LocalDate? = null,
+    val processedDateStart: LocalDate? = null,
+    val processedDateEnd: LocalDate? = null,
     val tempSelectedStatus: Status? = null,
+    val tempCreatedDateStart: LocalDate? = null,
+    val tempCreatedDateEnd: LocalDate? = null,
+    val tempProcessedDateStart: LocalDate? = null,
+    val tempProcessedDateEnd: LocalDate? = null,
+    val showFilterSheet: Boolean = false,
     val requests: List<AdminIngredientRequestItem> = emptyList(),
     val filteredRequests: List<AdminIngredientRequestItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isNetworkAvailable: Boolean = true,
     val errorMessage: Int? = null,
-    val showStatusFilterDialog: Boolean = false,
     val isCategoriesExpanded: Boolean = false
 )
 
@@ -116,12 +129,63 @@ class AdminIngredientsViewModel(
         _uiState.update { it.copy(isCategoriesExpanded = !it.isCategoriesExpanded) }
     }
 
-    fun onShowStatusFilterDialog(show: Boolean) {
-        _uiState.update { it.copy(showStatusFilterDialog = show, tempSelectedStatus = it.selectedStatus) }
+    fun onShowFilterSheet(show: Boolean) {
+        _uiState.update {
+            it.copy(
+                showFilterSheet = show,
+                tempSelectedStatus = it.selectedStatus,
+                tempCreatedDateStart = it.createdDateStart,
+                tempCreatedDateEnd = it.createdDateEnd,
+                tempProcessedDateStart = it.processedDateStart,
+                tempProcessedDateEnd = it.processedDateEnd
+            )
+        }
     }
 
     fun updateTempStatus(status: Status?) {
         _uiState.update { it.copy(tempSelectedStatus = status) }
+    }
+
+    fun updateTempCreatedStartDate(date: LocalDate?) {
+        _uiState.update { it.copy(tempCreatedDateStart = date) }
+    }
+
+    fun updateTempCreatedEndDate(date: LocalDate?) {
+        _uiState.update { it.copy(tempCreatedDateEnd = date) }
+    }
+
+    fun updateTempProcessedStartDate(date: LocalDate?) {
+        _uiState.update { it.copy(tempProcessedDateStart = date) }
+    }
+
+    fun updateTempProcessedEndDate(date: LocalDate?) {
+        _uiState.update { it.copy(tempProcessedDateEnd = date) }
+    }
+
+    fun resetTempFilters() {
+        _uiState.update {
+            it.copy(
+                tempSelectedStatus = null,
+                tempCreatedDateStart = null,
+                tempCreatedDateEnd = null,
+                tempProcessedDateStart = null,
+                tempProcessedDateEnd = null
+            )
+        }
+    }
+
+    fun applyFilterSheet() {
+        _uiState.update {
+            it.copy(
+                showFilterSheet = false,
+                selectedStatus = it.tempSelectedStatus,
+                createdDateStart = it.tempCreatedDateStart,
+                createdDateEnd = it.tempCreatedDateEnd,
+                processedDateStart = it.tempProcessedDateStart,
+                processedDateEnd = it.tempProcessedDateEnd
+            )
+        }
+        applyFilters()
     }
 
     fun onSearchQueryChange(query: String) {
@@ -141,21 +205,19 @@ class AdminIngredientsViewModel(
         applyFilters()
     }
 
-    fun onStatusFilterChange(status: Status?) {
-        _uiState.update { it.copy(selectedStatus = status) }
-        applyFilters()
-    }
-
     private fun applyFilters() {
         _uiState.update { state ->
-            val query = state.searchQuery.trim()
-            val filtered = state.requests.filter { item ->
-                (query.isEmpty() ||
-                 item.request.ingredientName.contains(query, ignoreCase = true) ||
-                 item.request.ingredientDesc.contains(query, ignoreCase = true)) &&
-                (state.selectedCategories.isEmpty() || item.request.ingredientCategory == null || state.selectedCategories.contains(item.request.ingredientCategory)) &&
-                (state.selectedStatus == null || item.request.requestStatus == state.selectedStatus)
-            }
+            val filtered = IngredientRequestFilterHelper.filterRequests(
+                items = state.requests,
+                searchQuery = state.searchQuery,
+                selectedCategories = state.selectedCategories,
+                selectedStatus = state.selectedStatus,
+                createdDateStart = state.createdDateStart,
+                createdDateEnd = state.createdDateEnd,
+                processedDateStart = state.processedDateStart,
+                processedDateEnd = state.processedDateEnd,
+                getRequest = { it.request }
+            )
             state.copy(filteredRequests = filtered)
         }
     }

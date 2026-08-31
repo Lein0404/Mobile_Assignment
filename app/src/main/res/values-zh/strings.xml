@@ -974,6 +974,15 @@
     <string name="admin_categories_header">类别</string>
     <string name="admin_no_requests_found">暂无申请。</string>
     <string name="admin_filter_status_title">按状态筛选</string>
+    <string name="admin_filter_sheet_title">筛选申请</string>
+    <string name="admin_filter_reset_all">重置全部</string>
+    <string name="admin_filter_section_status">申请状态</string>
+    <string name="admin_filter_section_created_date">申请日期</string>
+    <string name="admin_filter_section_processed_date">处理日期</string>
+    <string name="admin_filter_from">从</string>
+    <string name="admin_filter_to">至</string>
+    <string name="admin_filter_select_date">选择日期</string>
+    <string name="admin_filter_apply_btn">应用筛选</string>
     <string name="admin_filter_all">全部</string>
     <string name="admin_filter_pending">待处理</string>
     <string name="admin_filter_approved">已批准</string>
