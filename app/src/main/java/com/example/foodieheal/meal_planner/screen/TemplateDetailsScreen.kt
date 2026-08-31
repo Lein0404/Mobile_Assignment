@@ -31,21 +31,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
-import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel.DayCondition
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -65,41 +60,45 @@ fun TemplateDetailsScreen(
     onRecipeDelete: (String) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onAdd: () -> Unit
+    onAdd: () -> Unit,
 ) {
     val context = LocalContext.current
     val shareTitle = stringResource(R.string.menu_share)
     val coroutineScope = rememberCoroutineScope()
     val daysOfWeek = remember { DayOfWeek.entries }
     val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { daysOfWeek.size }
-    )
+        initialPage = 0
+    ) { daysOfWeek.size }
     val selectedDay = daysOfWeek[pagerState.currentPage]
 
     val selectedDayTotalCalories = remember(plan.dailyPlans, selectedDay) {
         plan.dailyPlans[selectedDay]
+            ?.asSequence()
             ?.flatMap { slot -> slot.recipes }
             ?.sumOf { recipe -> recipe.calories } ?: 0
     }
 
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
-    var isDescriptionExpanded by remember { mutableStateOf(false) }
-    var showMoreButton by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(value = false) }
+    var showMenu by remember { mutableStateOf(value = false) }
+    var isDescriptionExpanded by remember { mutableStateOf(value = false) }
+    var showMoreButton by remember { mutableStateOf(value = false) }
+
+    val labelPlanId = stringResource(R.string.label_plan_id)
+    val msgPlanIdCopied = stringResource(R.string.msg_plan_id_copied)
+    val shareUrl = "https://tzh652.github.io/template?id=${plan.planId}"
+    val shareText = stringResource(R.string.msg_share_template_text, shareUrl)
 
     fun copyIdToClipboard(id: String) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText(context.getString(R.string.label_plan_id), id)
+        val clip = ClipData.newPlainText(labelPlanId, id)
         clipboard.setPrimaryClip(clip)
-        Toasty.custom(context, context.getString(R.string.msg_plan_id_copied), R.drawable.foodieheallogo_removebg_preview, R.color.black, Toast.LENGTH_SHORT, true, true).show()
+        Toasty.custom(context, msgPlanIdCopied, R.drawable.foodieheallogo_removebg_preview, R.color.black, Toast.LENGTH_SHORT, true, true).show()
     }
 
-    fun shareTemplate(id: String) {
-        val shareUrl = "https://tzh652.github.io/template?id=$id"
+    fun shareTemplate() {
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.msg_share_template_text, shareUrl))
+            putExtra(Intent.EXTRA_TEXT, shareText)
             type = "text/plain"
         }
         val shareIntent = Intent.createChooser(sendIntent, shareTitle)
@@ -176,7 +175,7 @@ fun TemplateDetailsScreen(
                         onEdit = { onEdit() },
                         onDelete = { onDelete() },
                         onAdd = { onAdd() },
-                        onShare = { shareTemplate(plan.planId) }
+                        onShare = { shareTemplate() }
                     )
                 },
             )
@@ -197,14 +196,14 @@ fun TemplateDetailsScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // 🌟 Plan Description Section
+            //  Plan Description Section
             if (plan.planDescription.isNotBlank()) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.tab_details),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Card(

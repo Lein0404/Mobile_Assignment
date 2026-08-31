@@ -80,18 +80,18 @@ class TemplateViewModel(
         }
         .mapLatest { entityList ->
             try {
-                // 🌟 1. Extract ALL unique recipe IDs from ALL plans in the list
+                //  1. Extract ALL unique recipe IDs from ALL plans in the list
                 val allRecipeIds = entityList.flatMap { entity ->
                     entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.recipeId } }
                 }.distinct()
 
                 Log.d(TAG, "allWeeklyPlans: Batch fetching ${allRecipeIds.size} recipes for ${entityList.size} plans")
 
-                // 🌟 2. Fetch all required recipes in ONE batch request
+                //  2. Fetch all required recipes in ONE batch request
                 val recipes = recipeRepository.getRecipesByIds(allRecipeIds).getOrDefault(emptyList())
                 val recipeMap = recipes.filter { it.recipe_id != null }.associateBy { it.recipe_id!! }
 
-                // 🌟 3. Efficiently map entities to domain models using the pre-fetched map
+                // 3. Efficiently map entities to domain models using the pre-fetched map
                 val result = entityList.map { entity ->
                     WeeklyPlan(
                         planName = entity.planName,
@@ -164,7 +164,7 @@ class TemplateViewModel(
             try {
                 planRepository.deletePlan(planId)
 
-                // 🌟 Forces allWeeklyPlans to re-fetch and re-hydrate
+                //  Forces allWeeklyPlans to re-fetch and re-hydrate
                 refreshPlans()
                 onSuccess()
             } catch (e: Exception) {
@@ -209,7 +209,7 @@ class TemplateViewModel(
                 planRepository.updatePlan(updatedPlan.toEntity())
                 Log.d(TAG, "deleteRecipeFromTemplate(): Updated plan in DB. Refreshing UI flow.")
 
-                // 🌟 Forces selectedPlan and allWeeklyPlans to emit updated data
+                //  Forces selectedPlan and allWeeklyPlans to emit updated data
                 refreshPlans()
             } catch (e: Exception) {
                 Log.e(TAG, "deleteRecipeFromTemplate() Exception: Failed to update template", e)

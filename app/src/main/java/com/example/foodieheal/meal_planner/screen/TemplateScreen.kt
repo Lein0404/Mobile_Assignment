@@ -130,7 +130,7 @@ fun TemplatesContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp, bottom = 0.dp, start = 16.dp, end = 16.dp), // 🌟 Reduced bottom padding
+                .padding(top = 12.dp, bottom = 0.dp, start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             tabs.forEachIndexed { index, title ->
@@ -197,7 +197,7 @@ fun AllTemplatesScreen(
     val allPlans by templateViewModel.publicCommunityPlans.collectAsStateWithLifecycle()
     val isLoading by templateViewModel.isLoading.collectAsStateWithLifecycle()
 
-    // 🌟 Pre-resolve category names for better search matching (e.g. "High Protein" instead of "HIGH_PROTEIN")
+    //  Pre-resolve category names for better search matching
     val categoryNames = PlanCategory.entries.associateWith { stringResource(it.displayNameRes) }
 
     var query by remember { mutableStateOf("") }
@@ -308,7 +308,7 @@ fun MyTemplatesScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        contentWindowInsets = WindowInsets(0,0,0,0), // 🌟 Reset window insets to prevent automatic top padding
+        contentWindowInsets = WindowInsets(0,0,0,0), // Reset window insets to prevent automatic top padding
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTemplateClick,
@@ -392,7 +392,7 @@ fun CategorizedTemplatesScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp), // 🌟 Adjusted content padding
+        contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         items(
@@ -483,7 +483,7 @@ fun PlanCard(
                 )
             }
 
-            // 🌟 Extract unique recipe images to display a preview
+            //  Extract unique recipe images to display a preview
             val recipeImages = remember(plan) {
                 plan.dailyPlans.values
                     .asSequence()

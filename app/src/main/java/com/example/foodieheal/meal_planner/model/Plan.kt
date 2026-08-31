@@ -21,9 +21,6 @@ data class WeeklyPlan(
 /**
  * 📦 Remote Entity / DTO Layer: Used for Supabase storage.
  */
-/**
- * 📦 Remote Entity / DTO Layer: Used for Supabase storage.
- */
 @Serializable
 data class WeeklyPlanEntity(
     @SerialName("planId")

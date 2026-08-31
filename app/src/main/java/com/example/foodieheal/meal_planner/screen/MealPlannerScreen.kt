@@ -98,7 +98,7 @@ fun MealPlannerScreen(
         }
     }
 
-    // 🌟 Derive week start from selected date automatically
+    //  Derive week start from selected date automatically
     val currentWeekStart = remember(selectedDate) {
         selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     }
@@ -143,11 +143,11 @@ fun MealPlannerScreen(
     LaunchedEffect(deepLinkDays) {
         if (deepLinkDays != null) {
             showWeeklyPasteDatePicker = true
-            // 🌟 Shift the calendar to the shared week so the user sees what they are copying
+            //  Shift the calendar to the shared week so the user sees what they are copying
             deepLinkDays.firstOrNull()?.let { firstDay ->
                 selectedDate = firstDay
             }
-            // 🌟 Signal that we have consumed the deep link UI logic
+            //  Signal that we have consumed the deep link UI logic
             mealPlannerViewModel.consumeDeepLinkProcessed()
         }
     }
@@ -170,7 +170,7 @@ fun MealPlannerScreen(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
             val targetDate = anchorDate.plusDays(page.toLong())
-            // 🌟 Only sync pager -> state if it's NOT a deep link animation or if it's a real change
+            //  Only sync pager -> state if it's NOT a deep link animation or if it's a real change
             // This prevents the "reset to today" bounce during initial deep link loading
             if (targetDate != selectedDate && !mealPlannerViewModel.isProcessingDeepLink) {
                 selectedDate = targetDate
@@ -185,11 +185,11 @@ fun MealPlannerScreen(
         }
     }
 
-    // 🌟 Track current month based on active selected date
+    //  Track current month based on active selected date
     val currentMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
     val maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
 
-    // 🌟 Load current and adjacent months immediately on screen launch
+    //  Load current and adjacent months immediately on screen launch
     LaunchedEffect(currentMonth, maxCalories) {
         mealPlannerViewModel.loadMonthConditions(currentMonth, maxCalories)
         mealPlannerViewModel.prefetchAdjacentMonths(currentMonth, maxCalories)
@@ -322,11 +322,11 @@ fun MealPlannerScreen(
                     totalCalories = totalCaloriesForSelectedDate,
                     maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser),
                     mealPlansCache = mealPlannerViewModel.mealPlansCache,
-                    monthConditions = mealPlannerViewModel.monthConditions, // 🌟 Pass conditions
+                    monthConditions = mealPlannerViewModel.monthConditions,
                     pagerState = pagerState,
                     anchorDate = anchorDate,
-                    appointments = appointmentsForSelectedDate, // 🌟 Pass appointments
-                    chefsMap = chefsMap, // 🌟 Pass chefs map
+                    appointments = appointmentsForSelectedDate,
+                    chefsMap = chefsMap,
                     onCalendarClick = { showDatePicker = true },
                     onDateSelected = { newDate ->
                         selectedDate = newDate

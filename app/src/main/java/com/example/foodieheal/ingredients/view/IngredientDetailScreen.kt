@@ -2,9 +2,11 @@ package com.example.foodieheal.ingredients.view
 
 import android.app.Application
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -58,6 +60,18 @@ fun IngredientDetailScreen(
         } else {
             ingredientsViewModel.fetchIngredientDetail(ingredientId)
         }
+    }
+
+    val onNavigateBack: () -> Unit = {
+        if (!navController.popBackStack()) {
+            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    BackHandler(enabled = isRequest) {
+        onNavigateBack()
     }
 
     val isLoading = if (isRequest) requestUiState.isLoading else ingredientsUiState.isLoading
@@ -123,15 +137,7 @@ fun IngredientDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
-                        if (isRequest) {
-                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                            }
-                        } else {
-                            navController.popBackStack()
-                        }
-                    }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = stringResource(R.string.back), 
@@ -292,12 +298,26 @@ fun IngredientDetailScreen(
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.REJECTED) {
                                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_xl)))
-                                Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-                                Text(
-                                    text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(dimensionResource(R.dimen.padding_smd))
+                                        )
+                                        .padding(dimensionResource(R.dimen.padding_md))
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.ingredient_detail_rejected_reason_label),
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
+                                    Text(
+                                        text = requestDetail?.request?.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                }
                             }
 
                             if (isRequest && requestDetail?.request?.requestStatus == Status.APPROVED && !requestDetail?.request?.adminNote.isNullOrBlank()) {

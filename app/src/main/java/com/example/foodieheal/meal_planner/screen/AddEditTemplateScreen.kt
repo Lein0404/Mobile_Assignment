@@ -89,6 +89,7 @@ fun AddEditTemplateRoute(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddEditTemplateScreen(
+    modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
     planName: String,
     onPlanNameChange: (String) -> Unit,
@@ -106,14 +107,13 @@ fun AddEditTemplateScreen(
     onBackClick: () -> Unit,
     onSave: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember { DayOfWeek.entries.toList() }
     val mainTabs = listOf(stringResource(R.string.tab_details), stringResource(R.string.tab_weekly_plan))
     
-    // 🌟 State for the main swipable tabs
+    //  State for the main swipable tabs
     val mainPagerState = rememberPagerState(pageCount = { mainTabs.size })
-    // 🌟 State for the inner days pager
+    //  State for the inner days pager
     val dayPagerState = rememberPagerState(pageCount = { daysOfWeek.size })
     val scope = rememberCoroutineScope()
 
@@ -387,22 +387,28 @@ private fun TemplateDayPageContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(vertical = 16.dp)
             .navigationBarsPadding()
     ) {
         MealType.entries.forEach { mealType ->
             val currentSlot = mealSlots.find { it.mealType == mealType }
             val recipesInSlot = currentSlot?.recipes ?: emptyList()
 
-            TemplateMealSlotCard(
-                mealType = mealType,
+            val title = when (mealType) {
+                MealType.BREAKFAST -> stringResource(R.string.meal_title_breakfast)
+                MealType.LUNCH -> stringResource(R.string.meal_title_lunch)
+                MealType.DINNER -> stringResource(R.string.meal_title_dinner)
+                MealType.SNACK -> stringResource(R.string.meal_title_snack)
+            }
+
+            MealSection(
+                title = title,
                 recipes = recipesInSlot,
                 onAddClick = { onAddMealRecipe(mealType) },
-                onDeleteRecipe = { recipe -> onDeleteMealRecipe(mealType, recipe) },
-                onRecipeClick = onRecipeClick
+                onDeleteClick = { recipe -> onDeleteMealRecipe(mealType, recipe) },
+                onRecipeDetails = onRecipeClick,
+                modifier = Modifier.padding(bottom = 5.dp)
             )
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 }

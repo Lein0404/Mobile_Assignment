@@ -1,11 +1,14 @@
 package com.example.foodieheal.ingredients.viewModel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.notification.IngredientRequestNotificationHelper
+import com.example.foodieheal.ingredients.notification.IngredientRequestStatusMonitor
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.shared.IngredientFormHelper
@@ -66,6 +69,7 @@ class IngredientRequestViewModel(
     private val networkMonitor = NetworkMonitor(application)
 
     init {
+        IngredientRequestNotificationHelper.createNotificationChannel(application)
         observeNetworkStatus()
         fetchRequests()
         fetchUnits()
@@ -93,6 +97,8 @@ class IngredientRequestViewModel(
             }
             try {
                 val requests = repository.getIngredientRequests(currentUserId)
+                checkAndNotifyStatusUpdates(requests)
+
                 val allUnits = repository.getUnits().associateBy { it.unitID }
                 val unitRequests = repository.getIngredientUnitsRequests()
 
@@ -113,6 +119,10 @@ class IngredientRequestViewModel(
                 _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_requests) }
             }
         }
+    }
+
+    private fun checkAndNotifyStatusUpdates(requests: List<IngredientRequest>) {
+        IngredientRequestStatusMonitor.processRequestList(requests, getApplication())
     }
 
     fun refresh() {

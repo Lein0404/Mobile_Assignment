@@ -74,7 +74,7 @@ class MealPlannerViewModel(
 
     private val planUpdateMutex = Mutex()
 
-    // 🌟 Cache to track which weeks have been fully synced to local DB during this session
+    //  Cache to track which weeks have been fully synced to local DB during this session
     private val syncedWeeks = mutableSetOf<LocalDate>()
 
     // Explicit flag to protect deep-link navigation transactions
@@ -117,7 +117,7 @@ class MealPlannerViewModel(
         deepLinkSourceDays = null
         sharerId = null
         
-        // 🌟 If we were previewing a shared plan, refresh the current month to show our own data dots again
+        //  If we were previewing a shared plan, refresh the current month to show our own data dots again
         if (wasShared) {
             invalidateConditionsCacheAndReload(lastActiveDate)
         }
@@ -134,7 +134,7 @@ class MealPlannerViewModel(
                 isNetworkAvailable = connected
                 Log.d(TAG, "Network connection state updated: connected=$connected")
                 if (connected) {
-                    // 🌟 Clear sync flags to force a re-verification with the server for the current view
+                    //  Clear sync flags to force a re-verification with the server for the current view
                     syncedWeeks.clear()
                     fetchedMonths.clear()
 
@@ -183,11 +183,11 @@ class MealPlannerViewModel(
         val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
         if (currentUserId.isNullOrEmpty()) return
 
-        // 🌟 Determine who we are targeting: Me or the Sharer
+        //  Determine who we are targeting: Me or the Sharer
         val isSharedDate = deepLinkSourceDays?.contains(date) == true
         val targetUserId = if (isSharedDate && sharerId != null) sharerId!! else currentUserId
 
-        // 🌟 OPTIMIZATION: Only skip if the cached plan belongs to the correct target user
+        //  OPTIMIZATION: Only skip if the cached plan belongs to the correct target user
         val cachedPlan = mealPlansCache[date]
         if (!forceRefresh && cachedPlan != null && cachedPlan.user_id == targetUserId) {
             return
@@ -200,7 +200,7 @@ class MealPlannerViewModel(
             val result = if (isNetworkAvailable) {
                 repository.getDailyPlan(date, targetUserId)
             } else {
-                // 🌟 OFFLINE MODE: Try to load from local week cache
+                //  OFFLINE MODE: Try to load from local week cache
                 val weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 repository.getLocalWeeklyPlan(weekStart).map { plans ->
                     plans?.find { it.date == date.toString() }
@@ -210,20 +210,20 @@ class MealPlannerViewModel(
             withContext(Dispatchers.Main) {
                 result.onSuccess { plan ->
                     if (plan != null) {
-                        // 🌟 Ensure we only cache plans that belong to the intended target
+                        //  Ensure we only cache plans that belong to the correct user
                         if (plan.user_id == targetUserId) {
                             mealPlansCache[date] = plan
-                            // 🌟 Ensure the dot is updated if this is our own data
+                            //  Ensure the dot is updated if this is our own data
                             if (!isSharedDate) {
                                 updateLocalConditionForDate(date, plan)
-                                // 🌟 Auto-sync fetched plan locally for future offline access
+                                //  Auto-sync fetched plan locally for future offline access
                                 if (isNetworkAvailable) {
                                     syncCurrentWeekLocally(date)
                                 }
                             }
                         }
                     } else {
-                        // 🌟 If no plan exists, we still mark the week for syncing if online
+                        //  If no plan exists, we still mark the week for syncing if online
                         // to pre-fetch other days and ensure offline availability.
                         if (isNetworkAvailable && !isSharedDate) {
                             syncCurrentWeekLocally(date)
@@ -276,15 +276,15 @@ class MealPlannerViewModel(
 
         val updatedPlan = currentPlan.copy(meals = updatedMeals)
 
-        // 🌟 1. Optimistic UI update (Meal list)
+        //  1. Optimistic UI update (Meal list)
         mealPlansCache[date] = updatedPlan
 
-        // 🌟 2. Instant Dot Update (Predictive)
+        //  2. Instant Dot Update (Predictive)
         updateLocalConditionForDate(date, updatedPlan)
 
         val result = withContext(Dispatchers.IO) { repository.saveDailyPlan(updatedPlan) }
         result.onSuccess {
-            // 🌟 Auto-sync current week locally, but force refresh because we just added a recipe
+            //  Auto-sync current week locally, but force refresh because we just added a recipe
             syncCurrentWeekLocally(date, excludeDate = date, force = true)
         }.onFailure { exception ->
             Log.e(TAG, "Failed to save updated meal plan to Supabase", exception)
@@ -323,16 +323,16 @@ class MealPlannerViewModel(
 
         val updatedPlan = currentPlan.copy(meals = updatedMeals)
 
-        // 🌟 1. Optimistic UI update (Meal list)
+        //  1. Optimistic UI update (Meal list)
         mealPlansCache[date] = updatedPlan
 
-        // 🌟 2. Instant Dot Update (Predictive)
+        //  2. Instant Dot Update (Predictive)
         updateLocalConditionForDate(date, updatedPlan)
 
         val saveResult = withContext(Dispatchers.IO) { repository.saveDailyPlan(updatedPlan) }
 
         if (saveResult.isSuccess) {
-            // 🌟 Auto-sync current week locally, excluding the modified date, force refresh
+            //  Auto-sync current week locally, excluding the modified date, force refresh
             syncCurrentWeekLocally(date, excludeDate = date, force = true)
         } else {
             Log.e(TAG, "deleteRecipeFromMeal: Save failed")
@@ -349,7 +349,7 @@ class MealPlannerViewModel(
 
         val weekStart = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         
-        // 🌟 Skip if already synced this session, unless forced (e.g. after a modification)
+        //  Skip if already synced this session, unless forced (e.g. after a modification)
         if (!force && syncedWeeks.contains(weekStart)) {
             Log.d("MealPlannerSync", "Skipping sync for week starting $weekStart: already synced.")
             return
@@ -361,11 +361,11 @@ class MealPlannerViewModel(
             Log.d("MealPlannerSync", "Starting background sync for week: $weekStart to $weekEnd")
             val result = repository.getDailyPlansInRange(weekStart, weekEnd)
             result.onSuccess { plans ->
-                // 🌟 Save to local Room DB
+                //  Save to local Room DB
                 val saveResult = repository.saveWeeklyPlanLocally(weekStart, plans)
                 
                 saveResult.onSuccess { savedRecipes ->
-                    // 🌟 Only mark as synced if the DB write succeeded
+                    //  Only mark as synced if the DB write succeeded
                     syncedWeeks.add(weekStart)
                     Log.d("MealPlannerSync", "Successfully synced week starting $weekStart. Saved ${savedRecipes.size} recipes.")
 
@@ -386,7 +386,7 @@ class MealPlannerViewModel(
 
                         val matchingPlan = plans.find { it.date == date.toString() }
                         
-                        // 🌟 ONLY update memory cache if we don't have a plan or if the new one is non-null
+                        //  ONLY update memory cache if we don't have a plan or if the new one is non-null
                         // This prevents a "failed" sync from wiping out a successful single-day load
                         if (mealPlansCache[date] == null || matchingPlan != null) {
                             mealPlansCache[date] = matchingPlan
@@ -485,7 +485,7 @@ class MealPlannerViewModel(
             isLoading = true
             var successCount = 0
 
-            // 🌟 STEP 1: Immediately clear the preview state
+            //  STEP 1: Immediately clear the preview state
             // This ensures swiping during the save process doesn't revert to sharer data
             clearDeepLinkState()
 
@@ -493,11 +493,11 @@ class MealPlannerViewModel(
                 sourceWeekDays.forEachIndexed { index, sourceDate ->
                     val targetDate = targetWeekStart.plusDays(index.toLong())
                     
-                    // 🌟 STEP 2: Fetch the "pattern" from User B (the sharer)
+                    //  STEP 2: Fetch the "pattern" from User B (the sharer)
                     val sourcePlan = repository.getDailyPlan(sourceDate, capturedSharerId).getOrNull()
 
                     if (sourcePlan != null && sourcePlan.meals.any { it.recipes.isNotEmpty() }) {
-                        // 🌟 STEP 3: Create a NEW plan record owned by User A (me)
+                        //  STEP 3: Create a NEW plan record owned by User A (me)
                         val clonedPlan = sourcePlan.copy(
                             user_id = myId,
                             date = targetDate.toString(),
@@ -523,7 +523,7 @@ class MealPlannerViewModel(
             
             if (successCount > 0) {
                 _uiEvent.emit(getApplication<Application>().getString(R.string.msg_copy_weekly_success, successCount))
-                // 🌟 Final check: Ensure UI displays my new data correctly
+                //  Final check: Ensure UI displays my new data correctly
                 sourceWeekDays.forEachIndexed { index, _ ->
                     val targetDate = targetWeekStart.plusDays(index.toLong())
                     loadPlanForDate(targetDate, forceRefresh = true)
@@ -654,7 +654,7 @@ class MealPlannerViewModel(
         val startDate = month.atDay(1)
         val endDate = month.atEndOfMonth()
 
-        // 🌟 DECIDE WHO TO FETCH: ME or SHARER
+        //  DECIDE WHO TO FETCH: ME or SHARER
         // If the month contains any shared days, we prioritize the sharer's context for preview
         val targetUserId = if (deepLinkSourceDays?.any { YearMonth.from(it) == month } == true && sharerId != null) {
             sharerId
@@ -667,11 +667,11 @@ class MealPlannerViewModel(
         val plans = plansResult.getOrDefault(emptyList())
 
         // 2. Update memory cache so swiping is instant
-        // 🌟 RESTORED WITH SAFETY: Only update days that aren't currently being viewed/edited
+        //  RESTORED WITH SAFETY: Only update days that aren't currently being viewed/edited
         withContext(Dispatchers.Main) {
             plans.forEach { plan ->
                 val date = LocalDate.parse(plan.date)
-                // 🌟 Update cache if it's the intended target AND (we don't have it OR it was previously null)
+                //  Update cache if it's the intended target AND (we don't have it OR it was previously null)
                 // This ensures that days marked as empty while offline are corrected when data arrives.
                 if (plan.user_id == targetUserId && (mealPlansCache[date] == null)) {
                     mealPlansCache[date] = plan

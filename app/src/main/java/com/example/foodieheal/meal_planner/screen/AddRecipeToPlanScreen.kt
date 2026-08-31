@@ -97,7 +97,7 @@ fun AddRecipeToPlanScreen(
     val view = LocalView.current
     val backgroundColor = MaterialTheme.colorScheme.background
 
-    // 🌟 Sync Status Bar to background color
+    //  Sync Status Bar to background color
     SideEffect {
         val window = (view.context as Activity).window
         window.statusBarColor = backgroundColor.toArgb()
@@ -148,7 +148,7 @@ fun AddRecipeToPlanScreen(
     val currentMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
     val maxCalories = calculateSuggestedDailyCalories(authViewModel.currentUser)
 
-    // 🌟 Load current and adjacent months immediately on screen launch
+    //  Load current and adjacent months immediately on screen launch
     LaunchedEffect(currentMonth, maxCalories) {
         mealPlannerViewModel.loadMonthConditions(currentMonth, maxCalories)
         mealPlannerViewModel.prefetchAdjacentMonths(currentMonth, maxCalories)
@@ -183,11 +183,11 @@ fun AddRecipeToPlanScreen(
                 },
                 onConfirmClick = {
                     coroutineScope.launch {
-                        // 🌟 Use a list of deferred tasks or just iterate sequentially to ensure atomicity
+                        //  Use a list of deferred tasks or just iterate sequentially to ensure atomicity
                         selectedSlots.forEach { (savedDateStr, mealTypesList) ->
                             val targetDateParsed = LocalDate.parse(savedDateStr)
                             mealTypesList.forEach { mealType ->
-                                // 🌟 Await the actual database operation to prevent race conditions on navigation
+                                //  Await the actual database operation to prevent race conditions on navigation
                                 mealPlannerViewModel.addRecipeToMealSuspend(targetDateParsed, mealType, recipe)
                             }
                         }

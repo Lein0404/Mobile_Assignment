@@ -7,10 +7,6 @@ import com.example.foodieheal.meal_planner.model.MealSlotDTO
 import com.example.foodieheal.meal_planner.model.MealType
 import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.RecipeReference
-import com.example.foodieheal.meal_planner.model.WeeklyPlan
-import com.example.foodieheal.meal_planner.model.WeeklyPlanEntity
-import com.example.foodieheal.meal_planner.model.toDomain
-import com.example.foodieheal.meal_planner.model.toEntity
 import com.example.foodieheal.meal_planner.local.MealPlanDao
 import com.example.foodieheal.meal_planner.local.LocalWeeklyPlanEntity
 import com.example.foodieheal.Recipe.Model.Recipe
@@ -36,7 +32,10 @@ class MealPlannerRepository(
     // 🏠 LOCAL STORAGE METHODS
     // ==========================================================
 
-    suspend fun saveWeeklyPlanLocally(weekStartDate: LocalDate, dailyPlans: List<DailyPlan>): Result<List<Recipe>> = withContext(Dispatchers.IO) {
+    suspend fun saveWeeklyPlanLocally(
+        weekStartDate: LocalDate,
+        dailyPlans: List<DailyPlan>
+    ): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
                 ?: throw Exception("User is not logged in!")
@@ -69,40 +68,41 @@ class MealPlannerRepository(
     suspend fun clearLocalData(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val currentUserId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
-            // We don't necessarily want to wipe recipes as they might be used by other parts of the app (bookmarks)
-            // But we must wipe the user's specific meal plans.
-            // Since our DAO doesn't have a "deleteAllForUser", let's assume we want to clear the whole table or add a query.
-            // I'll add a clear query to MealPlanDao next.
-            localDao.clearAllPlans() 
+            localDao.clearAllPlans()
             Unit
         }
     }
 
-    suspend fun getLocalWeeklyPlan(weekStartDate: LocalDate): Result<List<DailyPlan>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
-                ?: throw Exception("User is not logged in!")
+    suspend fun getLocalWeeklyPlan(weekStartDate: LocalDate): Result<List<DailyPlan>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+                    ?: throw Exception("User is not logged in!")
 
-            val entity = localDao.getPlan(weekStartDate.toString(), currentUserId) 
-                ?: throw Exception("No local data for this week")
-            
-            val plans = com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(entity.planJson)
-            plans
-        }.onFailure { error ->
-            if (error.message != "No local data for this week") {
-                Log.e("MealPlannerRepo", "Failed to fetch local weekly plan", error)
+                val entity = localDao.getPlan(weekStartDate.toString(), currentUserId)
+                    ?: throw Exception("No local data for this week")
+
+                val plans =
+                    com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(
+                        entity.planJson
+                    )
+                plans
+            }.onFailure { error ->
+                if (error.message != "No local data for this week") {
+                    Log.e("MealPlannerRepo", "Failed to fetch local weekly plan", error)
+                }
             }
         }
-    }
 
-    suspend fun deleteLocalWeeklyPlan(weekStartDate: LocalDate): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
-                ?: throw Exception("User is not logged in!")
-            localDao.deletePlan(weekStartDate.toString(), currentUserId)
-            Unit
+    suspend fun deleteLocalWeeklyPlan(weekStartDate: LocalDate): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+                    ?: throw Exception("User is not logged in!")
+                localDao.deletePlan(weekStartDate.toString(), currentUserId)
+                Unit
+            }
         }
-    }
 
     // ==========================================================
     // DAILY PLAN METHODS
@@ -126,14 +126,14 @@ class MealPlannerRepository(
                 }
             )
 
-            // 🌟 1. Save to Supabase
+            //  1. Save to Supabase
             postgrest.from("daily_plans").upsert(listOf(dto))
 
-            // 🌟 2. Atomic Sync to Local Room DB
-            // We need to update the weekly entity containing this date
-            val weekStart = LocalDate.parse(plan.date).with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+            //  2. Atomic Sync to Local Room DB
+            val weekStart = LocalDate.parse(plan.date)
+                .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
             val localResult = getLocalWeeklyPlan(weekStart)
-            
+
             val updatedWeekPlans = if (localResult.isSuccess) {
                 val currentPlans = localResult.getOrThrow().toMutableList()
                 val index = currentPlans.indexOfFirst { it.date == plan.date }
@@ -154,77 +154,80 @@ class MealPlannerRepository(
         }
     }
 
-    suspend fun getDailyPlan(date: LocalDate, userId: String? = null): Result<DailyPlan?> = withContext(Dispatchers.IO) {
-        runCatching {
-            val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
+    suspend fun getDailyPlan(date: LocalDate, userId: String? = null): Result<DailyPlan?> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
                 ?: throw Exception("No authenticated user session found.")
 
-            val rawPlan = postgrest.from("daily_plans")
-                .select {
-                    filter {
-                        eq("date", date.toString())
-                        eq("user_id", targetUserId)
+                val rawPlan = postgrest.from("daily_plans")
+                    .select {
+                        filter {
+                            eq("date", date.toString())
+                            eq("user_id", targetUserId)
+                        }
                     }
-                }
-                .decodeList<DailyPlanDTO>()
-                .firstOrNull() ?: return@runCatching null
+                    .decodeList<DailyPlanDTO>()
+                    .firstOrNull() ?: return@runCatching null
 
-            val recipeIds = rawPlan.meals?.flatMap { slot ->
-                slot.recipes.map { it.recipeId }
-            }?.distinct().orEmpty()
+                val recipeIds = rawPlan.meals?.flatMap { slot ->
+                    slot.recipes.map { it.recipeId }
+                }?.distinct().orEmpty()
 
-            if (recipeIds.isEmpty()) {
-                return@runCatching DailyPlan(
-                    user_id = rawPlan.userId,
-                    date = rawPlan.date,
-                    meals = MealType.entries.map { type -> RealMealSlot(type, emptyList()) }
-                )
-            }
-
-            val fetchedRecipes = postgrest.from("recipes")
-                .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
-                    filter {
-                        isIn("recipe_id", recipeIds)
-                    }
-                }
-                .decodeList<Recipe>()
-
-            // 🌟 Populate flattened author fields for local storage & UI consistency
-            fetchedRecipes.forEach { recipe ->
-                recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
-                recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
-            }
-
-            // 🌟 Cache fetched recipes for offline availability
-            if (fetchedRecipes.isNotEmpty()) {
-                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
-            }
-
-            DailyPlan(
-                user_id = rawPlan.userId,
-                date = rawPlan.date,
-                meals = MealType.entries.map { type ->
-                    val matchingSlot = rawPlan.meals?.find { it.mealType == type }
-                    RealMealSlot(
-                        mealType = type,
-                        recipes = matchingSlot?.recipes?.mapNotNull { ref ->
-                            fetchedRecipes.find { it.recipe_id == ref.recipeId }
-                        } ?: emptyList()
+                if (recipeIds.isEmpty()) {
+                    return@runCatching DailyPlan(
+                        user_id = rawPlan.userId,
+                        date = rawPlan.date,
+                        meals = MealType.entries.map { type -> RealMealSlot(type, emptyList()) }
                     )
                 }
-            )
-        }.recover { error ->
-            // 🌟 OFFLINE FALLBACK for single day
-            val currentUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id ?: ""
-            if (currentUserId.isNotEmpty()) {
-                val weekStart = date.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
-                val localWeek = getLocalWeeklyPlan(weekStart).getOrNull()
-                localWeek?.find { it.date == date.toString() }
-            } else null
-        }.onFailure { error ->
-            Log.e("MealPlannerDebug", "Critical Exception in getDailyPlan!", error)
+
+                val fetchedRecipes = postgrest.from("recipes")
+                    .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                        filter {
+                            isIn("recipe_id", recipeIds)
+                        }
+                    }
+                    .decodeList<Recipe>()
+
+                //  Populate flattened author fields for local storage & UI consistency
+                fetchedRecipes.forEach { recipe ->
+                    recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                    recipe.authorImageUrl =
+                        recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+                }
+
+                //  Cache fetched recipes for offline availability
+                if (fetchedRecipes.isNotEmpty()) {
+                    recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
+                }
+
+                DailyPlan(
+                    user_id = rawPlan.userId,
+                    date = rawPlan.date,
+                    meals = MealType.entries.map { type ->
+                        val matchingSlot = rawPlan.meals?.find { it.mealType == type }
+                        RealMealSlot(
+                            mealType = type,
+                            recipes = matchingSlot?.recipes?.mapNotNull { ref ->
+                                fetchedRecipes.find { it.recipe_id == ref.recipeId }
+                            } ?: emptyList()
+                        )
+                    }
+                )
+            }.recover { error ->
+                //  OFFLINE FALLBACK for single day
+                val currentUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id ?: ""
+                if (currentUserId.isNotEmpty()) {
+                    val weekStart =
+                        date.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                    val localWeek = getLocalWeeklyPlan(weekStart).getOrNull()
+                    localWeek?.find { it.date == date.toString() }
+                } else null
+            }.onFailure { error ->
+                Log.e("MealPlannerDebug", "Critical Exception in getDailyPlan!", error)
+            }
         }
-    }
 
     /**
      * Fetches all daily plans within a date range for a specific user.
@@ -237,7 +240,7 @@ class MealPlannerRepository(
     ): Result<List<DailyPlan>> = withContext(Dispatchers.IO) {
         runCatching {
             val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
-                ?: throw Exception("No authenticated user session found.")
+            ?: throw Exception("No authenticated user session found.")
 
             // 1. Fetch all Plan DTOs in range
             val rawPlans = postgrest.from("daily_plans")
@@ -266,13 +269,13 @@ class MealPlannerRepository(
                     .decodeList<Recipe>()
             } else emptyList()
 
-            // 🌟 Populate flattened author fields for local storage & UI consistency
+            //  Populate flattened author fields for local storage & UI consistency
             fetchedRecipes.forEach { recipe ->
                 recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
             }
 
-            // 🌟 Cache fetched recipes for offline availability
+            //  Cache fetched recipes for offline availability
             if (fetchedRecipes.isNotEmpty()) {
                 recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
             }
@@ -296,112 +299,30 @@ class MealPlannerRepository(
                 )
             }
         }.recover { error ->
-            // 🌟 OFFLINE FALLBACK for Month View (Calendar Dots)
+            //  OFFLINE FALLBACK for Month View (Calendar Dots)
             val currentUserId = supabaseClient.auth.currentUserOrNull()?.id ?: userId ?: ""
             if (currentUserId.isNotEmpty()) {
                 val localWeeks = localDao.getAllPlansForUser(currentUserId)
                 val allPlans = localWeeks.flatMap { week ->
-                    com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(week.planJson)
+                    com.example.foodieheal.SupabaseClient.json.decodeFromString<List<DailyPlan>>(
+                        week.planJson
+                    )
                 }
                 // Filter plans within the requested range
                 allPlans.filter { plan ->
                     val date = LocalDate.parse(plan.date)
                     (date.isEqual(startDate) || date.isAfter(startDate)) &&
-                    (date.isEqual(endDate) || date.isBefore(endDate))
+                            (date.isEqual(endDate) || date.isBefore(endDate))
                 }
             } else {
                 emptyList()
             }
         }.onFailure { error ->
-            Log.e("MealPlannerRepo", "Failed to fetch range plans from $startDate to $endDate", error)
-        }
-    }
-
-    // ==========================================================
-    // 🌟 WEEKLY PLAN METHODS (NEW & UPDATED FOR PUBLIC FIELD)
-    // ==========================================================
-
-    /**
-     * Saves or updates a WeeklyPlan (including its `public` field status) in Supabase.
-     */
-    suspend fun saveWeeklyPlan(weeklyPlan: WeeklyPlan): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
-                ?: throw Exception("User is not logged in!")
-
-            // Convert UI Domain model to Entity DTO (carries the `public` flag)
-            val entity = weeklyPlan.copy(userId = currentUserId).toEntity()
-
-            postgrest.from("weekly_plans").upsert(entity)
-            Unit
-        }.onFailure { error ->
-            Log.e("MealPlannerDebug", "Failed to save weekly plan", error)
-        }
-    }
-
-    /**
-     * Toggles/updates only the `public` status of a specific plan in Supabase.
-     */
-    suspend fun updatePlanVisibility(planId: String, isPublic: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            postgrest.from("weekly_plans").update(
-                mapOf("is_public" to isPublic) // Make sure column name matches your DB!
-            ) {
-                filter {
-                    eq("plan_id", planId)
-                }
-            }
-            Unit
-        }.onFailure { error ->
-            Log.e("MealPlannerDebug", "Failed to update plan visibility", error)
-        }
-    }
-
-    /**
-     * Fetches public weekly plans shared by community members.
-     */
-    suspend fun getPublicWeeklyPlans(): Result<List<WeeklyPlan>> = withContext(Dispatchers.IO) {
-        runCatching {
-            // 1. Query Supabase for plans where is_public == true
-            val publicEntities = postgrest.from("weekly_plans")
-                .select {
-                    filter {
-                        eq("is_public", true) // Match column name in Supabase
-                    }
-                }
-                .decodeList<WeeklyPlanEntity>()
-
-            if (publicEntities.isEmpty()) return@runCatching emptyList()
-
-            // 2. Collect all recipe IDs across all public plans
-            val recipeIds = publicEntities.flatMap { entity ->
-                entity.dailyPlans.values.flatten().flatMap { slot ->
-                    slot.recipes.map { it.recipeId }
-                }
-            }.distinct()
-
-            // 3. Fetch recipe details if needed
-            val fetchedRecipes = if (recipeIds.isNotEmpty()) {
-                postgrest.from("recipes")
-                    .select {
-                        filter {
-                            isIn("recipe_id", recipeIds)
-                        }
-                    }
-                    .decodeList<Recipe>()
-            } else emptyList()
-
-            // 🌟 Cache fetched recipes for offline availability
-            if (fetchedRecipes.isNotEmpty()) {
-                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
-            }
-
-            // 4. Map DTO entities back to Domain UI models
-            publicEntities.map { entity ->
-                entity.toDomain(fetchedRecipes)
-            }
-        }.onFailure { error ->
-            Log.e("MealPlannerDebug", "Failed to fetch public weekly plans", error)
+            Log.e(
+                "MealPlannerRepo",
+                "Failed to fetch range plans from $startDate to $endDate",
+                error
+            )
         }
     }
 }
