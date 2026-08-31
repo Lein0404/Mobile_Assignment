@@ -194,14 +194,29 @@ fun AdminIngredientDetailScreen(
                                 // 5. Rejected Reason (if applicable)
                                 if (request.requestStatus == Status.REJECTED) {
                                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
-                                    Text(stringResource(R.string.ingredient_detail_rejected_reason_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
-                                    Text(
-                                        text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                    )
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                                                shape = RoundedCornerShape(dimensionResource(R.dimen.padding_smd))
+                                            )
+                                            .padding(dimensionResource(R.dimen.padding_md))
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.ingredient_detail_rejected_reason_label),
+                                            color = MaterialTheme.colorScheme.error,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
+                                        Text(
+                                            text = request.rejectedReason ?: stringResource(R.string.ingredient_detail_unspecified),
+                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                        )
+                                    }
                                 }
 
+                                // 6. Approved Admin Notes (if applicable)
                                 if (request.requestStatus == Status.APPROVED && !request.adminNote.isNullOrBlank()) {
                                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                                     Text(stringResource(R.string.ingredient_detail_admin_notes_label), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)

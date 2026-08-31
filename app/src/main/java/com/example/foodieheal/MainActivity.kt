@@ -1,16 +1,30 @@
 package com.example.foodieheal
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.foodieheal.ingredients.notification.IngredientRequestNotificationHelper
+import com.example.foodieheal.ingredients.notification.IngredientRequestStatusMonitor
+import com.example.foodieheal.ingredients.notification.IngredientRequestSyncWorker
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
@@ -160,6 +174,44 @@ class MainActivity : FragmentActivity() {
                     factory = AuthViewModel.Factory(networkMonitor)
                 )
 
+                // Initialize notification channel
+                IngredientRequestNotificationHelper.createNotificationChannel(context)
+
+                // Request POST_NOTIFICATIONS runtime permission on Android 13+
+                val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { }
+
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val isGranted = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (!isGranted) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                }
+
+                val isNetworkConnected by networkMonitor.isConnected.collectAsStateWithLifecycle(initialValue = true)
+
+                // Global background observer for ingredient request status updates
+                val currentUserId = sharedAuthViewModel.currentUser?.id
+                LaunchedEffect(sharedAuthViewModel.loginSuccess, currentUserId, sharedAuthViewModel.isAdmin, sharedAuthViewModel.isChef, isNetworkConnected) {
+                    if (sharedAuthViewModel.loginSuccess && !currentUserId.isNullOrBlank() && !sharedAuthViewModel.isAdmin && !sharedAuthViewModel.isChef) {
+                        IngredientRequestSyncWorker.enqueuePeriodicSync(context)
+                        while (isActive) {
+                            if (isNetworkConnected) {
+                                IngredientRequestStatusMonitor.checkStatusUpdates(currentUserId, context)
+                            }
+                            delay(5000) // polls every 5 seconds
+                        }
+                    } else {
+                        IngredientRequestSyncWorker.cancelPeriodicSync(context)
+                    }
+                }
+
                 // 1. Unified Entry Navigation Logic (Cold & Warm Start)
                 LaunchedEffect(sharedAuthViewModel.loginSuccess, sharedAuthViewModel.isInitializing, pendingDeepLinkRoute) {
                     if (sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
@@ -179,7 +231,12 @@ class MainActivity : FragmentActivity() {
                                 popUpTo(0) { inclusive = true }
                             }
 
-                            // 2. Push the deep link target on top of the root
+                            // 2. If navigating to ingredient request detail, push Ingredients Requests Tab as parent
+                            if (route.startsWith("ingredient_detail/") && route.contains("/true")) {
+                                navController.navigate(Screen.Ingredients.createRoute(tab = 1))
+                            }
+
+                            // 3. Push the deep link target on top of the root/parent
                             navController.navigate(route)
 
                             pendingDeepLinkRoute = null
@@ -1261,6 +1318,16 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id
+        if (!userId.isNullOrBlank()) {
+            lifecycleScope.launch {
+                IngredientRequestStatusMonitor.checkStatusUpdates(userId, applicationContext)
+            }
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -1268,6 +1335,15 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleDeepLink(intent: Intent?) {
+        // 1. Direct route string passed in extras (e.g., from notifications)
+        intent?.getStringExtra("route")?.let { route ->
+            Log.d("DeepLink", "Processing route extra: $route")
+            pendingDeepLinkRoute = route
+            intent.removeExtra("route")
+            return
+        }
+
+        // 2. URI-based deep links
         intent?.data?.let { uri ->
             processDeepLink(uri)
             intent.data = null
