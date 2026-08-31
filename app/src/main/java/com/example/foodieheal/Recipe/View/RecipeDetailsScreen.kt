@@ -41,8 +41,17 @@ fun RecipeDetailsScreen(
     authViewModel: AuthViewModel,
     followViewModel: FollowViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    LaunchedEffect(recipeId) {
+    val user = authViewModel.currentUser
+    val recipe = viewModel.selectedRecipe
+    val view = androidx.compose.ui.platform.LocalView.current
+    val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
+    val isMyRecipe = recipe?.author_id == user?.customId
+
+    LaunchedEffect(recipeId, user?.customId) {
         viewModel.fetchRecipeLocalFirst(recipeId)
+        user?.customId?.let { cid ->
+            viewModel.fetchBookmarkIds(cid)
+        }
     }
 
     // 🌟 2. Clear state when leaving the screen
@@ -51,12 +60,6 @@ fun RecipeDetailsScreen(
             viewModel.clearSelectedRecipe()
         }
     }
-
-    val recipe = viewModel.selectedRecipe
-    val user = authViewModel.currentUser
-    val view = androidx.compose.ui.platform.LocalView.current
-    val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
-    val isMyRecipe = recipe?.author_id == user?.customId
 
     LaunchedEffect(recipe?.author_id, user?.customId) {
         val aid = recipe?.author_id
@@ -117,7 +120,9 @@ fun RecipeDetailsScreen(
                 actions = {
                     IconButton(onClick = {
                         user?.customId?.let { cid ->
-                            recipe?.let { r -> viewModel.toggleBookmark(cid, r.recipe_id ?: "", r.recipeName) }
+                            recipe?.recipe_id?.takeIf { it.isNotBlank() }?.let { rid ->
+                                viewModel.toggleBookmark(cid, rid, recipe?.recipeName ?: "")
+                            }
                         }
                     }) {
                         Image(
