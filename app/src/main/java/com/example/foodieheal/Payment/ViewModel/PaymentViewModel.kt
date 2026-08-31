@@ -1,6 +1,8 @@
 package com.example.foodieheal.Payment.ViewModel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -23,6 +25,10 @@ class PaymentViewModel(
     private val client: SupabaseClient = AppSupabaseClient.client,
     private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _uiState = MutableStateFlow(PaymentUiState())
     val uiState: StateFlow<PaymentUiState> = _uiState.asStateFlow()
@@ -67,7 +73,7 @@ class PaymentViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = e.localizedMessage ?: "Failed to load appointment details."
+                        errorMessage = e.localizedMessage ?: (resString(R.string.error_payment_load_appointment_failed) ?: "Failed to load appointment details.")
                     )
                 }
             }
@@ -80,7 +86,7 @@ class PaymentViewModel(
         onError: (String) -> Unit
     ) {
         if (!_isNetworkAvailable.value) {
-            val errorMsg = "No internet connection. Please connect to the internet to complete your payment."
+            val errorMsg = resString(R.string.error_payment_no_internet) ?: "No internet connection. Please connect to the internet to complete your payment."
             _uiState.update { it.copy(errorMessage = errorMsg) }
             onError(errorMsg)
             return
@@ -89,7 +95,7 @@ class PaymentViewModel(
         val currentAppointment = uiState.value.appointment
 
         if (currentAppointment == null) {
-            val err = "Appointment information is missing."
+            val err = resString(R.string.error_payment_appointment_missing) ?: "Appointment information is missing."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
@@ -97,14 +103,14 @@ class PaymentViewModel(
 
         val appointmentId = currentAppointment.AppointmentID
         if (appointmentId.isNullOrEmpty()) {
-            val err = "Invalid Appointment ID."
+            val err = resString(R.string.error_payment_invalid_appointment_id) ?: "Invalid Appointment ID."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
         }
 
         if (selectedMethod == null) {
-            val err = "Please select a payment method."
+            val err = resString(R.string.error_payment_select_method) ?: "Please select a payment method."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
@@ -207,7 +213,7 @@ class PaymentViewModel(
                     }
                 }
 
-                val errorMsg = e.localizedMessage ?: "Payment processing failed. Please try again."
+                val errorMsg = e.localizedMessage ?: (resString(R.string.error_payment_processing_failed) ?: "Payment processing failed. Please try again.")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

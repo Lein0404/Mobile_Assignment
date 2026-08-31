@@ -118,15 +118,15 @@
             _uiState.update { it.copy(category = newCategory) }
         }
 
-        fun updateCategoryByString(categoryName: String) {
-            Log.d(TAG, "updateCategoryByString(): Attempting to match string = '$categoryName'")
+        fun updateCategoryByResId(resId: Int) {
+            Log.d(TAG, "updateCategoryByResId(): Attempting to match resId = $resId")
             val matchedCategory = PlanCategory.entries.find {
-                it.name.equals(categoryName, ignoreCase = true)
+                it.displayNameRes == resId
             }
             if (matchedCategory != null) {
-                Log.d(TAG, "updateCategoryByString(): Matched category = '$matchedCategory'")
+                Log.d(TAG, "updateCategoryByResId(): Matched category = '$matchedCategory'")
             } else {
-                Log.w(TAG, "updateCategoryByString(): No matching PlanCategory found for '$categoryName'")
+                Log.w(TAG, "updateCategoryByResId(): No matching PlanCategory found for resId $resId")
             }
             _uiState.update { it.copy(category = matchedCategory) }
         }

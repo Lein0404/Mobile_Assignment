@@ -1,6 +1,7 @@
 package com.example.foodieheal.Payment.Screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +31,11 @@ fun PaymentMethodScreen(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val cannotAddCardsOfflineToast = stringResource(R.string.toast_cannot_add_cards_offline)
+    val cardAddedSuccessToast = stringResource(R.string.toast_card_added_success)
+    val paymentMethodDeletedToast = stringResource(R.string.toast_payment_method_deleted)
+    val setDefaultPaymentMethodToast = stringResource(R.string.msg_set_default_payment_method)
+    val removedDefaultPaymentMethodToast = stringResource(R.string.msg_removed_default_payment_method)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isOnline by viewModel.isNetworkAvailable.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -77,7 +83,7 @@ fun PaymentMethodScreen(
                     if (isOnline) {
                         showAddCardSheet = true
                     } else {
-                        Toast.makeText(context, R.string.toast_cannot_add_cards_offline, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, cannotAddCardsOfflineToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                     }
                 },
                 containerColor = if (isOnline) MaterialTheme.colorScheme.primary else Color.Gray,
@@ -132,7 +138,7 @@ fun PaymentMethodScreen(
                 } else if (uiState.availableMethods.isEmpty()) {
                     EmptyPaymentMethodsView(onAddClick = {
                         if (isOnline) showAddCardSheet = true
-                        else Toast.makeText(context, R.string.toast_cannot_add_cards_offline, Toast.LENGTH_SHORT).show()
+                        else Toasty.custom(context, cannotAddCardsOfflineToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                     })
                 } else {
                     LazyColumn(
@@ -155,11 +161,11 @@ fun PaymentMethodScreen(
                                         userId = userId,
                                         isDefault = nextDefaultState,
                                         onSuccess = {
-                                            val msgRes = if (nextDefaultState) R.string.msg_set_default_payment_method else R.string.msg_removed_default_payment_method
-                                            Toast.makeText(context, msgRes, Toast.LENGTH_SHORT).show()
+                                            val msg = if (nextDefaultState) setDefaultPaymentMethodToast else removedDefaultPaymentMethodToast
+                                            Toasty.custom(context, msg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                         },
                                         onError = { err ->
-                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                            Toasty.custom(context, err, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                         }
                                     )
                                 },
@@ -184,10 +190,10 @@ fun PaymentMethodScreen(
                     expiryDate = expiry,
                     onSuccess = {
                         showAddCardSheet = false
-                        Toast.makeText(context, R.string.toast_card_added_success, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, cardAddedSuccessToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                     },
                     onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                        Toasty.custom(context, error, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                     }
                 )
             }
@@ -208,11 +214,11 @@ fun PaymentMethodScreen(
                             userId = userId,
                             onSuccess = {
                                 methodToDelete = null
-                                Toast.makeText(context, R.string.toast_payment_method_deleted, Toast.LENGTH_SHORT).show()
+                                Toasty.custom(context, paymentMethodDeletedToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                             },
                             onError = { err ->
                                 methodToDelete = null
-                                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                                Toasty.custom(context, err, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                             }
                         )
                     }

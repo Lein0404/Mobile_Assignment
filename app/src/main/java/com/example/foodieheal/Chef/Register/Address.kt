@@ -27,7 +27,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.StateResList
+import com.example.foodieheal.Chef.getStateDbName
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
@@ -112,9 +114,9 @@ fun addressInfo(
             DropDownList(
                 labelId = R.string.state,
                 placeholderId = R.string.select_state,
-                selectedValue = chefViewModel.state,
-                options = States,
-                onOptionSelected = { chefViewModel.updateState(it ?: "") }
+                selectedValue = getStateResId(chefViewModel.state)?.let { stringResource(it) } ?: chefViewModel.state,
+                options = StateResList,
+                onOptionSelected = { resId -> chefViewModel.updateState(getStateDbName(resId)) }
             )
             if (stateError != null) {
                 Text(

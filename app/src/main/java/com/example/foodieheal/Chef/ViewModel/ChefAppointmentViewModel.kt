@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.ViewModel
 
 import android.app.Application
 import android.util.Log
+import com.example.foodieheal.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -55,6 +56,10 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     )
 
     private val networkMonitor = NetworkMonitor(application)
+
+    private fun resString(resId: Int, vararg args: Any): String {
+        return getApplication<Application>().getString(resId, *args)
+    }
 
     private val _isNetworkAvailable = MutableStateFlow(true)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
@@ -164,7 +169,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 val currentUserId = repository.getCurrentUserId()
 
                 if (currentUserId.isNullOrEmpty()) {
-                    _appointmentsUiState.value = AppointmentsUiState.Error("User not logged in.")
+                    _appointmentsUiState.value = AppointmentsUiState.Error(resString(R.string.error_chef_user_not_logged_in))
                     return@launch
                 }
 
@@ -184,7 +189,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
             } catch (e: Exception) {
                 Log.e("AppointmentsVM", "Error fetching appointments", e)
                 _appointmentsUiState.value = AppointmentsUiState.Error(
-                    e.localizedMessage ?: "Failed to load appointments"
+                    e.localizedMessage ?: resString(R.string.error_chef_load_appointments_failed)
                 )
             }
         }
@@ -198,7 +203,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 val currentUserId = repository.getCurrentUserId()
 
                 if (currentUserId.isNullOrEmpty()) {
-                    _homeUiState.value = HomeUiState.Error("User not logged in")
+                    _homeUiState.value = HomeUiState.Error(resString(R.string.error_chef_user_not_logged_in))
                     return@launch
                 }
 
@@ -228,7 +233,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
             } catch (e: Exception) {
                 Log.e("ChefHomeVM", "Error loading home dashboard", e)
                 _homeUiState.value = HomeUiState.Error(
-                    e.localizedMessage ?: "Failed to load dashboard"
+                    e.localizedMessage ?: resString(R.string.error_chef_load_dashboard_failed)
                 )
             }
         }
@@ -241,7 +246,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     ) {
         viewModelScope.launch {
             if (!_isNetworkAvailable.value) {
-                _uiEvent.emit("Cannot update appointment status while offline.")
+                _uiEvent.emit(resString(R.string.error_chef_update_offline))
                 return@launch
             }
 
@@ -313,7 +318,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                 _homeUiState.value         = previousHomeState
                 _pendingAppointmentsCount.value = previousPendingCount
 
-                _uiEvent.emit("Failed to update appointment: ${e.localizedMessage}")
+                _uiEvent.emit(resString(R.string.error_chef_update_appointment_failed, e.localizedMessage ?: ""))
             }
         }
     }

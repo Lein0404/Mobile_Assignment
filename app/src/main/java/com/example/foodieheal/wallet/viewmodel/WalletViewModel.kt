@@ -1,6 +1,8 @@
 package com.example.foodieheal.wallet.viewmodel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,6 +19,10 @@ class WalletViewModel(
     private val repository: WalletRepository = WalletRepository(),
     private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _uiState = MutableStateFlow(WalletUiState())
     val uiState: StateFlow<WalletUiState> = _uiState.asStateFlow()
@@ -82,7 +88,7 @@ class WalletViewModel(
                     it.copy(
                         isLoading = false,
                         isRefreshing = false,
-                        errorMessage = e.localizedMessage ?: "Failed to load wallet information."
+                        errorMessage = e.localizedMessage ?: (resString(R.string.error_wallet_load_failed) ?: "Failed to load wallet information.")
                     )
                 }
             }
@@ -100,12 +106,12 @@ class WalletViewModel(
     fun topUp(
         amount: Double,
         paymentMethodId: String? = null,
-        description: String = "Wallet Top Up",
+        description: String = resString(R.string.wallet_default_top_up_description) ?: "Wallet Top Up",
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         if (!_isNetworkAvailable.value) {
-            val err = "No internet connection. Please check your network to top up your wallet."
+            val err = resString(R.string.error_wallet_top_up_no_internet) ?: "No internet connection. Please check your network to top up your wallet."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
@@ -113,14 +119,14 @@ class WalletViewModel(
 
         val targetUserId = activeUserId ?: repository.getCurrentUserId()
         if (targetUserId.isNullOrBlank()) {
-            val err = "User session expired. Please log in again."
+            val err = resString(R.string.error_wallet_session_expired) ?: "User session expired. Please log in again."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
         }
 
         if (amount <= 0.0) {
-            val err = "Please enter a valid top-up amount."
+            val err = resString(R.string.error_wallet_invalid_amount) ?: "Please enter a valid top-up amount."
             _uiState.update { it.copy(errorMessage = err) }
             onError(err)
             return
@@ -151,19 +157,22 @@ class WalletViewModel(
             result.onSuccess { updatedWallet ->
                 // Server confirmed then replace optimistic value with real server data
                 val txns = repository.getTransactions(updatedWallet.id)
+                val formattedAmount = String.format("%.2f", amount)
+                val successMsg = resString(R.string.msg_wallet_top_up_success_format, formattedAmount)
+                    ?: "Top-up of RM $formattedAmount was successful!"
                 _uiState.update {
                     it.copy(
                         isSubmittingTopUp = false,
                         wallet = updatedWallet,
                         transactions = txns,
                         optimisticBalance = null,           // ← clear optimistic; real data wins
-                        successMessage = "Top-up of RM ${String.format("%.2f", amount)} was successful!"
+                        successMessage = successMsg
                     )
                 }
                 onSuccess()
             }.onFailure { ex ->
                 // Network or server error it will rollback the optimistic balance display
-                val errMsg = ex.localizedMessage ?: "Top-up failed. Please try again."
+                val errMsg = ex.localizedMessage ?: (resString(R.string.error_wallet_top_up_failed) ?: "Top-up failed. Please try again.")
                 _uiState.update {
                     it.copy(
                         isSubmittingTopUp = false,

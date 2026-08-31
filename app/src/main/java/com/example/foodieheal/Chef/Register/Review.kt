@@ -42,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getGenderResId
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.navigation.Screen
@@ -102,9 +104,12 @@ fun reviewInfo(
                 )
             }
 
+            val genderDisplay = getGenderResId(chefRegisterViewModel.gender)?.let { stringResource(it) } ?: chefRegisterViewModel.gender
+            val stateDisplay = getStateResId(chefRegisterViewModel.state)?.let { stringResource(it) } ?: chefRegisterViewModel.state
+
             SectionCard(title = stringResource(R.string.section_personal_details)) {
                 ReviewItem(stringResource(R.string.full_name), chefRegisterViewModel.name)
-                ReviewItem(stringResource(R.string.gender), chefRegisterViewModel.gender)
+                ReviewItem(stringResource(R.string.gender), genderDisplay)
                 ReviewItem(stringResource(R.string.age), chefRegisterViewModel.age)
             }
 
@@ -116,7 +121,7 @@ fun reviewInfo(
             SectionCard(title = stringResource(R.string.section_address)) {
                 ReviewItem(stringResource(R.string.address), chefRegisterViewModel.address, isLongText = true)
                 ReviewItem(stringResource(R.string.postcode), chefRegisterViewModel.postcode)
-                ReviewItem(stringResource(R.string.state), chefRegisterViewModel.state)
+                ReviewItem(stringResource(R.string.state), stateDisplay)
             }
 
             SectionCard(title = stringResource(R.string.section_professional_bg)) {

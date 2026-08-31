@@ -143,7 +143,7 @@ fun BookmarkedChefsTabContent(
                                     text = stringResource(R.string.chefs_saved_count, filteredBookmarkedChefs.size),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }

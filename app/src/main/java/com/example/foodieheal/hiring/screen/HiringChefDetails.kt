@@ -1,8 +1,15 @@
 package com.example.foodieheal.hiring.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.widthIn
+import es.dmoral.toasty.Toasty
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -61,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.ReviewsUiState
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
@@ -347,15 +355,45 @@ fun HiringChefDetails(
                         }
                     )
 
+                    val stateDisplay = chef.state?.ifBlank { null }?.let { state ->
+                        getStateResId(state)?.let { stringResource(it) } ?: state
+                    }
                     val fullAddress = listOfNotNull(
                         chef.address?.ifBlank { null },
                         chef.postcode?.ifBlank { null },
-                        chef.state?.ifBlank { null }
+                        stateDisplay
                     ).joinToString(", ")
+
+                    val hasAddress = fullAddress.isNotBlank()
+                    val addressCopiedToast = stringResource(R.string.toast_address_copied)
 
                     InfoRow(
                         label = stringResource(R.string.label_address),
-                        value = fullAddress.ifBlank { stringResource(R.string.not_available) }
+                        value = fullAddress.ifBlank { stringResource(R.string.not_available) },
+                        isClickable = hasAddress,
+                        onClick = {
+                            if (hasAddress) {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Address", fullAddress))
+                                Toasty.custom(
+                                    context,
+                                    addressCopiedToast,
+                                    R.drawable.foodieheallogo_removebg_and_word,
+                                    R.color.black,
+                                    Toast.LENGTH_SHORT,
+                                    true,
+                                    true
+                                ).show()
+
+                                try {
+                                    val mapUri = Uri.parse("geo:0,0?q=${Uri.encode(fullAddress)}")
+                                    val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
+                                    context.startActivity(mapIntent)
+                                } catch (_: Exception) {
+                                    // Address already copied to clipboard
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -395,7 +433,7 @@ fun HiringChefDetails(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = day.shortName,
+                                    text = stringResource(day.shortNameRes),
                                     fontSize = 12.sp,
                                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -526,22 +564,32 @@ private fun InfoRow(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (isClickable) Modifier.clickable { onClick() }
-                else Modifier
+                if (isClickable) Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(onClick = onClick)
+                    .padding(vertical = 4.dp, horizontal = 2.dp)
+                else Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Text(
             text = label,
             fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier
+                .widthIn(min = 52.dp)
+                .padding(top = 1.dp)
         )
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = value,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.End,
+            lineHeight = 19.sp,
+            modifier = Modifier.weight(1f)
         )
     }
 }

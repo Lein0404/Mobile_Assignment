@@ -1,6 +1,8 @@
 package com.example.foodieheal.Payment.ViewModel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,6 +19,10 @@ class PaymentMethodViewModel(
     private val repository: PaymentRepository,
     private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _uiState = MutableStateFlow(PaymentMethodUiState())
     val uiState: StateFlow<PaymentMethodUiState> = _uiState.asStateFlow()
@@ -96,7 +102,7 @@ class PaymentMethodViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Showing cached cards. Failed to sync online."
+                        errorMessage = resString(R.string.msg_payment_cached_cards_sync_failed) ?: "Showing cached cards. Failed to sync online."
                     )
                 }
             }
@@ -117,7 +123,7 @@ class PaymentMethodViewModel(
         onError: (String) -> Unit = {}
     ) {
         if (!_isNetworkAvailable.value) {
-            val errorMsg = "No internet connection. Please check your network."
+            val errorMsg = resString(R.string.error_payment_no_internet_short) ?: "No internet connection. Please check your network."
             _uiState.update { it.copy(errorMessage = errorMsg) }
             onError(errorMsg)
             return
@@ -130,7 +136,7 @@ class PaymentMethodViewModel(
                 _uiState.update { it.copy(isLoading = false) }
                 onSuccess()
             } catch (e: Exception) {
-                val errorMsg = e.localizedMessage ?: "Failed to save card."
+                val errorMsg = e.localizedMessage ?: (resString(R.string.error_payment_save_card_failed) ?: "Failed to save card.")
                 _uiState.update { it.copy(isLoading = false, errorMessage = errorMsg) }
                 onError(errorMsg)
             }
@@ -144,7 +150,7 @@ class PaymentMethodViewModel(
         onError: (String) -> Unit
     ) {
         if (!_isNetworkAvailable.value) {
-            val errorMsg = "No internet connection. Please check your network."
+            val errorMsg = resString(R.string.error_payment_no_internet_short) ?: "No internet connection. Please check your network."
             _uiState.update { it.copy(errorMessage = errorMsg) }
             onError(errorMsg)
             return
@@ -162,7 +168,7 @@ class PaymentMethodViewModel(
                 _uiState.update { it.copy(isLoading = false) }
                 onSuccess()
             } catch (e: Exception) {
-                val errorMsg = e.localizedMessage ?: "Failed to delete payment method."
+                val errorMsg = e.localizedMessage ?: (resString(R.string.error_payment_delete_method_failed) ?: "Failed to delete payment method.")
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = errorMsg)
                 }
@@ -179,7 +185,7 @@ class PaymentMethodViewModel(
         onError: (String) -> Unit = {}
     ) {
         if (!_isNetworkAvailable.value) {
-            val errorMsg = "No internet connection. Please check your network."
+            val errorMsg = resString(R.string.error_payment_no_internet_short) ?: "No internet connection. Please check your network."
             _uiState.update { it.copy(errorMessage = errorMsg) }
             onError(errorMsg)
             return
@@ -195,7 +201,7 @@ class PaymentMethodViewModel(
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("PaymentMethodViewModel", "Failed to set default payment method", e)
-                val errorMsg = e.localizedMessage ?: "Failed to set default payment method."
+                val errorMsg = e.localizedMessage ?: (resString(R.string.error_payment_set_default_failed) ?: "Failed to set default payment method.")
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = errorMsg)
                 }

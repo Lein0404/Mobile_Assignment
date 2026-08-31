@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.Register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -19,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -27,6 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.foodieheal.Chef.GenderResList
+import com.example.foodieheal.Chef.getGenderDbName
+import com.example.foodieheal.Chef.getGenderResId
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.CommonInputField
@@ -97,9 +103,9 @@ fun basicInfo(
             DropDownList(
                 labelId = R.string.gender,
                 placeholderId = R.string.select_gender,
-                selectedValue = chefViewModel.gender,
-                options = listOf("Male", "Female"),
-                onOptionSelected = { chefViewModel.gender = it ?: "" }
+                selectedValue = getGenderResId(chefViewModel.gender)?.let { stringResource(it) } ?: chefViewModel.gender,
+                options = GenderResList,
+                onOptionSelected = { resId -> chefViewModel.gender = getGenderDbName(resId) }
             )
             if (genderError != null) {
                 Text(
@@ -143,12 +149,12 @@ fun basicInfo(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                androidx.compose.material3.Surface(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    androidx.compose.foundation.layout.Row(
+                    Row(
                         modifier = Modifier.padding(14.dp),
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {

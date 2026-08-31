@@ -2,6 +2,7 @@ package com.example.foodieheal.Chef.Home
 
 import android.net.Uri
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -316,12 +317,12 @@ fun EditChefProfileScreen(
                             authViewModel = authViewModel,
                             onSuccess = {
                                 isLoading = false
-                                Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
+                                Toasty.custom(context, successMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                 navController.popBackStack()
                             },
                             onError = { error ->
                                 isLoading = false
-                                Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                Toasty.custom(context, error, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                             }
                         )
                     },

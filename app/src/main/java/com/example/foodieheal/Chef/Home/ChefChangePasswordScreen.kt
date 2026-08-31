@@ -1,6 +1,7 @@
 package com.example.foodieheal.Chef.Home
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -183,10 +184,14 @@ fun ChefChangePasswordScreen(
                     hasAttemptedSubmit = true
                     if (isNewPasswordValid && passwordsMatch) {
                         authViewModel.changePassword(oldPassword, newPassword) {
-                            Toast.makeText(
+                            Toasty.custom(
                                 context,
                                 passwordUpdateSuccessMessage,
-                                Toast.LENGTH_SHORT
+                                R.drawable.foodieheallogo_removebg_and_word,
+                                R.color.black,
+                                Toast.LENGTH_SHORT,
+                                true,
+                                true
                             ).show()
                             navController.popBackStack()
                         }

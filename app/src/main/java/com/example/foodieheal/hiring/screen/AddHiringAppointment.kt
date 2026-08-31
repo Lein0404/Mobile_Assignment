@@ -26,8 +26,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
-import com.example.foodieheal.Chef.States
-import com.example.foodieheal.Chef.healthPreferencesList
+import com.example.foodieheal.Chef.StateResList
+import com.example.foodieheal.Chef.getStateDbName
+import com.example.foodieheal.Chef.getStateResId
+import com.example.foodieheal.Chef.HealthPreferenceResList
+import com.example.foodieheal.Chef.getHealthPrefDbName
+import com.example.foodieheal.Chef.getHealthPrefResId
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
@@ -295,9 +299,9 @@ fun AddAppointmentFormScreen(
                     DropDownList(
                         labelId = R.string.state,
                         placeholderId = R.string.select_state,
-                        selectedValue = uiState.state,
-                        options = States,
-                        onOptionSelected = { viewModel.onStateChanged(it ?: "") }
+                        selectedValue = getStateResId(uiState.state)?.let { stringResource(it) } ?: uiState.state,
+                        options = StateResList,
+                        onOptionSelected = { resId -> viewModel.onStateChanged(getStateDbName(resId)) }
                     )
                     if (stateError != null) {
                         Text(
@@ -329,9 +333,9 @@ fun AddAppointmentFormScreen(
                 DropDownList(
                     labelId = R.string.health_pref_label,
                     placeholderId = R.string.select_health_pref,
-                    selectedValue = uiState.healthPreference,
-                    options = healthPreferencesList,
-                    onOptionSelected = { viewModel.onHealthPreferenceChanged(it ?: "") }
+                    selectedValue = getHealthPrefResId(uiState.healthPreference)?.let { stringResource(it) } ?: uiState.healthPreference,
+                    options = HealthPreferenceResList,
+                    onOptionSelected = { resId -> viewModel.onHealthPreferenceChanged(getHealthPrefDbName(resId)) }
                 )
 
                 CommonInputField(

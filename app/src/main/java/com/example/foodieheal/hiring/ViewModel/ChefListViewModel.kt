@@ -1,6 +1,8 @@
 package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
@@ -78,7 +80,8 @@ class ChefListViewModel(
             } catch (e: Exception) {
                 Log.e("ChefListViewModel", "Error fetching chefs list", e)
                 if (_chefList.value.isEmpty()) {
-                    _errorMessage.value = e.message ?: "Failed to fetch chef profiles"
+                    val fallback = MainActivity.appContext?.getString(R.string.error_failed_fetch_chefs) ?: "Failed to fetch chef profiles"
+                    _errorMessage.value = e.message ?: fallback
                 }
             } finally {
                 _isProcessing.value = false

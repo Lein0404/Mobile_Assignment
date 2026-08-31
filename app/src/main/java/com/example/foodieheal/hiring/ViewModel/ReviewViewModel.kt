@@ -1,6 +1,8 @@
 package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
@@ -13,6 +15,10 @@ import kotlinx.coroutines.launch
 class ReviewViewModel(
     private val repository: HiringRepository = HiringRepository()
 ) : ViewModel() {
+
+    private fun resString(resId: Int): String? {
+        return MainActivity.appContext?.getString(resId)
+    }
 
     private val _reviewsState = MutableStateFlow<ReviewsUiState>(ReviewsUiState.Loading)
     val reviewsState: StateFlow<ReviewsUiState> = _reviewsState.asStateFlow()
@@ -28,7 +34,7 @@ class ReviewViewModel(
             } catch (e: Exception) {
                 Log.e("ReviewViewModel", "Error fetching chef reviews", e)
                 _reviewsState.value = ReviewsUiState.Error(
-                    e.localizedMessage ?: "Failed to load reviews"
+                    e.localizedMessage ?: (resString(R.string.error_failed_to_load_reviews) ?: "Failed to load reviews")
                 )
             }
         }
@@ -46,7 +52,7 @@ class ReviewViewModel(
                 repository.submitReview(appointmentId, rating, comment)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to submit review")
+                onError(e.localizedMessage ?: (resString(R.string.error_failed_to_submit_review) ?: "Failed to submit review"))
             }
         }
     }

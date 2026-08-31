@@ -3,6 +3,7 @@ package com.example.foodieheal.Chef.components
 import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
@@ -56,6 +57,7 @@ fun ChefQrScannerDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val cameraPermissionRequiredToast = stringResource(R.string.toast_camera_permission_required)
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -70,7 +72,7 @@ fun ChefQrScannerDialog(
         onResult = { granted ->
             hasCameraPermission = granted
             if (!granted) {
-                Toast.makeText(context, R.string.toast_camera_permission_required, Toast.LENGTH_SHORT).show()
+                Toasty.custom(context, cameraPermissionRequiredToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
             }
         }
     )
@@ -150,6 +152,7 @@ private fun CameraPreviewWithAnalyzer(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val scannedQrMismatchToast = stringResource(R.string.toast_scanned_qr_mismatch)
     val lifecycleOwner = LocalLifecycleOwner.current
     var isProcessingScan by remember { mutableStateOf(false) }
     var camera by remember { mutableStateOf<Camera?>(null) }
@@ -199,10 +202,14 @@ private fun CameraPreviewWithAnalyzer(
                                             }
                                         } else {
                                             ContextCompat.getMainExecutor(ctx).execute {
-                                                Toast.makeText(
+                                                Toasty.custom(
                                                     ctx,
-                                                    ctx.getString(R.string.toast_scanned_qr_mismatch),
-                                                    Toast.LENGTH_SHORT
+                                                    scannedQrMismatchToast,
+                                                    R.drawable.foodieheallogo_removebg_and_word,
+                                                    R.color.black,
+                                                    Toast.LENGTH_SHORT,
+                                                    true,
+                                                    true
                                                 ).show()
                                             }
                                         }

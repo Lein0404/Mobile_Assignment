@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.ui.components.getHighlightedText
@@ -260,10 +261,11 @@ fun ActiveFiltersRow(
 
         // State Chip
         filterState.selectedState?.let { state ->
+            val stateDisplay = getStateResId(state)?.let { stringResource(it) } ?: state
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(selectedState = null)) },
-                label = { Text(stringResource(R.string.chef_filter_chip_state, state), fontSize = 12.sp) },
+                label = { Text(stringResource(R.string.chef_filter_chip_state, stateDisplay), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -272,10 +274,17 @@ fun ActiveFiltersRow(
 
         // Gender Chip
         filterState.selectedGender?.let { gender ->
+            val genderDisplay = if (gender.equals("Male", ignoreCase = true)) {
+                stringResource(R.string.chef_filter_gender_male)
+            } else if (gender.equals("Female", ignoreCase = true)) {
+                stringResource(R.string.chef_filter_gender_female)
+            } else {
+                gender
+            }
             InputChip(
                 selected = true,
                 onClick = { onFilterChange(filterState.copy(selectedGender = null)) },
-                label = { Text(stringResource(R.string.chef_filter_chip_gender, gender), fontSize = 12.sp) },
+                label = { Text(stringResource(R.string.chef_filter_chip_gender, genderDisplay), fontSize = 12.sp) },
                 trailingIcon = {
                     Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                 }
@@ -311,9 +320,17 @@ fun ChefFilterBottomSheet(
         availableStates.distinct().sorted()
     }
 
-    val filteredStates = remember(stateSearchQuery, distinctStates) {
+    val localizedStateMap = distinctStates.associateWith { state ->
+        getStateResId(state)?.let { stringResource(it) } ?: state
+    }
+
+    val filteredStates = remember(stateSearchQuery, distinctStates, localizedStateMap) {
         if (stateSearchQuery.isBlank()) distinctStates
-        else distinctStates.filter { it.contains(stateSearchQuery.trim(), ignoreCase = true) }
+        else distinctStates.filter { state ->
+            val localizedName = localizedStateMap[state] ?: state
+            state.contains(stateSearchQuery.trim(), ignoreCase = true) ||
+            localizedName.contains(stateSearchQuery.trim(), ignoreCase = true)
+        }
     }
 
     Column(
@@ -515,6 +532,7 @@ fun ChefFilterBottomSheet(
                 ) {
                     items(filteredStates) { state ->
                         val isSelected = tempState.selectedState.equals(state, ignoreCase = true)
+                        val displayName = localizedStateMap[state] ?: (getStateResId(state)?.let { stringResource(it) } ?: state)
                         FilterChip(
                             selected = isSelected,
                             onClick = {
@@ -525,7 +543,7 @@ fun ChefFilterBottomSheet(
                             label = {
                                 Text(
                                     text = getHighlightedText(
-                                        fullText = state,
+                                        fullText = displayName,
                                         query = stateSearchQuery
                                     )
                                 )
@@ -540,6 +558,7 @@ fun ChefFilterBottomSheet(
 
                 // Show Selected State Chip
                 tempState.selectedState?.let { selected ->
+                    val selectedStateDisplay = getStateResId(selected)?.let { stringResource(it) } ?: selected
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.chef_filter_selected_location),
@@ -551,7 +570,7 @@ fun ChefFilterBottomSheet(
                     InputChip(
                         selected = true,
                         onClick = { tempState = tempState.copy(selectedState = null) },
-                        label = { Text(selected, fontSize = 11.sp) },
+                        label = { Text(selectedStateDisplay, fontSize = 11.sp) },
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Clear,

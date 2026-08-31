@@ -1525,4 +1525,173 @@
     <string name="placeholder_hyphen">-</string>
     <string name="error_unknown_occurred">Ralat yang tidak diketahui berlaku</string>
     <string name="unknown_author">Penulis Tidak Diketahui</string>
+    <!-- BookmarkViewModel.kt -->
+    <string name="toast_bookmark_removed">Dialih keluar %1$s daripada penanda buku</string>
+    <string name="toast_bookmark_added">Chef %1$s telah ditambah ke penanda buku</string>
+    <string name="toast_bookmark_failed">Gagal mengemas kini penanda buku</string>
+    <string name="toast_address_copied">Alamat disalin ke papan keratan</string>
+
+    <!-- AppointmentBookingViewModel.kt -->
+    <string name="error_booking_no_internet">Tiada sambungan internet. Sila sambung ke internet untuk melengkapkan tempahan.</string>
+    <string name="error_booking_invalid_parameters">Parameter tempahan tidak sah. Sila pilih chef yang sah.</string>
+    <string name="error_booking_select_date_time">Sila pilih tarikh dan slot masa janji temu yang sah.</string>
+    <string name="error_booking_time_slot_occupied">Slot masa yang dipilih telah diduduki oleh tempahan lain. Sila pilih masa yang lain.</string>
+    <string name="error_booking_invalid_time_range">Julat masa yang dipilih tidak sah. Masa tamat mestilah selepas masa mula.</string>
+    <string name="error_booking_invalid_address">Sila masukkan alamat janji temu yang sah.</string>
+    <string name="error_booking_invalid_postcode">Sila masukkan poskod Malaysia 5 digit yang sah.</string>
+    <string name="error_booking_invalid_state">Sila pilih negeri daripada senarai.</string>
+    <string name="error_booking_invalid_serving_size">Sila tentukan saiz hidangan yang sah lebih daripada 0.</string>
+    <string name="error_booking_invalid_description">Sila berikan nota acara atau butiran memasak untuk chef anda.</string>
+    <string name="error_booking_fix_errors">Sila semak borang dan betulkan ralat yang diserlahkan.</string>
+    <string name="error_booking_invalid_total_price">Pengiraan jumlah harga tidak sah. Jumlah harga mestilah melebihi sifar.</string>
+    <string name="error_booking_time_already_booked">Slot masa ini telah ditempah. Sila pilih masa yang lain.</string>
+    <string name="error_booking_create_failed">Gagal membuat janji temu: %1$s</string>
+    <string name="error_booking_unknown">Ralat tidak diketahui berlaku. Sila cuba lagi.</string>
+
+    <!-- UserAppointmentViewModel.kt -->
+    <string name="error_user_not_logged_in">Pengguna belum log masuk.</string>
+    <string name="error_failed_to_load_appointments">Gagal memuatkan janji temu</string>
+    <string name="error_failed_update_appointment_status">Gagal mengemas kini status janji temu</string>
+    <string name="error_failed_cancel_appointment">Gagal membatalkan janji temu: %1$s</string>
+    <string name="error_failed_reschedule_appointment">Gagal menjadualkan semula janji temu</string>
+
+    <!-- ReviewViewModel.kt -->
+    <string name="error_failed_to_load_reviews">Gagal memuatkan ulasan</string>
+    <string name="error_failed_to_submit_review">Gagal menghantar ulasan</string>
+
+    <!-- ChefListViewModel.kt -->
+    <string name="error_failed_fetch_chefs">Gagal mendapatkan profil chef</string>
+
+    <!-- ChefRegisterViewModel.kt -->
+    <string name="error_chef_registration_failed">Pendaftaran gagal. Sila cuba lagi.</string>
+    <string name="error_chef_upgrade_failed">Peningkatan status chef gagal. Sila cuba lagi.</string>
+
+    <!-- ChefAppointmentViewModel.kt -->
+    <string name="error_chef_user_not_logged_in">Pengguna belum log masuk.</string>
+    <string name="error_chef_load_appointments_failed">Gagal memuatkan janji temu</string>
+    <string name="error_chef_load_dashboard_failed">Gagal memuatkan papan pemuka</string>
+    <string name="error_chef_update_offline">Tidak dapat mengemas kini status janji temu semasa luar talian.</string>
+    <string name="error_chef_update_appointment_failed">Gagal mengemas kini janji temu: %1$s</string>
+
+    <!-- PaymentViewModel.kt -->
+    <string name="error_payment_load_appointment_failed">Gagal memuatkan butiran janji temu.</string>
+    <string name="error_payment_no_internet">Tiada sambungan internet. Sila sambung ke internet untuk melengkapkan pembayaran anda.</string>
+    <string name="error_payment_appointment_missing">Maklumat janji temu tiada.</string>
+    <string name="error_payment_invalid_appointment_id">ID Janji Temu tidak sah.</string>
+    <string name="error_payment_select_method">Sila pilih kaedah pembayaran.</string>
+    <string name="error_payment_processing_failed">Pemprosesan pembayaran gagal. Sila cuba lagi.</string>
+
+    <!-- PaymentMethodViewModel.kt -->
+    <string name="msg_payment_cached_cards_sync_failed">Menunjukkan kad yang dicache. Gagal menyegerak secara dalam talian.</string>
+    <string name="error_payment_no_internet_short">Tiada sambungan internet. Sila semak rangkaian anda.</string>
+    <string name="error_payment_save_card_failed">Gagal menyimpan kad.</string>
+    <string name="error_payment_delete_method_failed">Gagal memadam kaedah pembayaran.</string>
+    <string name="error_payment_set_default_failed">Gagal menetapkan kaedah pembayaran lalai.</string>
+
+    <!-- WalletViewModel -->
+    <string name="error_wallet_load_failed">Gagal memuatkan maklumat dompet.</string>
+    <string name="wallet_default_top_up_description">Tambah Nilai Dompet</string>
+    <string name="error_wallet_top_up_no_internet">Tiada sambungan internet. Sila semak rangkaian anda untuk menambah nilai dompet anda.</string>
+    <string name="error_wallet_session_expired">Sesi pengguna telah tamat tempoh. Sila log masuk semula.</string>
+    <string name="error_wallet_invalid_amount">Sila masukkan jumlah tambah nilai yang sah.</string>
+    <string name="msg_wallet_top_up_success_format">Tambah nilai sebanyak RM %1$s telah berjaya!</string>
+    <string name="error_wallet_top_up_failed">Tambah nilai gagal. Sila cuba lagi.</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">Diminta</string>
+    <string name="stepper_step_payment">Pembayaran</string>
+    <string name="stepper_step_confirmed">Disahkan</string>
+    <string name="stepper_step_completed">Selesai</string>
+    <string name="stepper_appointment_rejected">Temujanji Ditolak</string>
+    <string name="stepper_appointment_cancelled">Temujanji Dibatalkan</string>
+    <string name="stepper_rejection_reason_format">Sebab: %1$s</string>
+    <string name="stepper_rejection_default_subtitle">Chef telah menolak permintaan tempahan ini.</string>
+    <string name="stepper_cancelled_default_subtitle">Tempahan ini telah dibatalkan.</string>
+    <string name="stepper_hint_pending">Menunggu semakan &amp; pengesahan chef</string>
+    <string name="stepper_hint_unpaid">Chef telah menerima! Menunggu pembayaran</string>
+    <string name="stepper_hint_confirmed">Dijadualkan &amp; disahkan. Chef akan tiba pada tarikh tersebut</string>
+    <string name="stepper_hint_completed">Perkhidmatan selesai &amp; disahkan melalui QR</string>
+    <string name="stepper_hint_in_progress">Tempahan sedang diproses</string>
+    <string name="stepper_booking_lifecycle">Kitaran Hayat Tempahan</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">Pagi</string>
+    <string name="timeslot_afternoon">Petang</string>
+    <string name="timeslot_evening">Malam</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">Isn</string>
+    <string name="day_tue_short">Sel</string>
+    <string name="day_wed_short">Rab</string>
+    <string name="day_thu_short">Kha</string>
+    <string name="day_fri_short">Jum</string>
+    <string name="day_sat_short">Sab</string>
+    <string name="day_sun_short">Aha</string>
+    <string name="day_mon_full">Isnin</string>
+    <string name="day_tue_full">Selasa</string>
+    <string name="day_wed_full">Rabu</string>
+    <string name="day_thu_full">Khamis</string>
+    <string name="day_fri_full">Jumaat</string>
+    <string name="day_sat_full">Sabtu</string>
+    <string name="day_sun_full">Ahad</string>
+    <string name="error_chef_off_duty_format">Chef tidak bertugas pada hari %1$s. Sila pilih tarikh yang tersedia.</string>
+    <string name="error_chef_not_available_morning_format">Chef tidak tersedia pada waktu Pagi (8 AM - 12 PM) pada hari %1$s.</string>
+    <string name="error_chef_not_available_afternoon_format">Chef tidak tersedia pada waktu Petang (12 PM - 5 PM) pada hari %1$s.</string>
+    <string name="error_chef_not_available_evening_format">Chef tidak tersedia pada waktu Malam (5 PM - 9 PM) pada hari %1$s.</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">Semua</string>
+    <string name="chef_filter_status_pending">Menunggu</string>
+    <string name="chef_filter_status_unpaid">Belum Bayar</string>
+    <string name="chef_filter_status_confirmed">Disahkan</string>
+    <string name="chef_filter_status_rejected">Ditolak</string>
+    <string name="chef_filter_status_completed">Selesai</string>
+    <string name="chef_filter_status_cancelled">Dibatalkan</string>
+
+    <!-- Gender -->
+    <string name="gender_male">Lelaki</string>
+    <string name="gender_female">Perempuan</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">Pulau Pinang</string>
+    <string name="state_kedah">Kedah</string>
+    <string name="state_perak">Perak</string>
+    <string name="state_perlis">Perlis</string>
+    <string name="state_selangor">Selangor</string>
+    <string name="state_negeri_sembilan">Negeri Sembilan</string>
+    <string name="state_johor">Johor</string>
+    <string name="state_melaka">Melaka</string>
+    <string name="state_pahang">Pahang</string>
+    <string name="state_terengganu">Terengganu</string>
+    <string name="state_sabah">Sabah</string>
+    <string name="state_sarawak">Sarawak</string>
+
+    <!-- AddHiringAppointment.kt -->
+    <string name="health_pref_no_preference">Tiada Keutamaan</string>
+    <string name="health_pref_low_carb">Rendah Karbohidrat</string>
+    <string name="health_pref_vegetarian">Vegetarian</string>
+    <string name="health_pref_vegan">Vegan</string>
+    <string name="health_pref_halal">Halal</string>
+    <string name="health_pref_keto">Keto</string>
+    <string name="health_pref_gluten_free">Bebas Gluten</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">Semua</string>
+    <string name="recipe_course_breakfast">Sarapan</string>
+    <string name="recipe_course_lunch">Makan Tengah Hari</string>
+    <string name="recipe_course_dinner">Makan Malam</string>
+    <string name="recipe_course_snack">Snek</string>
+    <string name="recipe_course_dessert">Pencuci Mulut</string>
+    <string name="recipe_course_beverage">Minuman</string>
+    <string name="recipe_tab_popular">Popular</string>
+    <string name="recipe_tab_my_recipes">Resipi Saya</string>
+    <string name="recipe_tab_bookmarks">Penanda Buku</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">Standard</string>
+    <string name="recipe_skill_beginner">Pemula</string>
+    <string name="recipe_skill_intermediate">Pertengahan</string>
+    <string name="recipe_skill_advanced">Lanjutan</string>
+    <string name="recipe_skill_master_expert">Pakar</string>
 </resources>

@@ -6,6 +6,7 @@ import android.graphics.*
 import android.graphics.pdf.PdfDocument
 import android.util.Log
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.core.content.FileProvider
 import com.example.foodieheal.R
 import com.example.foodieheal.wallet.model.WalletTransaction
@@ -51,7 +52,7 @@ object ReceiptShareUtil {
             context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.receipt_share_chooser_image)))
         } catch (e: Exception) {
             Log.e(TAG, "Error sharing receipt", e)
-            Toast.makeText(context, context.getString(R.string.receipt_share_err_generate_image, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, context.getString(R.string.receipt_share_err_generate_image, e.localizedMessage ?: ""), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
         }
     }
 
@@ -106,7 +107,7 @@ object ReceiptShareUtil {
             context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.receipt_share_chooser_pdf)))
         } catch (e: Exception) {
             Log.e(TAG, "Error generating PDF receipt", e)
-            Toast.makeText(context, context.getString(R.string.receipt_share_err_generate_pdf, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, context.getString(R.string.receipt_share_err_generate_pdf, e.localizedMessage ?: ""), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
         }
     }
 

@@ -1524,4 +1524,173 @@
     <string name="placeholder_hyphen">-</string>
     <string name="error_unknown_occurred">发生未知错误</string>
     <string name="unknown_author">未知作者</string>
+    <!-- BookmarkViewModel.kt -->
+    <string name="toast_bookmark_removed">已从收藏中移除 %1$s</string>
+    <string name="toast_bookmark_added">已将厨师 %1$s 加入收藏</string>
+    <string name="toast_bookmark_failed">更新收藏失败</string>
+    <string name="toast_address_copied">地址已复制到剪贴板</string>
+
+    <!-- AppointmentBookingViewModel.kt -->
+    <string name="error_booking_no_internet">无网络连接。请连接网络以完成预约。</string>
+    <string name="error_booking_invalid_parameters">无效的预约参数。请选择有效的厨师。</string>
+    <string name="error_booking_select_date_time">请选择有效的预约日期和时间段。</string>
+    <string name="error_booking_time_slot_occupied">所选时间段已被其他预约占用。请选择其他时间。</string>
+    <string name="error_booking_invalid_time_range">所选时间范围无效。结束时间必须晚于开始时间。</string>
+    <string name="error_booking_invalid_address">请输入有效的预约地址。</string>
+    <string name="error_booking_invalid_postcode">请输入有效的 5 位马来西亚邮政编码。</string>
+    <string name="error_booking_invalid_state">请从下拉列表中选择州属。</string>
+    <string name="error_booking_invalid_serving_size">请指定大于 0 的有效用餐人数/份数。</string>
+    <string name="error_booking_invalid_description">请为您的厨师提供活动备注或烹饪要求。</string>
+    <string name="error_booking_fix_errors">请检查表单并修改标红的错误。</string>
+    <string name="error_booking_invalid_total_price">总价计算无效。总价必须大于零。</string>
+    <string name="error_booking_time_already_booked">此时段已被预订。请选择其他时间。</string>
+    <string name="error_booking_create_failed">创建预约失败：%1$s</string>
+    <string name="error_booking_unknown">发生未知错误。请重试。</string>
+
+    <!-- UserAppointmentViewModel.kt -->
+    <string name="error_user_not_logged_in">用户未登录。</string>
+    <string name="error_failed_to_load_appointments">加载预约失败</string>
+    <string name="error_failed_update_appointment_status">更新预约状态失败</string>
+    <string name="error_failed_cancel_appointment">取消预约失败：%1$s</string>
+    <string name="error_failed_reschedule_appointment">重新安排预约失败</string>
+
+    <!-- ReviewViewModel.kt -->
+    <string name="error_failed_to_load_reviews">加载评价失败</string>
+    <string name="error_failed_to_submit_review">提交评价失败</string>
+
+    <!-- ChefListViewModel.kt -->
+    <string name="error_failed_fetch_chefs">获取厨师资料失败</string>
+
+    <!-- ChefRegisterViewModel.kt -->
+    <string name="error_chef_registration_failed">注册失败。请重试。</string>
+    <string name="error_chef_upgrade_failed">厨师升级失败。请重试。</string>
+
+    <!-- ChefAppointmentViewModel.kt -->
+    <string name="error_chef_user_not_logged_in">用户未登录。</string>
+    <string name="error_chef_load_appointments_failed">加载预约失败</string>
+    <string name="error_chef_load_dashboard_failed">加载仪表板失败</string>
+    <string name="error_chef_update_offline">离线时无法更新预约状态。</string>
+    <string name="error_chef_update_appointment_failed">更新预约失败：%1$s</string>
+
+    <!-- PaymentViewModel.kt -->
+    <string name="error_payment_load_appointment_failed">加载预约详情失败。</string>
+    <string name="error_payment_no_internet">无网络连接。请连接网络以完成付款。</string>
+    <string name="error_payment_appointment_missing">缺少预约信息。</string>
+    <string name="error_payment_invalid_appointment_id">无效的预约编号。</string>
+    <string name="error_payment_select_method">请选择付款方式。</string>
+    <string name="error_payment_processing_failed">付款处理失败。请重试。</string>
+
+    <!-- PaymentMethodViewModel.kt -->
+    <string name="msg_payment_cached_cards_sync_failed">正在显示已缓存的银行卡。在线同步失败。</string>
+    <string name="error_payment_no_internet_short">无网络连接。请检查您的网络。</string>
+    <string name="error_payment_save_card_failed">保存银行卡失败。</string>
+    <string name="error_payment_delete_method_failed">删除付款方式失败。</string>
+    <string name="error_payment_set_default_failed">设置默认付款方式失败。</string>
+
+    <!-- WalletViewModel.kt -->
+    <string name="error_wallet_load_failed">加载钱包信息失败。</string>
+    <string name="wallet_default_top_up_description">钱包充值</string>
+    <string name="error_wallet_top_up_no_internet">无网络连接。请检查网络后为钱包充值。</string>
+    <string name="error_wallet_session_expired">用户会话已过期。请重新登录。</string>
+    <string name="error_wallet_invalid_amount">请输入有效的充值金额。</string>
+    <string name="msg_wallet_top_up_success_format">充值 RM %1$s 成功！</string>
+    <string name="error_wallet_top_up_failed">充值失败。请重试。</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">已提交</string>
+    <string name="stepper_step_payment">支付</string>
+    <string name="stepper_step_confirmed">已确认</string>
+    <string name="stepper_step_completed">已完成</string>
+    <string name="stepper_appointment_rejected">预约已拒绝</string>
+    <string name="stepper_appointment_cancelled">预约已取消</string>
+    <string name="stepper_rejection_reason_format">原因：%1$s</string>
+    <string name="stepper_rejection_default_subtitle">厨师拒绝了此预约请求。</string>
+    <string name="stepper_cancelled_default_subtitle">此预约已被取消。</string>
+    <string name="stepper_hint_pending">等待厨师审核并确认</string>
+    <string name="stepper_hint_unpaid">厨师已接受！等待支付</string>
+    <string name="stepper_hint_confirmed">已安排并确认。厨师将按时上门</string>
+    <string name="stepper_hint_completed">服务已完成并通过二维码核销</string>
+    <string name="stepper_hint_in_progress">预约进行中</string>
+    <string name="stepper_booking_lifecycle">预约进度</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">上午</string>
+    <string name="timeslot_afternoon">下午</string>
+    <string name="timeslot_evening">晚上</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">周一</string>
+    <string name="day_tue_short">周二</string>
+    <string name="day_wed_short">周三</string>
+    <string name="day_thu_short">周四</string>
+    <string name="day_fri_short">周五</string>
+    <string name="day_sat_short">周六</string>
+    <string name="day_sun_short">周日</string>
+    <string name="day_mon_full">星期一</string>
+    <string name="day_tue_full">星期二</string>
+    <string name="day_wed_full">星期三</string>
+    <string name="day_thu_full">星期四</string>
+    <string name="day_fri_full">星期五</string>
+    <string name="day_sat_full">星期六</string>
+    <string name="day_sun_full">星期日</string>
+    <string name="error_chef_off_duty_format">厨师在%1$s休息。请选择其他可用日期。</string>
+    <string name="error_chef_not_available_morning_format">厨师在%1$s上午（8 AM - 12 PM）不可预约。</string>
+    <string name="error_chef_not_available_afternoon_format">厨师在%1$s下午（12 PM - 5 PM）不可预约。</string>
+    <string name="error_chef_not_available_evening_format">厨师在%1$s晚上（5 PM - 9 PM）不可预约。</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">全部</string>
+    <string name="chef_filter_status_pending">待处理</string>
+    <string name="chef_filter_status_unpaid">待付款</string>
+    <string name="chef_filter_status_confirmed">已确认</string>
+    <string name="chef_filter_status_rejected">已拒绝</string>
+    <string name="chef_filter_status_completed">已完成</string>
+    <string name="chef_filter_status_cancelled">已取消</string>
+
+    <!-- Gender -->
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">槟城</string>
+    <string name="state_kedah">吉打</string>
+    <string name="state_perak">霹雳</string>
+    <string name="state_perlis">玻璃市</string>
+    <string name="state_selangor">雪兰莪</string>
+    <string name="state_negeri_sembilan">森美兰</string>
+    <string name="state_johor">柔佛</string>
+    <string name="state_melaka">马六甲</string>
+    <string name="state_pahang">彭亨</string>
+    <string name="state_terengganu">登嘉楼</string>
+    <string name="state_sabah">沙巴</string>
+    <string name="state_sarawak">砂拉越</string>
+
+    <!-- Health Preference-->
+    <string name="health_pref_no_preference">无偏好</string>
+    <string name="health_pref_low_carb">低碳水</string>
+    <string name="health_pref_vegetarian">素食</string>
+    <string name="health_pref_vegan">纯素</string>
+    <string name="health_pref_halal">清真</string>
+    <string name="health_pref_keto">生酮</string>
+    <string name="health_pref_gluten_free">无麸质</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">全部</string>
+    <string name="recipe_course_breakfast">早餐</string>
+    <string name="recipe_course_lunch">午餐</string>
+    <string name="recipe_course_dinner">晚餐</string>
+    <string name="recipe_course_snack">点心/小吃</string>
+    <string name="recipe_course_dessert">甜品</string>
+    <string name="recipe_course_beverage">饮品</string>
+    <string name="recipe_tab_popular">热门</string>
+    <string name="recipe_tab_my_recipes">我的食谱</string>
+    <string name="recipe_tab_bookmarks">我的收藏</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">标准</string>
+    <string name="recipe_skill_beginner">初级</string>
+    <string name="recipe_skill_intermediate">中级</string>
+    <string name="recipe_skill_advanced">高级</string>
+    <string name="recipe_skill_master_expert">专家/大师</string>
 </resources>

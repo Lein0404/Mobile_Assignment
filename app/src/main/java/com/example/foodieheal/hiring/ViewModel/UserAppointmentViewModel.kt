@@ -2,6 +2,8 @@ package com.example.foodieheal.hiring.viewmodel
 
 import android.content.Context
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.HiringRepository
@@ -20,6 +22,10 @@ class UserAppointmentViewModel(
     private val repository: HiringRepository = HiringRepository(),
     private val networkMonitor: NetworkMonitor? = null
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
     val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
@@ -87,7 +93,9 @@ class UserAppointmentViewModel(
             try {
                 val currentUserId = repository.getCurrentUserId()
                 if (currentUserId.isNullOrEmpty()) {
-                    _userAppointmentsState.value = UserAppointmentsUiState.Error("User not logged in.")
+                    _userAppointmentsState.value = UserAppointmentsUiState.Error(
+                        resString(R.string.error_user_not_logged_in) ?: "User not logged in."
+                    )
                     return@launch
                 }
 
@@ -104,7 +112,7 @@ class UserAppointmentViewModel(
                 // If we already have data, don't wipe it out on background fetch failure
                 if (!hasLoadedSuccessfully) {
                     _userAppointmentsState.value = UserAppointmentsUiState.Error(
-                        e.localizedMessage ?: "Failed to load appointments"
+                        e.localizedMessage ?: (resString(R.string.error_failed_to_load_appointments) ?: "Failed to load appointments")
                     )
                 }
             }
@@ -132,7 +140,7 @@ class UserAppointmentViewModel(
                 fetchAppointmentsForCurrentUser(forceRefresh = false)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to update appointment status")
+                onError(e.localizedMessage ?: (resString(R.string.error_failed_update_appointment_status) ?: "Failed to update appointment status"))
             }
         }
     }
@@ -148,7 +156,8 @@ class UserAppointmentViewModel(
                 fetchAppointmentsForCurrentUser(forceRefresh = true)
                 onSuccess()
             } catch (e: Exception) {
-                val errorMessage = "Failed to cancel appointment: ${e.localizedMessage}"
+                val detail = e.localizedMessage ?: ""
+                val errorMessage = resString(R.string.error_failed_cancel_appointment, detail) ?: "Failed to cancel appointment: $detail"
                 onError(errorMessage)
             }
         }
@@ -178,7 +187,7 @@ class UserAppointmentViewModel(
                 fetchAppointmentsForCurrentUser(forceRefresh = true)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Failed to reschedule appointment")
+                onError(e.localizedMessage ?: (resString(R.string.error_failed_reschedule_appointment) ?: "Failed to reschedule appointment"))
             }
         }
     }

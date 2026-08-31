@@ -1526,4 +1526,173 @@
     <string name="label_recipe_lines_format">%1$d/5 lines</string>
     <string name="label_recipe_steps_format">%1$d/20 lines</string>
     <string name="label_recipe_chars_format">%1$d/%2$d</string>
+    <!-- BookmarkViewModel -->
+    <string name="toast_bookmark_removed">Removed %1$s from bookmarks</string>
+    <string name="toast_bookmark_added">Chef %1$s added to bookmarks</string>
+    <string name="toast_bookmark_failed">Failed to update bookmark</string>
+    <string name="toast_address_copied">Address copied to clipboard</string>
+
+    <!-- AppointmentBookingViewModel -->
+    <string name="error_booking_no_internet">No internet connection. Please connect to the internet to complete booking.</string>
+    <string name="error_booking_invalid_parameters">Invalid booking parameters. Please select a valid chef.</string>
+    <string name="error_booking_select_date_time">Please select a valid appointment date and time slot.</string>
+    <string name="error_booking_time_slot_occupied">The selected time slot is already occupied by another booking. Please choose a different time.</string>
+    <string name="error_booking_invalid_time_range">Invalid time range selected. End time must be after start time.</string>
+    <string name="error_booking_invalid_address">Please enter a valid appointment address.</string>
+    <string name="error_booking_invalid_postcode">Please enter a valid 5-digit Malaysian postcode.</string>
+    <string name="error_booking_invalid_state">Please select a state from the dropdown.</string>
+    <string name="error_booking_invalid_serving_size">Please specify a valid party / serving size greater than 0.</string>
+    <string name="error_booking_invalid_description">Please provide event notes or cooking details for your chef.</string>
+    <string name="error_booking_fix_errors">Please check the form and fix the highlighted errors.</string>
+    <string name="error_booking_invalid_total_price">Invalid total price calculation. Total price must be greater than zero.</string>
+    <string name="error_booking_time_already_booked">This time slot is already booked. Please choose a different time.</string>
+    <string name="error_booking_create_failed">Failed to create appointment: %1$s</string>
+    <string name="error_booking_unknown">Unknown error occurred. Please try again.</string>
+
+    <!-- UserAppointmentViewModel -->
+    <string name="error_user_not_logged_in">User not logged in.</string>
+    <string name="error_failed_to_load_appointments">Failed to load appointments</string>
+    <string name="error_failed_update_appointment_status">Failed to update appointment status</string>
+    <string name="error_failed_cancel_appointment">Failed to cancel appointment: %1$s</string>
+    <string name="error_failed_reschedule_appointment">Failed to reschedule appointment</string>
+
+    <!-- ReviewViewModel -->
+    <string name="error_failed_to_load_reviews">Failed to load reviews</string>
+    <string name="error_failed_to_submit_review">Failed to submit review</string>
+
+    <!-- ChefListViewModel -->
+    <string name="error_failed_fetch_chefs">Failed to fetch chef profiles</string>
+
+    <!-- ChefRegisterViewModel -->
+    <string name="error_chef_registration_failed">Registration failed. Please try again.</string>
+    <string name="error_chef_upgrade_failed">Chef upgrade failed. Please try again.</string>
+
+    <!-- ChefAppointmentViewModel -->
+    <string name="error_chef_user_not_logged_in">User not logged in.</string>
+    <string name="error_chef_load_appointments_failed">Failed to load appointments</string>
+    <string name="error_chef_load_dashboard_failed">Failed to load dashboard</string>
+    <string name="error_chef_update_offline">Cannot update appointment status while offline.</string>
+    <string name="error_chef_update_appointment_failed">Failed to update appointment: %1$s</string>
+
+    <!-- PaymentViewModel -->
+    <string name="error_payment_load_appointment_failed">Failed to load appointment details.</string>
+    <string name="error_payment_no_internet">No internet connection. Please connect to the internet to complete your payment.</string>
+    <string name="error_payment_appointment_missing">Appointment information is missing.</string>
+    <string name="error_payment_invalid_appointment_id">Invalid Appointment ID.</string>
+    <string name="error_payment_select_method">Please select a payment method.</string>
+    <string name="error_payment_processing_failed">Payment processing failed. Please try again.</string>
+
+    <!-- PaymentMethodViewModel -->
+    <string name="msg_payment_cached_cards_sync_failed">Showing cached cards. Failed to sync online.</string>
+    <string name="error_payment_no_internet_short">No internet connection. Please check your network.</string>
+    <string name="error_payment_save_card_failed">Failed to save card.</string>
+    <string name="error_payment_delete_method_failed">Failed to delete payment method.</string>
+    <string name="error_payment_set_default_failed">Failed to set default payment method.</string>
+
+    <!-- WalletViewModel -->
+    <string name="error_wallet_load_failed">Failed to load wallet information.</string>
+    <string name="wallet_default_top_up_description">Wallet Top Up</string>
+    <string name="error_wallet_top_up_no_internet">No internet connection. Please check your network to top up your wallet.</string>
+    <string name="error_wallet_session_expired">User session expired. Please log in again.</string>
+    <string name="error_wallet_invalid_amount">Please enter a valid top-up amount.</string>
+    <string name="msg_wallet_top_up_success_format">Top-up of RM %1$s was successful!</string>
+    <string name="error_wallet_top_up_failed">Top-up failed. Please try again.</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">Requested</string>
+    <string name="stepper_step_payment">Payment</string>
+    <string name="stepper_step_confirmed">Confirmed</string>
+    <string name="stepper_step_completed">Completed</string>
+    <string name="stepper_appointment_rejected">Appointment Rejected</string>
+    <string name="stepper_appointment_cancelled">Appointment Cancelled</string>
+    <string name="stepper_rejection_reason_format">Reason: %1$s</string>
+    <string name="stepper_rejection_default_subtitle">The chef declined this booking request.</string>
+    <string name="stepper_cancelled_default_subtitle">This booking has been cancelled.</string>
+    <string name="stepper_hint_pending">Awaiting chef review &amp; confirmation</string>
+    <string name="stepper_hint_unpaid">Chef accepted! Waiting for payment</string>
+    <string name="stepper_hint_confirmed">Scheduled &amp; confirmed. Chef will arrive on date</string>
+    <string name="stepper_hint_completed">Service completed &amp; verified via QR</string>
+    <string name="stepper_hint_in_progress">Booking in progress</string>
+    <string name="stepper_booking_lifecycle">Booking Lifecycle</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">Morning</string>
+    <string name="timeslot_afternoon">Afternoon</string>
+    <string name="timeslot_evening">Evening</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">Mon</string>
+    <string name="day_tue_short">Tue</string>
+    <string name="day_wed_short">Wed</string>
+    <string name="day_thu_short">Thu</string>
+    <string name="day_fri_short">Fri</string>
+    <string name="day_sat_short">Sat</string>
+    <string name="day_sun_short">Sun</string>
+    <string name="day_mon_full">Monday</string>
+    <string name="day_tue_full">Tuesday</string>
+    <string name="day_wed_full">Wednesday</string>
+    <string name="day_thu_full">Thursday</string>
+    <string name="day_fri_full">Friday</string>
+    <string name="day_sat_full">Saturday</string>
+    <string name="day_sun_full">Sunday</string>
+    <string name="error_chef_off_duty_format">Chef is off duty on %1$ss. Please choose an available date.</string>
+    <string name="error_chef_not_available_morning_format">Chef is not available in the Morning (8 AM - 12 PM) on %1$ss.</string>
+    <string name="error_chef_not_available_afternoon_format">Chef is not available in the Afternoon (12 PM - 5 PM) on %1$ss.</string>
+    <string name="error_chef_not_available_evening_format">Chef is not available in the Evening (5 PM - 9 PM) on %1$ss.</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">All</string>
+    <string name="chef_filter_status_pending">Pending</string>
+    <string name="chef_filter_status_unpaid">Unpaid</string>
+    <string name="chef_filter_status_confirmed">Confirmed</string>
+    <string name="chef_filter_status_rejected">Rejected</string>
+    <string name="chef_filter_status_completed">Completed</string>
+    <string name="chef_filter_status_cancelled">Cancelled</string>
+
+    <!-- Gender -->
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">Pulau Pinang</string>
+    <string name="state_kedah">Kedah</string>
+    <string name="state_perak">Perak</string>
+    <string name="state_perlis">Perlis</string>
+    <string name="state_selangor">Selangor</string>
+    <string name="state_negeri_sembilan">Negeri Sembilan</string>
+    <string name="state_johor">Johor</string>
+    <string name="state_melaka">Melaka</string>
+    <string name="state_pahang">Pahang</string>
+    <string name="state_terengganu">Terengganu</string>
+    <string name="state_sabah">Sabah</string>
+    <string name="state_sarawak">Sarawak</string>
+
+    <!-- Health Preference-->
+    <string name="health_pref_no_preference">No Preference</string>
+    <string name="health_pref_low_carb">Low Carb</string>
+    <string name="health_pref_vegetarian">Vegetarian</string>
+    <string name="health_pref_vegan">Vegan</string>
+    <string name="health_pref_halal">Halal</string>
+    <string name="health_pref_keto">Keto</string>
+    <string name="health_pref_gluten_free">Gluten-Free</string>
+
+    <!-- RecipeBookmarkSelectorSheet.kt -->
+    <string name="recipe_course_all">All</string>
+    <string name="recipe_course_breakfast">Breakfast</string>
+    <string name="recipe_course_lunch">Lunch</string>
+    <string name="recipe_course_dinner">Dinner</string>
+    <string name="recipe_course_snack">Snack</string>
+    <string name="recipe_course_dessert">Dessert</string>
+    <string name="recipe_course_beverage">Beverage</string>
+    <string name="recipe_tab_popular">Popular</string>
+    <string name="recipe_tab_my_recipes">My Recipes</string>
+    <string name="recipe_tab_bookmarks">Bookmarks</string>
+
+    <!-- RecipeDetailPreviewSheet.kt -->
+    <string name="recipe_skill_standard">Standard</string>
+    <string name="recipe_skill_beginner">Beginner</string>
+    <string name="recipe_skill_intermediate">Intermediate</string>
+    <string name="recipe_skill_advanced">Advanced</string>
+    <string name="recipe_skill_master_expert">Master/Expert</string>
 </resources>

@@ -288,6 +288,7 @@ fun PasswordInputField(
         )
     }
 }
+@JvmName("DropDownListIntOptions")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDownList(
@@ -297,6 +298,73 @@ fun DropDownList(
     selectedValue: String,
     options: List<String>,
     onOptionSelected: (String) -> Unit,
+    isError: Boolean = false,
+    @StringRes errorMessageId: Int? = null
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp) // gap between items in a Column
+    ) {
+        Text(
+            text = stringResource(labelId),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedValue ,
+                onValueChange = { },
+                readOnly = true,
+                placeholder = {
+                    Text(stringResource(placeholderId),
+                        color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.6f)
+                    ) },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                isError = isError
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+        if (isError && errorMessageId != null) {
+            ErrorMessageCard(
+                textId = errorMessageId
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropDownList(
+    modifier: Modifier = Modifier,
+    @StringRes labelId: Int,
+    @StringRes placeholderId: Int,
+    selectedValue: String,
+    options: List<Int>,
+    onOptionSelected: (Int) -> Unit,
     isError: Boolean = false,
     @StringRes errorMessageId: Int? = null
 ) {
@@ -338,7 +406,7 @@ fun DropDownList(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(stringResource(option)) },
                         onClick = {
                             onOptionSelected(option)
                             expanded = false
@@ -374,71 +442,6 @@ fun ErrorMessageCard(
             style = MaterialTheme.typography.bodyMedium,
             modifier = modifier.padding(dimensionResource(R.dimen.padding_l))
         )
-    }
-}
-
-@Composable
-fun GenderDropdown(
-    gender: String,
-    onGenderChange: (String) -> Unit
-) {
-
-    var expanded by remember { mutableStateOf(false) }
-
-    val genders = listOf("Male", "Female")
-
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        OutlinedTextField(
-            value = gender,
-            onValueChange = {},
-            label = { Text("Gender") },
-            placeholder = { Text("Select Gender") },
-            readOnly = true,
-            enabled = true,
-            trailingIcon = {
-                Text("▼")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-
-        // Click layer
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable {
-                    expanded = true
-                }
-        )
-
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            genders.forEach { option ->
-
-                DropdownMenuItem(
-                    text = {
-                        Text(option)
-                    },
-                    onClick = {
-                        onGenderChange(option)
-                        expanded = false
-                    }
-                )
-
-            }
-
-        }
     }
 }
 
@@ -659,9 +662,17 @@ fun AppointmentStatusBadge(
         else        -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    // Format display text (capitalized or fallback)
-    val displayText = status.ifBlank { "Confirmed" }.replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+    // Format display text (localized or fallback)
+    val displayText = when (status.lowercase(Locale.ROOT).trim()) {
+        "completed" -> stringResource(R.string.chef_filter_status_completed)
+        "confirmed" -> stringResource(R.string.chef_filter_status_confirmed)
+        "cancelled" -> stringResource(R.string.chef_filter_status_cancelled)
+        "rejected"  -> stringResource(R.string.chef_filter_status_rejected)
+        "unpaid"    -> stringResource(R.string.chef_filter_status_unpaid)
+        "pending"   -> stringResource(R.string.chef_filter_status_pending)
+        else        -> status.ifBlank { stringResource(R.string.chef_filter_status_confirmed) }.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+        }
     }
 
     Surface(

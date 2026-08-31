@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -203,10 +204,14 @@ class ChefRegisterViewModel(
 
                 delay(1200L)
 
-                Toast.makeText(
+                Toasty.custom(
                     context,
                     context.getString(R.string.toast_chef_register_success),
-                    Toast.LENGTH_LONG
+                    R.drawable.foodieheallogo_removebg_and_word,
+                    R.color.black,
+                    Toast.LENGTH_LONG,
+                    true,
+                    true
                 ).show()
 
                 isSubmitting = false
@@ -216,10 +221,14 @@ class ChefRegisterViewModel(
                 Log.e("ChefRegister", "Registration error trace", e)
                 isSubmitting = false
                 errorMessage = repository.mapRegistrationError(e.message)
-                Toast.makeText(
+                Toasty.custom(
                     context,
-                    errorMessage ?: "Registration failed. Please try again.",
-                    Toast.LENGTH_LONG
+                    errorMessage ?: context.getString(R.string.error_chef_registration_failed),
+                    R.drawable.foodieheallogo_removebg_and_word,
+                    R.color.black,
+                    Toast.LENGTH_LONG,
+                    true,
+                    true
                 ).show()
             }
         }
@@ -259,10 +268,14 @@ class ChefRegisterViewModel(
 
                 delay(1200L)
 
-                Toast.makeText(
+                Toasty.custom(
                     context,
                     context.getString(R.string.toast_chef_upgrade_success),
-                    Toast.LENGTH_LONG
+                    R.drawable.foodieheallogo_removebg_and_word,
+                    R.color.black,
+                    Toast.LENGTH_LONG,
+                    true,
+                    true
                 ).show()
 
                 isSubmitting = false
@@ -272,10 +285,14 @@ class ChefRegisterViewModel(
                 Log.e("ChefUpgrade", "Upgrade error trace", e)
                 isSubmitting = false
                 errorMessage = repository.mapRegistrationError(e.message)
-                Toast.makeText(
+                Toasty.custom(
                     context,
-                    errorMessage ?: "Chef upgrade failed. Please try again.",
-                    Toast.LENGTH_LONG
+                    errorMessage ?: context.getString(R.string.error_chef_upgrade_failed),
+                    R.drawable.foodieheallogo_removebg_and_word,
+                    R.color.black,
+                    Toast.LENGTH_LONG,
+                    true,
+                    true
                 ).show()
             }
         }
@@ -331,40 +348,6 @@ class ChefRegisterViewModel(
             isEmailTaken = false
         }
     }
-
-    fun isValidName(): Boolean = ChefRegisterValidate.isValidName(name)
-    fun isValidAge(): Boolean = ChefRegisterValidate.isValidAge(age)
-    fun isValidGender(): Boolean = ChefRegisterValidate.isValidGender(gender)
-    fun isValidPassword(): Boolean = if (isUpgradeFlow) true else ChefRegisterValidate.isValidPassword(password)
-    fun isPasswordMatched(): Boolean =
-        if (isUpgradeFlow) true else ChefRegisterValidate.isPasswordMatched(password, confirmPassword)
-    fun isValidEmail(): Boolean = if (isUpgradeFlow) true else ChefRegisterValidate.isValidEmail(email)
-    fun isValidPhoneNumber(): Boolean = ChefRegisterValidate.isValidPhoneNumber(phoneNumber)
-    fun isValidAddress(): Boolean = ChefRegisterValidate.isValidAddress(address)
-    fun isValidState(): Boolean = ChefRegisterValidate.isValidState(state)
-    fun isValidPostcode(): Boolean = ChefRegisterValidate.isValidPostcode(postcode)
-    fun isValidExperience(): Boolean = ChefRegisterValidate.isValidExperience(experience)
-    fun isValidDescription(): Boolean = ChefRegisterValidate.isValidDescription(description)
-    fun isValidProfilePicture(): Boolean =
-        ChefRegisterValidate.isValidProfilePicture(selectedImageUri)
-
-    fun canProceedBasicInfo(): Boolean = if (isUpgradeFlow) {
-        ChefRegisterValidate.canProceedBasicInfoUpgrade(name, gender, age)
-    } else {
-        ChefRegisterValidate.canProceedBasicInfo(name, gender, age, password, confirmPassword)
-    }
-
-    fun canProceedContactInfo(): Boolean = if (isUpgradeFlow) {
-        phoneNumber.isNotBlank()
-    } else {
-        ChefRegisterValidate.canProceedContactInfo(email, phoneNumber)
-    }
-
-    fun canProceedAddressInfo(): Boolean =
-        ChefRegisterValidate.canProceedAddressInfo(address, postcode, state)
-
-    fun canProceedDescriptionInfo(): Boolean =
-        ChefRegisterValidate.canProceedDescriptionInfo(experience, description)
 
     fun validateBasicInfo(): Boolean {
         showBasicInfoErrorMessage = true

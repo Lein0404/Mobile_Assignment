@@ -1,6 +1,7 @@
 package com.example.foodieheal.Chef.Home
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -169,7 +170,7 @@ fun ChefAvailabilityCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = slot.displayName,
+                            text = stringResource(slot.displayNameRes),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -217,7 +218,7 @@ fun ChefAvailabilityCard(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = dayKey.shortName,
+                                    text = stringResource(dayKey.shortNameRes),
                                     fontSize = 11.sp,
                                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isToday) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -257,11 +258,11 @@ fun ChefAvailabilityCard(
                         weeklyAvailability = availability,
                         onSuccess = {
                             isSaving = false
-                            Toast.makeText(context, saveSuccessMsg, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, saveSuccessMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         },
                         onError = { errorMsg ->
                             isSaving = false
-                            Toast.makeText(context, String.format(Locale.getDefault(), saveErrorFormat, errorMsg), Toast.LENGTH_LONG).show()
+                            Toasty.custom(context, String.format(Locale.getDefault(), saveErrorFormat, errorMsg), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                         }
                     )
                 },

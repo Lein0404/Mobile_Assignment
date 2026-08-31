@@ -1,6 +1,8 @@
 package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.AppointmentConflictException
@@ -11,9 +13,11 @@ import com.example.foodieheal.hiring.model.ChefAppointmentsUiState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Chef.model.WeeklyAvailability
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.Companion.parseTimeSlotToCalendars
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,17 +28,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.foodieheal.hiring.util.HiringNetworkHelper
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class AppointmentBookingViewModel(
     private val repository: HiringRepository = HiringRepository(),
     private val networkMonitor: NetworkMonitor? = null,
     private val recipeRepository: RecipeRepository = RecipeRepository()
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _selectedChef = MutableStateFlow<Chef?>(null)
     val selectedChef: StateFlow<Chef?> = _selectedChef.asStateFlow()
@@ -110,10 +115,6 @@ class AppointmentBookingViewModel(
 
     fun updateSelectedDate(date: LocalDate) {
         _selectedDate.value = date
-    }
-
-    fun clearSelectedChef() {
-        _selectedChef.value = null
     }
 
     fun prepareRebook(
@@ -268,11 +269,6 @@ class AppointmentBookingViewModel(
         _selectedRecipes.value = currentList
     }
 
-    fun isRecipeSelected(recipeId: String?): Boolean {
-        if (recipeId == null) return false
-        return _selectedRecipes.value.any { it.recipe.recipe_id == recipeId }
-    }
-
     fun updateRecipeServings(recipeId: String, servings: Int) {
         val clampedServings = servings.coerceIn(1, 99)
         _selectedRecipes.update { list ->
@@ -298,10 +294,6 @@ class AppointmentBookingViewModel(
         _selectedRecipes.update { list ->
             list.filterNot { it.recipe.recipe_id == recipeId }
         }
-    }
-
-    fun clearSelectedRecipes() {
-        _selectedRecipes.value = emptyList()
     }
 
     private fun revalidateIfSubmitted() {
@@ -376,7 +368,7 @@ class AppointmentBookingViewModel(
         } else {
             val parts = appointmentTime.split("-").map { it.trim() }
             if (parts.size == 2) {
-                val parsedTimes = AppointmentPricingBreakdown.parseTimeSlotToCalendars(parts[0], parts[1])
+                val parsedTimes = parseTimeSlotToCalendars(parts[0], parts[1])
                 if (parsedTimes == null) {
                     errors.add(AppointmentValidationError.InvalidTime)
                 } else {
@@ -388,9 +380,9 @@ class AppointmentBookingViewModel(
                     } else {
                         val chef = selectedChef.value
                         if (chef?.availability_hours != null) {
-                            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+                            val weeklyAvail = WeeklyAvailability.fromJsonElement(chef.availability_hours)
                             val parsedDate = try {
-                                java.time.LocalDate.parse(targetDate)
+                                LocalDate.parse(targetDate)
                             } catch (_: Exception) {
                                 selectedDate.value
                             }
@@ -427,7 +419,7 @@ class AppointmentBookingViewModel(
         val parts = time.split("-").map { it.trim() }
         if (parts.size != 2) return
 
-        val parsedTimes = AppointmentPricingBreakdown.parseTimeSlotToCalendars(parts[0], parts[1]) ?: return
+        val parsedTimes = parseTimeSlotToCalendars(parts[0], parts[1]) ?: return
         val (startCal, endCal) = parsedTimes
 
         val targetDate = selectedDate.value.toString()
@@ -437,9 +429,9 @@ class AppointmentBookingViewModel(
         var unavailableReason: String? = null
         val chef = selectedChef.value
         if (chef?.availability_hours != null) {
-            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+            val weeklyAvail = WeeklyAvailability.fromJsonElement(chef.availability_hours)
             val parsedDate = try {
-                java.time.LocalDate.parse(targetDate)
+                LocalDate.parse(targetDate)
             } catch (_: Exception) {
                 selectedDate.value
             }
@@ -489,7 +481,7 @@ class AppointmentBookingViewModel(
 
         for (appt in appointments) {
             try {
-                val (apptStartCal, apptEndCal) = AppointmentPricingBreakdown.parseTimeSlotToCalendars(appt.Start_Time, appt.End_Time) ?: continue
+                val (apptStartCal, apptEndCal) = parseTimeSlotToCalendars(appt.Start_Time, appt.End_Time) ?: continue
 
                 // Overlap occurs if new Start < existing End AND new End > existing Start
                 val isOverlap = startCal.before(apptEndCal) && endCal.after(apptStartCal)
@@ -499,22 +491,6 @@ class AppointmentBookingViewModel(
             }
         }
         return false
-    }
-
-    fun calculateTotalPrice(
-        hourlyRate: Double = _selectedChef.value?.Pricing ?: 0.0,
-        appointmentTime: String = _uiState.value.appointmentTime,
-        selectedRecipes: List<SelectedAppointmentRecipe> = _selectedRecipes.value,
-        userState: String = _uiState.value.state,
-        chefState: String = _selectedChef.value?.state.orEmpty()
-    ): Double {
-        return AppointmentPricingBreakdown.calculate(
-            chefHourlyRate = hourlyRate,
-            appointmentTime = appointmentTime,
-            selectedRecipes = selectedRecipes,
-            userState = userState,
-            chefState = chefState
-        ).finalTotalPrice
     }
 
     fun createAppointment(
@@ -528,17 +504,17 @@ class AppointmentBookingViewModel(
         onError: (String) -> Unit
     ) {
         if (!_isNetworkAvailable.value) {
-            onError("No internet connection. Please connect to the internet to complete booking.")
+            onError(resString(R.string.error_booking_no_internet) ?: "No internet connection. Please connect to the internet to complete booking.")
             return
         }
 
         if (userId.isBlank() || chefId.isBlank()) {
-            onError("Invalid booking parameters. Please select a valid chef.")
+            onError(resString(R.string.error_booking_invalid_parameters) ?: "Invalid booking parameters. Please select a valid chef.")
             return
         }
 
         if (selectedDate.isBlank() || startTime.isBlank() || endTime.isBlank()) {
-            onError("Please select a valid appointment date and time slot.")
+            onError(resString(R.string.error_booking_select_date_time) ?: "Please select a valid appointment date and time slot.")
             return
         }
 
@@ -560,27 +536,27 @@ class AppointmentBookingViewModel(
             _uiState.update { it.copy(errors = validationErrors, hasAttemptedSubmit = true) }
             val firstErrorMessage = when {
                 validationErrors.contains(AppointmentValidationError.TimeSlotOccupied) ->
-                    "The selected time slot is already occupied by another booking. Please choose a different time."
+                    resString(R.string.error_booking_time_slot_occupied) ?: "The selected time slot is already occupied by another booking. Please choose a different time."
                 validationErrors.contains(AppointmentValidationError.InvalidTime) ->
-                    "Invalid time range selected. End time must be after start time."
+                    resString(R.string.error_booking_invalid_time_range) ?: "Invalid time range selected. End time must be after start time."
                 validationErrors.contains(AppointmentValidationError.InvalidAddress) ->
-                    "Please enter a valid appointment address."
+                    resString(R.string.error_booking_invalid_address) ?: "Please enter a valid appointment address."
                 validationErrors.contains(AppointmentValidationError.InvalidPostcode) ->
-                    "Please enter a valid 5-digit Malaysian postcode."
+                    resString(R.string.error_booking_invalid_postcode) ?: "Please enter a valid 5-digit Malaysian postcode."
                 validationErrors.contains(AppointmentValidationError.InvalidState) ->
-                    "Please select a state from the dropdown."
+                    resString(R.string.error_booking_invalid_state) ?: "Please select a state from the dropdown."
                 validationErrors.contains(AppointmentValidationError.InvalidServingSize) ->
-                    "Please specify a valid party / serving size greater than 0."
+                    resString(R.string.error_booking_invalid_serving_size) ?: "Please specify a valid party / serving size greater than 0."
                 validationErrors.contains(AppointmentValidationError.InvalidDescription) ->
-                    "Please provide event notes or cooking details for your chef."
-                else -> "Please check the form and fix the highlighted errors."
+                    resString(R.string.error_booking_invalid_description) ?: "Please provide event notes or cooking details for your chef."
+                else -> resString(R.string.error_booking_fix_errors) ?: "Please check the form and fix the highlighted errors."
             }
             onError(firstErrorMessage)
             return
         }
 
         if (totalPrice <= 0.0) {
-            onError("Invalid total price calculation. Total price must be greater than zero.")
+            onError(resString(R.string.error_booking_invalid_total_price) ?: "Invalid total price calculation. Total price must be greater than zero.")
             return
         }
 
@@ -617,11 +593,14 @@ class AppointmentBookingViewModel(
                         errors = it.errors + AppointmentValidationError.TimeSlotOccupied
                     )
                 }
-                onError(e.message ?: "This time slot is already booked. Please choose a different time.")
+                onError(e.message ?: (resString(R.string.error_booking_time_already_booked) ?: "This time slot is already booked. Please choose a different time."))
             } catch (e: Exception) {
                 Log.e("AppointmentBookingVM", "Error creating appointment in repository", e)
                 _uiState.update { it.copy(isSubmitting = false) }
-                onError("Failed to create appointment: ${e.localizedMessage ?: "Unknown error occurred. Please try again."}")
+                val unknownErr = resString(R.string.error_booking_unknown) ?: "Unknown error occurred. Please try again."
+                val errorDetail = e.localizedMessage ?: unknownErr
+                val errMsg = resString(R.string.error_booking_create_failed, errorDetail) ?: "Failed to create appointment: $errorDetail"
+                onError(errMsg)
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,7 +22,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.StateResList
+import com.example.foodieheal.Chef.getStateDbName
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.AppointmentValidationError
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
@@ -406,9 +409,9 @@ fun RescheduleAppointmentScreen(
                     DropDownList(
                         labelId = R.string.state,
                         placeholderId = R.string.select_state,
-                        selectedValue = selectedState,
-                        options = States,
-                        onOptionSelected = { selectedState = it ?: "" }
+                        selectedValue = getStateResId(selectedState)?.let { stringResource(it) } ?: selectedState,
+                        options = StateResList,
+                        onOptionSelected = { resId -> selectedState = getStateDbName(resId) }
                     )
                     if (hasAttemptedSubmit && selectedState.isBlank()) {
                         Text(
@@ -487,12 +490,12 @@ fun RescheduleAppointmentScreen(
                                 newTotalPrice = recalculatedTotalPrice,
                                 onSuccess = {
                                     isSubmitting = false
-                                    Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
+                                    Toasty.custom(context, successToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                     onRescheduleSuccess()
                                 },
                                 onError = { errorMsg ->
                                     isSubmitting = false
-                                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                                    Toasty.custom(context, errorMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                                 }
                             )
                         }
