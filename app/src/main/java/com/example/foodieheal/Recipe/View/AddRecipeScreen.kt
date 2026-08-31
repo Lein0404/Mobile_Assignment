@@ -385,7 +385,7 @@ fun AddRecipeScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "You may request for missing ingredients in the \"View & Request Ingredients\" menu option under Profile. We'll review and approve it right away!",
+                                            text = "You may request for missing ingredients in the \"View & Request Ingredients\" menu option under Profile. Our experts will review and approve it right away!",
                                             fontSize = 11.sp,
                                             lineHeight = 16.sp
                                         )
