@@ -365,7 +365,8 @@ class IngredientRequestViewModel(
                     createdByUserId = currentUserId,
                     requestStatus = Status.PENDING,
                     datetimeCreated = ZonedDateTime.now(ZoneId.of("Asia/Kuala_Lumpur"))
-                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                    datetimeProcessed = null
                 )
 
                 val unitRequests = filledRows.mapIndexed { index, row ->

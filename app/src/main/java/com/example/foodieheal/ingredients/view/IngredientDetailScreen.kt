@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
+import com.example.foodieheal.Admin.formatDisplayDateTime
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
 import com.example.foodieheal.ingredients.viewModel.IngredientRequestViewModel
@@ -329,6 +330,39 @@ fun IngredientDetailScreen(
                                     color = MaterialTheme.colorScheme.onBackground,
                                 )
                             }
+
+                            if (isRequest) {
+                                requestDetail?.request?.let { req ->
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = dimensionResource(id = R.dimen.padding_l)),
+                                        thickness = 1.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    // Request Information
+                                    Text(
+                                        text = stringResource(R.string.admin_detail_request_info_header),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_smd)))
+                                    RequestInfoRow(
+                                        label = stringResource(R.string.admin_detail_created_date),
+                                        value = formatDisplayDateTime(req.datetimeCreated)
+                                    )
+                                    if (req.requestStatus == Status.APPROVED && !req.datetimeProcessed.isNullOrBlank()) {
+                                        RequestInfoRow(
+                                            label = stringResource(R.string.admin_detail_approved_date),
+                                            value = formatDisplayDateTime(req.datetimeProcessed)
+                                        )
+                                    } else if (req.requestStatus == Status.REJECTED && !req.datetimeProcessed.isNullOrBlank()) {
+                                        RequestInfoRow(
+                                            label = stringResource(R.string.admin_detail_rejected_date),
+                                            value = formatDisplayDateTime(req.datetimeProcessed)
+                                        )
+                                    }
+                                }
+                            }
                             
                             Spacer(modifier = Modifier.height(120.dp))
                         }
@@ -438,3 +472,29 @@ private data class IngredientDisplayData(
     val description: String? = null,
     val calorieInfo: String? = null
 )
+
+@Composable
+private fun RequestInfoRow(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_xxsm)),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(0.4f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.6f)
+        )
+    }
+}

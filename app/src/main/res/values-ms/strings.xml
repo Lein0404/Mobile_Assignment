@@ -990,6 +990,8 @@
     <string name="admin_detail_user_id">ID pengguna:</string>
     <string name="admin_detail_user_name">Nama pengguna:</string>
     <string name="admin_detail_created_date">Tarikh dicipta:</string>
+    <string name="admin_detail_approved_date">Tarikh diluluskan:</string>
+    <string name="admin_detail_rejected_date">Tarikh ditolak:</string>
     <string name="admin_detail_request_not_found">Permohonan tidak ditemui</string>
     <string name="admin_detail_toast_rejected">Permohonan telah ditolak</string>
     <string name="admin_detail_reject_title">Tolak permohonan</string>

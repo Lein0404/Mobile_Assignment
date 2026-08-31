@@ -991,6 +991,8 @@
     <string name="admin_detail_user_id">User ID : </string>
     <string name="admin_detail_user_name">User Name : </string>
     <string name="admin_detail_created_date">Created date : </string>
+    <string name="admin_detail_approved_date">Approved date : </string>
+    <string name="admin_detail_rejected_date">Rejected date : </string>
     <string name="admin_detail_request_not_found">Request not found</string>
     <string name="admin_detail_toast_rejected">Request rejected</string>
     <string name="admin_detail_reject_title">Reject Request</string>

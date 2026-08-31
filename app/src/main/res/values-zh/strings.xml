@@ -990,6 +990,8 @@
     <string name="admin_detail_user_id">用户 ID：</string>
     <string name="admin_detail_user_name">用户名：</string>
     <string name="admin_detail_created_date">创建日期：</string>
+    <string name="admin_detail_approved_date">批准日期：</string>
+    <string name="admin_detail_rejected_date">拒绝日期：</string>
     <string name="admin_detail_request_not_found">未找到申请</string>
     <string name="admin_detail_toast_rejected">申请已拒绝</string>
     <string name="admin_detail_reject_title">拒绝申请</string>

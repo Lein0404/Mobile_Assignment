@@ -17,6 +17,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.User.Repo.UserRepository
+import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -217,7 +218,12 @@ class AdminIngredientRequestViewModel(
                     return@launch
                 }
 
-                repository.updateRequestStatus(requestId, Status.REJECTED, reason)
+                repository.updateRequestStatus(
+                    requestId = requestId,
+                    status = Status.REJECTED,
+                    rejectedReason = reason,
+                    datetimeProcessed = Instant.now().toString()
+                )
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -315,7 +321,8 @@ class AdminIngredientRequestViewModel(
                     requestStatus = Status.APPROVED,
                     rejectedReason = null, // Clear if it was previously rejected
                     adminNote = adminNote,
-                    ingredientId = ingredientId
+                    ingredientId = ingredientId,
+                    datetimeProcessed = Instant.now().toString()
                 )
 
                 val unitRequestIds = repository.getNextUnitRequestIds(state.unitRows.size)
