@@ -1,34 +1,31 @@
 package com.example.foodieheal.Admin
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,171 +35,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.foodieheal.Admin.ViewModel1.AdminApprovalViewModel
-import com.example.foodieheal.NavigationItem
 import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.R
-import com.example.foodieheal.navigation.Screen
-import com.example.foodieheal.User.viewModel.AuthViewModel
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AdminApprovalScreen(
-    parentNavController: NavHostController,
-    viewModel: AdminApprovalViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel(),
-    initialTab: Int = 0
-) {
-    val navController = rememberNavController()
-
-    val startDestination = if (initialTab == 1) Screen.AdminIngredient.createRoute(tab = 1) else Screen.AdminChefScreen.route
-
-    val items = listOf(
-        NavigationItem(
-            Screen.AdminChefScreen.route,
-            stringResource(R.string.label_chef_approval),
-            R.drawable.ic_outline_account_circle
-        ),
-        NavigationItem(
-            Screen.AdminIngredient.route,
-            stringResource(R.string.label_ingredients),
-            R.drawable.ingredient
-        )
-    )
-
-    LaunchedEffect(Unit) {
-        viewModel.loadPendingChefs()
-    }
-
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                items.forEach { item ->
-                    val isSelected = currentDestination?.hierarchy?.any { 
-                        // Match either exact route or route without arguments
-                        it.route?.split("?")?.firstOrNull() == item.route.split("?")?.firstOrNull() 
-                    } == true
-
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = item.icon),
-                                contentDescription = item.label,
-                                modifier = if (item.route == Screen.AdminIngredient.route) Modifier.size(20.dp) else Modifier
-                            )
-                        },
-                        label = { Text(item.label, fontSize = 10.sp) },
-                        selected = isSelected,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-
-                // Logout Item
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_logout),
-                            contentDescription = stringResource(R.string.logout)
-                        )
-                    },
-                    label = { Text(stringResource(R.string.label_logout), fontSize = 10.sp) },
-                    selected = false,
-                    colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    onClick = { viewModel.onShowLogoutDialog(true) }
-                )
-            }
-        }
-    ) { padding ->
-        if (viewModel.showLogoutDialog) {
-            AlertDialog(
-                onDismissRequest = { viewModel.onShowLogoutDialog(false) },
-                title = { 
-                    Text(
-                        text = stringResource(R.string.logout_confirm_title),
-                        fontWeight = FontWeight.Bold
-                    ) 
-                },
-                text = { Text(stringResource(R.string.logout_confirm_message)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            viewModel.onShowLogoutDialog(false)
-                            authViewModel.logout {
-                                parentNavController.navigate(Screen.Login.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            }
-                        }
-                    ) {
-                        Text(
-                            text = stringResource(R.string.logout),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { viewModel.onShowLogoutDialog(false) }) {
-                        Text(stringResource(R.string.dialog_cancel))
-                    }
-                }
-            )
-        }
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(padding)
-        ) {
-            composable(Screen.AdminChefScreen.route) {
-                AdminChefApprovalContent(viewModel, parentNavController)
-            }
-            composable(
-                route = Screen.AdminIngredient.route,
-                arguments = listOf(navArgument("tab") { defaultValue = -1; type = NavType.IntType })
-            ) { backStackEntry ->
-                val tab = backStackEntry.arguments?.getInt("tab") ?: -1
-                AdminIngredientsScreen(parentNavController, initialTab = tab)
-            }
-        }
-    }
-}
 
 @Composable
 fun AdminChefApprovalContent(
