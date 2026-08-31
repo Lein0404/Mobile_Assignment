@@ -35,12 +35,14 @@ class IngredientRequestSyncWorker(
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
+            // PeriodicWorkRequest = checks Supabase in the background whenever network is available
             val periodicWork = PeriodicWorkRequestBuilder<IngredientRequestSyncWorker>(
                 15, TimeUnit.MINUTES
             )
                 .setConstraints(constraints)
                 .build()
 
+            // WorkManager = performs background sync
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 UNIQUE_WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
@@ -49,9 +51,27 @@ class IngredientRequestSyncWorker(
             Log.d(TAG, "Enqueued periodic status sync work.")
         }
 
+        fun enqueueImmediateSync(context: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val oneTimeWork = OneTimeWorkRequestBuilder<IngredientRequestSyncWorker>()
+                .setConstraints(constraints)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "ImmediateIngredientRequestSyncWork",
+                ExistingWorkPolicy.REPLACE,
+                oneTimeWork
+            )
+            Log.d(TAG, "Enqueued immediate status sync work.")
+        }
+
         fun cancelPeriodicSync(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK_NAME)
-            Log.d(TAG, "Cancelled periodic status sync work.")
+            WorkManager.getInstance(context).cancelUniqueWork("ImmediateIngredientRequestSyncWork")
+            Log.d(TAG, "Cancelled periodic and immediate status sync work.")
         }
     }
 }

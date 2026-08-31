@@ -219,25 +219,31 @@ class MainActivity : FragmentActivity() {
                         if (route != null) {
                             Log.d(TAG, "Navigating to deep link route: $route")
 
-                            // This ensures that when the user presses 'Back', they go to Home instead of exiting.
-                            val landingDest = when {
-                                sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route
-                                sharedAuthViewModel.isChef -> Screen.ChefMain.route
-                                else -> Screen.Home.route
-                            }
+                            val currentRoute = navController.currentDestination?.route
+                            val isColdStart = currentRoute == null || currentRoute == Screen.Login.route
 
-                            // 1. Reset to the appropriate root screen first
-                            navController.navigate(landingDest) {
-                                popUpTo(0) { inclusive = true }
+                            if (isColdStart) {
+                                // Cold start: App was launched from killed state. Build default synthetic backstack:
+                                // [Landing (e.g. Home) -> Ingredients (tab = 1) -> IngredientDetail]
+                                val landingDest = when {
+                                    sharedAuthViewModel.isAdmin -> Screen.AdminChefScreen.route
+                                    sharedAuthViewModel.isChef -> Screen.ChefMain.route
+                                    else -> Screen.Home.route
+                                }
+                                navController.navigate(landingDest) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                                if (route.startsWith("ingredient_detail/") && route.contains("/true")) {
+                                    navController.navigate(Screen.Ingredients.createRoute(tab = 1))
+                                }
+                                navController.navigate(route)
+                            } else {
+                                // Warm start: App is already active with user's existing backstack
+                                // (e.g., Home -> Profile -> Ingredients). Preserve their entire backstack!
+                                if (currentRoute != route) {
+                                    navController.navigate(route)
+                                }
                             }
-
-                            // 2. If navigating to ingredient request detail, push Ingredients Requests Tab as parent
-                            if (route.startsWith("ingredient_detail/") && route.contains("/true")) {
-                                navController.navigate(Screen.Ingredients.createRoute(tab = 1))
-                            }
-
-                            // 3. Push the deep link target on top of the root/parent
-                            navController.navigate(route)
 
                             pendingDeepLinkRoute = null
                         } else {
@@ -1325,6 +1331,16 @@ class MainActivity : FragmentActivity() {
             lifecycleScope.launch {
                 IngredientRequestStatusMonitor.checkStatusUpdates(userId, applicationContext)
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // When app is minimized or backgrounded, schedule background sync
+        val userId = SupabaseClient.client.auth.currentUserOrNull()?.id
+        if (!userId.isNullOrBlank()) {
+            IngredientRequestSyncWorker.enqueueImmediateSync(applicationContext)
+            IngredientRequestSyncWorker.enqueuePeriodicSync(applicationContext)
         }
     }
 
