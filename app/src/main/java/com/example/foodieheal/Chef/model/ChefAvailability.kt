@@ -1,5 +1,8 @@
 package com.example.foodieheal.Chef.model
 
+import androidx.annotation.StringRes
+import com.example.foodieheal.MainActivity
+import com.example.foodieheal.R
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -7,20 +10,32 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import java.util.Calendar
 
-enum class TimeSlotKey(val displayName: String, val timeRange: String) {
-    MORNING("Morning", "8 AM - 12 PM"),
-    AFTERNOON("Afternoon", "12 PM - 5 PM"),
-    EVENING("Evening", "5 PM - 9 PM")
+enum class TimeSlotKey(
+    @get:StringRes val displayNameRes: Int,
+    @get:StringRes val timeRangeRes: Int,
+    val displayName: String,
+    val timeRange: String
+) {
+    MORNING(R.string.timeslot_morning, R.string.timeslot_morning_range, "Morning", "8 AM - 12 PM"),
+    AFTERNOON(R.string.timeslot_afternoon, R.string.timeslot_afternoon_range, "Afternoon", "12 PM - 5 PM"),
+    EVENING(R.string.timeslot_evening, R.string.timeslot_evening_range, "Evening", "5 PM - 9 PM")
 }
 
-enum class DayOfWeekKey(val code: String, val shortName: String, val fullName: String, val calendarDay: Int) {
-    MON("mon", "Mon", "Monday", Calendar.MONDAY),
-    TUE("tue", "Tue", "Tuesday", Calendar.TUESDAY),
-    WED("wed", "Wed", "Wednesday", Calendar.WEDNESDAY),
-    THU("thu", "Thu", "Thursday", Calendar.THURSDAY),
-    FRI("fri", "Fri", "Friday", Calendar.FRIDAY),
-    SAT("sat", "Sat", "Saturday", Calendar.SATURDAY),
-    SUN("sun", "Sun", "Sunday", Calendar.SUNDAY);
+enum class DayOfWeekKey(
+    val code: String,
+    @get:StringRes val shortNameRes: Int,
+    @get:StringRes val fullNameRes: Int,
+    val calendarDay: Int,
+    val shortName: String,
+    val fullName: String
+) {
+    MON("mon", R.string.day_mon_short, R.string.day_mon_full, Calendar.MONDAY, "Mon", "Monday"),
+    TUE("tue", R.string.day_tue_short, R.string.day_tue_full, Calendar.TUESDAY, "Tue", "Tuesday"),
+    WED("wed", R.string.day_wed_short, R.string.day_wed_full, Calendar.WEDNESDAY, "Wed", "Wednesday"),
+    THU("thu", R.string.day_thu_short, R.string.day_thu_full, Calendar.THURSDAY, "Thu", "Thursday"),
+    FRI("fri", R.string.day_fri_short, R.string.day_fri_full, Calendar.FRIDAY, "Fri", "Friday"),
+    SAT("sat", R.string.day_sat_short, R.string.day_sat_full, Calendar.SATURDAY, "Sat", "Saturday"),
+    SUN("sun", R.string.day_sun_short, R.string.day_sun_full, Calendar.SUNDAY, "Sun", "Sunday");
 
     companion object {
         fun fromCalendarDay(calDay: Int): DayOfWeekKey {
@@ -129,8 +144,12 @@ data class WeeklyAvailability(
         val dayKey = DayOfWeekKey.fromCalendarDay(calDay)
         val dayAvail = getDay(dayKey)
 
+        val dayName = MainActivity.appContext?.getString(dayKey.fullNameRes) ?: dayKey.fullName
+
         if (!dayAvail.hasAnySlot()) {
-            return Pair(false, "Chef is off duty on ${dayKey.fullName}s. Please choose an available date.")
+            val msg = MainActivity.appContext?.getString(R.string.error_chef_off_duty_format, dayName)
+                ?: "Chef is off duty on ${dayKey.fullName}s. Please choose an available date."
+            return Pair(false, msg)
         }
 
         // Determine which slots this appointment covers
@@ -139,13 +158,19 @@ data class WeeklyAvailability(
         val needsEvening = startHour < 21 && endHour > 17
 
         if (needsMorning && !dayAvail.morning) {
-            return Pair(false, "Chef is not available in the Morning (8 AM - 12 PM) on ${dayKey.fullName}s.")
+            val msg = MainActivity.appContext?.getString(R.string.error_chef_not_available_morning_format, dayName)
+                ?: "Chef is not available in the Morning (8 AM - 12 PM) on ${dayKey.fullName}s."
+            return Pair(false, msg)
         }
         if (needsAfternoon && !dayAvail.afternoon) {
-            return Pair(false, "Chef is not available in the Afternoon (12 PM - 5 PM) on ${dayKey.fullName}s.")
+            val msg = MainActivity.appContext?.getString(R.string.error_chef_not_available_afternoon_format, dayName)
+                ?: "Chef is not available in the Afternoon (12 PM - 5 PM) on ${dayKey.fullName}s."
+            return Pair(false, msg)
         }
         if (needsEvening && !dayAvail.evening) {
-            return Pair(false, "Chef is not available in the Evening (5 PM - 9 PM) on ${dayKey.fullName}s.")
+            val msg = MainActivity.appContext?.getString(R.string.error_chef_not_available_evening_format, dayName)
+                ?: "Chef is not available in the Evening (5 PM - 9 PM) on ${dayKey.fullName}s."
+            return Pair(false, msg)
         }
 
         return Pair(true, null)

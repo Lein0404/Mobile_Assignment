@@ -1471,4 +1471,47 @@
     <string name="error_wallet_invalid_amount">请输入有效的充值金额。</string>
     <string name="msg_wallet_top_up_success_format">充值 RM %1$s 成功！</string>
     <string name="error_wallet_top_up_failed">充值失败。请重试。</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">已提交</string>
+    <string name="stepper_step_payment">支付</string>
+    <string name="stepper_step_confirmed">已确认</string>
+    <string name="stepper_step_completed">已完成</string>
+    <string name="stepper_appointment_rejected">预约已拒绝</string>
+    <string name="stepper_appointment_cancelled">预约已取消</string>
+    <string name="stepper_rejection_reason_format">原因：%1$s</string>
+    <string name="stepper_rejection_default_subtitle">厨师拒绝了此预约请求。</string>
+    <string name="stepper_cancelled_default_subtitle">此预约已被取消。</string>
+    <string name="stepper_hint_pending">等待厨师审核并确认</string>
+    <string name="stepper_hint_unpaid">厨师已接受！等待支付</string>
+    <string name="stepper_hint_confirmed">已安排并确认。厨师将按时上门</string>
+    <string name="stepper_hint_completed">服务已完成并通过二维码核销</string>
+    <string name="stepper_hint_in_progress">预约进行中</string>
+    <string name="stepper_booking_lifecycle">预约进度</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">上午</string>
+    <string name="timeslot_afternoon">下午</string>
+    <string name="timeslot_evening">晚上</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">周一</string>
+    <string name="day_tue_short">周二</string>
+    <string name="day_wed_short">周三</string>
+    <string name="day_thu_short">周四</string>
+    <string name="day_fri_short">周五</string>
+    <string name="day_sat_short">周六</string>
+    <string name="day_sun_short">周日</string>
+    <string name="day_mon_full">星期一</string>
+    <string name="day_tue_full">星期二</string>
+    <string name="day_wed_full">星期三</string>
+    <string name="day_thu_full">星期四</string>
+    <string name="day_fri_full">星期五</string>
+    <string name="day_sat_full">星期六</string>
+    <string name="day_sun_full">星期日</string>
+    <string name="error_chef_off_duty_format">厨师在%1$s休息。请选择其他可用日期。</string>
+    <string name="error_chef_not_available_morning_format">厨师在%1$s上午（8 AM - 12 PM）不可预约。</string>
+    <string name="error_chef_not_available_afternoon_format">厨师在%1$s下午（12 PM - 5 PM）不可预约。</string>
+    <string name="error_chef_not_available_evening_format">厨师在%1$s晚上（5 PM - 9 PM）不可预约。</string>
 </resources>

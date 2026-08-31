@@ -1472,4 +1472,47 @@
     <string name="error_wallet_invalid_amount">Please enter a valid top-up amount.</string>
     <string name="msg_wallet_top_up_success_format">Top-up of RM %1$s was successful!</string>
     <string name="error_wallet_top_up_failed">Top-up failed. Please try again.</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">Requested</string>
+    <string name="stepper_step_payment">Payment</string>
+    <string name="stepper_step_confirmed">Confirmed</string>
+    <string name="stepper_step_completed">Completed</string>
+    <string name="stepper_appointment_rejected">Appointment Rejected</string>
+    <string name="stepper_appointment_cancelled">Appointment Cancelled</string>
+    <string name="stepper_rejection_reason_format">Reason: %1$s</string>
+    <string name="stepper_rejection_default_subtitle">The chef declined this booking request.</string>
+    <string name="stepper_cancelled_default_subtitle">This booking has been cancelled.</string>
+    <string name="stepper_hint_pending">Awaiting chef review &amp; confirmation</string>
+    <string name="stepper_hint_unpaid">Chef accepted! Waiting for payment</string>
+    <string name="stepper_hint_confirmed">Scheduled &amp; confirmed. Chef will arrive on date</string>
+    <string name="stepper_hint_completed">Service completed &amp; verified via QR</string>
+    <string name="stepper_hint_in_progress">Booking in progress</string>
+    <string name="stepper_booking_lifecycle">Booking Lifecycle</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">Morning</string>
+    <string name="timeslot_afternoon">Afternoon</string>
+    <string name="timeslot_evening">Evening</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">Mon</string>
+    <string name="day_tue_short">Tue</string>
+    <string name="day_wed_short">Wed</string>
+    <string name="day_thu_short">Thu</string>
+    <string name="day_fri_short">Fri</string>
+    <string name="day_sat_short">Sat</string>
+    <string name="day_sun_short">Sun</string>
+    <string name="day_mon_full">Monday</string>
+    <string name="day_tue_full">Tuesday</string>
+    <string name="day_wed_full">Wednesday</string>
+    <string name="day_thu_full">Thursday</string>
+    <string name="day_fri_full">Friday</string>
+    <string name="day_sat_full">Saturday</string>
+    <string name="day_sun_full">Sunday</string>
+    <string name="error_chef_off_duty_format">Chef is off duty on %1$ss. Please choose an available date.</string>
+    <string name="error_chef_not_available_morning_format">Chef is not available in the Morning (8 AM - 12 PM) on %1$ss.</string>
+    <string name="error_chef_not_available_afternoon_format">Chef is not available in the Afternoon (12 PM - 5 PM) on %1$ss.</string>
+    <string name="error_chef_not_available_evening_format">Chef is not available in the Evening (5 PM - 9 PM) on %1$ss.</string>
 </resources>

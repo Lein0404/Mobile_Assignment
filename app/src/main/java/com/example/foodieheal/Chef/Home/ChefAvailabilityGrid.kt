@@ -170,7 +170,7 @@ fun ChefAvailabilityCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = slot.displayName,
+                            text = stringResource(slot.displayNameRes),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -218,7 +218,7 @@ fun ChefAvailabilityCard(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = dayKey.shortName,
+                                    text = stringResource(dayKey.shortNameRes),
                                     fontSize = 11.sp,
                                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isToday) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant

@@ -1463,7 +1463,7 @@
     <string name="error_payment_delete_method_failed">Gagal memadam kaedah pembayaran.</string>
     <string name="error_payment_set_default_failed">Gagal menetapkan kaedah pembayaran lalai.</string>
 
-    <!-- WalletViewModel.kt -->
+    <!-- WalletViewModel -->
     <string name="error_wallet_load_failed">Gagal memuatkan maklumat dompet.</string>
     <string name="wallet_default_top_up_description">Tambah Nilai Dompet</string>
     <string name="error_wallet_top_up_no_internet">Tiada sambungan internet. Sila semak rangkaian anda untuk menambah nilai dompet anda.</string>
@@ -1471,4 +1471,47 @@
     <string name="error_wallet_invalid_amount">Sila masukkan jumlah tambah nilai yang sah.</string>
     <string name="msg_wallet_top_up_success_format">Tambah nilai sebanyak RM %1$s telah berjaya!</string>
     <string name="error_wallet_top_up_failed">Tambah nilai gagal. Sila cuba lagi.</string>
+
+    <!-- AppointmentStatusStepper -->
+    <string name="stepper_step_requested">Diminta</string>
+    <string name="stepper_step_payment">Pembayaran</string>
+    <string name="stepper_step_confirmed">Disahkan</string>
+    <string name="stepper_step_completed">Selesai</string>
+    <string name="stepper_appointment_rejected">Temujanji Ditolak</string>
+    <string name="stepper_appointment_cancelled">Temujanji Dibatalkan</string>
+    <string name="stepper_rejection_reason_format">Sebab: %1$s</string>
+    <string name="stepper_rejection_default_subtitle">Chef telah menolak permintaan tempahan ini.</string>
+    <string name="stepper_cancelled_default_subtitle">Tempahan ini telah dibatalkan.</string>
+    <string name="stepper_hint_pending">Menunggu semakan &amp; pengesahan chef</string>
+    <string name="stepper_hint_unpaid">Chef telah menerima! Menunggu pembayaran</string>
+    <string name="stepper_hint_confirmed">Dijadualkan &amp; disahkan. Chef akan tiba pada tarikh tersebut</string>
+    <string name="stepper_hint_completed">Perkhidmatan selesai &amp; disahkan melalui QR</string>
+    <string name="stepper_hint_in_progress">Tempahan sedang diproses</string>
+    <string name="stepper_booking_lifecycle">Kitaran Hayat Tempahan</string>
+
+    <!-- ChefAvailability -->
+    <string name="timeslot_morning">Pagi</string>
+    <string name="timeslot_afternoon">Petang</string>
+    <string name="timeslot_evening">Malam</string>
+    <string name="timeslot_morning_range">8 AM - 12 PM</string>
+    <string name="timeslot_afternoon_range">12 PM - 5 PM</string>
+    <string name="timeslot_evening_range">5 PM - 9 PM</string>
+    <string name="day_mon_short">Isn</string>
+    <string name="day_tue_short">Sel</string>
+    <string name="day_wed_short">Rab</string>
+    <string name="day_thu_short">Kha</string>
+    <string name="day_fri_short">Jum</string>
+    <string name="day_sat_short">Sab</string>
+    <string name="day_sun_short">Aha</string>
+    <string name="day_mon_full">Isnin</string>
+    <string name="day_tue_full">Selasa</string>
+    <string name="day_wed_full">Rabu</string>
+    <string name="day_thu_full">Khamis</string>
+    <string name="day_fri_full">Jumaat</string>
+    <string name="day_sat_full">Sabtu</string>
+    <string name="day_sun_full">Ahad</string>
+    <string name="error_chef_off_duty_format">Chef tidak bertugas pada hari %1$s. Sila pilih tarikh yang tersedia.</string>
+    <string name="error_chef_not_available_morning_format">Chef tidak tersedia pada waktu Pagi (8 AM - 12 PM) pada hari %1$s.</string>
+    <string name="error_chef_not_available_afternoon_format">Chef tidak tersedia pada waktu Petang (12 PM - 5 PM) pada hari %1$s.</string>
+    <string name="error_chef_not_available_evening_format">Chef tidak tersedia pada waktu Malam (5 PM - 9 PM) pada hari %1$s.</string>
 </resources>

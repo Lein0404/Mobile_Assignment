@@ -429,7 +429,7 @@ fun HiringChefDetails(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = day.shortName,
+                                    text = stringResource(day.shortNameRes),
                                     fontSize = 12.sp,
                                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface

@@ -27,7 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.annotation.StringRes
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,11 +37,11 @@ import androidx.compose.ui.unit.sp
 import com.example.foodieheal.R
 import java.util.Locale
 
-enum class AppointmentProgressStep(val label: String, val iconRes: Int) {
-    REQUESTED("Requested", R.drawable.ic_clock),
-    PAYMENT("Payment", R.drawable.wallet),
-    CONFIRMED("Confirmed", R.drawable.ic_check_circle),
-    COMPLETED("Completed", R.drawable.ic_star)
+enum class AppointmentProgressStep(@get:StringRes val labelRes: Int, val iconRes: Int) {
+    REQUESTED(R.string.stepper_step_requested, R.drawable.ic_clock),
+    PAYMENT(R.string.stepper_step_payment, R.drawable.wallet),
+    CONFIRMED(R.string.stepper_step_confirmed, R.drawable.ic_check_circle),
+    COMPLETED(R.string.stepper_step_completed, R.drawable.ic_star)
 }
 
 
@@ -54,12 +56,19 @@ fun AppointmentStatusStepper(
     // Handle terminal negative states with an alert card
     if (cleanStatus == "cancelled" || cleanStatus == "rejected") {
         val isRejected = cleanStatus == "rejected"
-        val title = if (isRejected) "Appointment Rejected" else "Appointment Cancelled"
-        val subtitle = if (isRejected) {
-            if (!rejectionReason.isNullOrBlank()) "Reason: $rejectionReason"
-            else "The chef declined this booking request."
+        val title = if (isRejected) {
+            stringResource(R.string.stepper_appointment_rejected)
         } else {
-            "This booking has been cancelled."
+            stringResource(R.string.stepper_appointment_cancelled)
+        }
+        val subtitle = if (isRejected) {
+            if (!rejectionReason.isNullOrBlank()) {
+                stringResource(R.string.stepper_rejection_reason_format, rejectionReason)
+            } else {
+                stringResource(R.string.stepper_rejection_default_subtitle)
+            }
+        } else {
+            stringResource(R.string.stepper_cancelled_default_subtitle)
         }
 
         Card(
@@ -120,11 +129,11 @@ fun AppointmentStatusStepper(
     }
 
     val statusHint = when (cleanStatus) {
-        "pending" -> "Awaiting chef review & confirmation"
-        "unpaid" -> "Chef accepted! Waiting for payment"
-        "confirmed" -> "Scheduled & confirmed. Chef will arrive on date"
-        "completed" -> "Service completed & verified via QR"
-        else -> "Booking in progress"
+        "pending" -> stringResource(R.string.stepper_hint_pending)
+        "unpaid" -> stringResource(R.string.stepper_hint_unpaid)
+        "confirmed" -> stringResource(R.string.stepper_hint_confirmed)
+        "completed" -> stringResource(R.string.stepper_hint_completed)
+        else -> stringResource(R.string.stepper_hint_in_progress)
     }
 
     Card(
@@ -143,7 +152,7 @@ fun AppointmentStatusStepper(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Booking Lifecycle",
+                    text = stringResource(R.string.stepper_booking_lifecycle),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -160,6 +169,7 @@ fun AppointmentStatusStepper(
             ) {
                 val steps = AppointmentProgressStep.values()
                 steps.forEachIndexed { index, step ->
+                    val stepLabel = stringResource(step.labelRes)
                     val isCompleted = index < activeIndex
                     val isCurrent = index == activeIndex
 
@@ -202,7 +212,7 @@ fun AppointmentStatusStepper(
                                 painter = painterResource(
                                     id = if (isCompleted) R.drawable.ic_check else step.iconRes
                                 ),
-                                contentDescription = step.label,
+                                contentDescription = stepLabel,
                                 tint = iconTint,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -211,7 +221,7 @@ fun AppointmentStatusStepper(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = step.label,
+                            text = stepLabel,
                             fontSize = 10.sp,
                             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
                             color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
