@@ -3,6 +3,7 @@ package com.example.foodieheal.Chef.Home
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -97,6 +98,8 @@ fun AppointmentDetailScreen(
 
     val acceptedToastMsg = stringResource(R.string.booking_accepted)
     val declinedToastMsg = stringResource(R.string.booking_declined)
+    val openingCalendarToast = stringResource(R.string.toast_opening_calendar)
+    val serviceVerifiedCompletedToast = stringResource(R.string.toast_service_verified_completed)
 
     Scaffold(
         topBar = {
@@ -904,7 +907,7 @@ fun AppointmentDetailScreen(
                                 "Dietary Preference: ${appointment.Health_Preference}\n" +
                                 if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
 
-                        Toast.makeText(context, R.string.toast_opening_calendar, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, openingCalendarToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         CalendarSyncHelper.addAppointmentToCalendar(
                             context = context,
                             title = "FoodieHeal Session - Client $userName",
@@ -971,7 +974,7 @@ fun AppointmentDetailScreen(
                 Button(
                     onClick = {
                         showAcceptDialog = false
-                        Toast.makeText(context, acceptedToastMsg, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, acceptedToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         onStatusChange("Unpaid", null)
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -1043,7 +1046,7 @@ fun AppointmentDetailScreen(
                             rejectionReasonError = true
                         } else {
                             showDeclineDialog = false
-                            Toast.makeText(context, declinedToastMsg, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, declinedToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                             onStatusChange("Rejected", rejectionReason.trim())
                         }
                     },
@@ -1091,10 +1094,14 @@ fun AppointmentDetailScreen(
             onVerified = {
                 showQrScannerDialog = false
                 onStatusChange("Completed", null)
-                Toast.makeText(
+                Toasty.custom(
                     context,
-                    R.string.toast_service_verified_completed,
-                    Toast.LENGTH_LONG
+                    serviceVerifiedCompletedToast,
+                    R.drawable.foodieheallogo_removebg_and_word,
+                    R.color.black,
+                    Toast.LENGTH_LONG,
+                    true,
+                    true
                 ).show()
             },
             onDismiss = { showQrScannerDialog = false }

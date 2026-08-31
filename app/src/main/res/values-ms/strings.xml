@@ -1399,4 +1399,76 @@
     <string name="receipt_share_chooser_pdf">Kongsi resit PDF menggunakan</string>
     <string name="receipt_share_err_generate_image">Gagal menjana imej resit: %s</string>
     <string name="receipt_share_err_generate_pdf">Gagal menjana PDF resit: %s</string>
+
+    <!-- BookmarkViewModel.kt -->
+    <string name="toast_bookmark_removed">Dialih keluar %1$s daripada penanda buku</string>
+    <string name="toast_bookmark_added">Chef %1$s telah ditambah ke penanda buku</string>
+    <string name="toast_bookmark_failed">Gagal mengemas kini penanda buku</string>
+    <string name="toast_address_copied">Alamat disalin ke papan keratan</string>
+
+    <!-- AppointmentBookingViewModel.kt -->
+    <string name="error_booking_no_internet">Tiada sambungan internet. Sila sambung ke internet untuk melengkapkan tempahan.</string>
+    <string name="error_booking_invalid_parameters">Parameter tempahan tidak sah. Sila pilih chef yang sah.</string>
+    <string name="error_booking_select_date_time">Sila pilih tarikh dan slot masa janji temu yang sah.</string>
+    <string name="error_booking_time_slot_occupied">Slot masa yang dipilih telah diduduki oleh tempahan lain. Sila pilih masa yang lain.</string>
+    <string name="error_booking_invalid_time_range">Julat masa yang dipilih tidak sah. Masa tamat mestilah selepas masa mula.</string>
+    <string name="error_booking_invalid_address">Sila masukkan alamat janji temu yang sah.</string>
+    <string name="error_booking_invalid_postcode">Sila masukkan poskod Malaysia 5 digit yang sah.</string>
+    <string name="error_booking_invalid_state">Sila pilih negeri daripada senarai.</string>
+    <string name="error_booking_invalid_serving_size">Sila tentukan saiz hidangan yang sah lebih daripada 0.</string>
+    <string name="error_booking_invalid_description">Sila berikan nota acara atau butiran memasak untuk chef anda.</string>
+    <string name="error_booking_fix_errors">Sila semak borang dan betulkan ralat yang diserlahkan.</string>
+    <string name="error_booking_invalid_total_price">Pengiraan jumlah harga tidak sah. Jumlah harga mestilah melebihi sifar.</string>
+    <string name="error_booking_time_already_booked">Slot masa ini telah ditempah. Sila pilih masa yang lain.</string>
+    <string name="error_booking_create_failed">Gagal membuat janji temu: %1$s</string>
+    <string name="error_booking_unknown">Ralat tidak diketahui berlaku. Sila cuba lagi.</string>
+
+    <!-- UserAppointmentViewModel.kt -->
+    <string name="error_user_not_logged_in">Pengguna belum log masuk.</string>
+    <string name="error_failed_to_load_appointments">Gagal memuatkan janji temu</string>
+    <string name="error_failed_update_appointment_status">Gagal mengemas kini status janji temu</string>
+    <string name="error_failed_cancel_appointment">Gagal membatalkan janji temu: %1$s</string>
+    <string name="error_failed_reschedule_appointment">Gagal menjadualkan semula janji temu</string>
+
+    <!-- ReviewViewModel.kt -->
+    <string name="error_failed_to_load_reviews">Gagal memuatkan ulasan</string>
+    <string name="error_failed_to_submit_review">Gagal menghantar ulasan</string>
+
+    <!-- ChefListViewModel.kt -->
+    <string name="error_failed_fetch_chefs">Gagal mendapatkan profil chef</string>
+
+    <!-- ChefRegisterViewModel.kt -->
+    <string name="error_chef_registration_failed">Pendaftaran gagal. Sila cuba lagi.</string>
+    <string name="error_chef_upgrade_failed">Peningkatan status chef gagal. Sila cuba lagi.</string>
+
+    <!-- ChefAppointmentViewModel.kt -->
+    <string name="error_chef_user_not_logged_in">Pengguna belum log masuk.</string>
+    <string name="error_chef_load_appointments_failed">Gagal memuatkan janji temu</string>
+    <string name="error_chef_load_dashboard_failed">Gagal memuatkan papan pemuka</string>
+    <string name="error_chef_update_offline">Tidak dapat mengemas kini status janji temu semasa luar talian.</string>
+    <string name="error_chef_update_appointment_failed">Gagal mengemas kini janji temu: %1$s</string>
+
+    <!-- PaymentViewModel.kt -->
+    <string name="error_payment_load_appointment_failed">Gagal memuatkan butiran janji temu.</string>
+    <string name="error_payment_no_internet">Tiada sambungan internet. Sila sambung ke internet untuk melengkapkan pembayaran anda.</string>
+    <string name="error_payment_appointment_missing">Maklumat janji temu tiada.</string>
+    <string name="error_payment_invalid_appointment_id">ID Janji Temu tidak sah.</string>
+    <string name="error_payment_select_method">Sila pilih kaedah pembayaran.</string>
+    <string name="error_payment_processing_failed">Pemprosesan pembayaran gagal. Sila cuba lagi.</string>
+
+    <!-- PaymentMethodViewModel.kt -->
+    <string name="msg_payment_cached_cards_sync_failed">Menunjukkan kad yang dicache. Gagal menyegerak secara dalam talian.</string>
+    <string name="error_payment_no_internet_short">Tiada sambungan internet. Sila semak rangkaian anda.</string>
+    <string name="error_payment_save_card_failed">Gagal menyimpan kad.</string>
+    <string name="error_payment_delete_method_failed">Gagal memadam kaedah pembayaran.</string>
+    <string name="error_payment_set_default_failed">Gagal menetapkan kaedah pembayaran lalai.</string>
+
+    <!-- WalletViewModel.kt -->
+    <string name="error_wallet_load_failed">Gagal memuatkan maklumat dompet.</string>
+    <string name="wallet_default_top_up_description">Tambah Nilai Dompet</string>
+    <string name="error_wallet_top_up_no_internet">Tiada sambungan internet. Sila semak rangkaian anda untuk menambah nilai dompet anda.</string>
+    <string name="error_wallet_session_expired">Sesi pengguna telah tamat tempoh. Sila log masuk semula.</string>
+    <string name="error_wallet_invalid_amount">Sila masukkan jumlah tambah nilai yang sah.</string>
+    <string name="msg_wallet_top_up_success_format">Tambah nilai sebanyak RM %1$s telah berjaya!</string>
+    <string name="error_wallet_top_up_failed">Tambah nilai gagal. Sila cuba lagi.</string>
 </resources>

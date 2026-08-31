@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -639,7 +640,7 @@ fun AppointmentReviewScreen(
                 Button(
                     onClick = {
                         showConfirmationDialog = false
-                        Toast.makeText(context, processingToastMsg, Toast.LENGTH_SHORT).show()
+                        Toasty.custom(context, processingToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
 
                         viewModel.createAppointment(
                             userId = currentUserId,
@@ -649,11 +650,11 @@ fun AppointmentReviewScreen(
                             endTime = endTime,
                             totalPrice = totalPrice,
                             onSuccess = {
-                                Toast.makeText(context, successToastMsg, Toast.LENGTH_LONG).show()
+                                Toasty.custom(context, successToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                                 onFinalConfirm()
                             },
                             onError = { errorMsg ->
-                                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                                Toasty.custom(context, errorMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                             }
                         )
                     },

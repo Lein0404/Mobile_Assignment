@@ -1,6 +1,7 @@
 package com.example.foodieheal.Payment.Screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,6 +86,7 @@ fun PaymentScreen(
     onPaymentError: (errorMessage: String) -> Unit
 ) {
     val context = LocalContext.current
+    val paymentSuccessToast = stringResource(R.string.toast_payment_success)
     val activity = remember(context) { context.findFragmentActivity() }
     val biometricStatus = remember(context) { BiometricAuthManager.checkBiometricAvailability(context) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -309,7 +311,7 @@ fun PaymentScreen(
                         paymentViewModel.processPayment(
                             selectedMethod = methodState.selectedMethod,
                             onSuccess = { transactionId ->
-                                Toast.makeText(context, R.string.toast_payment_success, Toast.LENGTH_SHORT).show()
+                                Toasty.custom(context, paymentSuccessToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                 completedTransactionId = transactionId
                                 showCalendarPromptDialog = true
                             },
@@ -344,7 +346,7 @@ fun PaymentScreen(
                                         executePayment()
                                     },
                                     onError = { errorMsg ->
-                                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                        Toasty.custom(context, errorMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                     },
                                     onCancel = {
                                         // User cancelled biometric prompt - do nothing and remain on screen safely
@@ -510,7 +512,7 @@ fun PaymentScreen(
                         expiryDate = expiry,
                         onSuccess = { showAddCardSheet = false },
                         onError = { errorMsg ->
-                            Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                            Toasty.custom(context, errorMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                         }
                     )
                 }

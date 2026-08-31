@@ -3,6 +3,8 @@ package com.example.foodieheal.hiring.viewmodel
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
+import com.example.foodieheal.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -81,10 +83,10 @@ class BookmarkViewModel(
             try {
                 if (wasBookmarked) {
                     chefBookmarkRepo.removeBookmark(userId, chefId)
-                    Toast.makeText(context, "Removed $chefName from bookmarks", Toast.LENGTH_SHORT).show()
+                    Toasty.custom(context, context.getString(R.string.toast_bookmark_removed, chefName), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                 } else {
                     chefBookmarkRepo.addBookmark(userId, chefId)
-                    Toast.makeText(context, "Chef $chefName added to bookmarks", Toast.LENGTH_SHORT).show()
+                    Toasty.custom(context, context.getString(R.string.toast_bookmark_added, chefName), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                 }
 
                 fetchBookmarkedChefs(userId, forceRefresh = false)
@@ -96,7 +98,7 @@ class BookmarkViewModel(
                     bookmarkedChefIds - chefId
                 }
 
-                Toast.makeText(context, "Failed to update bookmark", Toast.LENGTH_SHORT).show()
+                Toasty.custom(context, context.getString(R.string.toast_bookmark_failed), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                 Log.e("BookmarkViewModel", "Error toggling bookmark", e)
             }
         }

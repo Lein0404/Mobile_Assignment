@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -127,6 +128,7 @@ fun UserAppointmentDetailScreen(
 
     val completedToast = stringResource(R.string.toast_booking_completed)
     val cancelledToast = stringResource(R.string.toast_appointment_cancelled)
+    val openingCalendarToast = stringResource(R.string.toast_opening_calendar)
 
     // Auto-poll while user displays the completion QR code so UI flips immediately when Chef scans it
     LaunchedEffect(showQrCodeDialog) {
@@ -142,7 +144,7 @@ fun UserAppointmentDetailScreen(
     LaunchedEffect(appointment.Status) {
         if (appointment.Status.equals("completed", ignoreCase = true) && showQrCodeDialog) {
             showQrCodeDialog = false
-            Toast.makeText(context, completedToast, Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, completedToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
             onRatingClick(appointment.AppointmentID.orEmpty())
         }
     }
@@ -910,7 +912,7 @@ fun UserAppointmentDetailScreen(
                                     "Health Preference: ${appointment.Health_Preference}\n" +
                                     if (appointment.Note.isNotBlank()) "Notes: ${appointment.Note}" else ""
 
-                            Toast.makeText(context, R.string.toast_opening_calendar, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, openingCalendarToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                             CalendarSyncHelper.addAppointmentToCalendar(
                                 context = context,
                                 title = "FoodieHeal Appointment - Chef $chefName",
@@ -1005,11 +1007,11 @@ fun UserAppointmentDetailScreen(
                         viewModel.cancelAppointment(
                             appointmentId = appointment.AppointmentID.orEmpty(),
                             onSuccess = {
-                                Toast.makeText(context, cancelledToast, Toast.LENGTH_SHORT).show()
+                                Toasty.custom(context, cancelledToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                 onBackClick()
                             },
                             onError = { errorMessage ->
-                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                                Toasty.custom(context, errorMessage, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                             }
                         )
                     },

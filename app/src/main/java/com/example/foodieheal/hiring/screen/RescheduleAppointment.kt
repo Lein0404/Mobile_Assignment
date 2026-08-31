@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -487,12 +488,12 @@ fun RescheduleAppointmentScreen(
                                 newTotalPrice = recalculatedTotalPrice,
                                 onSuccess = {
                                     isSubmitting = false
-                                    Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
+                                    Toasty.custom(context, successToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                     onRescheduleSuccess()
                                 },
                                 onError = { errorMsg ->
                                     isSubmitting = false
-                                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                                    Toasty.custom(context, errorMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                                 }
                             )
                         }

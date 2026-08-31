@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
+import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -41,7 +43,7 @@ object CalendarSyncHelper {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(context, "Could not open Calendar app.", Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, "Could not open Calendar app.", R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
         }
     }
 

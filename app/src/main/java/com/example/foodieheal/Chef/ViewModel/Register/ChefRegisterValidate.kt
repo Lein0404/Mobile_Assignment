@@ -168,32 +168,6 @@ object ChefRegisterValidate {
         return if (selectedImageUri == null) R.string.error_profile_picture_required else null
     }
 
-    fun canProceedBasicInfo(
-        name: String,
-        gender: String,
-        age: String,
-        password: String,
-        confirmPassword: String
-    ): Boolean {
-        return name.isNotBlank() &&
-                gender.isNotBlank() &&
-                age.isNotBlank() &&
-                password.isNotBlank() &&
-                confirmPassword.isNotBlank()
-    }
-
-    fun canProceedContactInfo(email: String, phoneNumber: String): Boolean {
-        return email.isNotBlank() && phoneNumber.isNotBlank()
-    }
-
-    fun canProceedAddressInfo(address: String, postcode: String, state: String): Boolean {
-        return address.isNotBlank() && postcode.isNotBlank() && state.isNotBlank()
-    }
-
-    fun canProceedDescriptionInfo(experience: String, description: String): Boolean {
-        return experience.isNotBlank() && description.isNotBlank()
-    }
-
     fun validateBasicInfo(
         name: String,
         gender: String,
@@ -214,16 +188,6 @@ object ChefRegisterValidate {
 
     fun validateAddressInfo(address: String, state: String, postcode: String): Boolean {
         return isValidAddress(address) && isValidState(state) && isValidPostcode(postcode)
-    }
-
-    fun canProceedBasicInfoUpgrade(
-        name: String,
-        gender: String,
-        age: String
-    ): Boolean {
-        return name.isNotBlank() &&
-                gender.isNotBlank() &&
-                age.isNotBlank()
     }
 
     fun validateBasicInfoUpgrade(

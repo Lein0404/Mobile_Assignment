@@ -1,6 +1,8 @@
 package com.example.foodieheal.hiring.viewmodel
 
 import android.util.Log
+import com.example.foodieheal.R
+import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.hiring.data.AppointmentConflictException
@@ -35,6 +37,10 @@ class AppointmentBookingViewModel(
     private val networkMonitor: NetworkMonitor? = null,
     private val recipeRepository: RecipeRepository = RecipeRepository()
 ) : ViewModel() {
+
+    private fun resString(resId: Int, vararg args: Any): String? {
+        return MainActivity.appContext?.getString(resId, *args)
+    }
 
     private val _selectedChef = MutableStateFlow<Chef?>(null)
     val selectedChef: StateFlow<Chef?> = _selectedChef.asStateFlow()
@@ -528,17 +534,17 @@ class AppointmentBookingViewModel(
         onError: (String) -> Unit
     ) {
         if (!_isNetworkAvailable.value) {
-            onError("No internet connection. Please connect to the internet to complete booking.")
+            onError(resString(R.string.error_booking_no_internet) ?: "No internet connection. Please connect to the internet to complete booking.")
             return
         }
 
         if (userId.isBlank() || chefId.isBlank()) {
-            onError("Invalid booking parameters. Please select a valid chef.")
+            onError(resString(R.string.error_booking_invalid_parameters) ?: "Invalid booking parameters. Please select a valid chef.")
             return
         }
 
         if (selectedDate.isBlank() || startTime.isBlank() || endTime.isBlank()) {
-            onError("Please select a valid appointment date and time slot.")
+            onError(resString(R.string.error_booking_select_date_time) ?: "Please select a valid appointment date and time slot.")
             return
         }
 
@@ -560,27 +566,27 @@ class AppointmentBookingViewModel(
             _uiState.update { it.copy(errors = validationErrors, hasAttemptedSubmit = true) }
             val firstErrorMessage = when {
                 validationErrors.contains(AppointmentValidationError.TimeSlotOccupied) ->
-                    "The selected time slot is already occupied by another booking. Please choose a different time."
+                    resString(R.string.error_booking_time_slot_occupied) ?: "The selected time slot is already occupied by another booking. Please choose a different time."
                 validationErrors.contains(AppointmentValidationError.InvalidTime) ->
-                    "Invalid time range selected. End time must be after start time."
+                    resString(R.string.error_booking_invalid_time_range) ?: "Invalid time range selected. End time must be after start time."
                 validationErrors.contains(AppointmentValidationError.InvalidAddress) ->
-                    "Please enter a valid appointment address."
+                    resString(R.string.error_booking_invalid_address) ?: "Please enter a valid appointment address."
                 validationErrors.contains(AppointmentValidationError.InvalidPostcode) ->
-                    "Please enter a valid 5-digit Malaysian postcode."
+                    resString(R.string.error_booking_invalid_postcode) ?: "Please enter a valid 5-digit Malaysian postcode."
                 validationErrors.contains(AppointmentValidationError.InvalidState) ->
-                    "Please select a state from the dropdown."
+                    resString(R.string.error_booking_invalid_state) ?: "Please select a state from the dropdown."
                 validationErrors.contains(AppointmentValidationError.InvalidServingSize) ->
-                    "Please specify a valid party / serving size greater than 0."
+                    resString(R.string.error_booking_invalid_serving_size) ?: "Please specify a valid party / serving size greater than 0."
                 validationErrors.contains(AppointmentValidationError.InvalidDescription) ->
-                    "Please provide event notes or cooking details for your chef."
-                else -> "Please check the form and fix the highlighted errors."
+                    resString(R.string.error_booking_invalid_description) ?: "Please provide event notes or cooking details for your chef."
+                else -> resString(R.string.error_booking_fix_errors) ?: "Please check the form and fix the highlighted errors."
             }
             onError(firstErrorMessage)
             return
         }
 
         if (totalPrice <= 0.0) {
-            onError("Invalid total price calculation. Total price must be greater than zero.")
+            onError(resString(R.string.error_booking_invalid_total_price) ?: "Invalid total price calculation. Total price must be greater than zero.")
             return
         }
 
@@ -617,11 +623,14 @@ class AppointmentBookingViewModel(
                         errors = it.errors + AppointmentValidationError.TimeSlotOccupied
                     )
                 }
-                onError(e.message ?: "This time slot is already booked. Please choose a different time.")
+                onError(e.message ?: (resString(R.string.error_booking_time_already_booked) ?: "This time slot is already booked. Please choose a different time."))
             } catch (e: Exception) {
                 Log.e("AppointmentBookingVM", "Error creating appointment in repository", e)
                 _uiState.update { it.copy(isSubmitting = false) }
-                onError("Failed to create appointment: ${e.localizedMessage ?: "Unknown error occurred. Please try again."}")
+                val unknownErr = resString(R.string.error_booking_unknown) ?: "Unknown error occurred. Please try again."
+                val errorDetail = e.localizedMessage ?: unknownErr
+                val errMsg = resString(R.string.error_booking_create_failed, errorDetail) ?: "Failed to create appointment: $errorDetail"
+                onError(errMsg)
             }
         }
     }

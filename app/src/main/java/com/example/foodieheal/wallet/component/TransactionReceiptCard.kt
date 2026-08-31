@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -46,6 +47,7 @@ fun TransactionReceiptCard(
     val statusBg = if (isCredit) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
     val transactionIdLabel = stringResource(R.string.receipt_label_transaction_id)
     val recentFallback = stringResource(R.string.receipt_date_recent)
+    val copiedToast = stringResource(R.string.receipt_toast_copied)
 
     val formattedDate = formatReceiptDate(transaction.createdAt, recentFallback)
 
@@ -260,7 +262,7 @@ fun TransactionReceiptCard(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 clipboard.setPrimaryClip(ClipData.newPlainText(transactionIdLabel, transaction.id))
-                                Toast.makeText(context, R.string.receipt_toast_copied, Toast.LENGTH_SHORT).show()
+                                Toasty.custom(context, copiedToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                             },
                             modifier = Modifier.size(24.dp)
                         ) {

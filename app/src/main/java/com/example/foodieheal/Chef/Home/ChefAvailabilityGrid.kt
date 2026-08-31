@@ -1,6 +1,7 @@
 package com.example.foodieheal.Chef.Home
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -257,11 +258,11 @@ fun ChefAvailabilityCard(
                         weeklyAvailability = availability,
                         onSuccess = {
                             isSaving = false
-                            Toast.makeText(context, saveSuccessMsg, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, saveSuccessMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                         },
                         onError = { errorMsg ->
                             isSaving = false
-                            Toast.makeText(context, String.format(Locale.getDefault(), saveErrorFormat, errorMsg), Toast.LENGTH_LONG).show()
+                            Toasty.custom(context, String.format(Locale.getDefault(), saveErrorFormat, errorMsg), R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                         }
                     )
                 },

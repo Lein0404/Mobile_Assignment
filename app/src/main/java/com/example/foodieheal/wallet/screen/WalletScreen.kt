@@ -1,6 +1,7 @@
 package com.example.foodieheal.wallet.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -65,6 +66,8 @@ fun WalletScreen(
 
     val defaultTopUpDesc = stringResource(R.string.wallet_top_up_default_desc)
     val topUpViaFormat = stringResource(R.string.wallet_top_up_via_format)
+    val offlineCannotRefreshToast = stringResource(R.string.wallet_offline_cannot_refresh)
+    val offlineCannotTopUpToast = stringResource(R.string.wallet_offline_cannot_top_up)
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
@@ -82,7 +85,7 @@ fun WalletScreen(
 
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { msg ->
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            Toasty.custom(context, msg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
             viewModel.clearMessages()
         }
     }
@@ -120,7 +123,7 @@ fun WalletScreen(
                 if (isOnline) {
                     viewModel.loadWalletData(userId, isRefresh = true)
                 } else {
-                    Toast.makeText(context, R.string.wallet_offline_cannot_refresh, Toast.LENGTH_SHORT).show()
+                    Toasty.custom(context, offlineCannotRefreshToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                 }
             },
             modifier = Modifier
@@ -172,7 +175,7 @@ fun WalletScreen(
                                 if (isOnline) {
                                     showTopUpSheet = true
                                 } else {
-                                    Toast.makeText(context, R.string.wallet_offline_cannot_top_up, Toast.LENGTH_SHORT).show()
+                                    Toasty.custom(context, offlineCannotTopUpToast, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                                 }
                             }
                         )
@@ -291,7 +294,7 @@ fun WalletScreen(
                         showTopUpSheet = false
                     },
                     onError = { err ->
-                        Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                        Toasty.custom(context, err, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                     }
                 )
             }

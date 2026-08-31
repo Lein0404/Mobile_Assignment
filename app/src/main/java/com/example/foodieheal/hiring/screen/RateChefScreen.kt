@@ -1,6 +1,7 @@
 package com.example.foodieheal.hiring.screen
 
 import android.widget.Toast
+import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -299,12 +300,12 @@ fun RateChefScreen(
                         comment = comment.trim(),
                         onSuccess = {
                             isSubmitting = false
-                            Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
+                            Toasty.custom(context, successToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
                             onSubmitSuccess()
                         },
                         onError = { err ->
                             isSubmitting = false
-                            Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                            Toasty.custom(context, err, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_LONG, true, true).show()
                         }
                     )
                 },
