@@ -28,6 +28,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import com.example.foodieheal.Recipe.View.getCourseDisplay
+import com.example.foodieheal.Recipe.View.getCookingSkillDisplay
+import com.example.foodieheal.Recipe.View.getBudgetDisplay
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -86,6 +90,7 @@ fun ProfileScreen(
     val effectiveCustomId = if (isVisitor) targetCustomId else user?.customId
     
     val primaryColor = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
     val view = LocalView.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -99,9 +104,9 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         authViewModel.profileEvents.collect { event ->
             val message = when(event) {
-                is AuthViewModel.ProfileEvent.PasswordSuccess -> "Password updated successfully!"
-                is AuthViewModel.ProfileEvent.ProfileSuccess -> "Profile updated successfully!"
-                is AuthViewModel.ProfileEvent.BodyStatusSuccess -> "Body status updated successfully!"
+                is AuthViewModel.ProfileEvent.PasswordSuccess -> context.getString(R.string.msg_password_updated)
+                is AuthViewModel.ProfileEvent.ProfileSuccess -> context.getString(R.string.msg_profile_updated)
+                is AuthViewModel.ProfileEvent.BodyStatusSuccess -> context.getString(R.string.msg_body_status_updated)
             }
             snackbarHostState.showSnackbar(message)
         }
@@ -174,6 +179,7 @@ fun ProfileScreen(
     var showRecipeFilterSheet by remember { mutableStateOf(false) }
     
     var selectedCourse by remember { mutableStateOf("All") }
+    val courseAll = stringResource(R.string.course_all)
     val courses = listOf("All", "Breakfast", "Lunch", "Dinner", "Snack")
 
     val myRecipes = remember(viewModel.myRecipes, followViewModel.followStatus, isMyProfile) {
@@ -237,7 +243,7 @@ fun ProfileScreen(
                         .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp)
                         .navigationBarsPadding()
                 ) {
-                    Text(text = "Menu", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
+                    Text(text = stringResource(R.string.menu_title), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(24.dp))
@@ -247,31 +253,31 @@ fun ProfileScreen(
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        DrawerItem("Edit Profile", R.drawable.ic_edit) {
+                        DrawerItem(stringResource(R.string.menu_edit_profile), R.drawable.ic_edit) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.EditProfile.route)
                             }
                         }
-                        DrawerItem("Edit Body Status", R.drawable.ic_outline_account_circle) {
+                        DrawerItem(stringResource(R.string.menu_edit_body_status), R.drawable.ic_outline_account_circle) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.EditBodyStatus.route)
                             }
                         }
-                        DrawerItem("View & Request Ingredients", R.drawable.ic_ingredient_list) {
+                        DrawerItem(stringResource(R.string.menu_view_request_ingredients), R.drawable.ic_ingredient_list) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.Ingredients.route)
                             }
                         }
-                        DrawerItem("My Shopping Lists", R.drawable.ic_shopping_cart) {
+                        DrawerItem(stringResource(R.string.menu_my_shopping_lists), R.drawable.ic_shopping_cart) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.ShoppingListHome.route)
                             }
                         }
-                        DrawerItem("Become a Chef", R.drawable.ic_hiring) {
+                        DrawerItem(stringResource(R.string.menu_become_a_chef), R.drawable.ic_hiring) {
                             scope.launch {
                                 drawerState.close()
                                 authViewModel.checkChefApplicationStatus { existingChef ->
@@ -279,12 +285,17 @@ fun ProfileScreen(
                                     val effectiveEmail = authViewModel.getEffectiveUserEmail()
 
                                     if (existingChef != null) {
+                                        val applicationUnderReviewTitle = context.getString(R.string.chef_app_review_title)
+                                        val applicationUnderReviewText = context.getString(R.string.chef_app_review_text)
+                                        val chefAccountActiveTitle = context.getString(R.string.chef_app_active_title)
+                                        val chefAccountActiveText = context.getString(R.string.chef_app_active_text)
+
                                         when (existingChef.status.lowercase()) {
                                             "pending" -> {
-                                                chefStatusDialogInfo = "Application Under Review" to "Your chef application is currently under review by our administrators. Please wait for approval."
+                                                chefStatusDialogInfo = applicationUnderReviewTitle to applicationUnderReviewText
                                             }
                                             "approved" -> {
-                                                chefStatusDialogInfo = "Chef Account Active" to "You are already an approved Chef! Please use the Chef Login Portal from the login screen to access your chef dashboard."
+                                                chefStatusDialogInfo = chefAccountActiveTitle to chefAccountActiveText
                                             }
                                             "rejected" -> {
                                                 showReapplyDialog = true
@@ -301,28 +312,28 @@ fun ProfileScreen(
                                 }
                             }
                         }
-                        DrawerItem("Appointment History", R.drawable.ic_calendar) {
+                        DrawerItem(stringResource(R.string.menu_appointment_history), R.drawable.ic_calendar) {
                             navController.navigate(Screen.AppoinmtmentHistory.route)
                         }
-                        DrawerItem("Follow Requests", R.drawable.follower) {
+                        DrawerItem(stringResource(R.string.menu_follow_requests), R.drawable.follower) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.FollowRequests.route)
                             }
                         }
-                        DrawerItem("My Wallet", R.drawable.wallet) {
+                        DrawerItem(stringResource(R.string.menu_my_wallet), R.drawable.wallet) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.Wallet.route)
                             }
                         }
-                        DrawerItem("Payment Methods", R.drawable.dollar_symbol) {
+                        DrawerItem(stringResource(R.string.menu_payment_methods), R.drawable.dollar_symbol) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.PaymentMethod.route)
                             }
                         }
-                        DrawerItem("Change Password", R.drawable.changepassword4) {
+                        DrawerItem(stringResource(R.string.menu_change_password), R.drawable.changepassword4) {
                             scope.launch {
                                 drawerState.close()
                                 navController.navigate(Screen.ChangePassword.route)
@@ -344,7 +355,7 @@ fun ProfileScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Logout", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -380,7 +391,7 @@ fun ProfileScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 painter = painterResource(id = if (isMyProfile) R.drawable.ic_hamburger_menu else R.drawable.ic_arrowback),
-                                contentDescription = if (isMyProfile) "Menu" else "Back",
+                                contentDescription = if (isMyProfile) stringResource(R.string.menu_title) else stringResource(R.string.cd_back),
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp).clickable {
                                     if (isMyProfile) {
@@ -392,7 +403,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Text(
-                                text = "Profile",
+                                text = stringResource(R.string.nav_profile),
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
@@ -472,7 +483,7 @@ fun ProfileScreen(
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (displayUser == null && isVisitor) "Offline User" else (displayUser?.name ?: ""),
+                                    text = if (displayUser == null && isVisitor) stringResource(R.string.profile_offline_user) else (displayUser?.name ?: ""),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold,
@@ -506,7 +517,7 @@ fun ProfileScreen(
                                             }
                                         }
                                         Text(
-                                            text = "Followers",
+                                            text = stringResource(R.string.profile_followers),
                                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                                             fontSize = 11.sp
                                         )
@@ -537,7 +548,7 @@ fun ProfileScreen(
                                             }
                                         }
                                         Text(
-                                            text = "Following",
+                                            text = stringResource(R.string.profile_following),
                                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                                             fontSize = 11.sp
                                         )
@@ -547,10 +558,10 @@ fun ProfileScreen(
                                 if (isVisitor && user != null && targetCustomId != null) {
                                     val status = followViewModel.followStatus
                                     val buttonText = when (status) {
-                                        null -> "Follow"
-                                        "PENDING" -> "Request Sent"
-                                        "ACCEPTED" -> "Unfollow"
-                                        else -> "Follow"
+                                        null -> stringResource(R.string.btn_follow)
+                                        "PENDING" -> stringResource(R.string.btn_request_sent)
+                                        "ACCEPTED" -> stringResource(R.string.btn_unfollow)
+                                        else -> stringResource(R.string.btn_follow)
                                     }
                                     Button(
                                         onClick = {
@@ -584,7 +595,7 @@ fun ProfileScreen(
                             )
                         } else if (displayUser == null && isVisitor) {
                             Text(
-                                text = "Cannot load profile while offline.",
+                                text = stringResource(R.string.profile_offline_cannot_load),
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                                 fontSize = 12.sp,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
@@ -622,13 +633,13 @@ fun ProfileScreen(
                                 Tab(
                                     selected = selectedMainTab == 0,
                                     onClick = { selectedMainTab = 0 },
-                                    text = { Text(if (isMyProfile) "User Recipes" else "Recipes", fontWeight = FontWeight.Bold) }
+                                    text = { Text(if (isMyProfile) stringResource(R.string.tab_user_recipes) else stringResource(R.string.tab_recipes), fontWeight = FontWeight.Bold) }
                                 )
                                 if (isMyProfile) {
                                     Tab(
                                         selected = selectedMainTab == 1,
                                         onClick = { selectedMainTab = 1 },
-                                        text = { Text("Bookmarks", fontWeight = FontWeight.Bold) }
+                                        text = { Text(stringResource(R.string.tab_bookmarks), fontWeight = FontWeight.Bold) }
                                     )
                                 }
                             }
@@ -654,7 +665,7 @@ fun ProfileScreen(
                                 OutlinedTextField(
                                     value = chefFilterState.searchQuery,
                                     onValueChange = { chefFilterState = chefFilterState.copy(searchQuery = it) },
-                                    placeholder = { Text("Search chefs here", fontSize = 14.sp) },
+                                    placeholder = { Text(stringResource(R.string.placeholder_search_chefs), fontSize = 14.sp) },
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),
@@ -694,7 +705,7 @@ fun ProfileScreen(
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.filter),
-                                                contentDescription = "Filter",
+                                                contentDescription = stringResource(R.string.title_filter_recipes_sheet),
                                                 modifier = Modifier.size(20.dp),
                                                 tint = if (chefFilterState.activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurface
                                             )
@@ -735,7 +746,7 @@ fun ProfileScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "Recipes",
+                                            stringResource(R.string.tab_recipes),
                                             color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold
@@ -758,7 +769,7 @@ fun ProfileScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "Chefs",
+                                            stringResource(R.string.tab_chefs),
                                             color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold
@@ -789,7 +800,7 @@ fun ProfileScreen(
                                     },
                                     placeholder = { 
                                         Text(
-                                            if (selectedMainTab == 0) "Search recipes here" else "Search recipes/authors", 
+                                            if (selectedMainTab == 0) stringResource(R.string.placeholder_search_recipes_here) else stringResource(R.string.placeholder_search_recipes_authors), 
                                             fontSize = 14.sp
                                         ) 
                                     },
@@ -823,7 +834,7 @@ fun ProfileScreen(
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.filter),
-                                            contentDescription = "Filter",
+                                            contentDescription = stringResource(R.string.title_filter_recipes_sheet),
                                             modifier = Modifier.size(20.dp),
                                             tint = MaterialTheme.colorScheme.onSurface
                                         )
@@ -865,7 +876,7 @@ fun ProfileScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                "Recipes",
+                                                stringResource(R.string.tab_recipes),
                                                 color = if (!showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontSize = 15.sp,
                                                 fontWeight = FontWeight.Bold
@@ -888,7 +899,7 @@ fun ProfileScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                "Chefs",
+                                                stringResource(R.string.tab_chefs),
                                                 color = if (showChefBookmarks) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontSize = 15.sp,
                                                 fontWeight = FontWeight.Bold
@@ -906,7 +917,7 @@ fun ProfileScreen(
                                         onClick = { selectedCourse = course },
                                         label = { 
                                             Text(
-                                                text = course, 
+                                                text = getCourseDisplay(course), 
                                                 fontSize = 15.sp, 
                                                 modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp)
                                             ) 
@@ -939,7 +950,7 @@ fun ProfileScreen(
                     } else {
                         val filtered = myRecipes.filter { recipe ->
                             val matchesSearch = recipe.recipeName.contains(userRecipesSearchQuery, true)
-                            val matchesCourse = selectedCourse == "All" || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
+                            val matchesCourse = selectedCourse == courseAll || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
                             val matchesTime = recipe.time <= filterMaxTime.toInt()
                             val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
                             val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
@@ -1019,7 +1030,7 @@ fun ProfileScreen(
 
                                 val matchesSearch = (recipe.recipeName.contains(bookmarksSearchQuery, true) || 
                                                    recipe.authorName?.contains(bookmarksSearchQuery, true) == true)
-                                val matchesCourse = selectedCourse == "All" || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
+                                val matchesCourse = selectedCourse == courseAll || recipe.recipeCourse.equals(selectedCourse, ignoreCase = true)
                                 val matchesTime = recipe.time <= filterMaxTime.toInt()
                                 val matchesCalories = recipe.calories <= filterMaxCalories.toInt()
                                 val matchesSkill = filterSkill == null || recipe.cookingSkill.equals(filterSkill, ignoreCase = true)
@@ -1082,8 +1093,8 @@ fun ProfileScreen(
                                 item(span = { GridItemSpan(2) }) {
                                     EmptyState(
                                         iconRes = R.drawable.ic_hiring,
-                                        title = if (chefFilterState.isFilterActive) "No chefs match filters" else stringResource(R.string.empty_no_bookmarked_chefs),
-                                        subtitle = if (chefFilterState.isFilterActive) "Try resetting your search or filters" else stringResource(R.string.empty_bookmarked_chefs_sub)
+                                        title = if (chefFilterState.isFilterActive) stringResource(R.string.error_no_chefs_match_filters) else stringResource(R.string.empty_no_bookmarked_chefs),
+                                        subtitle = if (chefFilterState.isFilterActive) stringResource(R.string.desc_reset_search_filters) else stringResource(R.string.empty_bookmarked_chefs_sub)
                                     )
                                 }
                             } else {
@@ -1116,8 +1127,8 @@ fun ProfileScreen(
     if (recipeToDelete != null) {
         AlertDialog(
             onDismissRequest = { recipeToDelete = null },
-            title = { Text("Delete Recipe") },
-            text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+            title = { Text(stringResource(R.string.dialog_delete_recipe_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_recipe_text, recipeToDelete?.recipeName ?: "")) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -1129,12 +1140,12 @@ fun ProfileScreen(
                         recipeToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.delete_action), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recipeToDelete = null }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -1157,7 +1168,7 @@ fun ProfileScreen(
             text = { Text(message) },
             confirmButton = {
                 Button(onClick = { chefStatusDialogInfo = null }) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -1166,20 +1177,20 @@ fun ProfileScreen(
     if (showReapplyDialog) {
         AlertDialog(
             onDismissRequest = { showReapplyDialog = false },
-            title = { Text("Re-apply as Chef", fontWeight = FontWeight.Bold) },
-            text = { Text("Your previous application was rejected. Would you like to submit an updated application?") },
+            title = { Text(stringResource(R.string.dialog_reapply_chef_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.dialog_reapply_chef_text)) },
             confirmButton = {
                 Button(onClick = {
                     showReapplyDialog = false
                     chefRegisterViewModel.initForUpgrade(user, user?.email.orEmpty(), user?.id.orEmpty())
                     navController.navigate(Screen.BasicInfo.route)
                 }) {
-                    Text("Re-apply")
+                    Text(stringResource(R.string.btn_reapply))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showReapplyDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
@@ -1277,14 +1288,13 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Filter Recipes",
+                        text = stringResource(R.string.title_filter_recipes_sheet),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1296,15 +1306,15 @@ fun ProfileScreen(
                         filterIngredients = emptySet()
                         ingredientSearchQuery = ""
                     }) {
-                        Text("Reset All", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.btn_reset_all), color = MaterialTheme.colorScheme.error)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 1. Max Prep Time
-                FilterSectionHeader(icon = R.drawable.ic_clock, title = "Max Prep Time")
-                val timeDisplay = if (filterMaxTime >= 240f) "Any Time" else "${filterMaxTime.toInt()} mins"
+                FilterSectionHeader(icon = R.drawable.ic_clock, title = stringResource(R.string.label_max_prep_time_sheet))
+                val timeDisplay = if (filterMaxTime >= 240f) stringResource(R.string.value_any_time) else stringResource(R.string.format_recipe_duration, filterMaxTime.toInt())
                 Text(timeDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Slider(
                     value = filterMaxTime,
@@ -1320,8 +1330,8 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 2. Max Calories
-                FilterSectionHeader(icon = R.drawable.ic_fire, title = "Max Calories")
-                val calDisplay = if (filterMaxCalories >= 5000f) "Any Calories" else "${filterMaxCalories.toInt()} kcal"
+                FilterSectionHeader(icon = R.drawable.ic_fire, title = stringResource(R.string.label_max_calories_sheet))
+                val calDisplay = if (filterMaxCalories >= 5000f) stringResource(R.string.value_any_calories) else stringResource(R.string.format_recipe_calories, filterMaxCalories.toInt())
                 Text(calDisplay, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Slider(
                     value = filterMaxCalories,
@@ -1337,12 +1347,12 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 3. Ingredients
-                FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = "Ingredients")
+                FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = stringResource(R.string.label_ingredients))
                 
                 OutlinedTextField(
                     value = ingredientSearchQuery,
                     onValueChange = { ingredientSearchQuery = it },
-                    placeholder = { Text("Search ingredients...", fontSize = 14.sp) },
+                    placeholder = { Text(stringResource(R.string.placeholder_search_ingredients_sheet), fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -1385,7 +1395,7 @@ fun ProfileScreen(
                     if (filterIngredients.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Selected (${filterIngredients.size}):",
+                            text = stringResource(R.string.label_selected_count, filterIngredients.size),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -1403,7 +1413,7 @@ fun ProfileScreen(
                                     trailingIcon = {
                                         Icon(
                                             painter = painterResource(id = R.drawable.cancel),
-                                            contentDescription = "Remove",
+                                            contentDescription = stringResource(R.string.remove),
                                             modifier = Modifier.size(14.dp)
                                         )
                                     },
@@ -1417,13 +1427,13 @@ fun ProfileScreen(
                         }
                     }
                 } else {
-                    Text("Loading ingredients...", fontSize = 12.sp, color = Color.Gray)
+                    Text(stringResource(R.string.label_loading_ingredients), fontSize = 12.sp, color = Color.Gray)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 4. Cooking Skill
-                FilterSectionHeader(icon = R.drawable.skill, title = "Cooking Skill")
+                FilterSectionHeader(icon = R.drawable.skill, title = stringResource(R.string.label_cooking_skill))
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1432,7 +1442,7 @@ fun ProfileScreen(
                         FilterChip(
                             selected = filterSkill == skill,
                             onClick = { filterSkill = if (filterSkill == skill) null else skill },
-                            label = { Text(skill) },
+                            label = { Text(getCookingSkillDisplay(skill)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -1444,7 +1454,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 5. Budget
-                FilterSectionHeader(icon = R.drawable.dollar_symbol, title = "Budget (RM)")
+                FilterSectionHeader(icon = R.drawable.dollar_symbol, title = stringResource(R.string.label_budget_rm))
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1453,7 +1463,7 @@ fun ProfileScreen(
                         FilterChip(
                             selected = filterBudget == budget,
                             onClick = { filterBudget = if (filterBudget == budget) null else budget },
-                            label = { Text(budget) },
+                            label = { Text(getBudgetDisplay(budget)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.primary
@@ -1471,7 +1481,7 @@ fun ProfileScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Apply Filters", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.btn_apply_filters_sheet), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
                 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -1584,7 +1594,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(
-                        text = "$${chef.Pricing?.toInt() ?: 0}/hr",
+                        text = stringResource(R.string.format_hourly_rate_short, chef.Pricing?.toInt() ?: 0),
                         color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -1600,7 +1610,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = chef.name.ifEmpty { "Chef" },
+                    text = chef.name.ifEmpty { stringResource(R.string.default_chef_name) },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
@@ -1619,13 +1629,13 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(R.drawable.ic_star),
-                            contentDescription = "Rating",
+                            contentDescription = stringResource(R.string.rating_star),
                             modifier = Modifier.size(13.dp),
                             tint = Color(0xFFFFB300)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "${chef.averagerating ?: "N/A"}",
+                            text = "${chef.averagerating ?: stringResource(R.string.not_available)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Text
@@ -1638,7 +1648,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = "${chef.experience} yrs exp",
+                            text = stringResource(R.string.format_experience_short, chef.experience),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text

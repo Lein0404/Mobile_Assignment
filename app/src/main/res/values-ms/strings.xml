@@ -49,6 +49,8 @@
     <string name="select_image">Pilih imej</string>
     <string name="change_image">Tukar imej</string>
     <string name="remove_image">Buang imej</string>
+    <string name="upload_recipe_image">Muat Naik Imej Resipi</string>
+    <string name="change_recipe_image">Tukar Imej Resipi</string>
     <string name="image_unavailable">Tiada imej tersedia</string>
     <string name="upload_failed">Gagal memuat naik imej.</string>
 
@@ -141,6 +143,69 @@
     <string name="desc_no_network">Tiada rangkaian tersedia</string>
     <string name="share">Kongsi</string>
 
+    <!-- Recipe Form -->
+    <string name="add_recipe_title">Tambah Resipi</string>
+    <string name="edit_recipe_title">Edit Resipi</string>
+    <string name="label_recipe_name">Nama Resipi</string>
+    <string name="label_description_optional">Penerangan (Pilihan)</string>
+    <string name="label_total_time_min">Jumlah Masa (min)</string>
+    <string name="label_calories_kcal">Kalori (kcal)</string>
+    <string name="label_visibility">Kelihatan</string>
+    <string name="label_recipe_steps">Langkah-langkah Resipi</string>
+    <string name="tip_recipe_steps">Tip: Tekan \'Enter\' untuk langkah baru; nombor ditambah secara automatik.</string>
+    <string name="placeholder_recipe_description">Apa yang memberi inspirasi kepada anda untuk membuat resipi ini…</string>
+    <string name="placeholder_steps">1. Masak Pasta</string>
+    <string name="placeholder_time">cth. 30</string>
+    <string name="placeholder_calories">0</string>
+    <string name="btn_reset_ingredients">Kosongkan Bahan</string>
+    <string name="btn_add_ingredient">Tambah Bahan</string>
+    <string name="error_form_invalid">Sila isi semua ruangan dengan maklumat yang sah.</string>
+    <string name="error_time_limit">Masa tidak boleh melebihi 24 jam.</string>
+    <string name="dialog_reset_ingredients_title">Kosongkan Bahan?</string>
+    <string name="dialog_reset_ingredients_text">Adakah anda pasti mahu memadamkan semua bahan yang telah dimasukkan?</string>
+    <string name="help_ingredient_title">Tidak dapat mencari bahan?</string>
+    <string name="help_ingredient_text">Anda boleh memohon bahan yang hilang di menu \"Lihat &amp; Mohon Bahan\" di bawah Profil. Pakar kami akan menyemak dan meluluskannya dengan segera!</string>
+    <string name="btn_add_recipe">TAMBAH RESIPI</string>
+    <string name="btn_save_recipe">SIMPAN PERUBAHAN</string>
+
+    <!-- Recipe Details -->
+    <string name="view_recipe_title">Lihat Resipi</string>
+    <string name="menu_edit_recipe">Edit Resipi</string>
+    <string name="menu_delete_recipe">Padam Resipi</string>
+    <string name="menu_share_recipe">Kongsi Resipi</string>
+    <string name="menu_add_to_planner">Tambah ke Pelan</string>
+    <string name="recipe_not_found">Resipi tidak ditemui.</string>
+    <string name="recipe_offline_unavailable">Data resipi tidak tersedia di luar talian.</string>
+    <string name="go_back">Kembali</string>
+    <string name="label_updated">Dikemas kini: %1$s</string>
+    <string name="label_visibility_followers_only">Pengikut Sahaja</string>
+    <string name="label_recipe_by">Resipi oleh</string>
+    <string name="btn_follow">Ikut</string>
+    <string name="btn_request_sent">Permintaan Dihantar</string>
+    <string name="btn_unfollow">Berhenti Ikut</string>
+    <string name="dialog_delete_recipe_title">Padam Resipi</string>
+    <string name="dialog_delete_recipe_text">Adakah anda pasti mahu memadamkan \'%1$s\'?</string>
+    <string name="error_delete_offline">Anda tidak boleh memadam resipi semasa di luar talian. Sila semak tetapan rangkaian anda.</string>
+    <string name="error_share_offline">Anda tidak boleh berkongsi resipi semasa di luar talian. Sila semak tetapan rangkaian anda. </string>
+    <string name="error_planner_offline">Anda tidak boleh menambah resipi ke pelan semasa di luar talian. Sila semak tetapan rangkaian anda.</string>
+
+    <!-- Cooking Skill Options -->
+    <string name="skill_beginner">Permulaan</string>
+    <string name="skill_intermediate">Sederhana</string>
+    <string name="skill_master_expert">Pakar</string>
+
+    <!-- Visibility Options -->
+    <string name="visibility_public">Awam</string>
+    <string name="visibility_followers">Pengikut</string>
+    <string name="visibility_private">Peribadi</string>
+
+    <!-- Budget Options -->
+    <string name="budget_range_0_20">0 - 20</string>
+    <string name="budget_range_20_40">20 - 40</string>
+    <string name="budget_range_40_60">40 - 60</string>
+    <string name="budget_range_60_80">60 - 80</string>
+    <string name="budget_range_80_100">80 - 100</string>
+
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">Tiada sambungan internet</string>
     <string name="desc_connect_internet_prompt">Sila sambungkan ke internet untuk melihat dan mengemas kini pelan hidangan anda.</string>
@@ -184,6 +249,85 @@
 
     <string name="title_hiring">Tempah chef</string>
     <string name="tab_popular">Popular</string>
+    <string name="tab_favorites">Kegemaran</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_edit_profile">Edit Profil</string>
+    <string name="menu_edit_body_status">Edit Status Badan</string>
+    <string name="menu_view_request_ingredients">Lihat &amp; Mohon Bahan</string>
+    <string name="menu_my_shopping_lists">Senarai Beli-belah Saya</string>
+    <string name="menu_become_a_chef">Jadi Chef</string>
+    <string name="menu_appointment_history">Sejarah Temujanji</string>
+    <string name="menu_follow_requests">Permintaan Mengikuti</string>
+    <string name="menu_my_wallet">Dompet Saya</string>
+    <string name="menu_payment_methods">Kaedah Pembayaran</string>
+    <string name="menu_change_password">Tukar Kata Laluan</string>
+    <string name="profile_offline_user">Pengguna Luar Talian</string>
+    <string name="profile_followers">Pengikut</string>
+    <string name="profile_following">Mengikuti</string>
+    <string name="profile_offline_cannot_load">Tidak dapat memuatkan profil semasa luar talian.</string>
+    <string name="tab_user_recipes">Resipi Pengguna</string>
+    <string name="tab_recipes">Resipi</string>
+    <string name="tab_chefs">Chef</string>
+    <string name="placeholder_search_chefs">Cari chef di sini</string>
+    <string name="placeholder_search_recipes_here">Cari resipi di sini</string>
+    <string name="error_no_chefs_match_filters">Tiada chef padan dengan penapis anda</string>
+    <string name="desc_reset_search_filters">Cuba kosongkan carian atau penapis anda</string>
+    <string name="dialog_reapply_chef_title">Mohon Semula sebagai Chef</string>
+    <string name="dialog_reapply_chef_text">Permohonan anda sebelum ini telah ditolak. Adakah anda mahu menghantar permohonan yang dikemas kini?</string>
+    <string name="btn_reapply">Mohon Semula</string>
+    <string name="msg_password_updated">Kata laluan berjaya dikemas kini!</string>
+    <string name="msg_profile_updated">Profil berjaya dikemas kini!</string>
+    <string name="msg_body_status_updated">Status badan berjaya dikemas kini!</string>
+    <string name="label_profile_picture">Gambar Profil</string>
+    <string name="btn_select_image">PILIH IMEJ</string>
+    <string name="placeholder_username">Nama Pengguna</string>
+    <string name="placeholder_tell_us_about_yourself">Beritahu kami tentang diri anda…</string>
+    <string name="title_body_status">Status Badan</string>
+    <string name="prompt_body_status">Apakah status badan anda?</string>
+    <string name="desc_body_status">Ini adalah untuk pengiraan BMI dan tujuan perancangan hidangan. Anda boleh langkau dahulu jika anda belum mempunyai sebarang rancangan.</string>
+    <string name="label_gender_selection">Jantina</string>
+    <string name="gender_male">Lelaki</string>
+    <string name="gender_female">Perempuan</string>
+    <string name="label_weight">Berat</string>
+    <string name="label_height">Tinggi</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_years">tahun</string>
+    <string name="label_calculated_bmi">BMI Dikira</string>
+    <string name="bmi_underweight">Kurang Berat</string>
+    <string name="bmi_normal">Normal</string>
+    <string name="bmi_overweight">Lebih Berat</string>
+    <string name="bmi_obese">Obesiti</string>
+    <string name="btn_skip">LANGKAU</string>
+    <string name="btn_register">DAFTAR</string>
+    <string name="btn_submit">HANTAR</string>
+    <string name="chef_app_review_title">Permohonan Sedang Disemak</string>
+    <string name="chef_app_review_text">Permohonan chef anda sedang disemak oleh pentadbir kami. Sila tunggu kelulusan.</string>
+    <string name="chef_app_active_title">Akaun Chef Aktif</string>
+    <string name="chef_app_active_text">Anda sudah pun menjadi Chef yang diluluskan! Sila gunakan Portal Log Masuk Chef dari skrin log masuk untuk mengakses papan pemuka chef anda.</string>
+    <string name="course_all">Semua</string>
+    <string name="placeholder_search_recipes_authors">Cari resipi/penulis</string>
+    <string name="label_followed">Diikuti</string>
+    <string name="error_no_popular_recipes">Tiada resipi popular ditemui</string>
+    <string name="desc_no_popular_recipes">Semak semula kemudian untuk hidangan lazat yang sedang trend!</string>
+    <string name="error_no_following_recipes">Tiada resipi diikuti</string>
+    <string name="desc_no_following_recipes">Ikuti penulis kegemaran anda untuk melihat resipi terbaru mereka di sini!</string>
+    <string name="error_no_recipes_match_filters">Tiada resipi padan dengan penapis</string>
+    <string name="desc_no_recipes_match_filters">Cuba laraskan carian atau penapis anda</string>
+    <string name="title_filter_recipes_sheet">Tapis Resipi</string>
+    <string name="btn_reset_all">Padam Semua</string>
+    <string name="label_max_prep_time_sheet">Masa Penyediaan Maks</string>
+    <string name="label_max_calories_sheet">Kalori Maks</string>
+    <string name="value_any_time">Bila-bila Masa</string>
+    <string name="value_any_calories">Mana-mana Kalori</string>
+    <string name="placeholder_search_ingredients_sheet">Cari bahan…</string>
+    <string name="label_selected_count">Dipilih (%1$d):</string>
+    <string name="label_loading_ingredients">Memuatkan bahan…</string>
+    <string name="btn_apply_filters_sheet">Gunakan Penapis</string>
+    <string name="error_no_recipes_found">Tiada resipi ditemui</string>
+    <string name="cd_back">Kembali</string>
+    <string name="cd_add">Tambah</string>
+    <string name="label_recipe_title">Resipi</string>
     <string name="tab_appointment">Tempahan</string>
     <string name="tab_bookmarks">Kegemaran</string>
 
@@ -198,6 +342,23 @@
     <string name="time_range_format">%1$s - %2$s</string>
     <string name="price_currency_format">RM %.2f</string>
     <string name="status_confirmed">Disahkan</string>
+
+    <string name="home_greeting_morning">Selamat Pagi</string>
+    <string name="home_greeting_afternoon">Selamat Tengah Hari</string>
+    <string name="home_greeting_evening">Selamat Petang</string>
+    <string name="home_greeting_night">Selamat Malam</string>
+    <string name="default_username">Nama Pengguna</string>
+    <string name="label_popular_recipes">Resipi Popular</string>
+    <string name="btn_see_all">Lihat Semua</string>
+    <string name="empty_no_recipes_category">Tiada resipi ditemui untuk kategori ini</string>
+    <string name="promo_missing_ingredient_title">Bahan Hilang?</string>
+    <string name="promo_missing_ingredient_body">Bantu kami berkembang! Daftar barangan baru dan buka lebih banyak kemungkinan yang lazat.</string>
+    <string name="promo_contribute_now">Sumbang Sekarang</string>
+    <string name="error_no_chefs_offline">Tiada chef dalam cache tersedia di luar talian</string>
+    <string name="error_no_chefs_available">Tiada chef tersedia</string>
+    <string name="btn_tap_to_retry">Ketik untuk cuba semula</string>
+    <string name="format_hourly_rate_short">$%1$d/jam</string>
+    <string name="format_experience_short">%1$s thn exp</string>
     <string name="chef_available_today">Tersedia untuk ditempah hari ini</string>
     <string name="chef_off_today">Cuti hari ini</string>
     <string name="chef_new_rating">Baharu</string>

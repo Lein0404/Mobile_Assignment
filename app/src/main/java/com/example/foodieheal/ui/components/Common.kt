@@ -358,7 +358,7 @@ fun DropDownList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownList(
+fun DropDownListFromResources(
     modifier: Modifier = Modifier,
     @StringRes labelId: Int,
     @StringRes placeholderId: Int,

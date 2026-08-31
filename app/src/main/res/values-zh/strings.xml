@@ -49,6 +49,8 @@
     <string name="select_image">选择图片</string>
     <string name="change_image">更换图片</string>
     <string name="remove_image">移除图片</string>
+    <string name="upload_recipe_image">上传食谱图片</string>
+    <string name="change_recipe_image">更改食谱图片</string>
     <string name="image_unavailable">暂无图片</string>
     <string name="upload_failed">图片上传失败。</string>
 
@@ -141,6 +143,69 @@
     <string name="desc_no_network">无可用网络</string>
     <string name="share">分享</string>
 
+    <!-- Recipe Form -->
+    <string name="add_recipe_title">添加食谱</string>
+    <string name="edit_recipe_title">编辑食谱</string>
+    <string name="label_recipe_name">食谱名称</string>
+    <string name="label_description_optional">描述（可选）</string>
+    <string name="label_total_time_min">总时间（分钟）</string>
+    <string name="label_calories_kcal">卡路里 (kcal)</string>
+    <string name="label_visibility">可见性</string>
+    <string name="label_recipe_steps">制作步骤</string>
+    <string name="tip_recipe_steps">提示：按“回车”添加新步骤；编号将自动添加。</string>
+    <string name="placeholder_recipe_description">是什么启发了你制作这个食谱…</string>
+    <string name="placeholder_steps">1. 煮意面</string>
+    <string name="placeholder_time">例如：30</string>
+    <string name="placeholder_calories">0</string>
+    <string name="btn_reset_ingredients">重置食材</string>
+    <string name="btn_add_ingredient">添加食材</string>
+    <string name="error_form_invalid">请在所有字段中填写有效信息。</string>
+    <string name="error_time_limit">时间不能超过 24 小时。</string>
+    <string name="dialog_reset_ingredients_title">清除食材？</string>
+    <string name="dialog_reset_ingredients_text">您确定要清除已输入的所有食材吗？</string>
+    <string name="help_ingredient_title">找不到食材？</string>
+    <string name="help_ingredient_text">您可以在“个人资料”下的“查看并请求食材”菜单选项中请求缺失的食材。我们的专家将立即审核并批准！</string>
+    <string name="btn_add_recipe">添加食谱</string>
+    <string name="btn_save_recipe">保存更改</string>
+
+    <!-- Recipe Details -->
+    <string name="view_recipe_title">查看食谱</string>
+    <string name="menu_edit_recipe">编辑食谱</string>
+    <string name="menu_delete_recipe">删除食谱</string>
+    <string name="menu_share_recipe">分享食谱</string>
+    <string name="menu_add_to_planner">添加到计划</string>
+    <string name="recipe_not_found">未找到食谱。</string>
+    <string name="recipe_offline_unavailable">离线状态下无法获取食谱数据。</string>
+    <string name="go_back">返回</string>
+    <string name="label_updated">更新于：%1$s</string>
+    <string name="label_visibility_followers_only">仅限关注者</string>
+    <string name="label_recipe_by">食谱作者：</string>
+    <string name="btn_follow">关注</string>
+    <string name="btn_request_sent">已发送请求</string>
+    <string name="btn_unfollow">取消关注</string>
+    <string name="dialog_delete_recipe_title">删除食谱</string>
+    <string name="dialog_delete_recipe_text">您确定要删除“%1$s”吗？</string>
+    <string name="error_delete_offline">离线时无法删除食谱。请检查您的网络设置。</string>
+    <string name="error_share_offline">离线时无法分享食谱。请检查您的网络设置。</string>
+    <string name="error_planner_offline">离线时无法将食谱添加到计划。请检查您的网络设置。</string>
+
+    <!-- Cooking Skill Options -->
+    <string name="skill_beginner">初学者</string>
+    <string name="skill_intermediate">中级</string>
+    <string name="skill_master_expert">大师/专家</string>
+
+    <!-- Visibility Options -->
+    <string name="visibility_public">公开</string>
+    <string name="visibility_followers">关注者</string>
+    <string name="visibility_private">私密</string>
+
+    <!-- Budget Options -->
+    <string name="budget_range_0_20">0 - 20</string>
+    <string name="budget_range_20_40">20 - 40</string>
+    <string name="budget_range_40_60">40 - 60</string>
+    <string name="budget_range_60_80">60 - 80</string>
+    <string name="budget_range_80_100">80 - 100</string>
+
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">无网络连接</string>
     <string name="desc_connect_internet_prompt">请连接互联网以查看和更新您的膳食计划。</string>
@@ -184,6 +249,85 @@
 
     <string name="title_hiring">聘请厨师</string>
     <string name="tab_popular">热门</string>
+    <string name="tab_favorites">收藏</string>
+    <string name="menu_title">菜单</string>
+    <string name="menu_edit_profile">编辑个人资料</string>
+    <string name="menu_edit_body_status">编辑身体状态</string>
+    <string name="menu_view_request_ingredients">查看并请求食材</string>
+    <string name="menu_my_shopping_lists">我的购物清单</string>
+    <string name="menu_become_a_chef">成为厨师</string>
+    <string name="menu_appointment_history">预约历史</string>
+    <string name="menu_follow_requests">关注请求</string>
+    <string name="menu_my_wallet">我的钱包</string>
+    <string name="menu_payment_methods">支付方式</string>
+    <string name="menu_change_password">修改密码</string>
+    <string name="profile_offline_user">离线用户</string>
+    <string name="profile_followers">关注者</string>
+    <string name="profile_following">关注中</string>
+    <string name="profile_offline_cannot_load">离线状态下无法加载个人资料。</string>
+    <string name="tab_user_recipes">用户食谱</string>
+    <string name="tab_recipes">食谱</string>
+    <string name="tab_chefs">厨师</string>
+    <string name="placeholder_search_chefs">在这里搜索厨师</string>
+    <string name="placeholder_search_recipes_here">在这里搜索食谱</string>
+    <string name="error_no_chefs_match_filters">没有符合筛选条件的厨师</string>
+    <string name="desc_reset_search_filters">尝试重置搜索或筛选条件</string>
+    <string name="dialog_reapply_chef_title">重新申请厨师</string>
+    <string name="dialog_reapply_chef_text">您之前的申请已被拒绝。您想提交更新后的申请吗？</string>
+    <string name="btn_reapply">重新申请</string>
+    <string name="msg_password_updated">密码更新成功！</string>
+    <string name="msg_profile_updated">个人资料更新成功！</string>
+    <string name="msg_body_status_updated">身体状态更新成功！</string>
+    <string name="label_profile_picture">个人头像</string>
+    <string name="btn_select_image">选择图片</string>
+    <string name="placeholder_username">用户名</string>
+    <string name="placeholder_tell_us_about_yourself">向我们介绍一下你自己…</string>
+    <string name="title_body_status">身体状态</string>
+    <string name="prompt_body_status">您的身体状态如何？</string>
+    <string name="desc_body_status">这将用于 BMI 计算和膳食计划。如果您还没有任何计划，可以先跳过。</string>
+    <string name="label_gender_selection">性别</string>
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+    <string name="label_weight">体重</string>
+    <string name="label_height">身高</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_years">岁</string>
+    <string name="label_calculated_bmi">计算出的 BMI</string>
+    <string name="bmi_underweight">体重过轻</string>
+    <string name="bmi_normal">正常</string>
+    <string name="bmi_overweight">超重</string>
+    <string name="bmi_obese">肥胖</string>
+    <string name="btn_skip">跳过</string>
+    <string name="btn_register">注册</string>
+    <string name="btn_submit">提交</string>
+    <string name="chef_app_review_title">申请审核中</string>
+    <string name="chef_app_review_text">您的厨师申请目前正在由我们的管理员审核。请耐心等待批准。</string>
+    <string name="chef_app_active_title">厨师账号已激活</string>
+    <string name="chef_app_active_text">您已经是一名获批的厨师！请使用登录界面上的厨师登录门户进入您的厨师仪表板。</string>
+    <string name="course_all">全部</string>
+    <string name="placeholder_search_recipes_authors">搜索食谱/作者</string>
+    <string name="label_followed">关注</string>
+    <string name="error_no_popular_recipes">未找到热门食谱</string>
+    <string name="desc_no_popular_recipes">稍后再来看看流行的美味佳肴吧！</string>
+    <string name="error_no_following_recipes">没有关注的食谱</string>
+    <string name="desc_no_following_recipes">关注您喜爱的作者，在这里查看他们最新的食谱！</string>
+    <string name="error_no_recipes_match_filters">没有符合筛选条件的食谱</string>
+    <string name="desc_no_recipes_match_filters">尝试调整您的搜索或筛选条件</string>
+    <string name="title_filter_recipes_sheet">筛选食谱</string>
+    <string name="btn_reset_all">全部重置</string>
+    <string name="label_max_prep_time_sheet">最大准备时间</string>
+    <string name="label_max_calories_sheet">最大卡路里</string>
+    <string name="value_any_time">不限时间</string>
+    <string name="value_any_calories">不限卡路里</string>
+    <string name="placeholder_search_ingredients_sheet">搜索食材…</string>
+    <string name="label_selected_count">已选择 (%1$d):</string>
+    <string name="label_loading_ingredients">正在加载食材…</string>
+    <string name="btn_apply_filters_sheet">应用筛选</string>
+    <string name="error_no_recipes_found">未找到食谱</string>
+    <string name="cd_back">返回</string>
+    <string name="cd_add">添加</string>
+    <string name="label_recipe_title">食谱</string>
     <string name="tab_appointment">预约</string>
     <string name="tab_bookmarks">收藏</string>
 
@@ -198,6 +342,23 @@
     <string name="time_range_format">%1$s - %2$s</string>
     <string name="price_currency_format">RM %.2f</string>
     <string name="status_confirmed">已确认</string>
+
+    <string name="home_greeting_morning">早上好</string>
+    <string name="home_greeting_afternoon">下午好</string>
+    <string name="home_greeting_evening">晚上好</string>
+    <string name="home_greeting_night">晚安</string>
+    <string name="default_username">用户名</string>
+    <string name="label_popular_recipes">热门食谱</string>
+    <string name="btn_see_all">查看全部</string>
+    <string name="empty_no_recipes_category">此类别下未找到食谱</string>
+    <string name="promo_missing_ingredient_title">缺少食材？</string>
+    <string name="promo_missing_ingredient_body">帮助我们扩展！注册新项目，开启更多美味可能。</string>
+    <string name="promo_contribute_now">立即贡献</string>
+    <string name="error_no_chefs_offline">离线状态下无缓存厨师</string>
+    <string name="error_no_chefs_available">没有可用的厨师</string>
+    <string name="btn_tap_to_retry">点击重试</string>
+    <string name="format_hourly_rate_short">$%1$d/小时</string>
+    <string name="format_experience_short">%1$s年经验</string>
     <string name="chef_available_today">今日可预约</string>
     <string name="chef_off_today">今日休息</string>
     <string name="chef_new_rating">新</string>

@@ -36,17 +36,22 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
     var age by remember { mutableStateOf(user?.age?.let { if (it == 0) "" else it.toString() } ?: "") }
     var gender by remember { mutableStateOf(user?.gender ?: "Male") }
 
+    val underweightStr = stringResource(R.string.bmi_underweight)
+    val normalStr = stringResource(R.string.bmi_normal)
+    val overweightStr = stringResource(R.string.bmi_overweight)
+    val obeseStr = stringResource(R.string.bmi_obese)
+
     // Optimization: Calculate BMI only when needed to prevent "Davey" hangs
-    val bmiInfo = remember(weight, height) {
+    val bmiInfo = remember(weight, height, underweightStr, normalStr, overweightStr, obeseStr) {
         val w = weight.toDoubleOrNull() ?: 0.0
         val h = (height.toDoubleOrNull() ?: 0.0) / 100.0
         if (h > 0) {
             val score = w / (h * h)
             val category = when {
-                score < 18.5 -> "Underweight"
-                score < 25.0 -> "Normal"
-                score < 30.0 -> "Overweight"
-                else -> "Obese"
+                score < 18.5 -> underweightStr
+                score < 25.0 -> normalStr
+                score < 30.0 -> overweightStr
+                else -> obeseStr
             }
             Pair(String.format("%.1f", score), category)
         } else {
@@ -75,7 +80,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
         modifier = Modifier.imePadding().navigationBarsPadding(), // 🌟 Added IME and Navigation padding
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Body Status", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
+                title = { Text(stringResource(R.string.title_body_status), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
                         if (fromRegister) {
@@ -87,7 +92,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                             navController.popBackStack() 
                         }
                     }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -113,20 +118,20 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     .padding(24.dp)
             ) {
             Text(
-                text = "What’s your body status?",
+                text = stringResource(R.string.prompt_body_status),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "This is for BMI calculation and meal planning purposes. You may skip first if you didn’t have any plans yet.",
+                text = stringResource(R.string.desc_body_status),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
 
             // Gender Selection
-            Text("Gender", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
+            Text(stringResource(R.string.label_gender_selection), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -136,44 +141,44 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     onClick = { gender = "Male" },
                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                 )
-                Text("Male", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp, end = 24.dp))
+                Text(stringResource(R.string.gender_male), color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp, end = 24.dp))
 
                 RadioButton(
                     selected = gender == "Female",
                     onClick = { gender = "Female" },
                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                 )
-                Text("Female", color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp))
+                Text(stringResource(R.string.gender_female), color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(start = 4.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Weight Field
             StatusInputField(
-                label = "Weight", 
+                label = stringResource(R.string.label_weight), 
                 value = weight, 
                 onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) weight = it }, 
-                suffix = "kg"
+                suffix = stringResource(R.string.unit_kg)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
 
             // Height Field
             StatusInputField(
-                label = "Height", 
+                label = stringResource(R.string.label_height), 
                 value = height, 
                 onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) height = it }, 
-                suffix = "cm"
+                suffix = stringResource(R.string.unit_cm)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Age Field
             StatusInputField(
-                label = "Age", 
+                label = stringResource(R.string.age), 
                 value = age, 
                 onValueChange = { if (it.all { char -> char.isDigit() }) age = it }, 
-                suffix = "years"
+                suffix = stringResource(R.string.unit_years)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -189,17 +194,20 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Calculated BMI", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.label_calculated_bmi), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(text = bmiValue, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
                             if (bmiCategory.isNotEmpty()) {
+                                val normalStr = stringResource(R.string.bmi_normal)
+                                val overweightStr = stringResource(R.string.bmi_overweight)
+                                val underweightStr = stringResource(R.string.bmi_underweight)
                                 Text(
                                     text = " ($bmiCategory)", 
                                     fontSize = 16.sp, 
                                     fontWeight = FontWeight.Bold, 
                                     color = when(bmiCategory) {
-                                        "Normal" -> Color(0xFF4CAF50)
-                                        "Overweight", "Underweight" -> Color(0xFFFF9800)
+                                        normalStr -> Color(0xFF4CAF50)
+                                        overweightStr, underweightStr -> Color(0xFFFF9800)
                                         else -> Color(0xFFF44336)
                                     },
                                     modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
@@ -246,7 +254,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                         enabled = !authViewModel.isProcessing
                     ) {
-                        Text("SKIP", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.btn_skip), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
 
@@ -286,7 +294,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                     if (authViewModel.isProcessing) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                     } else {
-                        Text(if (fromRegister) "REGISTER" else "SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(if (fromRegister) stringResource(R.string.btn_register) else stringResource(R.string.btn_submit), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

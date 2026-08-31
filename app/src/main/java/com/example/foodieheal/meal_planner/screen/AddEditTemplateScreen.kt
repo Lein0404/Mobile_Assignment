@@ -27,6 +27,7 @@ import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.viewModel.AddEditTemplateViewModel
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.ui.components.DropDownList
+import com.example.foodieheal.ui.components.DropDownListFromResources
 import com.example.foodieheal.ui.theme.Green
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import kotlinx.coroutines.launch
@@ -273,7 +274,7 @@ fun AddEditTemplateScreen(
                     )
 
                     // Category Selection Dropdown
-                    DropDownList(
+                    DropDownListFromResources(
                         labelId = R.string.category,
                         placeholderId = R.string.category,
                         selectedValue = stringResource(selectedCategory),

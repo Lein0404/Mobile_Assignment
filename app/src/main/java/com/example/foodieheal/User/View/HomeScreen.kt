@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import java.util.Calendar
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -144,9 +146,10 @@ fun  HomeScreen(
                     .padding(top = 48.dp, bottom = 24.dp, start = 20.dp, end = 20.dp)
             ) {
                 Column {
-                    Text(text = "Good Morning", color = Color.White, fontSize = 14.sp)
+                    val greeting = getGreeting()
+                    Text(text = greeting, color = Color.White, fontSize = 14.sp)
                     Text(
-                        text = user?.name ?: "Username",
+                        text = user?.name ?: stringResource(R.string.default_username),
                         color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -168,7 +171,7 @@ fun  HomeScreen(
                 ) {
                     // Chef Section
                     Text(
-                        text = "Chef",
+                        text = stringResource(R.string.header_chef),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 20.dp),
@@ -201,7 +204,7 @@ fun  HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Popular Recipes",
+                            text = stringResource(R.string.label_popular_recipes),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground // 🌟 Themed Text
@@ -222,7 +225,7 @@ fun  HomeScreen(
                             modifier = Modifier.height(32.dp)
                         ) {
                             Text(
-                                "See All",
+                                stringResource(R.string.btn_see_all),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -325,7 +328,7 @@ fun ChefListSection(
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
-                        text = "Tap to retry",
+                        text = stringResource(R.string.btn_tap_to_retry),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -337,7 +340,7 @@ fun ChefListSection(
         // Empty State
         else -> {
             Text(
-                text = if (!isNetworkAvailable) "No cached chefs available offline" else "No chefs available",
+                text = if (!isNetworkAvailable) stringResource(R.string.error_no_chefs_offline) else stringResource(R.string.error_no_chefs_available),
                 color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -384,7 +387,7 @@ fun ChefCard(
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(
-                        text = "$${chef.Pricing?.toInt() ?: 0}/hr",
+                        text = stringResource(R.string.format_hourly_rate_short, chef.Pricing?.toInt() ?: 0),
                         color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -400,7 +403,7 @@ fun ChefCard(
                     .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = chef.name?.ifEmpty { "Chef" } ?: "Chef",
+                    text = chef.name?.ifEmpty { stringResource(R.string.default_chef_name) } ?: stringResource(R.string.default_chef_name),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
@@ -419,13 +422,13 @@ fun ChefCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(R.drawable.ic_star),
-                            contentDescription = "Rating",
+                            contentDescription = stringResource(R.string.rating_star),
                             modifier = Modifier.size(13.dp),
                             tint = Color(0xFFFFB300)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "${chef.averagerating ?: "N/A"}",
+                            text = "${chef.averagerating ?: stringResource(R.string.not_available)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Text
@@ -438,7 +441,7 @@ fun ChefCard(
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = "${chef.experience ?: "0"} yrs exp",
+                            text = stringResource(R.string.format_experience_short, chef.experience ?: "0"),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
@@ -466,7 +469,7 @@ fun PromoBanner(navController: NavController) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Missing an Ingredient?", 
+                text = stringResource(R.string.promo_missing_ingredient_title), 
                 fontWeight = FontWeight.ExtraBold, 
                 fontSize = 17.sp, 
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -474,7 +477,7 @@ fun PromoBanner(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Help us expand! Register new items and unlock more delicious possibilities.", 
+                text = stringResource(R.string.promo_missing_ingredient_body), 
                 fontSize = 13.sp, 
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f), 
                 textAlign = TextAlign.Center,
@@ -488,7 +491,7 @@ fun PromoBanner(navController: NavController) {
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
-                    text = "Contribute Now",
+                    text = stringResource(R.string.promo_contribute_now),
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -546,12 +549,23 @@ fun RecipeListSection(
         // 🌟 Empty State
         else -> {
             Text(
-                text = "No recipes found for this category",
+                text = stringResource(R.string.empty_no_recipes_category),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
                 fontSize = 13.sp
             )
         }
+    }
+}
+
+@Composable
+fun getGreeting(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 0..11 -> stringResource(R.string.home_greeting_morning)
+        in 12..16 -> stringResource(R.string.home_greeting_afternoon)
+        in 17..20 -> stringResource(R.string.home_greeting_evening)
+        else -> stringResource(R.string.home_greeting_night)
     }
 }
 

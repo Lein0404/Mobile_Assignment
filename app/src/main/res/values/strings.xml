@@ -48,6 +48,8 @@
     <string name="select_image">Select Image</string>
     <string name="change_image">Change Image</string>
     <string name="remove_image">Remove Image</string>
+    <string name="upload_recipe_image">Upload Recipe Image</string>
+    <string name="change_recipe_image">Change Recipe Image</string>
     <string name="image_unavailable">No image available</string>
     <string name="upload_failed">Failed to upload image.</string>
 
@@ -140,6 +142,69 @@
     <string name="desc_no_network">No Network Available</string>
     <string name="share">Share</string>
 
+    <!-- Recipe Form -->
+    <string name="add_recipe_title">Add Recipe</string>
+    <string name="edit_recipe_title">Edit Recipe</string>
+    <string name="label_recipe_name">Recipe Name</string>
+    <string name="label_description_optional">Description (Optional)</string>
+    <string name="label_total_time_min">Total Time (min)</string>
+    <string name="label_calories_kcal">Calories (kcal)</string>
+    <string name="label_visibility">Visibility</string>
+    <string name="label_recipe_steps">Recipe Steps</string>
+    <string name="tip_recipe_steps">Tip: Just press \'Enter\' for a new step; numbers are added automatically.</string>
+    <string name="placeholder_recipe_description">What inspired you to make this recipe…</string>
+    <string name="placeholder_steps">1. Cook the Pasta</string>
+    <string name="placeholder_time">e.g. 30</string>
+    <string name="placeholder_calories">0</string>
+    <string name="btn_reset_ingredients">Reset Ingredients</string>
+    <string name="btn_add_ingredient">Add Ingredient</string>
+    <string name="error_form_invalid">Please fill in all fields with valid information.</string>
+    <string name="error_time_limit">Time cannot exceed 24 hours.</string>
+    <string name="dialog_reset_ingredients_title">Clear Ingredients?</string>
+    <string name="dialog_reset_ingredients_text">Are you sure you want to clear all the ingredients you\'ve entered?</string>
+    <string name="help_ingredient_title">Can\'t find an ingredient?</string>
+    <string name="help_ingredient_text">You may request for missing ingredients in the \"View &amp; Request Ingredients\" menu option under Profile. Our experts will review and approve it right away!</string>
+    <string name="btn_add_recipe">ADD RECIPE</string>
+    <string name="btn_save_recipe">SAVE CHANGES</string>
+
+    <!-- Recipe Details -->
+    <string name="view_recipe_title">View Recipe</string>
+    <string name="menu_edit_recipe">Edit Recipe</string>
+    <string name="menu_delete_recipe">Delete Recipe</string>
+    <string name="menu_share_recipe">Share Recipe</string>
+    <string name="menu_add_to_planner">Add to Planner</string>
+    <string name="recipe_not_found">Recipe not found.</string>
+    <string name="recipe_offline_unavailable">Recipe data not available offline.</string>
+    <string name="go_back">Go Back</string>
+    <string name="label_updated">Updated: %1$s</string>
+    <string name="label_visibility_followers_only">Followers Only</string>
+    <string name="label_recipe_by">Recipe by</string>
+    <string name="btn_follow">Follow</string>
+    <string name="btn_request_sent">Request Sent</string>
+    <string name="btn_unfollow">Unfollow</string>
+    <string name="dialog_delete_recipe_title">Delete Recipe</string>
+    <string name="dialog_delete_recipe_text">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="error_delete_offline">You cannot delete recipes while offline. Please check your network settings.</string>
+    <string name="error_share_offline">You cannot share recipes while offline. Please check your network settings.</string>
+    <string name="error_planner_offline">You cannot add recipes to your planner while offline. Please check your network settings.</string>
+
+    <!-- Cooking Skill Options -->
+    <string name="skill_beginner">Beginner</string>
+    <string name="skill_intermediate">Intermediate</string>
+    <string name="skill_master_expert">Master/Expert</string>
+
+    <!-- Visibility Options -->
+    <string name="visibility_public">Public</string>
+    <string name="visibility_followers">Followers</string>
+    <string name="visibility_private">Private</string>
+
+    <!-- Budget Options -->
+    <string name="budget_range_0_20">0 - 20</string>
+    <string name="budget_range_20_40">20 - 40</string>
+    <string name="budget_range_40_60">40 - 60</string>
+    <string name="budget_range_60_80">60 - 80</string>
+    <string name="budget_range_80_100">80 - 100</string>
+
     <!-- Loading and Connectivity States -->
     <string name="title_no_internet">No Internet Connection</string>
     <string name="desc_connect_internet_prompt">Please connect to the internet to view and update your meal plans.</string>
@@ -182,6 +247,86 @@
     <string name="rate_per_hour">$%1$d/hr</string>
 
     <string name="title_hiring">Hiring</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_edit_profile">Edit Profile</string>
+    <string name="menu_edit_body_status">Edit Body Status</string>
+    <string name="menu_view_request_ingredients">View &amp; Request Ingredients</string>
+    <string name="menu_my_shopping_lists">My Shopping Lists</string>
+    <string name="menu_become_a_chef">Become a Chef</string>
+    <string name="menu_appointment_history">Appointment History</string>
+    <string name="menu_follow_requests">Follow Requests</string>
+    <string name="menu_my_wallet">My Wallet</string>
+    <string name="menu_payment_methods">Payment Methods</string>
+    <string name="menu_change_password">Change Password</string>
+    <string name="profile_offline_user">Offline User</string>
+    <string name="profile_followers">Followers</string>
+    <string name="profile_following">Following</string>
+    <string name="profile_offline_cannot_load">Cannot load profile while offline.</string>
+    <string name="tab_user_recipes">User Recipes</string>
+    <string name="tab_recipes">Recipes</string>
+    <string name="tab_chefs">Chefs</string>
+    <string name="placeholder_search_chefs">Search chefs here</string>
+    <string name="placeholder_search_recipes_here">Search recipes here</string>
+    <string name="error_no_chefs_match_filters">No chefs match your filters</string>
+    <string name="desc_reset_search_filters">Try resetting your search or filters</string>
+    <string name="dialog_reapply_chef_title">Re-apply as Chef</string>
+    <string name="dialog_reapply_chef_text">Your previous application was rejected. Would you like to submit an updated application?</string>
+    <string name="btn_reapply">Re-apply</string>
+    <string name="msg_password_updated">Password updated successfully!</string>
+    <string name="msg_profile_updated">Profile updated successfully!</string>
+    <string name="msg_body_status_updated">Body status updated successfully!</string>
+    <string name="label_profile_picture">Profile Picture</string>
+    <string name="btn_select_image">SELECT IMAGE</string>
+    <string name="placeholder_username">Username</string>
+    <string name="placeholder_tell_us_about_yourself">Tell us about yourself…</string>
+    <string name="title_body_status">Body Status</string>
+    <string name="prompt_body_status">What’s your body status?</string>
+    <string name="desc_body_status">This is for BMI calculation and meal planning purposes. You may skip first if you didn’t have any plans yet.</string>
+    <string name="label_gender_selection">Gender</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="label_weight">Weight</string>
+    <string name="label_height">Height</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_years">years</string>
+    <string name="label_calculated_bmi">Calculated BMI</string>
+    <string name="bmi_underweight">Underweight</string>
+    <string name="bmi_normal">Normal</string>
+    <string name="bmi_overweight">Overweight</string>
+    <string name="bmi_obese">Obese</string>
+    <string name="btn_skip">SKIP</string>
+    <string name="btn_register">REGISTER</string>
+    <string name="btn_submit">SUBMIT</string>
+    <string name="chef_app_review_title">Application Under Review</string>
+    <string name="chef_app_review_text">Your chef application is currently under review by our administrators. Please wait for approval.</string>
+    <string name="chef_app_active_title">Chef Account Active</string>
+    <string name="chef_app_active_text">You are already an approved Chef! Please use the Chef Login Portal from the login screen to access your chef dashboard.</string>
+    <string name="course_all">All</string>
+    <string name="placeholder_search_recipes_authors">Search recipes/authors</string>
+    <string name="label_followed">Followed</string>
+    <string name="error_no_popular_recipes">No popular recipes found</string>
+    <string name="desc_no_popular_recipes">Check back later for trending delicious dishes!</string>
+    <string name="error_no_following_recipes">No following recipes</string>
+    <string name="desc_no_following_recipes">Follow your favorite authors to see their latest recipes here!</string>
+    <string name="error_no_recipes_match_filters">No recipes match filters</string>
+    <string name="desc_no_recipes_match_filters">Try adjusting your search or filters</string>
+    <string name="title_filter_recipes_sheet">Filter Recipes</string>
+    <string name="btn_reset_all">Reset All</string>
+    <string name="label_max_prep_time_sheet">Max Prep Time</string>
+    <string name="label_max_calories_sheet">Max Calories</string>
+    <string name="value_any_time">Any Time</string>
+    <string name="value_any_calories">Any Calories</string>
+    <string name="placeholder_search_ingredients_sheet">Search ingredients…</string>
+    <string name="label_selected_count">Selected (%1$d):</string>
+    <string name="label_loading_ingredients">Loading ingredients…</string>
+    <string name="btn_apply_filters_sheet">Apply Filters</string>
+    <string name="error_no_recipes_found">No recipes found</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_add">Add</string>
+    <string name="label_recipe_title">Recipe</string>
+
     <string name="tab_popular">Popular</string>
     <string name="tab_appointment">Appointment</string>
     <string name="tab_bookmarks">Bookmark</string>
@@ -530,6 +675,22 @@
     <string name="nav_profile">Profile</string>
     <string name="nav_recipes">recipes</string>
 
+    <string name="home_greeting_morning">Good Morning</string>
+    <string name="home_greeting_afternoon">Good Afternoon</string>
+    <string name="home_greeting_evening">Good Evening</string>
+    <string name="home_greeting_night">Good Night</string>
+    <string name="default_username">Username</string>
+    <string name="label_popular_recipes">Popular Recipes</string>
+    <string name="btn_see_all">See All</string>
+    <string name="empty_no_recipes_category">No recipes found for this category</string>
+    <string name="promo_missing_ingredient_title">Missing an Ingredient?</string>
+    <string name="promo_missing_ingredient_body">Help us expand! Register new items and unlock more delicious possibilities.</string>
+    <string name="promo_contribute_now">Contribute Now</string>
+    <string name="error_no_chefs_offline">No cached chefs available offline</string>
+    <string name="error_no_chefs_available">No chefs available</string>
+    <string name="btn_tap_to_retry">Tap to retry</string>
+    <string name="format_hourly_rate_short">$%1$d/hr</string>
+    <string name="format_experience_short">%1$s yrs exp</string>
 
     <string name="greeting">Welcome Back</string>
     <string name="unknown_client">Unknown Client</string>

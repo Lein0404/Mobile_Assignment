@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -111,10 +112,10 @@ fun RecipeDetailsScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("View Recipe", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text(stringResource(R.string.view_recipe_title), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = Color.White)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.topapp_back), tint = Color.White)
                     }
                 },
                 actions = {
@@ -143,7 +144,7 @@ fun RecipeDetailsScreen(
                         ) {
                             if (isMyRecipe) {
                                 DropdownMenuItem(
-                                    text = { Text("Edit Recipe") },
+                                    text = { Text(stringResource(R.string.menu_edit_recipe)) },
                                     onClick = {
                                         expanded = false
                                         navController.navigate(Screen.EditRecipe.createRoute(recipeId))
@@ -157,7 +158,7 @@ fun RecipeDetailsScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete Recipe", color = MaterialTheme.colorScheme.error) },
+                                    text = { Text(stringResource(R.string.menu_delete_recipe), color = MaterialTheme.colorScheme.error) },
                                     onClick = {
                                         expanded = false
                                         recipeToDelete = recipe
@@ -174,7 +175,7 @@ fun RecipeDetailsScreen(
                             }
 
                             DropdownMenuItem(
-                                text = { Text("Share Recipe") },
+                                text = { Text(stringResource(R.string.menu_share_recipe)) },
                                 onClick = {
                                     expanded = false
                                     if (viewModel.isNetworkAvailable) {
@@ -193,7 +194,7 @@ fun RecipeDetailsScreen(
                             )
 
                             DropdownMenuItem(
-                                text = { Text("Add to Planner") },
+                                text = { Text(stringResource(R.string.menu_add_to_planner)) },
                                 onClick = {
                                     expanded = false
                                     if (viewModel.isNetworkAvailable) {
@@ -231,14 +232,14 @@ fun RecipeDetailsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = if (viewModel.isNetworkAvailable)
-                            "Recipe not found."
+                            stringResource(R.string.recipe_not_found)
                         else
-                            "Recipe data not available offline.",
+                            stringResource(R.string.recipe_offline_unavailable),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.Gray
                     )
                     TextButton(onClick = { navController.popBackStack() }) {
-                        Text("Go Back")
+                        Text(stringResource(R.string.go_back))
                     }
                 }
             }
@@ -291,13 +292,13 @@ fun RecipeDetailsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                         Icon(painterResource(id = R.drawable.recipe_category), null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = recipe.recipeCourse, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = getCourseDisplay(recipe.recipeCourse), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         
                         // 🌟 Show Last Updated Time on the same line, right next to the course
                         if (!recipe.lastUpdated.isNullOrBlank()) {
                             val displayTime = recipe.lastUpdated.split("T").firstOrNull() ?: ""
                             Text(
-                                text = "  •  Updated: $displayTime", 
+                                text = "  •  " + stringResource(R.string.label_updated, displayTime), 
                                 fontSize = 13.sp, // Sized closer to course
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -310,9 +311,9 @@ fun RecipeDetailsScreen(
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
                         val (iconRes, visibilityText) = when(recipe.visibility.lowercase()) {
-                            "followers" -> R.drawable.follower to "Followers Only"
-                            "private" -> R.drawable.privatevis to "Private"
-                            else -> R.drawable.publicvis to "Public"
+                            "followers" -> R.drawable.follower to stringResource(R.string.label_visibility_followers_only)
+                            "private" -> R.drawable.privatevis to stringResource(R.string.visibility_private)
+                            else -> R.drawable.publicvis to stringResource(R.string.visibility_public)
                         }
 
                         Icon(
@@ -333,13 +334,13 @@ fun RecipeDetailsScreen(
 
                     // Stats Grid
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        StatItem(R.drawable.ic_fire, "${recipe.calories} kcal", Modifier.weight(1f))
-                        StatItem(R.drawable.ic_clock, "${recipe.time} minutes", Modifier.weight(1f))
+                        StatItem(R.drawable.ic_fire, stringResource(R.string.format_recipe_calories, recipe.calories), Modifier.weight(1f))
+                        StatItem(R.drawable.ic_clock, stringResource(R.string.format_recipe_duration, recipe.time), Modifier.weight(1f))
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        StatItem(R.drawable.skill, recipe.cookingSkill, Modifier.weight(1f)) 
-                        StatItem(R.drawable.dollar_symbol, "RM ${recipe.estimatedBudget}", Modifier.weight(1f))
+                        StatItem(R.drawable.skill, getCookingSkillDisplay(recipe.cookingSkill), Modifier.weight(1f)) 
+                        StatItem(R.drawable.dollar_symbol, "RM " + getBudgetDisplay(recipe.estimatedBudget), Modifier.weight(1f))
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -384,7 +385,7 @@ fun RecipeDetailsScreen(
                         
                         Column(modifier = Modifier.padding(start = 12.dp)) {
                             Text(
-                                text = "Recipe by",
+                                text = stringResource(R.string.label_recipe_by),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -400,10 +401,10 @@ fun RecipeDetailsScreen(
                             Spacer(modifier = Modifier.weight(1f))
                             val status = followViewModel.followStatus
                             val buttonText = when (status) {
-                                null -> "Follow"
-                                "PENDING" -> "Request Sent"
-                                "ACCEPTED" -> "Unfollow"
-                                else -> "Follow"
+                                null -> stringResource(R.string.btn_follow)
+                                "PENDING" -> stringResource(R.string.btn_request_sent)
+                                "ACCEPTED" -> stringResource(R.string.btn_unfollow)
+                                else -> stringResource(R.string.btn_follow)
                             }
                             val buttonColor = if (status == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
 
@@ -430,7 +431,7 @@ fun RecipeDetailsScreen(
 
                     // 🌟 Description (Hidden if empty)
                     if (recipe.recipeDescription.isNotBlank()) {
-                        Text(text = "Description", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(text = stringResource(R.string.label_description), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         var isExpanded by remember { mutableStateOf(false) }
                         Text(
                             text = recipe.recipeDescription,
@@ -446,7 +447,7 @@ fun RecipeDetailsScreen(
                         )
                         if (!isExpanded && (recipe.recipeDescription.length > 150 || recipe.recipeDescription.count { it == '\n' } >= 5)) {
                             Text(
-                                text = "... See More",
+                                text = "... " + stringResource(R.string.show_more),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary, // 🌟 Use primary for action text
@@ -462,7 +463,7 @@ fun RecipeDetailsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Ingredients", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(text = stringResource(R.string.label_ingredients), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         IconButton(onClick = {
                             recipe.let {
                                 navController.navigate(Screen.ShoppingListAddFrom.createRoute(recipeId = it.recipe_id ?: recipeId))
@@ -486,7 +487,7 @@ fun RecipeDetailsScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Steps
-                    Text(text = "Recipe Steps", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = stringResource(R.string.label_recipe_steps), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     recipe.recipeStep.split("\n").forEachIndexed { index, step ->
                         if (step.isNotBlank()) {
                             Row(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -515,13 +516,13 @@ fun RecipeDetailsScreen(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("No Internet Connection")
+                    Text(stringResource(R.string.no_internet_connection))
                 }
             },
-            text = { Text("You cannot share recipes while offline. Please check your network settings.") },
+            text = { Text(stringResource(R.string.error_share_offline)) },
             confirmButton = {
                 TextButton(onClick = { showOfflineShareDialog = false }) {
-                    Text("OK", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -540,13 +541,13 @@ fun RecipeDetailsScreen(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("No Internet Connection")
+                    Text(stringResource(R.string.no_internet_connection))
                 }
             },
-            text = { Text("You cannot add recipes to your planner while offline. Please check your network settings.") },
+            text = { Text(stringResource(R.string.error_planner_offline)) },
             confirmButton = {
                 TextButton(onClick = { showOfflinePlannerDialog = false }) {
-                    Text("OK", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -565,21 +566,21 @@ fun RecipeDetailsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("No Internet Connection")
+                        Text(stringResource(R.string.no_internet_connection))
                     }
                 },
-                text = { Text("You cannot delete recipes while offline. Please check your network settings.") },
+                text = { Text(stringResource(R.string.error_delete_offline)) },
                 confirmButton = {
                     TextButton(onClick = { recipeToDelete = null }) {
-                        Text("OK", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                     }
                 }
             )
         } else {
             AlertDialog(
                 onDismissRequest = { recipeToDelete = null },
-                title = { Text("Delete Recipe") },
-                text = { Text("Are you sure you want to delete '${recipeToDelete?.recipeName}'?") },
+                title = { Text(stringResource(R.string.dialog_delete_recipe_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_recipe_text, recipeToDelete?.recipeName ?: "")) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -592,12 +593,12 @@ fun RecipeDetailsScreen(
                             recipeToDelete = null
                         }
                     ) {
-                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.delete_action), color = Color.Red, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { recipeToDelete = null }) {
-                        Text("Cancel", color = Color.Gray)
+                        Text(stringResource(R.string.dialog_cancel), color = Color.Gray)
                     }
                 }
             )
