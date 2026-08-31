@@ -110,7 +110,7 @@ fun AddRecipeToPlanScreen(
     }
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${
-        weekEndDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+        weekEndDate.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
     } ${weekEndDate.year}"
 
     var showDatePicker by remember { mutableStateOf(false) }

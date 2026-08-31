@@ -229,9 +229,9 @@ fun MealPageContent(
             OfflinePlaceholder()
         } else {
             val dailyBannerText = remember(pageDate) {
-                val dayName = pageDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                val dayName = pageDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
                 val dayOfMonth = pageDate.dayOfMonth
-                val monthName = pageDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                val monthName = pageDate.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
                 "$dayName, $dayOfMonth $monthName"
             }
 

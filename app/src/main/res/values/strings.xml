@@ -2,8 +2,17 @@
     <string name="app_name">Foodie Heal</string>
 
     <string name="login_title">Login</string>
+    <string name="register_title">Register</string>
     <string name="email_label">Email</string>
     <string name="password_label">Password</string>
+    <string name="confirm_password_label">Confirm Password</string>
+    <string name="forgot_password">Forget Password?</string>
+    <string name="login_button">LOGIN</string>
+    <string name="signup_prompt">Don\'t have an account? Sign up here!</string>
+    <string name="login_prompt">Already have an account? Login here!</string>
+    <string name="chef_login_portal">Chef Login Portal</string>
+    <string name="new_chef_register_prompt">New Chef? Register here</string>
+    <string name="next_button">NEXT</string>
     <string name="hide_password">Hide password</string>
     <string name="show_password">Show password</string>
     <string name="nav_home">Home</string>
@@ -22,18 +31,23 @@
     <string name="gender">Gender</string>
     <string name="select_gender">Select Gender</string>
     <string name="experience">Year of Experience</string>
-    <string name="description">Description</string>">
+    <string name="description">Description</string>
     <string name="address">Address</string>
-    <string name="postcode">Postcode</string>">
+    <string name="postcode">Postcode</string>
     <string name="state">State</string>
     <string name="select_state">Choose your state</string>
     <string name = "serving_size">Serving Size</string>
     <string name = "select_size">Select Serving Size</string>
-    <string name = "health_pref_label">Health Preference</string>">
-    <string name = "select_health_pref">Select Health Preference</string>
+    <string name="health_pref_label">Health Preference</string>
+    <string name="select_health_pref">Select Health Preference</string>
 
     <!-- Error Messages -->
     <string name="error_fields_empty">Please fill in the input fields.</string>
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_account_not_found">Account not found</string>
+    <string name="error_invalid_password_short">Invalid password</string>
+    <string name="error_password_requirement">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
+    <string name="error_email_registered">Email already registered</string>
     <string name="error_unknown">An unknown error occurred. Please try again later.</string>
     <string name="error_user_not_found">No account found with this email.</string>
     <string name="error_network_connection">No internet connection. Please check your network and try again.</string>
@@ -1401,6 +1415,131 @@
     <string name="receipt_share_err_generate_image">Failed to generate receipt image: %s</string>
     <string name="receipt_share_err_generate_pdf">Failed to generate PDF receipt: %s</string>
 
+    <!-- HomeScreen -->
+    <string name="greeting_morning">Good Morning</string>
+    <string name="greeting_afternoon">Good Afternoon</string>
+    <string name="greeting_evening">Good Evening</string>
+    <string name="greeting_night">Good Night</string>
+    <string name="default_username">Username</string>
+    <string name="home_section_chef">Chef</string>
+    <string name="home_section_popular_recipes">Popular Recipes</string>
+    <string name="home_btn_see_all">See All</string>
+    <string name="home_banner_title">Missing an Ingredient?</string>
+    <string name="home_banner_desc">Help us expand! Register new items and unlock more delicious possibilities.</string>
+    <string name="home_banner_btn">Contribute Now</string>
+    <string name="tap_to_retry">Tap to retry</string>
+    <string name="no_cached_chefs_offline">No cached chefs available offline</string>
+    <string name="no_chefs_available">No chefs available</string>
+    <string name="no_recipes_available">No recipes found for this category</string>
+
+    <!-- Recipe Messaging -->
+    <string name="msg_wifi_required_bookmark">Wifi connection required to bookmark recipes.</string>
+    <string name="msg_removed_from_favorites">Removed \'%1$s\' from favorites</string>
+    <string name="msg_removed_locally">Removed locally: %1$s</string>
+    <string name="msg_added_to_favorites">Added to favorites: %1$s</string>
+    <string name="msg_bookmarked_locally">Bookmarked locally: %1$s</string>
+    <string name="msg_no_internet_add_recipe">No internet connection. Cannot add recipe.</string>
+    <string name="msg_recipe_added_success">Successfully added: %1$s</string>
+    <string name="msg_no_internet_update_recipe">No internet connection. Cannot update recipe.</string>
+    <string name="msg_recipe_updated_success">Successfully updated: %1$s</string>
+    <string name="msg_no_internet_delete_recipe">No internet connection. Cannot delete recipe.</string>
+    <string name="msg_recipe_deleted_success">Recipe deleted successfully.</string>
+    <string name="msg_wifi_required_planner">Wifi connection required to add recipes to planner.</string>
+
+    <!-- Recipe Empty States -->
+    <string name="empty_no_recipes_match">No recipes match filters</string>
+    <string name="empty_no_recipes_match_sub">Try adjusting your search or filters</string>
+    <string name="empty_no_popular_recipes">No popular recipes found</string>
+    <string name="empty_no_popular_recipes_sub">Check back later for trending delicious dishes!</string>
+    <string name="empty_no_followed_recipes">No followed recipes</string>
+    <string name="empty_no_followed_recipes_sub">Follow your favorite authors to see their latest recipes here!</string>
+
+
+    <!-- Recipes Screen -->
+    <string name="tab_popular_recipes">Popular</string>
+    <string name="tab_my_recipes_title">My Recipes</string>
+    <string name="tab_favorites_title">Favorites</string>
+    <string name="placeholder_search_recipes_authors">Search recipes/authors</string>
+    <string name="label_followed">Followed</string>
+    <string name="label_bookmarks_toggle">Bookmarks</string>
+    <string name="btn_reset_all">Reset All</string>
+    <string name="label_any_time">Any Time</string>
+    <string name="label_mins_suffix">mins</string>
+    <string name="label_any_calories">Any Calories</string>
+    <string name="label_kcal_suffix">kcal</string>
+    <string name="placeholder_search_ingredients_filter">Search ingredients...</string>
+    <string name="msg_loading_ingredients">Loading ingredients...</string>
+    <string name="btn_apply_filters_action">Apply Filters</string>
+    <string name="dialog_delete_recipe_title">Delete Recipe</string>
+    <string name="dialog_delete_recipe_msg">Are you sure you want to delete ‘%1$s’?</string>
+    <string name="dialog_delete_recipe_confirm">Delete</string>
+    <string name="msg_no_internet_delete_warning">You cannot delete recipes while offline. Please check your network settings.</string>
+    <string name="title_recipe_main">Recipe</string>
+    <string name="label_selected_ingredients">Selected (%1$d):</string>
+
+    <!-- Recipe Card Menu -->
+    <string name="menu_edit_recipe">Edit Recipe</string>
+    <string name="menu_share_recipe">Share Recipe</string>
+    <string name="menu_delete_recipe">Delete Recipe</string>
+
+    <!-- Add/Edit Recipe -->
+    <string name="title_add_recipe">Add Recipe</string>
+    <string name="title_edit_recipe">Edit Recipe</string>
+    <string name="label_upload_image">Upload Recipe Image</string>
+    <string name="label_recipe_name">Recipe Name</string>
+    <string name="hint_recipe_name">Recipe Name</string>
+    <string name="label_description_optional">Description</string>
+    <string name="hint_description">What inspired you to make this recipe...</string>
+    <string name="label_course_type">Course</string>
+    <string name="label_total_time_min">Total Time (min)</string>
+    <string name="hint_total_time">e.g. 30</string>
+    <string name="error_time_limit">Time cannot exceed 24 hours.</string>
+    <string name="label_calories_kcal">Calories (kcal)</string>
+    <string name="label_cooking_skill_level">Cooking Skill</string>
+    <string name="skill_beginner">Beginner</string>
+    <string name="skill_intermediate">Intermediate</string>
+    <string name="skill_expert">Master/Expert</string>
+    <string name="label_budget_rm_range">Budget (RM)</string>
+    <string name="label_ingredients_list">Ingredients</string>
+    <string name="help_ingredient_title">Can\'t find an ingredient?</string>
+    <string name="help_ingredient_desc">You may request for missing ingredients in the \"View &amp; Request Ingredients\" menu option under Profile. Our experts will review and approve it right away!</string>
+    <string name="btn_reset_ingredients">Reset Ingredients</string>
+    <string name="btn_add_ingredient">Add Ingredient</string>
+    <string name="label_recipe_steps">Recipe Steps</string>
+    <string name="tip_recipe_steps">Tip: Just press \'Enter\' for a new step; numbers are added automatically.</string>
+    <string name="hint_recipe_steps">1. Cook the Pasta</string>
+    <string name="label_visibility">Visibility</string>
+    <string name="visibility_public">Public</string>
+    <string name="visibility_followers">Followers Only</string>
+    <string name="visibility_private">Private</string>
+    <string name="msg_fill_all_fields">Please fill in all fields with valid information.</string>
+    <string name="btn_add_recipe_submit">ADD RECIPE</string>
+    <string name="placeholder_zero">0</string>
+    <string name="placeholder_hyphen">-</string>
+    <string name="error_unknown_occurred">An error occurred</string>
+    <string name="unknown_author">Unknown Author</string>
+    <string name="btn_save_changes">SAVE CHANGES</string>
+    <string name="dialog_clear_ingredients_title">Clear Ingredients?</string>
+    <string name="dialog_clear_ingredients_msg">Are you sure you want to clear all the ingredients you\'ve entered?</string>
+    <string name="label_ingredient_name">Name</string>
+    <string name="hint_ingredient_name">e.g. Flour</string>
+    <string name="label_ingredient_qty">Quantity</string>
+    <string name="label_ingredient_unit">Unit</string>
+    <string name="msg_no_matching_ingredients">No matching ingredients found</string>
+    <string name="label_unit_prefix">Unit: %1$s</string>
+
+    <!-- Recipe Details -->
+    <string name="title_view_recipe">View Recipe</string>
+    <string name="label_recipe_by">Recipe by</string>
+    <string name="label_updated_at_format">Updated: %1$s</string>
+    <string name="btn_follow">Follow</string>
+    <string name="btn_unfollow">Unfollow</string>
+    <string name="btn_request_sent">Request Sent</string>
+    <string name="label_recipe_not_found">Recipe not found.</string>
+    <string name="label_recipe_offline_unavailable">Recipe data not available offline.</string>
+    <string name="label_recipe_lines_format">%1$d/5 lines</string>
+    <string name="label_recipe_steps_format">%1$d/20 lines</string>
+    <string name="label_recipe_chars_format">%1$d/%2$d</string>
     <!-- BookmarkViewModel -->
     <string name="toast_bookmark_removed">Removed %1$s from bookmarks</string>
     <string name="toast_bookmark_added">Chef %1$s added to bookmarks</string>

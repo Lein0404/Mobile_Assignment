@@ -64,7 +64,7 @@ fun FollowRequestsScreen(
         user?.customId?.let { followViewModel.fetchFollowers(it) }
     }
 
-    LaunchedEffect(requests) {
+    LaunchedEffect(requests, followViewModel.isLoadingFollowList) {
         if (requests.isNotEmpty()) {
             val ids = requests.mapNotNull { it.followerId }.distinct()
             if (ids.isNotEmpty()) {

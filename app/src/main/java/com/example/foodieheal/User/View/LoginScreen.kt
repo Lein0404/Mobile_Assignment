@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -109,7 +110,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             Spacer(modifier = Modifier.weight(0.6f))
 
             Text(
-                text = "Login",
+                text = stringResource(R.string.login_title),
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -120,7 +121,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Email",
+                    text = stringResource(R.string.email_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -135,7 +136,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Email",
+                            stringResource(R.string.email_label),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -155,8 +156,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
                 // 🌟 Email Specific Errors
                 val emailError = when {
-                    hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> "Invalid email"
-                    viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> "Account not found"
+                    hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
+                    viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> stringResource(R.string.error_account_not_found)
                     else -> null
                 }
 
@@ -175,7 +176,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             // Password Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Password",
+                    text = stringResource(R.string.password_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -190,7 +191,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Password",
+                            stringResource(R.string.password_label),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -223,7 +224,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 if (viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
                     viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
                     Text(
-                        text = "Invalid password",
+                        text = stringResource(R.string.error_invalid_password_short),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -238,7 +239,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     .padding(top = 12.dp)
             ) {
                 Text(
-                    text = "Forget Password?",
+                    text = stringResource(R.string.forgot_password),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -277,7 +278,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text("LOGIN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.login_button), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
@@ -285,7 +286,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
             // Footer Link
             Text(
-                text = "Don't have an account? Sign up here!",
+                text = stringResource(R.string.signup_prompt),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -323,7 +324,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Chef Login Portal",
+                    stringResource(R.string.chef_login_portal),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp
@@ -339,7 +340,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 modifier = Modifier.padding(top = 4.dp)
             ) {
                 Text(
-                    "New Chef? Register here",
+                    stringResource(R.string.new_chef_register_prompt),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
