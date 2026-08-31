@@ -87,8 +87,13 @@ fun  HomeScreen(
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
         recipeViewModel.fetchAllRecipes()
-        // 🌟 FIX: Fetch bookmark IDs on start so Home Screen icons are in sync
-        user?.customId?.let { recipeViewModel.fetchBookmarkIds(it) }
+    }
+
+    LaunchedEffect(user?.customId) {
+        user?.customId?.let { cid ->
+            recipeViewModel.fetchBookmarkIds(cid)
+            recipeViewModel.fetchBookmarkedRecipes(cid)
+        }
     }
 
     // Auto-reload when network reconnects
