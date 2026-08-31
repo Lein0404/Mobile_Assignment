@@ -2,7 +2,12 @@ package com.example.foodieheal.User.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.foodieheal.User.Model.Follow
+import com.example.foodieheal.User.Model.User
 
+//This file configure the pattern of the folder in the local database file which name "User database"
+
+//This table stores the data for the private profile data of the user
 @Entity(tableName = "local_user")
 data class UserEntity(
     @PrimaryKey val id: String,
@@ -21,6 +26,7 @@ data class UserEntity(
     val followingCount: Int? = 0
 )
 
+//This table stores the data for the private profile data of the chef
 @Entity(tableName = "local_chef")
 data class ChefEntity(
     @PrimaryKey val id: String,
@@ -41,6 +47,8 @@ data class ChefEntity(
     val Pricing: Double?
 )
 
+//This table stores the data for the public profile data of the user,
+// we can see the name of the author on the recipe card and view the profile of that user
 @Entity(tableName = "public_users")
 data class PublicUserEntity(
     @PrimaryKey val customId: String,
@@ -53,6 +61,7 @@ data class PublicUserEntity(
     val followingCount: Int? = 0
 )
 
+//This table maps the relationships between users locally, keep track the status of the relationship
 @Entity(tableName = "local_follows")
 data class FollowEntity(
     @PrimaryKey val id: String,
@@ -62,8 +71,15 @@ data class FollowEntity(
     val createdAt: String? = null
 )
 
-fun PublicUserEntity.toDomain(): com.example.foodieheal.User.Model.User {
-    return com.example.foodieheal.User.Model.User(
+
+//toDomain = "I am reading from the phone to show the user."
+//toEntity = "I am saving to the phone to remember for later."
+
+
+// Database -> UI
+// When we want to view other user profile, this function take his data out and show us, used in view other people profile screen
+fun PublicUserEntity.toDomain(): User {
+    return User(
         id = this.id,
         customId = this.customId,
         name = this.name,
@@ -75,7 +91,9 @@ fun PublicUserEntity.toDomain(): com.example.foodieheal.User.Model.User {
     )
 }
 
-fun com.example.foodieheal.User.Model.User.toPublicEntity(): PublicUserEntity {
+//UI -> Database
+//When we save data it updates the ui instantly and save it to the database
+fun User.toPublicEntity(): PublicUserEntity {
     return PublicUserEntity(
         customId = this.customId ?: "",
         id = this.id,
@@ -87,9 +105,10 @@ fun com.example.foodieheal.User.Model.User.toPublicEntity(): PublicUserEntity {
         followingCount = this.followingCount
     )
 }
-
-fun FollowEntity.toDomain(): com.example.foodieheal.User.Model.Follow {
-    return com.example.foodieheal.User.Model.Follow(
+//Database -> UI
+//When we open follow list, it takes out the data from the database and show it to the user
+fun FollowEntity.toDomain(): Follow {
+    return Follow(
         id = this.id,
         followerId = this.followerId,
         followingId = this.followingId,
@@ -98,7 +117,9 @@ fun FollowEntity.toDomain(): com.example.foodieheal.User.Model.Follow {
     )
 }
 
-fun com.example.foodieheal.User.Model.Follow.toEntity(): FollowEntity {
+//UI -> Database
+//When we perform action like follow it immediately store into the local database
+fun Follow.toEntity(): FollowEntity {
     return FollowEntity(
         id = this.id ?: "",
         followerId = this.followerId ?: "",
