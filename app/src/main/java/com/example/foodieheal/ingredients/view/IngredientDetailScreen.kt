@@ -2,6 +2,7 @@ package com.example.foodieheal.ingredients.view
 
 import android.app.Application
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -59,6 +60,18 @@ fun IngredientDetailScreen(
         } else {
             ingredientsViewModel.fetchIngredientDetail(ingredientId)
         }
+    }
+
+    val onNavigateBack: () -> Unit = {
+        if (!navController.popBackStack()) {
+            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    BackHandler(enabled = isRequest) {
+        onNavigateBack()
     }
 
     val isLoading = if (isRequest) requestUiState.isLoading else ingredientsUiState.isLoading
@@ -124,15 +137,7 @@ fun IngredientDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
-                        if (isRequest) {
-                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                            }
-                        } else {
-                            navController.popBackStack()
-                        }
-                    }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrowback),
                             contentDescription = stringResource(R.string.back), 

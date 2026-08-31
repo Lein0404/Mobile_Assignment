@@ -179,7 +179,12 @@ class MainActivity : FragmentActivity() {
                                 popUpTo(0) { inclusive = true }
                             }
 
-                            // 2. Push the deep link target on top of the root
+                            // 2. If navigating to ingredient request detail, push Ingredients Requests Tab as parent
+                            if (route.startsWith("ingredient_detail/") && route.contains("/true")) {
+                                navController.navigate(Screen.Ingredients.createRoute(tab = 1))
+                            }
+
+                            // 3. Push the deep link target on top of the root/parent
                             navController.navigate(route)
 
                             pendingDeepLinkRoute = null
@@ -1268,6 +1273,15 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleDeepLink(intent: Intent?) {
+        // 1. Direct route string passed in extras (e.g., from notifications)
+        intent?.getStringExtra("route")?.let { route ->
+            Log.d("DeepLink", "Processing route extra: $route")
+            pendingDeepLinkRoute = route
+            intent.removeExtra("route")
+            return
+        }
+
+        // 2. URI-based deep links
         intent?.data?.let { uri ->
             processDeepLink(uri)
             intent.data = null

@@ -1,11 +1,13 @@
 package com.example.foodieheal.ingredients.viewModel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.R
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.notification.IngredientRequestNotificationHelper
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.shared.IngredientFormHelper
@@ -66,6 +68,7 @@ class IngredientRequestViewModel(
     private val networkMonitor = NetworkMonitor(application)
 
     init {
+        IngredientRequestNotificationHelper.createNotificationChannel(application)
         observeNetworkStatus()
         fetchRequests()
         fetchUnits()
@@ -93,6 +96,8 @@ class IngredientRequestViewModel(
             }
             try {
                 val requests = repository.getIngredientRequests(currentUserId)
+                checkAndNotifyStatusUpdates(requests)
+
                 val allUnits = repository.getUnits().associateBy { it.unitID }
                 val unitRequests = repository.getIngredientUnitsRequests()
 
@@ -113,6 +118,44 @@ class IngredientRequestViewModel(
                 _uiState.update { it.copy(isLoading = false, isRefreshing = false, errorMessage = R.string.ingredients_error_fetch_requests) }
             }
         }
+    }
+
+    private fun checkAndNotifyStatusUpdates(requests: List<IngredientRequest>) {
+        val context = getApplication<Application>()
+        val prefs = context.getSharedPreferences("ingredient_request_notifications", Context.MODE_PRIVATE)
+        val hasInitialized = prefs.getBoolean("has_initialized_request_tracking", false)
+
+        if (!hasInitialized) {
+            // First time tracking: record existing statuses to avoid spamming historical items
+            val editor = prefs.edit()
+            requests.forEach { req ->
+                editor.putString("notified_status_${req.ingredientRequestId}", req.requestStatus.name)
+            }
+            editor.putBoolean("has_initialized_request_tracking", true)
+            editor.apply()
+            return
+        }
+
+        // On subsequent updates: check if any request transitioned to APPROVED or REJECTED
+        val editor = prefs.edit()
+        requests.forEach { req ->
+            val prevStatus = prefs.getString("notified_status_${req.ingredientRequestId}", null)
+            if ((req.requestStatus == Status.APPROVED || req.requestStatus == Status.REJECTED) &&
+                prevStatus != req.requestStatus.name
+            ) {
+                IngredientRequestNotificationHelper.showRequestStatusNotification(
+                    context = context,
+                    requestId = req.ingredientRequestId,
+                    ingredientName = req.ingredientName,
+                    status = req.requestStatus
+                )
+                editor.putString("notified_status_${req.ingredientRequestId}", req.requestStatus.name)
+            } else if (prevStatus == null) {
+                // Record newly created pending requests
+                editor.putString("notified_status_${req.ingredientRequestId}", req.requestStatus.name)
+            }
+        }
+        editor.apply()
     }
 
     fun refresh() {

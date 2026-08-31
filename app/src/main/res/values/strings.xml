@@ -891,6 +891,15 @@
     <string name="ingredient_detail_toast_deleted">Request deleted</string>
     <string name="ingredient_detail_unspecified">Unspecified.</string>
 
+    <!-- Ingredient Request Notifications -->
+    <string name="ingredient_request_channel_name">Ingredient Request Updates</string>
+    <string name="ingredient_request_channel_desc">Notifications about your submitted ingredient request approvals and rejections</string>
+    <string name="ingredient_request_approved_title">Ingredient Request Approved</string>
+    <string name="ingredient_request_approved_msg">Your request for \"%1$s\" has been approved and added to the ingredients catalog!</string>
+    <string name="ingredient_request_rejected_title">Ingredient Request Rejected</string>
+    <string name="ingredient_request_rejected_msg">Your request for \"%1$s\" was rejected. Tap to view details and reason.</string>
+
+
     <!-- Ingredient Request -->
     <string name="ingredient_name">Ingredient Name</string>
     <string name="category">Category</string>

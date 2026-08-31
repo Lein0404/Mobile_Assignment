@@ -8,6 +8,7 @@ import com.example.foodieheal.ingredients.model.IngredientUnits
 import com.example.foodieheal.ingredients.model.IngredientUnitsRequest
 import com.example.foodieheal.ingredients.model.Ingredients
 import com.example.foodieheal.ingredients.model.Units
+import com.example.foodieheal.ingredients.notification.IngredientRequestNotificationHelper
 import com.example.foodieheal.ingredients.repo.IngredientRequestRepository
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import com.example.foodieheal.ingredients.shared.IngredientFormHelper
@@ -218,6 +219,15 @@ class AdminIngredientRequestViewModel(
                 }
 
                 repository.updateRequestStatus(requestId, Status.REJECTED, reason)
+
+                // Dispatch push notification immediately
+                IngredientRequestNotificationHelper.showRequestStatusNotification(
+                    context = getApplication(),
+                    requestId = requestId,
+                    ingredientName = current.ingredientName,
+                    status = Status.REJECTED
+                )
+
                 onComplete()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -329,6 +339,14 @@ class AdminIngredientRequestViewModel(
                 }
 
                 repository.updateIngredientRequest(updatedRequestRecord, updatedUnitRequests)
+
+                // Dispatch push notification immediately
+                IngredientRequestNotificationHelper.showRequestStatusNotification(
+                    context = getApplication(),
+                    requestId = state.requestId,
+                    ingredientName = state.ingredientName,
+                    status = Status.APPROVED
+                )
 
                 _formState.update { it.copy(isSubmitting = false) }
                 onComplete()
