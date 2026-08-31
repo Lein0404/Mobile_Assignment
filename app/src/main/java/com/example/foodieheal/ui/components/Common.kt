@@ -446,71 +446,6 @@ fun ErrorMessageCard(
 }
 
 @Composable
-fun GenderDropdown(
-    gender: String,
-    onGenderChange: (String) -> Unit
-) {
-
-    var expanded by remember { mutableStateOf(false) }
-
-    val genders = listOf("Male", "Female")
-
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        OutlinedTextField(
-            value = gender,
-            onValueChange = {},
-            label = { Text("Gender") },
-            placeholder = { Text("Select Gender") },
-            readOnly = true,
-            enabled = true,
-            trailingIcon = {
-                Text("▼")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-
-        // Click layer
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable {
-                    expanded = true
-                }
-        )
-
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            genders.forEach { option ->
-
-                DropdownMenuItem(
-                    text = {
-                        Text(option)
-                    },
-                    onClick = {
-                        onGenderChange(option)
-                        expanded = false
-                    }
-                )
-
-            }
-
-        }
-    }
-}
-
-@Composable
 fun getHighlightedText(
     fullText: String,
     query: String,
@@ -727,9 +662,17 @@ fun AppointmentStatusBadge(
         else        -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    // Format display text (capitalized or fallback)
-    val displayText = status.ifBlank { "Confirmed" }.replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+    // Format display text (localized or fallback)
+    val displayText = when (status.lowercase(Locale.ROOT).trim()) {
+        "completed" -> stringResource(R.string.chef_filter_status_completed)
+        "confirmed" -> stringResource(R.string.chef_filter_status_confirmed)
+        "cancelled" -> stringResource(R.string.chef_filter_status_cancelled)
+        "rejected"  -> stringResource(R.string.chef_filter_status_rejected)
+        "unpaid"    -> stringResource(R.string.chef_filter_status_unpaid)
+        "pending"   -> stringResource(R.string.chef_filter_status_pending)
+        else        -> status.ifBlank { stringResource(R.string.chef_filter_status_confirmed) }.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+        }
     }
 
     Surface(

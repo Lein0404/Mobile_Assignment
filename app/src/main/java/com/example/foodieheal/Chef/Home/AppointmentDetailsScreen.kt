@@ -68,6 +68,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.getHealthPrefResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.model.Appointment
@@ -465,10 +466,14 @@ fun AppointmentDetailScreen(
                     value = stringResource(R.string.party_size_format, appointment.Serving_Size)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                val dietaryPrefDisplay = getHealthPrefResId(appointment.Health_Preference)?.let {
+                    stringResource(it)
+                } ?: appointment.Health_Preference.ifBlank { stringResource(R.string.none_specified) }
+
                 DetailRow(
                     iconRes = R.drawable.health_preference,
                     label = stringResource(R.string.label_dietary_preference),
-                    value = appointment.Health_Preference.ifBlank { stringResource(R.string.none_specified) }
+                    value = dietaryPrefDisplay
                 )
 
                 if (appointment.Note.isNotBlank()) {

@@ -22,7 +22,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodieheal.Chef.States
+import com.example.foodieheal.Chef.StateResList
+import com.example.foodieheal.Chef.getStateDbName
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.AppointmentValidationError
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
@@ -407,9 +409,9 @@ fun RescheduleAppointmentScreen(
                     DropDownList(
                         labelId = R.string.state,
                         placeholderId = R.string.select_state,
-                        selectedValue = selectedState,
-                        options = States,
-                        onOptionSelected = { selectedState = it ?: "" }
+                        selectedValue = getStateResId(selectedState)?.let { stringResource(it) } ?: selectedState,
+                        options = StateResList,
+                        onOptionSelected = { resId -> selectedState = getStateDbName(resId) }
                     )
                     if (hasAttemptedSubmit && selectedState.isBlank()) {
                         Text(

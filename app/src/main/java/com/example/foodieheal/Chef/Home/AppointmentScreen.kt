@@ -29,6 +29,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.Chef.ViewModel.AppointmentsUiState
 import com.example.foodieheal.Chef.ViewModel.ChefPortalViewModel
+import com.example.foodieheal.Chef.getHealthPrefResId
 import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
@@ -36,6 +37,20 @@ import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.foodieheal.ui.components.getHighlightedText
 import java.util.Locale
+import androidx.annotation.StringRes
+
+enum class AppointmentFilterStatus(
+    val statusKey: String,
+    @get:StringRes val labelRes: Int
+) {
+    ALL("All", R.string.chef_filter_status_all),
+    PENDING("Pending", R.string.chef_filter_status_pending),
+    UNPAID("Unpaid", R.string.chef_filter_status_unpaid),
+    CONFIRMED("Confirmed", R.string.chef_filter_status_confirmed),
+    REJECTED("Rejected", R.string.chef_filter_status_rejected),
+    COMPLETED("Completed", R.string.chef_filter_status_completed),
+    CANCELLED("Cancelled", R.string.chef_filter_status_cancelled)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,13 +161,13 @@ fun AppointmentsScreen(
 
                 is AppointmentsUiState.Success -> {
                     val allAppointments = state.appointments
-                    val statusList = listOf("All", "Pending", "Unpaid", "Confirmed", "Rejected", "Completed", "Cancelled")
+                    val statusList = AppointmentFilterStatus.values()
 
                     // Status counts map
                     val statusCounts = remember(allAppointments) {
                         val counts = mutableMapOf("All" to allAppointments.size)
-                        statusList.drop(1).forEach { status ->
-                            counts[status] = allAppointments.count { it.Status.equals(status, ignoreCase = true) }
+                        statusList.drop(1).forEach { filter ->
+                            counts[filter.statusKey] = allAppointments.count { it.Status.equals(filter.statusKey, ignoreCase = true) }
                         }
                         counts
                     }
@@ -264,20 +279,20 @@ fun AppointmentsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                items(statusList) { status ->
-                                    val isSelected = selectedStatusFilter.equals(status, ignoreCase = true)
-                                    val count = statusCounts[status] ?: 0
+                                items(statusList) { filter ->
+                                    val isSelected = selectedStatusFilter.equals(filter.statusKey, ignoreCase = true)
+                                    val count = statusCounts[filter.statusKey] ?: 0
 
                                     FilterChip(
                                         selected = isSelected,
-                                        onClick = { selectedStatusFilter = status },
+                                        onClick = { selectedStatusFilter = filter.statusKey },
                                         label = {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                                             ) {
                                                 Text(
-                                                    text = status,
+                                                    text = stringResource(filter.labelRes),
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                                 )
                                                 if (count > 0) {
@@ -518,9 +533,13 @@ fun AppointmentCard(
                         shape = RoundedCornerShape(6.dp),
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     ) {
+                        val healthPrefText = getHealthPrefResId(appointment.Health_Preference)?.let {
+                            stringResource(it)
+                        } ?: appointment.Health_Preference
+
                         Text(
                             text = getHighlightedText(
-                                fullText = appointment.Health_Preference,
+                                fullText = healthPrefText,
                                 query = searchQuery
                             ),
                             style = MaterialTheme.typography.labelSmall,

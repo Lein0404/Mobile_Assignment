@@ -1514,4 +1514,40 @@
     <string name="error_chef_not_available_morning_format">厨师在%1$s上午（8 AM - 12 PM）不可预约。</string>
     <string name="error_chef_not_available_afternoon_format">厨师在%1$s下午（12 PM - 5 PM）不可预约。</string>
     <string name="error_chef_not_available_evening_format">厨师在%1$s晚上（5 PM - 9 PM）不可预约。</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">全部</string>
+    <string name="chef_filter_status_pending">待处理</string>
+    <string name="chef_filter_status_unpaid">待付款</string>
+    <string name="chef_filter_status_confirmed">已确认</string>
+    <string name="chef_filter_status_rejected">已拒绝</string>
+    <string name="chef_filter_status_completed">已完成</string>
+    <string name="chef_filter_status_cancelled">已取消</string>
+
+    <!-- Gender -->
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">槟城</string>
+    <string name="state_kedah">吉打</string>
+    <string name="state_perak">霹雳</string>
+    <string name="state_perlis">玻璃市</string>
+    <string name="state_selangor">雪兰莪</string>
+    <string name="state_negeri_sembilan">森美兰</string>
+    <string name="state_johor">柔佛</string>
+    <string name="state_melaka">马六甲</string>
+    <string name="state_pahang">彭亨</string>
+    <string name="state_terengganu">登嘉楼</string>
+    <string name="state_sabah">沙巴</string>
+    <string name="state_sarawak">砂拉越</string>
+
+    <!-- Health Preference-->
+    <string name="health_pref_no_preference">无偏好</string>
+    <string name="health_pref_low_carb">低碳水</string>
+    <string name="health_pref_vegetarian">素食</string>
+    <string name="health_pref_vegan">纯素</string>
+    <string name="health_pref_halal">清真</string>
+    <string name="health_pref_keto">生酮</string>
+    <string name="health_pref_gluten_free">无麸质</string>
 </resources>

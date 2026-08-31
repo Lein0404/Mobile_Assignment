@@ -1514,4 +1514,40 @@
     <string name="error_chef_not_available_morning_format">Chef tidak tersedia pada waktu Pagi (8 AM - 12 PM) pada hari %1$s.</string>
     <string name="error_chef_not_available_afternoon_format">Chef tidak tersedia pada waktu Petang (12 PM - 5 PM) pada hari %1$s.</string>
     <string name="error_chef_not_available_evening_format">Chef tidak tersedia pada waktu Malam (5 PM - 9 PM) pada hari %1$s.</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">Semua</string>
+    <string name="chef_filter_status_pending">Menunggu</string>
+    <string name="chef_filter_status_unpaid">Belum Bayar</string>
+    <string name="chef_filter_status_confirmed">Disahkan</string>
+    <string name="chef_filter_status_rejected">Ditolak</string>
+    <string name="chef_filter_status_completed">Selesai</string>
+    <string name="chef_filter_status_cancelled">Dibatalkan</string>
+
+    <!-- Gender -->
+    <string name="gender_male">Lelaki</string>
+    <string name="gender_female">Perempuan</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">Pulau Pinang</string>
+    <string name="state_kedah">Kedah</string>
+    <string name="state_perak">Perak</string>
+    <string name="state_perlis">Perlis</string>
+    <string name="state_selangor">Selangor</string>
+    <string name="state_negeri_sembilan">Negeri Sembilan</string>
+    <string name="state_johor">Johor</string>
+    <string name="state_melaka">Melaka</string>
+    <string name="state_pahang">Pahang</string>
+    <string name="state_terengganu">Terengganu</string>
+    <string name="state_sabah">Sabah</string>
+    <string name="state_sarawak">Sarawak</string>
+
+    <!-- AddHiringAppointment.kt -->
+    <string name="health_pref_no_preference">Tiada Keutamaan</string>
+    <string name="health_pref_low_carb">Rendah Karbohidrat</string>
+    <string name="health_pref_vegetarian">Vegetarian</string>
+    <string name="health_pref_vegan">Vegan</string>
+    <string name="health_pref_halal">Halal</string>
+    <string name="health_pref_keto">Keto</string>
+    <string name="health_pref_gluten_free">Bebas Gluten</string>
 </resources>

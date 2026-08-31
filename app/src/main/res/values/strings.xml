@@ -1515,4 +1515,40 @@
     <string name="error_chef_not_available_morning_format">Chef is not available in the Morning (8 AM - 12 PM) on %1$ss.</string>
     <string name="error_chef_not_available_afternoon_format">Chef is not available in the Afternoon (12 PM - 5 PM) on %1$ss.</string>
     <string name="error_chef_not_available_evening_format">Chef is not available in the Evening (5 PM - 9 PM) on %1$ss.</string>
+
+    <!-- AppointmentScreen.kt -->
+    <string name="chef_filter_status_all">All</string>
+    <string name="chef_filter_status_pending">Pending</string>
+    <string name="chef_filter_status_unpaid">Unpaid</string>
+    <string name="chef_filter_status_confirmed">Confirmed</string>
+    <string name="chef_filter_status_rejected">Rejected</string>
+    <string name="chef_filter_status_completed">Completed</string>
+    <string name="chef_filter_status_cancelled">Cancelled</string>
+
+    <!-- Gender -->
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+
+    <!-- State-->
+    <string name="state_pulau_pinang">Pulau Pinang</string>
+    <string name="state_kedah">Kedah</string>
+    <string name="state_perak">Perak</string>
+    <string name="state_perlis">Perlis</string>
+    <string name="state_selangor">Selangor</string>
+    <string name="state_negeri_sembilan">Negeri Sembilan</string>
+    <string name="state_johor">Johor</string>
+    <string name="state_melaka">Melaka</string>
+    <string name="state_pahang">Pahang</string>
+    <string name="state_terengganu">Terengganu</string>
+    <string name="state_sabah">Sabah</string>
+    <string name="state_sarawak">Sarawak</string>
+
+    <!-- Health Preference-->
+    <string name="health_pref_no_preference">No Preference</string>
+    <string name="health_pref_low_carb">Low Carb</string>
+    <string name="health_pref_vegetarian">Vegetarian</string>
+    <string name="health_pref_vegan">Vegan</string>
+    <string name="health_pref_halal">Halal</string>
+    <string name="health_pref_keto">Keto</string>
+    <string name="health_pref_gluten_free">Gluten-Free</string>
 </resources>
