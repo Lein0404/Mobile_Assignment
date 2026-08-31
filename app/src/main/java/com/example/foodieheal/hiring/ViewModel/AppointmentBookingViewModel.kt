@@ -13,9 +13,11 @@ import com.example.foodieheal.hiring.model.ChefAppointmentsUiState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Chef.model.WeeklyAvailability
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.Companion.parseTimeSlotToCalendars
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,11 +28,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.foodieheal.hiring.util.HiringNetworkHelper
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class AppointmentBookingViewModel(
     private val repository: HiringRepository = HiringRepository(),
@@ -116,10 +115,6 @@ class AppointmentBookingViewModel(
 
     fun updateSelectedDate(date: LocalDate) {
         _selectedDate.value = date
-    }
-
-    fun clearSelectedChef() {
-        _selectedChef.value = null
     }
 
     fun prepareRebook(
@@ -274,11 +269,6 @@ class AppointmentBookingViewModel(
         _selectedRecipes.value = currentList
     }
 
-    fun isRecipeSelected(recipeId: String?): Boolean {
-        if (recipeId == null) return false
-        return _selectedRecipes.value.any { it.recipe.recipe_id == recipeId }
-    }
-
     fun updateRecipeServings(recipeId: String, servings: Int) {
         val clampedServings = servings.coerceIn(1, 99)
         _selectedRecipes.update { list ->
@@ -304,10 +294,6 @@ class AppointmentBookingViewModel(
         _selectedRecipes.update { list ->
             list.filterNot { it.recipe.recipe_id == recipeId }
         }
-    }
-
-    fun clearSelectedRecipes() {
-        _selectedRecipes.value = emptyList()
     }
 
     private fun revalidateIfSubmitted() {
@@ -382,7 +368,7 @@ class AppointmentBookingViewModel(
         } else {
             val parts = appointmentTime.split("-").map { it.trim() }
             if (parts.size == 2) {
-                val parsedTimes = AppointmentPricingBreakdown.parseTimeSlotToCalendars(parts[0], parts[1])
+                val parsedTimes = parseTimeSlotToCalendars(parts[0], parts[1])
                 if (parsedTimes == null) {
                     errors.add(AppointmentValidationError.InvalidTime)
                 } else {
@@ -394,9 +380,9 @@ class AppointmentBookingViewModel(
                     } else {
                         val chef = selectedChef.value
                         if (chef?.availability_hours != null) {
-                            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+                            val weeklyAvail = WeeklyAvailability.fromJsonElement(chef.availability_hours)
                             val parsedDate = try {
-                                java.time.LocalDate.parse(targetDate)
+                                LocalDate.parse(targetDate)
                             } catch (_: Exception) {
                                 selectedDate.value
                             }
@@ -433,7 +419,7 @@ class AppointmentBookingViewModel(
         val parts = time.split("-").map { it.trim() }
         if (parts.size != 2) return
 
-        val parsedTimes = AppointmentPricingBreakdown.parseTimeSlotToCalendars(parts[0], parts[1]) ?: return
+        val parsedTimes = parseTimeSlotToCalendars(parts[0], parts[1]) ?: return
         val (startCal, endCal) = parsedTimes
 
         val targetDate = selectedDate.value.toString()
@@ -443,9 +429,9 @@ class AppointmentBookingViewModel(
         var unavailableReason: String? = null
         val chef = selectedChef.value
         if (chef?.availability_hours != null) {
-            val weeklyAvail = com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+            val weeklyAvail = WeeklyAvailability.fromJsonElement(chef.availability_hours)
             val parsedDate = try {
-                java.time.LocalDate.parse(targetDate)
+                LocalDate.parse(targetDate)
             } catch (_: Exception) {
                 selectedDate.value
             }
@@ -495,7 +481,7 @@ class AppointmentBookingViewModel(
 
         for (appt in appointments) {
             try {
-                val (apptStartCal, apptEndCal) = AppointmentPricingBreakdown.parseTimeSlotToCalendars(appt.Start_Time, appt.End_Time) ?: continue
+                val (apptStartCal, apptEndCal) = parseTimeSlotToCalendars(appt.Start_Time, appt.End_Time) ?: continue
 
                 // Overlap occurs if new Start < existing End AND new End > existing Start
                 val isOverlap = startCal.before(apptEndCal) && endCal.after(apptStartCal)
@@ -505,22 +491,6 @@ class AppointmentBookingViewModel(
             }
         }
         return false
-    }
-
-    fun calculateTotalPrice(
-        hourlyRate: Double = _selectedChef.value?.Pricing ?: 0.0,
-        appointmentTime: String = _uiState.value.appointmentTime,
-        selectedRecipes: List<SelectedAppointmentRecipe> = _selectedRecipes.value,
-        userState: String = _uiState.value.state,
-        chefState: String = _selectedChef.value?.state.orEmpty()
-    ): Double {
-        return AppointmentPricingBreakdown.calculate(
-            chefHourlyRate = hourlyRate,
-            appointmentTime = appointmentTime,
-            selectedRecipes = selectedRecipes,
-            userState = userState,
-            chefState = chefState
-        ).finalTotalPrice
     }
 
     fun createAppointment(
