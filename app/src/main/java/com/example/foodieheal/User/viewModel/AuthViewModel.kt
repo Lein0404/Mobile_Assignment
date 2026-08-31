@@ -33,6 +33,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import androidx.lifecycle.ViewModelProvider
+import com.example.foodieheal.R
+import java.util.Calendar
 
 class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewModel() {
     private val client = SupabaseClient.client
@@ -61,6 +63,18 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
     var isNetworkAvailable by mutableStateOf(true)
         private set
+
+    // 🌟 Greeting resource ID based on current time of day
+    val greetingResId: Int
+        get() {
+            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            return when (hour) {
+                in 5..11 -> R.string.greeting_morning
+                in 12..16 -> R.string.greeting_afternoon
+                in 17..20 -> R.string.greeting_evening
+                else -> R.string.greeting_night
+            }
+        }
 
     // 🌟 Temporary holders for registration data
     private var tempEmail = ""

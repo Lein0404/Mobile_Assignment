@@ -275,6 +275,7 @@ class MainActivity : FragmentActivity() {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             return RecipeViewModel(
+                                application = application,
                                 repository = recipeRepo,
                                 networkMonitor = networkMonitor
                             ) as T
