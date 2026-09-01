@@ -1864,4 +1864,17 @@
     <string name="cancellation_total_refund">Refund to Wallet</string>
     <string name="cancellation_confirm_btn">Confirm Cancellation</string>
     <string name="cancellation_keep_btn">Keep Booking</string>
+
+    <!-- Supabase Realtime Booking Alert -->
+    <string name="chef_realtime_alert_title">Live Booking Alert</string>
+    <string name="chef_realtime_new_booking">New booking request received! Tap to review.</string>
+    <string name="chef_realtime_booking_updated">An appointment schedule was updated by the client.</string>
+    <string name="chef_realtime_view_btn">Review</string>
+    <string name="dismiss">Dismiss</string>
+
+    <!-- Chef Client Rating -->
+    <string name="client_rating_label">Client Rating</string>
+    <string name="average_client_rating">Average Customer Rating</string>
+    <string name="no_ratings_yet">No ratings yet</string>
+    <string name="ratings_hint">Ratings will appear as appointments are completed</string>
 </resources>

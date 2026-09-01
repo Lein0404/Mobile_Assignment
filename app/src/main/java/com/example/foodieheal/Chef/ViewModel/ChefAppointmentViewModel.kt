@@ -14,7 +14,13 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.User.Model.User
+import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.Chef.notification.ChefNotificationHelper
+import io.github.jan.supabase.realtime.RealtimeChannel
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.PostgresAction
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -115,12 +121,89 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Realtime alert message StateFlow (displayed on ChefHome)
+    private val _realtimeAlert = MutableStateFlow<String?>(null)
+    val realtimeAlert: StateFlow<String?> = _realtimeAlert.asStateFlow()
+
+    fun dismissRealtimeAlert() {
+        _realtimeAlert.value = null
+    }
+
+    private var realtimeJob: Job? = null
+    private var realtimeChannel: RealtimeChannel? = null
+
+    fun startRealtimeSubscription(chefId: String) {
+        if (chefId.isBlank()) return
+        realtimeJob?.cancel()
+        realtimeJob = viewModelScope.launch {
+            try {
+                val channel = SupabaseClient.client.channel("chef_appointments_$chefId")
+                realtimeChannel = channel
+                val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+                    table = "Appointment"
+                }
+
+                channel.subscribe()
+                Log.d("ChefPortalVM", "Subscribed to Supabase Realtime channel for chef: $chefId")
+
+                changeFlow.collect { action ->
+                    Log.d("ChefPortalVM", "Realtime action on Appointment table: $action")
+                    val record = when (action) {
+                        is PostgresAction.Insert -> action.record
+                        is PostgresAction.Update -> action.record
+                        is PostgresAction.Delete -> action.oldRecord
+                        else -> null
+                    }
+                    val eventChefId = record?.get("chefId")?.let {
+                        try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                    } ?: record?.get("ChefID")?.let {
+                        try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                    }
+
+                    if (eventChefId != null && eventChefId != chefId) {
+                        return@collect
+                    }
+
+                    when (action) {
+                        is PostgresAction.Insert -> {
+                            fetchAppointmentsForCurrentChef()
+                            loadDashboardData()
+                            _realtimeAlert.value = resString(R.string.chef_realtime_new_booking)
+                            ChefNotificationHelper.showPendingAppointmentNotification(
+                                context = getApplication(),
+                                pendingCount = _pendingAppointmentsCount.value.coerceAtLeast(0) + 1,
+                                clientName = null
+                            )
+                        }
+                        is PostgresAction.Update -> {
+                            fetchAppointmentsForCurrentChef()
+                            loadDashboardData()
+                            _realtimeAlert.value = resString(R.string.chef_realtime_booking_updated)
+                        }
+                        is PostgresAction.Delete -> {
+                            fetchAppointmentsForCurrentChef()
+                            loadDashboardData()
+                        }
+                        else -> {}
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ChefPortalVM", "Error in Supabase Realtime subscription: ${e.localizedMessage}", e)
+            }
+        }
+    }
+
     init {
         // Initialize notification channel
         ChefNotificationHelper.createNotificationChannel(application)
         observeNetworkStatus()
         fetchAppointmentsForCurrentChef()
         loadDashboardData()
+
+        val currentUserId = repository.getCurrentUserId()
+        if (!currentUserId.isNullOrEmpty()) {
+            startRealtimeSubscription(currentUserId)
+        }
     }
 
     private fun observeNetworkStatus() {
@@ -320,6 +403,16 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
 
                 _uiEvent.emit(resString(R.string.error_chef_update_appointment_failed, e.localizedMessage ?: ""))
             }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        realtimeJob?.cancel()
+        viewModelScope.launch {
+            try {
+                realtimeChannel?.unsubscribe()
+            } catch (_: Exception) {}
         }
     }
 }

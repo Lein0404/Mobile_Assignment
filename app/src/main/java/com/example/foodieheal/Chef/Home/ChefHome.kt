@@ -24,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,6 +64,8 @@ fun ChefHomeScreen(
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val homeUiState by homeViewModel.homeUiState.collectAsState()
+    val realtimeAlert by homeViewModel.realtimeAlert.collectAsState()
+    val chef = authViewModel.currentChef
 
     // Refresh chef info and appointment data on initial launch
     LaunchedEffect(Unit) {
@@ -72,7 +75,13 @@ fun ChefHomeScreen(
         homeViewModel.loadDashboardData()
     }
 
-    val chef = authViewModel.currentChef
+    LaunchedEffect(chef?.id) {
+        chef?.id?.let { chefId ->
+            if (chefId.isNotBlank()) {
+                homeViewModel.startRealtimeSubscription(chefId)
+            }
+        }
+    }
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
@@ -165,6 +174,88 @@ fun ChefHomeScreen(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    // Supabase Realtime Live Booking Alert Banner
+                    if (!realtimeAlert.isNullOrBlank()) {
+                        item {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_clock),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.chef_realtime_alert_title),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = realtimeAlert ?: "",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                homeViewModel.dismissRealtimeAlert()
+                                                onNavigateToAppointments()
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                            modifier = Modifier.height(32.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.chef_realtime_view_btn),
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = { homeViewModel.dismissRealtimeAlert() },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_cancel),
+                                                contentDescription = stringResource(R.string.dismiss),
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

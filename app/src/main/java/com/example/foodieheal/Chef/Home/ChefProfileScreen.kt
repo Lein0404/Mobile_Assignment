@@ -179,23 +179,28 @@ fun ChefProfileScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Approval Status Badge
-                        val isApproved = chef.status?.equals("approved", ignoreCase = true) == true
-                        val badgeBg = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
-                        val badgeText = if (isApproved) Color(0xFF2E7D32) else Color(0xFFE65100)
-
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = badgeBg
+                        // Approval Status & Rating Badges
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = chef.status?.replaceFirstChar { it.uppercase() }
-                                    ?: stringResource(R.string.status_pending),
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = badgeText,
-                                fontWeight = FontWeight.Bold
-                            )
+                            val isApproved = chef.status?.equals("approved", ignoreCase = true) == true
+                            val badgeBg = if (isApproved) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+                            val badgeText = if (isApproved) Color(0xFF2E7D32) else Color(0xFFE65100)
+
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = badgeBg
+                            ) {
+                                Text(
+                                    text = chef.status?.replaceFirstChar { it.uppercase() }
+                                        ?: stringResource(R.string.status_pending),
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = badgeText,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -214,6 +219,15 @@ fun ChefProfileScreen(
                         iconRes = R.drawable.dollar_symbol,
                         label = stringResource(R.string.label_price),
                         value = stringResource(R.string.rate_per_hour, (chef.Pricing ?: 0.0).toInt())
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val avgRating = chef.averagerating ?: 0.0
+                    DetailRow(
+                        iconRes = R.drawable.ic_star,
+                        label = stringResource(R.string.client_rating_label),
+                        value = if (avgRating > 0.0) "%.1f ★ / 5.0".format(avgRating) else stringResource(R.string.not_available)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -270,6 +284,74 @@ fun ChefProfileScreen(
                         label = stringResource(R.string.label_location),
                         value = fullAddress.ifEmpty { stringResource(R.string.not_provided) }
                     )
+                }
+
+                // Client Rating Section
+                DetailSectionCard(title = stringResource(R.string.client_rating_label)) {
+                    val avgRating = chef.averagerating ?: 0.0
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(0xFFFFF8E1),
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_star),
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFB300),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = if (avgRating > 0.0) "%.1f ★".format(avgRating) else stringResource(R.string.no_ratings_yet),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (avgRating > 0.0) stringResource(R.string.average_client_rating) else stringResource(R.string.ratings_hint),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            if (avgRating > 0.0) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    repeat(5) { index ->
+                                        val isFilled = index < avgRating.toInt()
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_star),
+                                            contentDescription = null,
+                                            tint = if (isFilled) Color(0xFFFFB300) else Color.LightGray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Weekly Availability Schedule Grid
