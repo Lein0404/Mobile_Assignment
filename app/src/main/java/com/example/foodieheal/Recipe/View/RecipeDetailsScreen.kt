@@ -96,6 +96,7 @@ fun RecipeDetailsScreen(
                 FollowViewModel.FollowEvent.RequestAccepted -> view.context.getString(R.string.follow_request_accepted)
                 FollowViewModel.FollowEvent.RequestRejected -> view.context.getString(R.string.follow_request_rejected)
                 FollowViewModel.FollowEvent.NoInternet -> view.context.getString(R.string.desc_connect_internet_follow)
+                FollowViewModel.FollowEvent.Error -> view.context.getString(R.string.error_network_try_again)
             }
             snackbarHostState.showSnackbar(message)
         }

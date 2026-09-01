@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -43,6 +44,18 @@ fun FollowListScreen(
     var isFetchingUsers by remember { mutableStateOf(false) }
     var hasLoadedAtLeastOnce by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val errorMessage = stringResource(R.string.error_failed_refresh_list)
+
+    LaunchedEffect(Unit) {
+        followViewModel.followEvents.collect { event ->
+            if (event is FollowViewModel.FollowEvent.Error) {
+                snackbarHostState.showSnackbar(errorMessage)
+            }
+        }
+    }
+
     LaunchedEffect(userId, type) {
         if (type == "followers") {
             followViewModel.fetchFollowers(userId)
@@ -53,35 +66,34 @@ fun FollowListScreen(
 
     val followData = if (type == "followers") followViewModel.followersList else followViewModel.followingList
 
-    LaunchedEffect(followData) {
-        if (followData.isNotEmpty()) {
-            val ids = if (type == "followers") {
-                followData.filter { it.status == "ACCEPTED" }.mapNotNull { it.followerId }
-            } else {
-                followData.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
-            }
-            
-            if (ids.isNotEmpty()) {
-                isFetchingUsers = true
-                val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
-                repo.getUsersByCustomIds(ids).onSuccess { result ->
+    LaunchedEffect(followData, followViewModel.isLoadingFollowList) {
+        if (!followViewModel.isLoadingFollowList) {
+            if (followData.isNotEmpty()) {
+                val ids = if (type == "followers") {
+                    followData.filter { it.status == "ACCEPTED" }.mapNotNull { it.followerId }
+                } else {
+                    followData.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
+                }
+                
+                if (ids.isNotEmpty()) {
+                    isFetchingUsers = true
+                    val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
+                    repo.getUsersByCustomIds(ids).onSuccess { result ->
+                        users.clear()
+                        users.addAll(result)
+                        isFetchingUsers = false
+                        hasLoadedAtLeastOnce = true
+                    }.onFailure {
+                        isFetchingUsers = false
+                        hasLoadedAtLeastOnce = true
+                    }
+                } else {
                     users.clear()
-                    users.addAll(result)
-                    isFetchingUsers = false
-                    hasLoadedAtLeastOnce = true
-                }.onFailure {
                     isFetchingUsers = false
                     hasLoadedAtLeastOnce = true
                 }
             } else {
                 users.clear()
-                isFetchingUsers = false
-                hasLoadedAtLeastOnce = true
-            }
-        } else {
-            users.clear()
-            // If the viewmodel has finished its fetch and followData is still empty, then we stop loading
-            if (!followViewModel.isLoadingFollowList) {
                 isFetchingUsers = false
                 hasLoadedAtLeastOnce = true
             }
@@ -92,6 +104,7 @@ fun FollowListScreen(
     val showLoading = followViewModel.isLoadingFollowList || isFetchingUsers || !hasLoadedAtLeastOnce
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (type == "followers") stringResource(R.string.profile_followers) else stringResource(R.string.profile_following), fontWeight = FontWeight.Bold) },
