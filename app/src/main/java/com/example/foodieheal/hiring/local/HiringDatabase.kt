@@ -15,9 +15,10 @@ import kotlinx.coroutines.launch
         ChefEntity::class,
         AppointmentEntity::class,
         ChefBookmarkEntity::class,
-        ChefReviewEntity::class
+        ChefReviewEntity::class,
+        AppointmentRecipeEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class HiringDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class HiringDatabase : RoomDatabase() {
     abstract fun appointmentDao(): AppointmentDao
     abstract fun chefBookmarkDao(): ChefBookmarkDao
     abstract fun chefReviewDao(): ChefReviewDao
+    abstract fun appointmentRecipeDao(): AppointmentRecipeDao
 
     companion object {
         const val SENTINEL_FILE_NAME = "hiring_cache_sentinel.marker"
@@ -62,6 +64,7 @@ abstract class HiringDatabase : RoomDatabase() {
                             db.appointmentDao().clearAppointments()
                             db.chefBookmarkDao().clearAllBookmarks()
                             db.chefReviewDao().clearAllReviews()
+                            db.appointmentRecipeDao().clearAllAppointmentRecipes()
                             sentinelFile.createNewFile()
                         } catch (e: Exception) {
                             android.util.Log.e("HiringDatabase", "Failed to clear hiring cache after phone cache wipe", e)

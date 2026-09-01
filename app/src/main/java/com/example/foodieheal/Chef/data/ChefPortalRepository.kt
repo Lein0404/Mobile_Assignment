@@ -10,9 +10,11 @@ import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.MainActivity
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.hiring.model.AppointmentRecipe
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import com.example.foodieheal.hiring.local.toRecipeEntity
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -118,7 +120,7 @@ class ChefPortalRepository(
             val fetchedRecipes = recipeRepository.getRecipesByIds(recipeIds).getOrDefault(emptyList())
             val recipesMap = fetchedRecipes.associateBy { it.recipe_id ?: "" }
 
-            appointmentRecipes.map { apptRecipe ->
+            val result = appointmentRecipes.map { apptRecipe ->
                 AppointmentRecipeWithDetails(
                     id = apptRecipe.id,
                     appointmentId = apptRecipe.appointmentId,
@@ -129,9 +131,28 @@ class ChefPortalRepository(
                     recipe = recipesMap[apptRecipe.recipeId]
                 )
             }
+
+            try {
+                MainActivity.appContext?.let { ctx ->
+                    val dao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).appointmentRecipeDao()
+                    dao.deleteRecipesForAppointment(appointmentId)
+                    dao.insertRecipes(result.map { it.toRecipeEntity() })
+                }
+            } catch (_: Exception) {}
+
+            result
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching appointment recipes: ${e.localizedMessage}", e)
-            emptyList()
+            try {
+                MainActivity.appContext?.let { ctx ->
+                    com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx)
+                        .appointmentRecipeDao()
+                        .getRecipesForAppointment(appointmentId)
+                        .map { it.toDomain() }
+                } ?: emptyList()
+            } catch (_: Exception) {
+                emptyList()
+            }
         }
     }
 

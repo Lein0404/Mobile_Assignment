@@ -41,7 +41,8 @@ class HiringCacheCleanupService : Service() {
                     hiringDb.chefDao().clearChefs()
                     hiringDb.chefBookmarkDao().clearAllBookmarks()
                     hiringDb.chefReviewDao().clearAllReviews()
-                    Log.d(TAG, "Hiring database cache (including appointments) successfully purged.")
+                    hiringDb.appointmentRecipeDao().clearAllAppointmentRecipes()
+                    Log.d(TAG, "Hiring database cache (including appointments and recipes) successfully purged.")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error purging hiring cache on task removed", e)
                 }

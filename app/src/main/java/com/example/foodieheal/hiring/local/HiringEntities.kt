@@ -6,6 +6,11 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.ChefBookmark
 import com.example.foodieheal.hiring.model.ReviewWithUser
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
 @Entity(tableName = "hiring_chefs")
 data class ChefEntity(
@@ -231,5 +236,57 @@ fun ReviewWithUser.toEntity(): ChefReviewEntity {
         comment = this.appointment.Comment,
         date = this.appointment.Date,
         createdAt = this.appointment.created_at
+    )
+}
+
+private val recipeJsonParser = Json { ignoreUnknownKeys = true }
+
+@Entity(tableName = "hiring_appointment_recipes")
+data class AppointmentRecipeEntity(
+    @PrimaryKey
+    val id: String,
+    val appointmentId: String,
+    val recipeId: String,
+    val serviceCount: Double,
+    val customNote: String?,
+    val chefProvideIngredient: Boolean,
+    val recipeJson: String? = null
+) {
+    fun toDomain(): AppointmentRecipeWithDetails {
+        val decodedRecipe = recipeJson?.let {
+            try {
+                recipeJsonParser.decodeFromString<Recipe>(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return AppointmentRecipeWithDetails(
+            id = id,
+            appointmentId = appointmentId,
+            recipeId = recipeId,
+            service_count = serviceCount,
+            custom_note = customNote,
+            chef_provide_ingredient = chefProvideIngredient,
+            recipe = decodedRecipe
+        )
+    }
+}
+
+fun AppointmentRecipeWithDetails.toRecipeEntity(): AppointmentRecipeEntity {
+    val json = recipe?.let {
+        try {
+            recipeJsonParser.encodeToString(it)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    return AppointmentRecipeEntity(
+        id = this.id?.ifBlank { null } ?: "${appointmentId}_${recipeId}",
+        appointmentId = this.appointmentId,
+        recipeId = this.recipeId,
+        serviceCount = this.service_count,
+        customNote = this.custom_note,
+        chefProvideIngredient = this.chef_provide_ingredient,
+        recipeJson = json
     )
 }

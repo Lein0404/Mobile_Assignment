@@ -4,13 +4,16 @@ import android.util.Log
 import com.example.foodieheal.Payment.data.payment
 import com.example.foodieheal.SupabaseClient.client
 import com.example.foodieheal.hiring.local.AppointmentDao
+import com.example.foodieheal.hiring.local.AppointmentRecipeDao
 import com.example.foodieheal.hiring.local.ChefDao
 import com.example.foodieheal.hiring.local.ChefReviewDao
 import com.example.foodieheal.hiring.local.toEntity
+import com.example.foodieheal.hiring.local.toRecipeEntity
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.ReviewWithUser
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.MainActivity
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +34,18 @@ class HiringRepository(
     private var chefDao: ChefDao? = null,
     private var appointmentDao: AppointmentDao? = null,
     private var reviewDao: ChefReviewDao? = null,
+    private var appointmentRecipeDao: AppointmentRecipeDao? = null,
     private val recipeRepository: RecipeRepository = RecipeRepository()
 ) {
+
+    private fun getAppointmentRecipeDao(): AppointmentRecipeDao? {
+        if (appointmentRecipeDao == null) {
+            MainActivity.appContext?.let { ctx ->
+                appointmentRecipeDao = com.example.foodieheal.hiring.local.HiringDatabase.getInstance(ctx).appointmentRecipeDao()
+            }
+        }
+        return appointmentRecipeDao
+    }
 
     private fun getChefDao(): ChefDao? {
         if (chefDao == null) {
@@ -276,6 +289,25 @@ class HiringRepository(
                             client.from("appointment_recipe").insert(apptRecipe)
                         }
                     }
+
+                    // Cache to Room for instant offline access
+                    try {
+                        val entitiesToCache = selectedRecipes.mapNotNull { item ->
+                            val rId = item.recipe.recipe_id?.ifBlank { null } ?: return@mapNotNull null
+                            AppointmentRecipeWithDetails(
+                                id = UUID.randomUUID().toString(),
+                                appointmentId = generatedAppointmentId,
+                                recipeId = rId,
+                                service_count = item.serviceCount.toDouble(),
+                                custom_note = item.customNote.trim().ifBlank { null },
+                                chef_provide_ingredient = item.chefProvidesIngredients,
+                                recipe = item.recipe
+                            ).toRecipeEntity()
+                        }
+                        getAppointmentRecipeDao()?.insertRecipes(entitiesToCache)
+                    } catch (cacheErr: Exception) {
+                        Log.w("HiringRepository", "Failed to cache appointment recipes to Room: ${cacheErr.localizedMessage}")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("HiringRepository", "Error batch inserting appointment recipes: ${e.localizedMessage}", e)
@@ -298,13 +330,18 @@ class HiringRepository(
                 }
                 .decodeList<AppointmentRecipe>()
 
-            if (appointmentRecipes.isEmpty()) return@withContext emptyList()
+            if (appointmentRecipes.isEmpty()) {
+                try {
+                    getAppointmentRecipeDao()?.deleteRecipesForAppointment(appointmentId)
+                } catch (_: Exception) {}
+                return@withContext emptyList()
+            }
 
             val recipeIds = appointmentRecipes.map { it.recipeId }.distinct()
             val fetchedRecipes = recipeRepository.getRecipesByIds(recipeIds).getOrDefault(emptyList())
             val recipesMap = fetchedRecipes.associateBy { it.recipe_id ?: "" }
 
-            appointmentRecipes.map { apptRecipe ->
+            val result = appointmentRecipes.map { apptRecipe ->
                 AppointmentRecipeWithDetails(
                     id = apptRecipe.id,
                     appointmentId = apptRecipe.appointmentId,
@@ -315,9 +352,20 @@ class HiringRepository(
                     recipe = recipesMap[apptRecipe.recipeId]
                 )
             }
+
+            // Cache to Room for instant offline access
+            try {
+                getAppointmentRecipeDao()?.deleteRecipesForAppointment(appointmentId)
+                getAppointmentRecipeDao()?.insertRecipes(result.map { it.toRecipeEntity() })
+            } catch (cacheErr: Exception) {
+                Log.w("HiringRepository", "Failed to update Room cache for appointment recipes: ${cacheErr.localizedMessage}")
+            }
+
+            result
         } catch (e: Exception) {
             Log.e("HiringRepository", "Error fetching appointment recipes: ${e.localizedMessage}", e)
-            emptyList()
+            // Fallback to local Room cache for seamless offline resilience!
+            getAppointmentRecipeDao()?.getRecipesForAppointment(appointmentId)?.map { it.toDomain() } ?: emptyList()
         }
     }
 
@@ -525,6 +573,26 @@ class HiringRepository(
                         for (apptRecipe in appointmentRecipes) {
                             client.from("appointment_recipe").insert(apptRecipe)
                         }
+                    }
+
+                    // Cache to Room
+                    try {
+                        getAppointmentRecipeDao()?.deleteRecipesForAppointment(appointmentId)
+                        val entitiesToCache = newRecipes.mapNotNull { item ->
+                            val rId = item.recipe.recipe_id?.ifBlank { null } ?: return@mapNotNull null
+                            AppointmentRecipeWithDetails(
+                                id = UUID.randomUUID().toString(),
+                                appointmentId = appointmentId,
+                                recipeId = rId,
+                                service_count = item.serviceCount.toDouble(),
+                                custom_note = item.customNote.trim().ifBlank { null },
+                                chef_provide_ingredient = item.chefProvidesIngredients,
+                                recipe = item.recipe
+                            ).toRecipeEntity()
+                        }
+                        getAppointmentRecipeDao()?.insertRecipes(entitiesToCache)
+                    } catch (cacheErr: Exception) {
+                        Log.w("HiringRepository", "Failed to cache rescheduled recipes to Room: ${cacheErr.localizedMessage}")
                     }
                 }
             } catch (e: Exception) {

@@ -1848,4 +1848,18 @@
     <string name="tag_chef_provides">Chef supplies ingredients</string>
     <string name="tag_user_provides">Self-provided ingredients</string>
     <string name="self_provided_cost_label">Self-provided (RM 0.00)</string>
+
+    <!-- Cancellation Breakdown -->
+    <string name="cancellation_policy_title">Cancellation Policy &amp; Refund</string>
+    <string name="cancellation_confirmed_policy_desc">100% Refund Guarantee: The full amount will be credited back to your FoodieHeal Wallet immediately upon cancellation.</string>
+    <string name="cancellation_pending_policy_desc">No fee: This booking has not been charged yet. Cancelling will release the chef\'s reservation at no cost.</string>
+    <string name="cancellation_original_amount">Booking Total</string>
+    <string name="cancellation_fee">Cancellation Fee</string>
+    <string name="cancellation_fee_free">RM 0.00 (Free)</string>
+    <string name="cancellation_refund_destination">Refund Destination</string>
+    <string name="cancellation_refund_destination_wallet">FoodieHeal Wallet</string>
+    <string name="cancellation_refund_destination_na">N/A (No charge)</string>
+    <string name="cancellation_total_refund">Refund to Wallet</string>
+    <string name="cancellation_confirm_btn">Confirm Cancellation</string>
+    <string name="cancellation_keep_btn">Keep Booking</string>
 </resources>

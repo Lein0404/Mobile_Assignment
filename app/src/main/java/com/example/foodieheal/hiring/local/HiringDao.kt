@@ -111,3 +111,23 @@ interface ChefReviewDao {
     @Query("DELETE FROM hiring_reviews")
     suspend fun clearAllReviews()
 }
+
+@Dao
+interface AppointmentRecipeDao {
+
+    @Query("SELECT * FROM hiring_appointment_recipes WHERE appointmentId = :appointmentId")
+    fun getRecipesForAppointmentFlow(appointmentId: String): Flow<List<AppointmentRecipeEntity>>
+
+    @Query("SELECT * FROM hiring_appointment_recipes WHERE appointmentId = :appointmentId")
+    suspend fun getRecipesForAppointment(appointmentId: String): List<AppointmentRecipeEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecipes(recipes: List<AppointmentRecipeEntity>)
+
+    @Query("DELETE FROM hiring_appointment_recipes WHERE appointmentId = :appointmentId")
+    suspend fun deleteRecipesForAppointment(appointmentId: String)
+
+    @Query("DELETE FROM hiring_appointment_recipes")
+    suspend fun clearAllAppointmentRecipes()
+}
+
