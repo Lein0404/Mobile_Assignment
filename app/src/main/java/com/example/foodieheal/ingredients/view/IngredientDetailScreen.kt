@@ -243,10 +243,10 @@ fun IngredientDetailScreen(
                                                         ingredientId = productionId,
                                                         ingredientName = request.ingredientName,
                                                         category = request.ingredientCategory
-                                                    ) {
+                                                    ) { listTitle ->
                                                         Toast.makeText(
                                                             context,
-                                                            application.getString(R.string.ingredients_toast_added, request.ingredientName),
+                                                            application.getString(R.string.ingredients_toast_added, request.ingredientName, listTitle),
                                                             Toast.LENGTH_SHORT
                                                         ).show()
                                                     }
@@ -260,8 +260,8 @@ fun IngredientDetailScreen(
                                             }
                                         } else {
                                             ingredientsUiState.ingredientDetail?.ingredient?.let {
-                                                ingredientsViewModel.requestAddToShoppingList(it) {
-                                                    Toast.makeText(context, application.getString(R.string.ingredients_toast_added, it.ingredientName), Toast.LENGTH_SHORT).show()
+                                                ingredientsViewModel.requestAddToShoppingList(it) { listTitle ->
+                                                    Toast.makeText(context, application.getString(R.string.ingredients_toast_added, it.ingredientName, listTitle), Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                         }
@@ -444,19 +444,19 @@ fun IngredientDetailScreen(
             onSelectedIndexChange = { ingredientsViewModel.updateSelectedShoppingListIndex(it) },
             onDismissRequest = { ingredientsViewModel.onDismissSelectShoppingListDialog() },
             onConfirm = {
-                ingredientsViewModel.confirmAddPendingIngredientToShoppingList { addedName ->
+                ingredientsViewModel.confirmAddPendingIngredientToShoppingList { addedName, listTitle ->
                     Toast.makeText(
                         context,
-                        application.getString(R.string.ingredients_toast_added, addedName),
+                        application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             },
             onConfirmNewList = {
-                ingredientsViewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
+                ingredientsViewModel.confirmAddPendingIngredientToNewShoppingList { addedName, listTitle ->
                     Toast.makeText(
                         context,
-                        application.getString(R.string.ingredients_toast_added, addedName),
+                        application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

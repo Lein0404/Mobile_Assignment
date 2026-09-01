@@ -876,7 +876,7 @@
     <string name="ingredients_tab_existing">Bahan sedia ada</string>
     <string name="ingredients_tab_requests">Permohonan</string>
     <string name="ingredients_fab_new_request">Tambah permohonan</string>
-    <string name="ingredients_toast_added">%1$s telah ditambahkan ke senarai belian saya.</string>
+    <string name="ingredients_toast_added">%1$s telah ditambahkan ke %2$s.</string>
     <string name="ingredients_requests_empty">Tiada permohonan.</string>
     <string name="ingredients_requests_filter_title">Tapis mengikut status</string>
     <string name="ingredients_requests_filter_all">Semua</string>

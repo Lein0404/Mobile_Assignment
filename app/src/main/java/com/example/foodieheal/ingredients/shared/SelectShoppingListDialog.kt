@@ -31,8 +31,12 @@ fun SelectShoppingListDialog(
     onConfirm: () -> Unit,
     onConfirmNewList: () -> Unit
 ) {
-    val options = remember(shoppingLists) {
-        shoppingLists.map { it.title.ifEmpty { it.shoppingListId } }
+    val defaultLabel = stringResource(R.string.label_default)
+    val options = remember(shoppingLists, defaultLabel) {
+        shoppingLists.map { list ->
+            val baseTitle = list.title.ifEmpty { list.shoppingListId }
+            if (list.isDefault) "$baseTitle ($defaultLabel)" else baseTitle
+        }
     }
     val currentSelectedTitle = options.getOrElse(selectedIndex) { options.firstOrNull() ?: "" }
 

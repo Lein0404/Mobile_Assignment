@@ -221,10 +221,10 @@ fun IngredientsMainScreen(
                     navController = navController,
                     categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
-                        viewModel.requestAddToShoppingList(ingredient) {
+                        viewModel.requestAddToShoppingList(ingredient) { listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
+                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -251,19 +251,19 @@ fun IngredientsMainScreen(
                     onSelectedIndexChange = { viewModel.updateSelectedShoppingListIndex(it) },
                     onDismissRequest = { viewModel.onDismissSelectShoppingListDialog() },
                     onConfirm = {
-                        viewModel.confirmAddPendingIngredientToShoppingList { addedName ->
+                        viewModel.confirmAddPendingIngredientToShoppingList { addedName, listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, addedName),
+                                application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
                     },
                     onConfirmNewList = {
-                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
+                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName, listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, addedName),
+                                application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }

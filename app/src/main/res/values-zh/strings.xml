@@ -876,7 +876,7 @@
     <string name="ingredients_tab_existing">现有食材</string>
     <string name="ingredients_tab_requests">申请</string>
     <string name="ingredients_fab_new_request">添加申请</string>
-    <string name="ingredients_toast_added">%1$s 已添加到我的购物清单。</string>
+    <string name="ingredients_toast_added">%1$s 已添加到 %2$s。</string>
     <string name="ingredients_requests_empty">暂无申请。</string>
     <string name="ingredients_requests_filter_title">按状态筛选</string>
     <string name="ingredients_requests_filter_all">全部</string>
