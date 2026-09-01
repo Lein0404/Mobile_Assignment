@@ -389,6 +389,7 @@ fun RecipesScreen(
                         onClick = { showFilterSheet = true },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                         modifier = Modifier.size(52.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -429,6 +430,7 @@ fun RecipesScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                             .height(48.dp)
                             .clip(RoundedCornerShape(24.dp))
+                            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), RoundedCornerShape(24.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                             .padding(4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -495,7 +497,14 @@ fun RecipesScreen(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                 labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
-                            border = null
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                selectedBorderColor = Color.Transparent,
+                                borderWidth = 1.dp,
+                                selectedBorderWidth = 0.dp
+                            )
                         )
                     }
                     item { Spacer(modifier = Modifier.width(20.dp)) }

@@ -146,8 +146,12 @@ fun  HomeScreen(
             ) {
                 Column {
                     Text(text = stringResource(id = viewModel.greetingResId), color = Color.White, fontSize = 14.sp)
+                    val rawName = user?.name ?: stringResource(id = R.string.user)
+                    val displayName = remember(rawName) {
+                        if (rawName.startsWith("User (U") && rawName.endsWith(")")) "User" else rawName
+                    }
                     Text(
-                        text = user?.name ?: stringResource(id = R.string.default_username),
+                        text = displayName,
                         color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
