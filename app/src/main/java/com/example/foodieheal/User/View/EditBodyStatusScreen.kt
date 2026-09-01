@@ -153,7 +153,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 label = stringResource(R.string.body_status_weight), 
                 value = weight, 
                 onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) weight = it }, 
-                suffix = "kg"
+                suffix = stringResource(R.string.unit_kg)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +163,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 label = stringResource(R.string.body_status_height), 
                 value = height, 
                 onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) height = it }, 
-                suffix = "cm"
+                suffix = stringResource(R.string.unit_cm)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -195,7 +195,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                             if (bmiCategoryResId != null) {
                                 val category = stringResource(bmiCategoryResId)
                                 Text(
-                                    text = " ($category)", 
+                                    text = stringResource(R.string.bmi_category_format, category), 
                                     fontSize = 16.sp, 
                                     fontWeight = FontWeight.Bold, 
                                     color = when(bmiCategoryResId) {

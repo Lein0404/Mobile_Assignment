@@ -1510,7 +1510,7 @@
     <string name="hint_recipe_steps">1. Cook the Pasta</string>
     <string name="label_visibility">Visibility</string>
     <string name="visibility_public">Public</string>
-    <string name="visibility_followers">Followers Only</string>
+    <string name="visibility_followers">Followers</string>
     <string name="visibility_private">Private</string>
     <string name="msg_fill_all_fields">Please fill in all fields with valid information.</string>
     <string name="btn_add_recipe_submit">ADD RECIPE</string>
@@ -1795,4 +1795,32 @@
     <string name="change_password_validation_error">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
     <string name="change_password_match_error">Passwords do not match</string>
     <string name="change_password_update_btn">UPDATE PASSWORD</string>
+
+    <!-- User Auth & Follow Flow Missing Strings -->
+    <string name="no_users_found">No users found</string>
+    <string name="unknown_user">Unknown User</string>
+    <string name="error_fields_empty_auth">Email and password cannot be empty</string>
+    <string name="error_chef_portal_redirect">This account is registered as a Chef. Please use the Chef Login Portal.</string>
+    <string name="error_no_chef_account">No chef account found.</string>
+    <string name="error_chef_app_review_short">Your chef application is currently under review by admin.</string>
+    <string name="error_chef_app_rejected_short">Your chef application was rejected by admin.</string>
+    <string name="error_wifi_required">Please connect to wifi or network connection</string>
+    <string name="error_connection_timeout">Connection timeout. Please try again.</string>
+    <string name="error_registration_data_lost">Registration data lost. Please try again.</string>
+    <string name="error_reset_link_sent">Reset link sent to your email</string>
+    <string name="error_enter_email">Please enter your email address</string>
+    <string name="error_username_length">Username cannot exceed 20 characters</string>
+    <string name="error_description_length">Description cannot exceed 150 characters</string>
+    <string name="profile_updated_msg">Profile Updated</string>
+    <string name="error_invalid_current_password">Invalid current password</string>
+    <string name="error_email_already_registered">Email already registered</string>
+    <string name="error_registration_failed">Registration Failed</string>
+    <string name="error_database">Database Error</string>
+    <string name="error_password_change_failed">Failed to change password</string>
+    <string name="error_password_update_failed">Password update failed</string>
+    <string name="error_reset_email_failed">Failed to send reset email</string>
+    <string name="slogan_one">Nourishing every bite.</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="bmi_category_format"> (%1$s)</string>
 </resources>

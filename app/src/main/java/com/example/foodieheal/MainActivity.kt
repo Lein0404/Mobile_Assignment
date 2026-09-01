@@ -1439,14 +1439,14 @@ fun SplashLogoOverlay() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Foodie Heal",
+                    text = stringResource(R.string.app_name),
                     color = primaryColor,
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Nourishing every bite.",
+                    text = stringResource(R.string.slogan_one),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium

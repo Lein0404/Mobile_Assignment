@@ -52,6 +52,9 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    // 🌟 Resource strings for robust error comparison
+    val emailAlreadyRegistered = stringResource(R.string.error_email_already_registered)
+
     LaunchedEffect(Unit) {
         viewModel.resetPasswordState() // 🌟 Clear errors when re-entering Register
     }
@@ -95,7 +98,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_arrowback),
-                        "Back",
+                        stringResource(R.string.back),
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
@@ -146,8 +149,9 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 // 🌟 Email Specific Errors (Local Validation + Server Check)
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
+                    viewModel.errorMessage == emailAlreadyRegistered ||
                     viewModel.errorMessage.contains("already registered", ignoreCase = true) || 
-                    viewModel.errorMessage.contains("already exists", ignoreCase = true) -> stringResource(R.string.error_email_registered)
+                    viewModel.errorMessage.contains("already exists", ignoreCase = true) -> emailAlreadyRegistered
                     else -> null
                 }
 
@@ -341,7 +345,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
             // 🌟 Only show non-auth errors here (e.g. Network errors)
             // We filtered out "already registered" and auth-related messages since they are shown under fields
-            val isAuthError = viewModel.errorMessage.contains("already registered", ignoreCase = true) ||
+            val isAuthError = viewModel.errorMessage == emailAlreadyRegistered ||
+                             viewModel.errorMessage.contains("already registered", ignoreCase = true) ||
                              viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) ||
                              viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true) ||
                              viewModel.errorMessage.contains("Registration Failed", ignoreCase = true)
