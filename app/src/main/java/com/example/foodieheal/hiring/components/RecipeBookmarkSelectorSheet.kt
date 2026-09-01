@@ -93,6 +93,7 @@ fun RecipeBookmarkSelectorSheet(
     onToggleSelect: (Recipe) -> Unit,
     onUpdateServings: (recipeId: String, servings: Int) -> Unit,
     onUpdateNote: (recipeId: String, note: String) -> Unit,
+    onUpdateChefProvidesIngredients: (recipeId: String, provides: Boolean) -> Unit = { _, _ -> },
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
@@ -102,7 +103,7 @@ fun RecipeBookmarkSelectorSheet(
 
     var previewingRecipe by remember { mutableStateOf<Recipe?>(null) }
 
-    // Toggle between Following and Bookmarks (same as Recipe Screen Tab 2)
+    // Toggle between Following and Bookmarks
     var showFollowingFeed by remember { mutableStateOf(false) }
     val currentUserId = authViewModel?.currentUser?.customId
 
@@ -497,6 +498,9 @@ fun RecipeBookmarkSelectorSheet(
                                     },
                                     onUpdateNote = { note ->
                                         recipe.recipe_id?.let { onUpdateNote(it, note) }
+                                    },
+                                    onUpdateChefProvidesIngredients = { provides ->
+                                        recipe.recipe_id?.let { onUpdateChefProvidesIngredients(it, provides) }
                                     }
                                 )
                             }
@@ -537,7 +541,8 @@ fun RecipeBookmarkSelectorSheet(
             onDismiss = { previewingRecipe = null },
             onToggleSelect = { recipe -> onToggleSelect(recipe) },
             onUpdateServings = { recipeId, servings -> onUpdateServings(recipeId, servings) },
-            onUpdateNote = { recipeId, note -> onUpdateNote(recipeId, note) }
+            onUpdateNote = { recipeId, note -> onUpdateNote(recipeId, note) },
+            onUpdateChefProvidesIngredients = { recipeId, provides -> onUpdateChefProvidesIngredients(recipeId, provides) }
         )
     }
 }
@@ -552,7 +557,8 @@ private fun RecipeSelectableCard(
     onToggle: () -> Unit,
     onViewDetails: () -> Unit,
     onUpdateServings: (Int) -> Unit,
-    onUpdateNote: (String) -> Unit
+    onUpdateNote: (String) -> Unit,
+    onUpdateChefProvidesIngredients: (Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -780,6 +786,71 @@ private fun RecipeSelectableCard(
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Chef Provide Ingredients Checkbox
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    onUpdateChefProvidesIngredients(!selectedRecipeState.chefProvidesIngredients)
+                                },
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                if (selectedRecipeState.chefProvidesIngredients) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                }
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Checkbox(
+                                    checked = selectedRecipeState.chefProvidesIngredients,
+                                    onCheckedChange = { onUpdateChefProvidesIngredients(it) },
+                                    modifier = Modifier.size(20.dp),
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.chef_provides_ingredients_checkbox),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    val estimatedBudget = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.parseEstimatedBudget(recipe.estimatedBudget)
+                                    val dishIngredientTotal = estimatedBudget * selectedRecipeState.serviceCount
+                                    Text(
+                                        text = if (selectedRecipeState.chefProvidesIngredients) {
+                                            if (dishIngredientTotal > 0) {
+                                                "+ RM ${String.format(java.util.Locale.US, "%.2f", dishIngredientTotal)} estimated cost"
+                                            } else {
+                                                stringResource(R.string.chef_provides_ingredients_sub)
+                                            }
+                                        } else {
+                                            stringResource(R.string.user_provides_ingredients_sub)
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (selectedRecipeState.chefProvidesIngredients) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                        fontSize = 10.sp
+                                    )
                                 }
                             }
                         }

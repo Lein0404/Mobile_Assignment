@@ -596,6 +596,34 @@ fun AppointmentDetailScreen(
                                                 )
                                             }
 
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = if (item.chef_provide_ingredient) {
+                                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                                } else {
+                                                    MaterialTheme.colorScheme.surfaceVariant
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = if (item.chef_provide_ingredient) {
+                                                        stringResource(R.string.tag_chef_provides)
+                                                    } else {
+                                                        stringResource(R.string.tag_user_provides)
+                                                    },
+                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (item.chef_provide_ingredient) {
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                                    },
+                                                    fontSize = 10.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
+                                                )
+                                            }
+
                                             if ((recipe?.calories ?: 0) > 0) {
                                                 Text(
                                                     text = stringResource(R.string.recipe_calories_format, recipe?.calories ?: 0),
@@ -1069,7 +1097,8 @@ fun AppointmentDetailScreen(
             val selectedState = SelectedAppointmentRecipe(
                 recipe = targetRecipe,
                 serviceCount = item.service_count.toInt(),
-                customNote = item.custom_note.orEmpty()
+                customNote = item.custom_note.orEmpty(),
+                chefProvidesIngredients = item.chef_provide_ingredient
             )
             RecipeDetailPreviewSheet(
                 recipe = targetRecipe,

@@ -125,6 +125,7 @@ class ChefPortalRepository(
                     recipeId = apptRecipe.recipeId,
                     service_count = apptRecipe.service_count,
                     custom_note = apptRecipe.custom_note,
+                    chef_provide_ingredient = apptRecipe.chef_provide_ingredient,
                     recipe = recipesMap[apptRecipe.recipeId]
                 )
             }

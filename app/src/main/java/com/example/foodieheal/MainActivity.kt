@@ -993,6 +993,8 @@ class MainActivity : FragmentActivity() {
                                         appointmentId = appointmentId,
                                         userViewModel = userAppointmentViewModel,
                                         bookingViewModel = bookingViewModel,
+                                        recipeViewModel = sharedRecipeViewModel,
+                                        authViewModel = sharedAuthViewModel,
                                         onBackClick = { navController.popBackStack() },
                                         onRescheduleSuccess = {
                                             navController.popBackStack()

@@ -27,6 +27,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +75,7 @@ fun RecipeDetailPreviewSheet(
     onToggleSelect: ((Recipe) -> Unit)? = null,
     onUpdateServings: ((recipeId: String, servings: Int) -> Unit)? = null,
     onUpdateNote: ((recipeId: String, note: String) -> Unit)? = null,
+    onUpdateChefProvidesIngredients: ((recipeId: String, provides: Boolean) -> Unit)? = null,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
 
@@ -549,6 +553,43 @@ fun RecipeDetailPreviewSheet(
                                         }
                                     }
 
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.label_ingredients_cost),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = if (selectedRecipeState.chefProvidesIngredients) {
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.surfaceVariant
+                                            }
+                                        ) {
+                                            Text(
+                                                text = if (selectedRecipeState.chefProvidesIngredients) {
+                                                    stringResource(R.string.tag_chef_provides)
+                                                } else {
+                                                    stringResource(R.string.tag_user_provides)
+                                                },
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (selectedRecipeState.chefProvidesIngredients) {
+                                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+                                    }
+
                                     if (selectedRecipeState.customNote.isNotBlank()) {
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                         Text(
@@ -651,6 +692,75 @@ fun RecipeDetailPreviewSheet(
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
+                                }
+                            }
+                        }
+
+                        // Chef Provide Ingredients Checkbox
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    recipe.recipe_id?.let { id ->
+                                        onUpdateChefProvidesIngredients?.invoke(id, !selectedRecipeState.chefProvidesIngredients)
+                                    }
+                                },
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                if (selectedRecipeState.chefProvidesIngredients) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                }
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Checkbox(
+                                    checked = selectedRecipeState.chefProvidesIngredients,
+                                    onCheckedChange = { provides ->
+                                        recipe.recipe_id?.let { id ->
+                                            onUpdateChefProvidesIngredients?.invoke(id, provides)
+                                        }
+                                    },
+                                    modifier = Modifier.size(20.dp),
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.chef_provides_ingredients_checkbox),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    val estimatedBudget = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.parseEstimatedBudget(recipe.estimatedBudget)
+                                    val dishIngredientTotal = estimatedBudget * selectedRecipeState.serviceCount
+                                    Text(
+                                        text = if (selectedRecipeState.chefProvidesIngredients) {
+                                            if (dishIngredientTotal > 0) {
+                                                "+ RM ${String.format(java.util.Locale.US, "%.2f", dishIngredientTotal)} estimated cost"
+                                            } else {
+                                                stringResource(R.string.chef_provides_ingredients_sub)
+                                            }
+                                        } else {
+                                            stringResource(R.string.user_provides_ingredients_sub)
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (selectedRecipeState.chefProvidesIngredients) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                        fontSize = 11.sp
+                                    )
                                 }
                             }
                         }

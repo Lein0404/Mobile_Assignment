@@ -24,7 +24,12 @@ data class AppointmentRecipe(
     val service_count: Double = 1.0,
 
     @SerialName("custom_note")
-    val custom_note: String? = null
+    val custom_note: String? = null,
+
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    @SerialName("chef_provide_ingredient")
+    val chef_provide_ingredient: Boolean = true
 )
 
 @Serializable
@@ -44,11 +49,15 @@ data class AppointmentRecipeWithDetails(
     @SerialName("custom_note")
     val custom_note: String? = null,
 
+    @SerialName("chef_provide_ingredient")
+    val chef_provide_ingredient: Boolean = true,
+
     val recipe: Recipe? = null
 )
 
 data class SelectedAppointmentRecipe(
     val recipe: Recipe,
     val serviceCount: Int = 1,
-    val customNote: String = ""
+    val customNote: String = "",
+    val chefProvidesIngredients: Boolean = true
 )

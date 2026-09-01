@@ -149,7 +149,8 @@ class AppointmentBookingViewModel(
                         SelectedAppointmentRecipe(
                             recipe = recipe,
                             serviceCount = item.service_count.toInt().coerceAtLeast(1),
-                            customNote = item.custom_note.orEmpty()
+                            customNote = item.custom_note.orEmpty(),
+                            chefProvidesIngredients = item.chef_provide_ingredient
                         )
                     }
                 }
@@ -262,7 +263,8 @@ class AppointmentBookingViewModel(
                 SelectedAppointmentRecipe(
                     recipe = recipe,
                     serviceCount = defaultServings,
-                    customNote = ""
+                    customNote = "",
+                    chefProvidesIngredients = true
                 )
             )
         }
@@ -285,6 +287,16 @@ class AppointmentBookingViewModel(
             list.map { item ->
                 if (item.recipe.recipe_id == recipeId) {
                     item.copy(customNote = note)
+                } else item
+            }
+        }
+    }
+
+    fun updateChefProvidesIngredients(recipeId: String, provides: Boolean) {
+        _selectedRecipes.update { list ->
+            list.map { item ->
+                if (item.recipe.recipe_id == recipeId) {
+                    item.copy(chefProvidesIngredients = provides)
                 } else item
             }
         }

@@ -263,7 +263,8 @@ class HiringRepository(
                         appointmentId = generatedAppointmentId,
                         recipeId = rId,
                         service_count = item.serviceCount.toDouble(),
-                        custom_note = item.customNote.trim().ifBlank { null }
+                        custom_note = item.customNote.trim().ifBlank { null },
+                        chef_provide_ingredient = item.chefProvidesIngredients
                     )
                 }
                 if (appointmentRecipes.isNotEmpty()) {
@@ -310,6 +311,7 @@ class HiringRepository(
                     recipeId = apptRecipe.recipeId,
                     service_count = apptRecipe.service_count,
                     custom_note = apptRecipe.custom_note,
+                    chef_provide_ingredient = apptRecipe.chef_provide_ingredient,
                     recipe = recipesMap[apptRecipe.recipeId]
                 )
             }
@@ -394,7 +396,8 @@ class HiringRepository(
         newState: String,
         newServingSize: Int,
         newDescription: String,
-        newTotalPrice: Double = 0.0
+        newTotalPrice: Double = 0.0,
+        newRecipes: List<SelectedAppointmentRecipe>? = null
     ) = withContext(Dispatchers.IO) {
 
         val currentAppt = try {
@@ -495,6 +498,38 @@ class HiringRepository(
 
         client.from("Appointment").update(updateData) {
             filter { eq("AppointmentID", appointmentId) }
+        }
+
+        // Sync appointment recipe if updated
+        if (newRecipes != null) {
+            try {
+                client.from("appointment_recipe").delete {
+                    filter { eq("appointmentId", appointmentId) }
+                }
+                val appointmentRecipes = newRecipes.mapNotNull { item ->
+                    val rId = item.recipe.recipe_id?.ifBlank { null } ?: return@mapNotNull null
+                    AppointmentRecipe(
+                        id = UUID.randomUUID().toString(),
+                        appointmentId = appointmentId,
+                        recipeId = rId,
+                        service_count = item.serviceCount.toDouble(),
+                        custom_note = item.customNote.trim().ifBlank { null },
+                        chef_provide_ingredient = item.chefProvidesIngredients
+                    )
+                }
+                if (appointmentRecipes.isNotEmpty()) {
+                    try {
+                        client.from("appointment_recipe").insert(appointmentRecipes)
+                    } catch (batchErr: Exception) {
+                        Log.w("HiringRepository", "Batch insert into appointment_recipe on reschedule failed, trying individual inserts: ${batchErr.localizedMessage}")
+                        for (apptRecipe in appointmentRecipes) {
+                            client.from("appointment_recipe").insert(apptRecipe)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HiringRepository", "Error syncing appointment recipes on reschedule: ${e.localizedMessage}", e)
+            }
         }
 
         appointmentDao?.updateAppointmentStatus(appointmentId, "Pending")

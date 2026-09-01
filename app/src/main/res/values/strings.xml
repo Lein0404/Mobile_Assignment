@@ -1839,4 +1839,13 @@
     <string name="msg_checking_account">Checking account details… Please check your connection.</string>
     <string name="btn_waiting_for_profile">WAITING FOR PROFILE…</string>
     <string name="error_missing_author_link">Database Error: Missing author link. Please check your connection.</string>
+
+    <!-- Chef Provide Ingredient Feature -->
+    <string name="label_ingredients_cost">Ingredients Cost</string>
+    <string name="chef_provides_ingredients_checkbox">Chef provides ingredients</string>
+    <string name="chef_provides_ingredients_sub">Estimated ingredient cost added to booking</string>
+    <string name="user_provides_ingredients_sub">Self-provided ingredients (RM 0.00)</string>
+    <string name="tag_chef_provides">Chef supplies ingredients</string>
+    <string name="tag_user_provides">Self-provided ingredients</string>
+    <string name="self_provided_cost_label">Self-provided (RM 0.00)</string>
 </resources>

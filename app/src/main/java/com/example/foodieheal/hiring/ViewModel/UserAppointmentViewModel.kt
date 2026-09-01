@@ -10,6 +10,7 @@ import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,6 +59,10 @@ class UserAppointmentViewModel(
                 _isLoadingRecipes.value = false
             }
         }
+    }
+
+    suspend fun fetchAppointmentRecipes(appointmentId: String): List<AppointmentRecipeWithDetails> {
+        return repository.fetchAppointmentRecipes(appointmentId)
     }
 
     init {
@@ -174,6 +179,7 @@ class UserAppointmentViewModel(
         newServingSize: Int,
         newDescription: String,
         newTotalPrice: Double = 0.0,
+        newRecipes: List<SelectedAppointmentRecipe>? = null,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -182,8 +188,10 @@ class UserAppointmentViewModel(
                 // Reschedules appointment: credits previous payment (if confirmed/paid) back to user's wallet and resets status to Pending
                 repository.rescheduleAppointment(
                     appointmentId, newDate, newStartTime, newEndTime,
-                    newAddress, newPostcode, newState, newServingSize, newDescription, newTotalPrice
+                    newAddress, newPostcode, newState, newServingSize, newDescription, newTotalPrice,
+                    newRecipes
                 )
+                loadRecipesForAppointment(appointmentId)
                 fetchAppointmentsForCurrentUser(forceRefresh = true)
                 onSuccess()
             } catch (e: Exception) {

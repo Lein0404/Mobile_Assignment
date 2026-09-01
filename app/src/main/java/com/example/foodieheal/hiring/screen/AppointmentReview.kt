@@ -351,6 +351,31 @@ fun AppointmentReviewScreen(
                                                     softWrap = false
                                                 )
                                             }
+
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = if (item.chefProvidesIngredients) {
+                                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                                } else {
+                                                    MaterialTheme.colorScheme.surfaceVariant
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = if (item.chefProvidesIngredients) {
+                                                        stringResource(R.string.tag_chef_provides)
+                                                    } else {
+                                                        stringResource(R.string.tag_user_provides)
+                                                    },
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = if (item.chefProvidesIngredients) {
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                                    },
+                                                    fontSize = 10.sp
+                                                )
+                                            }
                                         }
 
                                         if (item.customNote.isNotBlank()) {
@@ -469,10 +494,16 @@ fun AppointmentReviewScreen(
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
+                                    val costText = if (dish.chefProvidesIngredients) {
+                                        String.format(Locale.US, "RM %.2f", dish.totalCost)
+                                    } else {
+                                        stringResource(R.string.self_provided_cost_label)
+                                    }
                                     Text(
-                                        text = String.format(Locale.US, "RM %.2f", dish.totalCost),
+                                        text = costText,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = if (dish.chefProvidesIngredients) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                        fontWeight = if (!dish.chefProvidesIngredients) FontWeight.SemiBold else FontWeight.Normal,
                                         maxLines = 1,
                                         softWrap = false
                                     )

@@ -473,14 +473,51 @@ fun AddAppointmentFormScreen(
                                                     overflow = TextOverflow.Ellipsis,
                                                     color = MaterialTheme.colorScheme.onSurface
                                                 )
-                                                Text(
-                                                    text = stringResource(R.string.portion_count_format, item.serviceCount) +
-                                                            if (item.customNote.isNotBlank()) " • “${item.customNote}”" else "",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
+
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.portion_count_format, item.serviceCount),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Surface(
+                                                        shape = RoundedCornerShape(4.dp),
+                                                        color = if (item.chefProvidesIngredients) {
+                                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                                        } else {
+                                                            MaterialTheme.colorScheme.surfaceVariant
+                                                        }
+                                                    ) {
+                                                        Text(
+                                                            text = if (item.chefProvidesIngredients) {
+                                                                stringResource(R.string.tag_chef_provides)
+                                                            } else {
+                                                                stringResource(R.string.tag_user_provides)
+                                                            },
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = if (item.chefProvidesIngredients) {
+                                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                                            } else {
+                                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                                            },
+                                                            fontSize = 10.sp
+                                                        )
+                                                    }
+                                                }
+
+                                                if (item.customNote.isNotBlank()) {
+                                                    Text(
+                                                        text = "“${item.customNote}”",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
                                             }
 
                                             Row(
@@ -799,6 +836,7 @@ fun AddAppointmentFormScreen(
             onToggleSelect = { recipe -> viewModel.toggleRecipeSelection(recipe) },
             onUpdateServings = { recipeId, servings -> viewModel.updateRecipeServings(recipeId, servings) },
             onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) },
+            onUpdateChefProvidesIngredients = { recipeId, provides -> viewModel.updateChefProvidesIngredients(recipeId, provides) },
             onDismiss = { showBookmarkSelectorSheet = false }
         )
     }
@@ -812,7 +850,8 @@ fun AddAppointmentFormScreen(
             onDismiss = { previewingRecipeInForm = null },
             onToggleSelect = { recipe -> viewModel.toggleRecipeSelection(recipe) },
             onUpdateServings = { recipeId, servings -> viewModel.updateRecipeServings(recipeId, servings) },
-            onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) }
+            onUpdateNote = { recipeId, note -> viewModel.updateRecipeCustomNote(recipeId, note) },
+            onUpdateChefProvidesIngredients = { recipeId, provides -> viewModel.updateChefProvidesIngredients(recipeId, provides) }
         )
     }
 }

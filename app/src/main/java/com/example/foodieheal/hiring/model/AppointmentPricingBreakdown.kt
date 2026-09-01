@@ -9,7 +9,8 @@ data class RecipeCostItem(
     val recipeName: String,
     val baseEstimatedCost: Double,
     val portions: Int,
-    val totalCost: Double
+    val totalCost: Double,
+    val chefProvidesIngredients: Boolean = true
 )
 
 // Formula = Total Price = (Labor Cost + Ingredients Cost + Travel Surcharge) * (1 + Platform Fee Rate)
@@ -42,17 +43,18 @@ data class AppointmentPricingBreakdown(
             val hours = calculateHours(appointmentTime)
             val laborCost = chefHourlyRate * hours
 
-            // Ingredients cost (scaled per serving)
+            // Ingredients cost (scaled per serving only if chef provides ingredients)
             val costItems = selectedRecipes.map { item ->
                 val baseEstimated = parseEstimatedBudget(item.recipe.estimatedBudget)
                 val portions = item.serviceCount.coerceAtLeast(1)
-                val itemTotal = baseEstimated * portions
+                val itemTotal = if (item.chefProvidesIngredients) baseEstimated * portions else 0.0
                 RecipeCostItem(
                     recipeId = item.recipe.recipe_id,
                     recipeName = item.recipe.recipeName,
                     baseEstimatedCost = baseEstimated,
                     portions = portions,
-                    totalCost = itemTotal
+                    totalCost = itemTotal,
+                    chefProvidesIngredients = item.chefProvidesIngredients
                 )
             }
             val ingredientsCost = costItems.sumOf { it.totalCost }

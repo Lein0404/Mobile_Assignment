@@ -4,6 +4,7 @@ import android.widget.Toast
 import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,20 +14,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.foodieheal.Chef.StateResList
 import com.example.foodieheal.Chef.getStateDbName
 import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
+import com.example.foodieheal.User.viewModel.AuthViewModel
+import com.example.foodieheal.hiring.components.RecipeBookmarkSelectorSheet
+import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
 import com.example.foodieheal.hiring.model.AppointmentValidationError
+import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
@@ -46,6 +57,8 @@ fun RescheduleAppointmentScreen(
     appointmentId: String,
     userViewModel: UserAppointmentViewModel = viewModel(),
     bookingViewModel: AppointmentBookingViewModel = viewModel(),
+    recipeViewModel: RecipeViewModel? = null,
+    authViewModel: AuthViewModel? = null,
     onBackClick: () -> Unit,
     onRescheduleSuccess: () -> Unit
 ) {
@@ -81,6 +94,30 @@ fun RescheduleAppointmentScreen(
     var servingSize by remember { mutableStateOf(appointment.Serving_Size?.toString().orEmpty()) }
     var description by remember { mutableStateOf(appointment.Note.orEmpty()) }
 
+    // Selected recipes state
+    var selectedRecipes by remember { mutableStateOf<List<SelectedAppointmentRecipe>>(emptyList()) }
+    var hasLoadedInitialRecipes by remember { mutableStateOf(false) }
+    var showBookmarkSelectorSheet by remember { mutableStateOf(false) }
+    var previewingRecipeInForm by remember { mutableStateOf<Recipe?>(null) }
+
+    // Pre-populate attached recipes from appointment
+    LaunchedEffect(appointmentId) {
+        if (!hasLoadedInitialRecipes) {
+            val fetched = userViewModel.fetchAppointmentRecipes(appointmentId)
+            selectedRecipes = fetched.mapNotNull { item ->
+                item.recipe?.let { recipe ->
+                    SelectedAppointmentRecipe(
+                        recipe = recipe,
+                        serviceCount = item.service_count.toInt().coerceAtLeast(1),
+                        customNote = item.custom_note.orEmpty(),
+                        chefProvidesIngredients = item.chef_provide_ingredient
+                    )
+                }
+            }
+            hasLoadedInitialRecipes = true
+        }
+    }
+
     // Dynamic Price Calculation using AppointmentPricingBreakdown
     val chefHourlyRate = remember(appointment) {
         val originalHours = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculateHours(appointment.Start_Time, appointment.End_Time)
@@ -88,11 +125,11 @@ fun RescheduleAppointmentScreen(
         if (originalHours > 0.0) origPrice / originalHours else origPrice
     }
 
-    val pricingBreakdown = remember(chefHourlyRate, startTime, endTime, selectedState, appointment) {
+    val pricingBreakdown = remember(chefHourlyRate, startTime, endTime, selectedState, appointment, selectedRecipes) {
         com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculate(
             chefHourlyRate = chefHourlyRate,
             appointmentTime = "$startTime - $endTime",
-            selectedRecipes = emptyList(),
+            selectedRecipes = selectedRecipes,
             userState = selectedState,
             chefState = appointment.State
         )
@@ -457,6 +494,236 @@ fun RescheduleAppointmentScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Requested Dishes Section
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.requested_dishes_optional),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.attach_bookmarked_recipes_sub),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            if (selectedRecipes.isNotEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.dishes_selected_count, selectedRecipes.size),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        softWrap = false,
+                                        maxLines = 1,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
+
+                        if (selectedRecipes.isEmpty()) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.bookmark),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.no_specific_recipes_attached),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else {
+                            // Selected recipes list
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                selectedRecipes.forEach { item ->
+                                    val recipe = item.recipe
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { previewingRecipeInForm = recipe },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            AsyncImage(
+                                                model = recipe.recipeImageUrl,
+                                                contentDescription = recipe.recipeName,
+                                                modifier = Modifier
+                                                    .size(42.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                                contentScale = ContentScale.Crop,
+                                                error = painterResource(R.drawable.ic_recipe),
+                                                placeholder = painterResource(R.drawable.ic_recipe)
+                                            )
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = recipe.recipeName,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.portion_count_format, item.serviceCount),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Surface(
+                                                        shape = RoundedCornerShape(4.dp),
+                                                        color = if (item.chefProvidesIngredients) {
+                                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                                        } else {
+                                                            MaterialTheme.colorScheme.surfaceVariant
+                                                        }
+                                                    ) {
+                                                        Text(
+                                                            text = if (item.chefProvidesIngredients) {
+                                                                stringResource(R.string.tag_chef_provides)
+                                                            } else {
+                                                                stringResource(R.string.tag_user_provides)
+                                                            },
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = if (item.chefProvidesIngredients) {
+                                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                                            } else {
+                                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                                            },
+                                                            fontSize = 10.sp
+                                                        )
+                                                    }
+                                                }
+
+                                                if (item.customNote.isNotBlank()) {
+                                                    Text(
+                                                        text = "“${item.customNote}”",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                            ) {
+                                                IconButton(
+                                                    onClick = { previewingRecipeInForm = recipe },
+                                                    modifier = Modifier.size(30.dp)
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_recipe),
+                                                        contentDescription = stringResource(R.string.view_details),
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(17.dp)
+                                                    )
+                                                }
+
+                                                IconButton(
+                                                    onClick = {
+                                                        selectedRecipes = selectedRecipes.filterNot { it.recipe.recipe_id == recipe.recipe_id }
+                                                    },
+                                                    modifier = Modifier.size(30.dp)
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.cancel),
+                                                        contentDescription = stringResource(R.string.remove),
+                                                        tint = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.size(17.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { showBookmarkSelectorSheet = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.bookmark),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (selectedRecipes.isEmpty()) stringResource(R.string.attach_from_bookmarks_btn) else stringResource(R.string.edit_attached_recipes_btn, selectedRecipes.size),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Submit Button
@@ -488,6 +755,7 @@ fun RescheduleAppointmentScreen(
                                 newServingSize = servingSize.toIntOrNull() ?: 0,
                                 newDescription = description,
                                 newTotalPrice = recalculatedTotalPrice,
+                                newRecipes = selectedRecipes,
                                 onSuccess = {
                                     isSubmitting = false
                                     Toasty.custom(context, successToastMsg, R.drawable.foodieheallogo_removebg_and_word, R.color.black, Toast.LENGTH_SHORT, true, true).show()
@@ -617,6 +885,86 @@ fun RescheduleAppointmentScreen(
         ) {
             TimePicker(state = timePickerState)
         }
+    }
+
+    // Bookmark Recipe Selector Bottom Sheet
+    if (showBookmarkSelectorSheet) {
+        RecipeBookmarkSelectorSheet(
+            selectedRecipes = selectedRecipes,
+            recipeViewModel = recipeViewModel,
+            authViewModel = authViewModel,
+            onToggleSelect = { recipe ->
+                val existing = selectedRecipes.find { it.recipe.recipe_id == recipe.recipe_id }
+                selectedRecipes = if (existing != null) {
+                    selectedRecipes.filterNot { it.recipe.recipe_id == recipe.recipe_id }
+                } else {
+                    val defaultServings = servingSize.toIntOrNull()?.takeIf { it > 0 } ?: 1
+                    selectedRecipes + SelectedAppointmentRecipe(
+                        recipe = recipe,
+                        serviceCount = defaultServings,
+                        customNote = "",
+                        chefProvidesIngredients = true
+                    )
+                }
+            },
+            onUpdateServings = { recipeId, servings ->
+                val clamped = servings.coerceIn(1, 99)
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(serviceCount = clamped) else it
+                }
+            },
+            onUpdateNote = { recipeId, note ->
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(customNote = note) else it
+                }
+            },
+            onUpdateChefProvidesIngredients = { recipeId, provides ->
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(chefProvidesIngredients = provides) else it
+                }
+            },
+            onDismiss = { showBookmarkSelectorSheet = false }
+        )
+    }
+
+    // Recipe Details Sheet Modal from main form
+    previewingRecipeInForm?.let { targetRecipe ->
+        val selectedState = selectedRecipes.find { it.recipe.recipe_id == targetRecipe.recipe_id }
+        RecipeDetailPreviewSheet(
+            recipe = targetRecipe,
+            selectedRecipeState = selectedState,
+            onDismiss = { previewingRecipeInForm = null },
+            onToggleSelect = { recipe ->
+                val existing = selectedRecipes.find { it.recipe.recipe_id == recipe.recipe_id }
+                selectedRecipes = if (existing != null) {
+                    selectedRecipes.filterNot { it.recipe.recipe_id == recipe.recipe_id }
+                } else {
+                    val defaultServings = servingSize.toIntOrNull()?.takeIf { it > 0 } ?: 1
+                    selectedRecipes + SelectedAppointmentRecipe(
+                        recipe = recipe,
+                        serviceCount = defaultServings,
+                        customNote = "",
+                        chefProvidesIngredients = true
+                    )
+                }
+            },
+            onUpdateServings = { recipeId, servings ->
+                val clamped = servings.coerceIn(1, 99)
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(serviceCount = clamped) else it
+                }
+            },
+            onUpdateNote = { recipeId, note ->
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(customNote = note) else it
+                }
+            },
+            onUpdateChefProvidesIngredients = { recipeId, provides ->
+                selectedRecipes = selectedRecipes.map {
+                    if (it.recipe.recipe_id == recipeId) it.copy(chefProvidesIngredients = provides) else it
+                }
+            }
+        )
     }
 }
 
