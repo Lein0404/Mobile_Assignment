@@ -821,12 +821,28 @@ fun ProfileScreen(
                                     modifier = Modifier.size(52.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.filter),
-                                            contentDescription = "Filter",
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.onSurface
-                                        )
+                                        val activeFilterCount = (if (filterMaxTime < 240f) 1 else 0) +
+                                                (if (filterMaxCalories < 5000f) 1 else 0) +
+                                                (if (filterSkill != null) 1 else 0) +
+                                                (if (filterBudget != null) 1 else 0) +
+                                                (if (filterIngredients.isNotEmpty()) 1 else 0)
+
+                                        BadgedBox(
+                                            badge = {
+                                                if (activeFilterCount > 0) {
+                                                    Badge(containerColor = primaryColor, contentColor = Color.White) {
+                                                        Text(activeFilterCount.toString())
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.filter),
+                                                contentDescription = "Filter",
+                                                modifier = Modifier.size(20.dp),
+                                                tint = if (activeFilterCount > 0) primaryColor else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1193,13 +1209,13 @@ fun ProfileScreen(
     }
 
     // Big Image View
-    if (showBigImage && user != null) {
+    if (showBigImage) {
         Dialog(onDismissRequest = { showBigImage = false }) {
             Box(
                 modifier = Modifier.fillMaxWidth().aspectRatio(1f).background(Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
-                val profilePicUrl = user.profilePicUrl ?: ""
+                val profilePicUrl = displayUser?.profilePicUrl ?: ""
                 val bitmap = remember(profilePicUrl) {
                     if (profilePicUrl.isNotEmpty() && !profilePicUrl.startsWith("http")) {
                         try {
@@ -1231,7 +1247,7 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = user.name?.take(1)?.uppercase() ?: "?",
+                            text = displayUser?.name?.take(1)?.uppercase() ?: "?",
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 120.sp,
                             fontWeight = FontWeight.Bold
