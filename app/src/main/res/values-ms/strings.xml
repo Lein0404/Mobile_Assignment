@@ -1,0 +1,1413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Foodie Heal</string>
+
+    <string name="login_title">Log masuk</string>
+    <string name="email_label">E-mel</string>
+    <string name="password_label">Kata laluan</string>
+    <string name="hide_password">Sembunyikan kata laluan</string>
+    <string name="show_password">Tunjukkan kata laluan</string>
+    <string name="nav_home">Laman utama</string>
+    <string name="topapp_back">Kembali ke halaman sebelumnya</string>
+    <string name="search">Cari</string>
+
+    <!-- Login -->
+    <string name="full_name">Nama</string>
+    <string name="enter_name">Sila masukkan nama anda</string>
+    <string name="age">Umur</string>
+    <string name="enter_age">Sila masukkan umur anda</string>
+    <string name="email">E-mel</string>
+    <string name="phone_number">Nombor telefon</string>
+    <string name="password">Kata laluan</string>
+    <string name="confirm_password">Sahkan kata laluan</string>
+    <string name="gender">Jantina</string>
+    <string name="select_gender">Pilih jantina</string>
+    <string name="experience">Tahun pengalaman kerja</string>
+    <string name="description">Penerangan</string>
+    <string name="address">Alamat</string>
+    <string name="postcode">Poskod</string>
+    <string name="state">Negeri</string>
+    <string name="select_state">Pilih negeri anda</string>
+    <string name="serving_size">Hidangan</string>
+    <string name="select_size">Pilih saiz hidangan</string>
+    <string name="health_pref_label">Keutamaan kesihatan</string>
+    <string name="select_health_pref">Pilih keutamaan kesihatan</string>
+
+    <!-- Error Messages -->
+    <string name="error_fields_empty">Sila isi semua maklumat yang diperlukan.</string>
+    <string name="error_unknown">Ralat tidak diketahui berlaku. Sila cuba lagi kemudian.</string>
+    <string name="error_user_not_found">Tiada akaun ditemui menggunakan e-mel ini.</string>
+    <string name="error_network_connection">Tiada sambungan internet. Sila semak rangkaian anda dan cuba lagi.</string>
+    <string name="error_logout_failed">Gagal log keluar. Sila cuba lagi.</string>
+    <string name="error_invalid_credentials">E-mel atau kata laluan tidak sah. Sila cuba lagi.</string>
+    <string name="nav_logout">Log keluar</string>
+    <string name="logout_confirm_title">Sahkan log keluar</string>
+    <string name="logout_confirm_message">Adakah anda pasti mahu log keluar?</string>
+
+    <!-- Image related -->
+    <string name="image">Imej</string>
+    <string name="select_image">Pilih imej</string>
+    <string name="change_image">Tukar imej</string>
+    <string name="remove_image">Buang imej</string>
+    <string name="image_unavailable">Tiada imej tersedia</string>
+    <string name="upload_failed">Gagal memuat naik imej.</string>
+
+    <!-- Common Dialog Buttons -->
+    <string name="dialog_done">Selesai</string>
+    <string name="dialog_yes">Ya</string>
+    <string name="dialog_cancel">Batal</string>
+
+    <!-- Add meal to plan strings -->
+    <string name="daily_date_picker_dialog">Pilih julat tarikh sasaran</string>
+    <string name="offline">Luar talian</string>
+    <string name="add_slots">Tambah (%1$d)</string>
+    <string name="select_slots_below">Pilih slot masa di bawah</string>
+    <string name="adding_recipe">Sedang menambah: %1$s</string>
+
+    <string name="previous_week">Minggu sebelumnya</string>
+    <string name="calendar">Kalendar</string>
+    <string name="next_week">Minggu seterusnya</string>
+
+    <string name="no_network">Tiada rangkaian</string>
+    <string name="no_internet_connection">Tiada sambungan internet</string>
+    <string name="connect_to_internet_message">Sila sambungkan ke internet untuk melihat dan mengemas kini pelan hidangan anda.</string>
+
+    <string name="breakfast">Sarapan</string>
+    <string name="lunch">Makan tengah hari</string>
+    <string name="dinner">Makan malam</string>
+    <string name="snack">Snek</string>
+    <string name="meal_planner">Pelan hidangan</string>
+
+    <string name="success">Berjaya!</string>
+    <string name="meals_added_successfully">Hidangan anda telah berjaya ditambahkan ke dalam pelan hidangan.</string>
+    <string name="ok">Sahkan</string>
+
+    <!-- Calorie Status Identifiers -->
+    <string name="status_under_intake">Pengambilan tidak mencukupi</string>
+    <string name="status_slightly_low">Sedikit rendah</string>
+    <string name="status_ideal_intake">Pengambilan ideal</string>
+    <string name="status_slightly_high">Sedikit tinggi</string>
+    <string name="status_excess_intake">Pengambilan berlebihan</string>
+
+    <!-- Content Labels and Value formatters -->
+    <string name="label_todays_calories">Kalori hari ini: </string>
+    <string name="format_kcal_current">%1$d kcal</string>
+    <string name="format_kcal_max"> / %1$d kcal</string>
+    <string name="desc_show_calorie_guide">Tunjukkan panduan analisis kalori</string>
+    <string name="format_bullet_percent">• %1$s</string>
+    <string name="btn_close">Tutup</string>
+
+    <!-- Calorie Help Dialog Strings -->
+    <string name="dialog_title_calorie_works">Cara sasaran kalori berfungsi</string>
+    <string name="dialog_description_ranges">Julat status kalori yang disyorkan dikira berdasarkan sasaran pengambilan anda:</string>
+
+    <!-- Percent Ranges -->
+    <string name="percent_under_80">&lt; 80%</string>
+    <string name="percent_80_94">80% - 94%</string>
+    <string name="percent_95_105">95% - 105%</string>
+    <string name="percent_106_120">106% - 120%</string>
+    <string name="percent_over_120">&gt; 120%</string>
+
+    <!-- Range Descriptions -->
+    <string name="desc_under_intake">Pengambilan kalori terlalu rendah dan mungkin tidak memenuhi keperluan nutrisi badan.</string>
+    <string name="desc_slightly_low">Sedikit di bawah sasaran. Masih boleh diterima, tetapi masih ada ruang untuk pelarasan.</string>
+    <string name="desc_ideal_intake">Sangat hampir dengan sasaran pengambilan yang disyorkan.</string>
+    <string name="desc_slightly_high">Sedikit melebihi had atas yang disyorkan.</string>
+    <string name="desc_excess_intake">Jauh melebihi julat pengambilan sasaran.</string>
+
+    <!-- Dynamic Footnote Notice Splits -->
+    <string name="profile_notice_part_1">Had pengambilan kalori harian yang disyorkan akan diselaraskan secara dinamik berdasarkan BMI, ketinggian dan sasaran berat badan yang direkodkan. Anda boleh mengemas kini parameter ini pada bila-bila masa melalui</string>
+    <string name="profile_notice_link">halaman profil</string>
+    <string name="profile_notice_part_2"> untuk mengemas kini parameter ini.</string>
+
+    <!-- Date Picker Dialog Header Texts -->
+    <string name="dialog_title_select_date_view">Pilih tarikh untuk dilihat</string>
+    <string name="dialog_title_choose_paste_date">Pilih tarikh untuk menampal pelan hari ini</string>
+    <string name="dialog_title_choose_weekly_repeat_date">Pilih julat tarikh dan ulangi pelan mingguan anda!</string>
+    <string name="dialog_title_choose_date_range_paste">Pilih julat tarikh untuk menampal pelan mingguan</string>
+    <string name="msg_copy_daily_success">Pelan berjaya disalin ke %1$s!</string>
+    <string name="msg_copy_daily_failed">Gagal menyalin pelan hidangan.</string>
+    <string name="msg_copy_weekly_success">%1$d hari berjaya ditambahkan ke dalam pelan hidangan anda!</string>
+    <string name="msg_copy_weekly_none">Tiada resipi untuk disalin ditemui.</string>
+    <string name="msg_apply_template_success">Templat “%1$s” berjaya digunakan!</string>
+    <string name="daily_success_notify">Pelan harian berjaya disalin!</string>
+    <string name="weekly_success_notify">Pelan mingguan berjaya disalin!</string>
+
+    <!-- Content Descriptions -->
+    <string name="desc_calendar_back">Minggu sebelumnya dalam kalendar</string>
+    <string name="desc_calendar_icon">Kalendar</string>
+    <string name="desc_calendar_forward">Minggu seterusnya dalam kalendar</string>
+    <string name="desc_copy_daily_plan">Salin pelan harian</string>
+    <string name="desc_no_network">Tiada rangkaian tersedia</string>
+    <string name="share">Kongsi</string>
+
+    <!-- Loading and Connectivity States -->
+    <string name="title_no_internet">Tiada sambungan internet</string>
+    <string name="desc_connect_internet_prompt">Sila sambungkan ke internet untuk melihat dan mengemas kini pelan hidangan anda.</string>
+    <string name="desc_connect_internet_recipe">Sila sambungkan ke internet untuk melihat dan mengemas kini resipi anda.</string>
+    <string name="desc_connect_internet_profile">Sila sambungkan ke internet untuk mengemas kini profil anda.</string>
+    <string name="desc_connect_internet_password">Sila sambungkan ke internet untuk menukar kata laluan anda.</string>
+    <string name="desc_connect_internet_follow">Tiada sambungan internet. Sila semak rangkaian sebelum mengikuti atau berhenti mengikuti.</string>
+    <string name="desc_connect_internet_follow_request">Sila sambungkan ke internet untuk mengurus permintaan mengikuti.</string>
+    <string name="follow_request_sent">Permintaan mengikuti telah dihantar!</string>
+    <string name="follow_request_cancelled">Permintaan mengikuti telah dibatalkan!</string>
+    <string name="unfollowed_user">Anda telah berhenti mengikuti pengguna!</string>
+    <string name="follow_request_accepted">Permintaan mengikuti telah diterima!</string>
+    <string name="follow_request_rejected">Permintaan mengikuti telah ditolak!</string>
+    <string name="label_loading_plans">Memuatkan pelan…</string>
+
+    <!-- Meal Sections Categories -->
+    <string name="meal_title_breakfast">Sarapan</string>
+    <string name="meal_title_lunch">Makan tengah hari</string>
+    <string name="meal_title_dinner">Makan malam</string>
+    <string name="meal_title_snack">Snek</string>
+
+    <!-- Action Buttons -->
+    <string name="btn_copy_todays_plan">Salin pelan hari ini?</string>
+
+    <!-- Recipe Numeric Metrics Formatters -->
+    <string name="format_recipe_calories">%1$d kcal</string>
+    <string name="format_recipe_duration">%1$d minit</string>
+
+    <!-- UI Interaction Descriptions -->
+    <string name="desc_remove_recipe">Buang resipi</string>
+    <string name="desc_add_recipe">Tambah</string>
+    <string name="desc_checkbox_checked">Dipilih</string>
+
+    <!-- Empty State Placeholders -->
+    <string name="placeholder_empty_plan">Mari mula merancang!</string>
+
+    <!-- Hiring Screen-->
+    <string name="btn_retry">Cuba lagi</string>
+    <string name="default_chef_name">Chef</string>
+    <string name="rate_per_hour">$%1$d/jam</string>
+
+    <string name="title_hiring">Tempah chef</string>
+    <string name="tab_popular">Popular</string>
+    <string name="tab_appointment">Tempahan</string>
+    <string name="tab_bookmarks">Kegemaran</string>
+
+    <string name="header_chef">Chef</string>
+    <string name="header_my_bookings">Tempahan saya (%1$d)</string>
+    <string name="header_bookmarked_chefs">Chef kegemaran (%1$d)</string>
+
+    <string name="experience_years_short">%1$d tahun pengalaman</string>
+    <string name="role_private_chef">Chef peribadi</string>
+    <string name="label_total_price">Jumlah harga</string>
+    <string name="time_not_set">Masa belum ditetapkan</string>
+    <string name="time_range_format">%1$s - %2$s</string>
+    <string name="price_currency_format">RM %.2f</string>
+    <string name="status_confirmed">Disahkan</string>
+    <string name="chef_available_today">Tersedia untuk ditempah hari ini</string>
+    <string name="chef_off_today">Cuti hari ini</string>
+    <string name="chef_new_rating">Baharu</string>
+
+    <string name="empty_no_chefs_found">Tiada maklumat chef ditemui.</string>
+    <string name="empty_no_appointments_found">Tiada tempahan ditemui</string>
+    <string name="empty_no_bookmarked_chefs">Tiada chef kegemaran</string>
+    <string name="empty_bookmarked_chefs_sub">Chef kegemaran anda akan dipaparkan di sini.</string>
+
+    <string name="empty_no_bookmarked_recipes">Tiada resipi kegemaran</string>
+    <string name="empty_bookmarked_recipes_sub">Resipi kegemaran anda akan dipaparkan di sini.</string>
+    <string name="empty_no_my_recipes">Belum ada resipi dicipta.</string>
+    <string name="empty_my_recipes_sub">Resipi yang anda cipta akan dipaparkan di sini.</string>
+
+    <!-- Hiring Chef Details Screen-->
+    <string name="chef_profile_title">Profil chef</string>
+    <string name="title_about_chef">Tentang chef</string>
+    <string name="title_contact_info">Maklumat hubungan</string>
+
+    <string name="label_rate">Kadar</string>
+    <string name="btn_hire_this_chef">Tempah chef ini</string>
+    <string name="label_rating">Penilaian</string>
+    <string name="label_experience">Pengalaman</string>
+    <string name="years_experience">%1$d tahun</string>
+    <string name="label_gender">Jantina</string>
+    <string name="label_phone">Telefon</string>
+    <string name="label_email">E-mel</string>
+    <string name="label_address">Alamat</string>
+    <string name="not_available">Tidak berkenaan</string>
+    <string name="unknown_chef">Chef tidak diketahui</string>
+    <string name="default_initial_chef">C</string>
+
+    <string name="back_button">Kembali</string>
+    <string name="profile_picture">Foto profil</string>
+    <string name="bookmark_chef">Simpan chef</string>
+    <string name="no_appointments">Tiada tempahan</string>
+    <string name="no_bookmarks">Tiada kegemaran</string>
+    <string name="rating_star">Bintang penilaian</string>
+    <string name="chef_placeholder">Imej pengganti chef</string>
+    <string name="chef_profile_picture_format">Foto profil %1$s</string>
+
+    <!--Hiring Appointment -->
+    <string name="title_appointment">Tempahan</string>
+    <string name="title_select_appointment_date">Pilih tarikh tempahan</string>
+    <string name="review">Lihat</string>
+    <string name="label_appointment">Tempahan</string>
+
+    <string name="empty_no_appointments_for_date">Tiada perkhidmatan ditempah pada tarikh ini.</string>
+    <string name="no_comment_provided">Tiada komen diberikan</string>
+
+    <string name="hiring_offline_mode">Mod luar talian: Memaparkan data cache</string>
+    <string name="search_chef_placeholder">Cari mengikut nama dan negeri</string>
+    <string name="no_chefs_match_filters">Tiada chef yang sepadan dengan penapis</string>
+    <string name="adjust_search_criteria_or_reset">Cuba laraskan kriteria carian atau tetapkan semula penapis.</string>
+    <string name="reset_all_filters">Tetapkan semula semua penapis</string>
+    <string name="reset_filters">Tetapkan semula penapis</string>
+    <string name="chefs_found_count">%1$d ditemui</string>
+    <string name="search_bookmarks_placeholder">Cari kegemaran...</string>
+    <string name="no_bookmarks_match_filters">Tiada kegemaran yang sepadan dengan penapis</string>
+    <string name="chefs_saved_count">%1$d disimpan</string>
+    <string name="hiring_weekly_working_schedule">Jadual kerja mingguan</string>
+    <string name="hiring_schedule_morning">Pagi</string>
+    <string name="hiring_schedule_afternoon">Petang</string>
+    <string name="hiring_schedule_evening">Malam</string>
+    <string name="hiring_schedule_today">Hari ini</string>
+    <string name="hiring_schedule_off_duty">Cuti</string>
+    <string name="show_more">Tunjukkan lebih banyak</string>
+    <string name="show_less">Tunjukkan kurang</string>
+
+    <string name="cd_previous_week">Minggu sebelumnya</string>
+    <string name="cd_next_week">Minggu seterusnya</string>
+    <string name="cd_pick_date">Pilih tarikh</string>
+    <string name="cd_add_booking">Tambah tempahan</string>
+    <string name="cd_add_appointment">Tambah tempahan</string>
+
+    <string name="pick_date">Pilih tarikh</string>
+    <string name="add_booking">Tambah tempahan</string>
+    <string name="add_appointment">Tambah tempahan</string>
+    <string name="user">Pengguna</string>
+    <string name="no_review">Tiada ulasan</string>
+
+    <!-- Add Hiring Appointment -->
+    <string name="next">Seterusnya</string>
+    <string name="select">Pilih</string>
+    <string name="cancel">Batal</string>
+
+    <string name="label_appointment_time">Masa tempahan</string>
+    <string name="label_start_time">Masa mula</string>
+    <string name="label_end_time">Masa tamat</string>
+    <string name="label_postcode">Poskod</string>
+    <string name="label_serving_size">Hidangan</string>
+    <string name="label_description">Penerangan</string>
+
+    <string name="booking_offline_mode">Mod luar talian: Sambungan internet diperlukan untuk menghantar tempahan</string>
+    <string name="requested_dishes_optional">Hidangan khusus (pilihan)</string>
+    <string name="attach_bookmarked_recipes_sub">Lampirkan resipi kegemaran untuk rujukan chef</string>
+    <string name="dishes_selected_count">%1$d dipilih</string>
+    <string name="no_specific_recipes_attached">Tiada resipi khusus dilampirkan. Anda boleh memilih hidangan daripada kegemaran untuk disediakan oleh chef.</string>
+    <string name="portion_count_format">%1$d hidangan</string>
+    <string name="view_details">Lihat butiran</string>
+    <string name="remove">Buang</string>
+    <string name="attach_from_bookmarks_btn">+ Tambah daripada kegemaran</string>
+    <string name="edit_attached_recipes_btn">Edit resipi dilampirkan (%1$d)</string>
+    <string name="dish_count_singular">1 hidangan</string>
+    <string name="dish_count_plural">%1$d hidangan</string>
+    <string name="no_recipes_attached_booking">Tiada resipi khusus dilampirkan pada tempahan ini</string>
+    <string name="recipe_fallback_title">Resipi #%1$s</string>
+    <string name="attach_recipes_menu_title">Resipi / menu dilampirkan</string>
+    <string name="select_dishes_for_chef_sub">Pilih hidangan untuk disediakan oleh chef</string>
+    <string name="search_recipes_placeholder">Cari resipi mengikut nama...</string>
+    <string name="tab_my_recipes">Resipi saya</string>
+    <string name="no_recipes_in_tab">Tiada resipi dalam %1$s</string>
+    <string name="explore_and_bookmark_sub">Terokai dan simpan resipi untuk menambahkannya di sini.</string>
+    <string name="no_matching_recipes">Tiada resipi sepadan</string>
+    <string name="no_recipe_matches_query">Tiada resipi yang sepadan dengan “%1$s” ditemui dalam %2$s</string>
+    <string name="done_selected_count">Selesai (%1$d dipilih)</string>
+    <string name="done">Selesai</string>
+    <string name="portions_for_this_dish">Saiz hidangan ini:</string>
+    <string name="optional_note_chef_placeholder">Nota untuk chef (contoh: kurang garam, lebih pedas)</string>
+    <string name="by_author_format">Oleh: %1$s</string>
+    <string name="label_calories_badge">Kalori</string>
+    <string name="label_prep_time_badge">Masa penyediaan</string>
+    <string name="label_skill_badge">Tahap kesukaran</string>
+    <string name="label_budget_badge">Bajet</string>
+    <string name="label_cooking_steps">Langkah memasak</string>
+    <string name="ingredients_items_count">%1$d item</string>
+    <string name="portions_requested_label">Saiz hidangan diminta:</string>
+    <string name="client_special_request_label">Permintaan khas pelanggan:</string>
+    <string name="portions_for_appointment_label">Saiz hidangan tempahan:</string>
+    <string name="custom_request_chef_placeholder">Permintaan khas untuk chef (contoh: kurang pedas)</string>
+    <string name="remove_dish_btn">Buang hidangan</string>
+    <string name="select_recipe_for_appointment_btn">Pilih resipi ini untuk tempahan</string>
+    <string name="hiring_chef_off_duty_title">Chef bercuti pada hari tersebut</string>
+    <string name="hiring_chef_off_duty_desc">Chef ini bercuti pada hari tersebut. Sila pilih tarikh lain dalam kalendar.</string>
+
+    <string name="placeholder_address">Alamat</string>
+    <string name="placeholder_postcode">Poskod</string>
+    <string name="placeholder_serving_size">Masukkan bilangan orang (contoh: 5)</string>
+    <string name="placeholder_description">Penerangan</string>
+
+    <string name="error_invalid_time_range">Sila pilih julat masa tempahan.</string>
+    <string name="error_time_slot_occupied">Slot masa ini telah ditempah. Sila pilih masa lain.</string>
+    <string name="error_empty_address">Alamat tidak boleh kosong.</string>
+    <string name="error_invalid_postcode">Poskod mesti mengandungi 5 digit.</string>
+    <string name="error_select_state">Sila pilih negeri.</string>
+    <string name="error_invalid_serving_size">Sila masukkan saiz hidangan yang sah.</string>
+    <string name="error_empty_description">Penerangan tidak boleh kosong.</string>
+
+    <!-- Pricing Estimate -->
+    <string name="label_estimated_price">Anggaran jumlah harga</string>
+    <string name="label_estimated_duration">Tempoh</string>
+    <string name="estimated_price_summary">Pecahan harga</string>
+    <string name="hourly_rate_format">RM %.2f / jam</string>
+    <string name="hiring_pricing_chef_labor">Caj perkhidmatan chef (%s jam)</string>
+    <string name="hiring_pricing_ingredients">Bahan-bahan (%d hidangan)</string>
+    <string name="hiring_pricing_interstate_surcharge">Surcaj perjalanan antara negeri</string>
+    <string name="hiring_pricing_service_fee">Yuran perkhidmatan platform (5%)</string>
+
+    <!-- Appointment History-->
+    <string name="appointment_history_title">Sejarah tempahan</string>
+    <string name="filter_prefix">Penapis: %1$s</string>
+    <string name="filter_by_status">Tapis mengikut status</string>
+    <string name="remove_from_history">Buang daripada sejarah</string>
+    <string name="confirm_remove_history_msg">Adakah anda pasti mahu membuang tempahan %1$s ini daripada sejarah? Tindakan ini hanya membuangnya daripada paparan sejarah tempahan anda.</string>
+    <string name="appointment_removed_snackbar">Dibuang daripada sejarah tempahan</string>
+    <string name="undo">Buat asal</string>
+    <string name="delete_action">Padam</string>
+    <string name="retry_action">Cuba lagi</string>
+    <string name="rating_format_prefix">Penilaian: %1$s</string>
+    <string name="filter_all_statuses">Semua status</string>
+    <string name="status_unpaid">Belum dibayar</string>
+    <string name="status_completed">Selesai</string>
+    <string name="status_cancelled">Dibatalkan</string>
+    <string name="status_rejected">Ditolak</string>
+    <string name="no_appointments_found_filter">Tiada tempahan %1$s</string>
+    <string name="rate_offline_mode">Mod luar talian: Sambungan internet diperlukan untuk menghantar ulasan</string>
+    <string name="reschedule_offline_mode">Mod luar talian: Sambungan internet diperlukan untuk menempah semula</string>
+    <string name="appointment_id_format">ID：%1$s</string>
+    <string name="details_offline_mode">Mod luar talian: Sambungan internet diperlukan untuk melaksanakan tindakan</string>
+
+    <!-- Appointment Review -->
+    <string name="review_booking">Sahkan tempahan</string>
+
+    <string name="section_date_and_time">Tarikh &amp; masa</string>
+    <string name="section_location_and_event">Lokasi &amp; butiran aktiviti</string>
+    <string name="section_payment_breakdown">Pecahan pembayaran</string>
+
+    <string name="label_selected_chef">Chef yang dipilih</string>
+    <string name="default_selected_chef_name">Chef yang dipilih</string>
+    <string name="label_time_slot">Slot masa</string>
+    <string name="label_health_preference">Keutamaan kesihatan</string>
+    <string name="label_notes_special_requests">Nota / permintaan khas</string>
+    <string name="label_hourly_rate">Kadar sejam</string>
+    <string name="label_chef">Chef</string>
+    <string name="label_time">Masa</string>
+
+    <string name="portions_format">%1$d hidangan</string>
+    <string name="review_booking_offline_mode">Mod luar talian: Sambungan internet diperlukan untuk mengesahkan tempahan</string>
+    <string name="attached_dishes_meal_plan">Hidangan dilampirkan / pelan hidangan</string>
+    <string name="no_specific_recipes_requested">Tiada resipi ditetapkan (chef akan menyediakan menu standard)</string>
+    <string name="requested_dishes_label">Hidangan khusus</string>
+    <string name="recipes_count_format">%1$d resipi</string>
+
+    <string name="not_selected">Tidak dipilih</string>
+    <string name="not_provided">Tidak diberikan</string>
+    <string name="none_selected">Tiada</string>
+    <string name="serving_pax_format">%1$s orang</string>
+    <string name="currency_rm_format">RM %.2f</string>
+    <string name="currency_hourly_rate_format">RM %.2f / jam</string>
+
+    <string name="confirm_and_book">Sahkan dan tempah</string>
+    <string name="confirm_and_pay">Sahkan dan bayar</string>
+
+    <string name="confirm_booking">Sahkan tempahan</string>
+    <string name="confirm_booking_message">Sila semak butiran tempahan anda dengan teliti sebelum mengesahkan:</string>
+
+    <string name="default_profile">Profil lalai</string>
+
+    <string name="toast_processing_booking">Sedang memproses tempahan anda…</string>
+    <string name="toast_booking_success">Tempahan berjaya!</string>
+
+    <!-- Rate Screen -->
+    <string name="rate_experience">Nilai pengalaman anda</string>
+    <string name="label_overall_rating">Penilaian keseluruhan</string>
+    <string name="label_write_feedback">Tulis maklum balas anda</string>
+
+    <string name="private_chef_name">Chef peribadi</string>
+    <string name="this_booking">Tempahan ini</string>
+    <string name="How_experience_on_date">Bagaimanakah pengalaman anda di %1$s?</string>
+    <string name="placeholder_feedback_hint">Kongsi pengalaman anda tentang hidangan, perkhidmatan, kebersihan dan sebagainya.</string>
+    <string name="char_count_format">%1$d / %2$d</string>
+
+    <string name="rating_select_prompt">Sila pilih penilaian</string>
+    <string name="rating_poor">Lemah</string>
+    <string name="rating_fair">Sederhana</string>
+    <string name="rating_good">Baik</string>
+    <string name="rating_very_good">Sangat baik</string>
+    <string name="rating_excellent">Cemerlang!</string>
+
+    <string name="submit_review">Hantar ulasan</string>
+    <string name="toast_rating_success">Terima kasih atas maklum balas anda!</string>
+
+    <string name="chef_picture">Foto chef</string>
+    <string name="star_rating_number">Bintang ke-%1$d</string>
+
+    <!-- Reschedule Appointment -->
+    <string name="reschedule_booking">Tempah semula</string>
+    <string name="confirm_reschedule">Sahkan tempahan semula</string>
+
+    <string name="label_current_booking_details">Butiran tempahan semasa</string>
+    <string name="label_date">Tarikh</string>
+    <string name="label_time_range">Julat masa</string>
+    <string name="label_serving_size_pax">Saiz hidangan (orang)</string>
+    <string name="label_notes_requirements">Nota / permintaan khas</string>
+
+    <string name="placeholder_postcode_hint">Poskod (contoh: 10000)</string>
+    <string name="placeholder_notes_hint">Tambah nota atau keutamaan pemakanan…</string>
+
+    <string name="cd_select_date">Pilih tarikh</string>
+    <string name="cd_warning">Amaran</string>
+
+    <string name="error_time_slot_occupied_reschedule">Slot masa ini telah ditempah. Sila pilih masa atau tarikh lain.</string>
+    <string name="toast_reschedule_success">Tempahan semula berjaya!</string>
+
+    <!-- User Appointment Screen -->
+    <string name="booking_details">Butiran tempahan</string>
+    <string name="professional_chef">Chef profesional</string>
+
+    <string name="label_status">Status</string>
+    <string name="label_service_location">Lokasi perkhidmatan</string>
+    <string name="label_rejection_reason">Sebab penolakan</string>
+
+    <string name="address_not_provided">Alamat tidak diberikan</string>
+    <string name="serving_size_format">%1$s orang</string>
+    <string name="time_slot_format">%1$s - %2$s</string>
+    <string name="city_state_format">%1$s, %2$s</string>
+
+    <string name="complete_booking">Tandakan tempahan selesai</string>
+    <string name="cancel_booking">Batalkan tempahan</string>
+    <string name="reschedule">Tempah semula</string>
+    <string name="yes_complete">Ya, selesai</string>
+    <string name="not_yet">Belum lagi</string>
+    <string name="yes_cancel">Ya, batalkan</string>
+    <string name="keep_booking">Kekalkan tempahan</string>
+    <string name="pay_now">Bayar sekarang</string>
+    <string name="no_rejection_reason">Tiada sebab penolakan</string>
+    <string name="declined_by_chef">Chef menolak tempahan</string>
+    <string name="rejection_hint_text">Anda boleh memilih slot masa lain atau melihat chef lain.</string>
+
+    <string name="dialog_complete_title">Selesaikan tempahan?</string>
+    <string name="dialog_complete_message">Adakah chef telah menyelesaikan perkhidmatan dengan memuaskan?</string>
+    <string name="dialog_cancel_title">Batalkan tempahan?</string>
+    <string name="dialog_cancel_message">Adakah anda pasti mahu membatalkan tempahan ini? Tindakan ini tidak boleh dibuat asal.</string>
+
+    <string name="toast_booking_completed">Tempahan telah ditandakan sebagai selesai!</string>
+    <string name="toast_appointment_cancelled">Tempahan telah dibatalkan</string>
+
+    <string name="back">Kembali</string>
+    <string name="complete">Selesai</string>
+
+    <!-- Admin Approval Screen <Chef> -->
+    <string name="chef_approval">Semakan chef</string>
+    <string name="ingredient_requests">Permohonan bahan</string>
+    <string name="label_chef_approval">Semakan chef</string>
+    <string name="label_ingredients">Bahan</string>
+    <string name="label_logout">Log keluar</string>
+
+    <string name="experience_years_format">%1$d tahun pengalaman</string>
+
+    <string name="review_application">Semak permohonan</string>
+    <string name="no_pending_applications">Tiada permohonan belum selesai</string>
+
+    <string name="logout">Log keluar</string>
+
+    <!-- Admin Chef Details Screen -->
+    <string name="chef_details">Butiran chef</string>
+    <string name="approve">Lulus</string>
+
+    <string name="personal_info">Maklumat peribadi</string>
+    <string name="contact_info">Maklumat hubungan</string>
+    <string name="professional_info">Maklumat profesional</string>
+
+    <string name="label_age">Umur</string>
+
+    <string name="full_address_format">%1$s, %2$s，%3$s</string>
+
+    <!-- Chef Home -->
+    <!-- Navigation Bar -->
+    <string name="nav_appointments">Tempahan</string>
+    <string name="nav_hiring">Pengambilan</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_recipes">Resipi</string>
+
+    <string name="greeting">Selamat kembali</string>
+    <string name="unknown_client">Pelanggan tidak diketahui</string>
+
+    <string name="banner_title_schedule">Jadual anda</string>
+    <string name="banner_appointment_count_format">%1$d tempahan</string>
+    <string name="banner_zero_appointments">0 tempahan</string>
+    <string name="view_all">Lihat semua</string>
+
+    <string name="next_appointment">Tempahan seterusnya</string>
+    <string name="no_upcoming_appointments">Tiada tempahan akan datang.</string>
+    <string name="error_loading_appointments">Tidak dapat memuatkan tempahan.</string>
+    <string name="msg_loading">Memuatkan...</string>
+    <string name="chef_home_offline_cached_appointments">Luar talian: Memaparkan tempahan cache</string>
+
+    <!-- Chef Appointment Screen -->
+    <string name="bookings_and_events">Tempahan &amp; aktiviti</string>
+    <string name="your_appointments">Tempahan anda</string>
+
+    <string name="none">Tiada</string>
+
+    <string name="appointment_serving_and_diet_format">Orang: %1$d | Diet: %2$s</string>
+    <string name="appointment_note_format">Nota: %1$s</string>
+    <string name="appointment_datetime_format">%1$s (%2$s - %3$s)</string>
+    <string name="appointment_address_format">%1$s, %2$s</string>
+
+    <string name="no_appointments_found">Tiada tempahan ditemui.</string>
+    <string name="no_matching_appointments">Tiada tempahan sepadan dengan carian/penapis.</string>
+
+    <string name="time">Ikon masa</string>
+    <string name="location">Ikon lokasi</string>
+    <string name="more_options">Lebih banyak pilihan</string>
+
+    <!-- Appointment Details <Chef> -->
+    <string name="date_time">Tarikh &amp; masa</string>
+    <string name="event_location">Lokasi aktiviti</string>
+    <string name="section_booking_details">Butiran tempahan</string>
+    <string name="label_party_size">Bilangan pelanggan</string>
+    <string name="label_dietary_preference">Keutamaan pemakanan</string>
+    <string name="label_special_notes">Penerangan:</string>
+    <string name="none_specified">Tidak ditetapkan</string>
+
+    <string name="label_contact_format">Hubungan: %1$s</string>
+    <string name="party_size_format">%1$d orang</string>
+
+    <string name="open_in_maps">Buka dalam peta</string>
+    <string name="decline">Tolak</string>
+    <string name="accept_booking">Terima tempahan</string>
+    <string name="confirm_accept">Sahkan penerimaan</string>
+    <string name="confirm_decline">Sahkan penolakan</string>
+    <string name="open_maps">Buka menggunakan peta</string>
+    <string name="total_booking_value">Jumlah tempahan</string>
+    <string name="call_client">Hubungi pelanggan</string>
+    <string name="scan_client_qr_to_complete">Imbas kod QR pelanggan untuk melengkapkan tempahan</string>
+
+    <string name="price_format">RM %.2f</string>
+    <string name="rate_per_guest_label">Kadar bagi setiap tetamu (%1$d orang):</string>
+    <string name="rate_per_guest_value_format">RM %.2f / orang</string>
+
+    <string name="reason_for_declining">Sebab penolakan</string>
+    <string name="client_review_and_rating">Ulasan &amp; penilaian pelanggan</string>
+    <string name="quoted_text_format">“%1$s”</string>
+    <string name="rating_format">%1$d.0</string>
+    <string name="no_review_submitted">Pelanggan belum menghantar ulasan.</string>
+
+    <string name="section_attached_dishes">Hidangan dilampirkan / pelan hidangan</string>
+    <string name="no_recipes_requested">Pelanggan tidak menetapkan resipi</string>
+    <string name="default_recipe_name">Resipi #%1$d</string>
+    <string name="recipe_portions_format">%1$d hidangan</string>
+    <string name="recipe_calories_format">%1$d kcal</string>
+    <string name="recipe_time_format">• %1$d minit</string>
+    <string name="client_note_format">Nota pelanggan: “%1$s”</string>
+    <string name="recipe_image_content_description">Imej resipi</string>
+
+    <string name="service_verified_qr_completed">Perkhidmatan telah disahkan melalui kod QR! Tempahan telah ditandakan sebagai selesai.</string>
+
+    <string name="payment_status_paid">Dibayar</string>
+    <string name="payment_status_cancelled">Dibatalkan</string>
+    <string name="payment_status_na">Tidak berkenaan</string>
+    <string name="payment_status_awaiting_payment">Menunggu pembayaran</string>
+    <string name="payment_status_pending">Menunggu tindakan</string>
+
+    <string name="accept_title">Terima tempahan?</string>
+    <string name="accept_body_format">Adakah anda pasti mahu menerima tempahan %1$s pada %2$s?</string>
+    <string name="decline_title">Tolak tempahan</string>
+    <string name="decline_body_format">Sila berikan sebab menolak tempahan ini. Sebab ini akan dikongsi dengan %1$s.</string>
+    <string name="decline_reason">Contoh: Penuh, lokasi di luar kawasan perkhidmatan...</string>
+    <string name="rejection_reason_empty">Sebab penolakan tidak boleh kosong</string>
+
+    <string name="booking_accepted">Tempahan berjaya diterima!</string>
+    <string name="booking_declined">Tempahan telah ditolak.</string>
+
+    <!-- Chef Profile Screen -->
+    <string name="account_settings">Tetapan akaun</string>
+    <string name="chef_profile">Profil chef</string>
+
+    <string name="label_price">Harga</string>
+    <string name="label_chef_id">ID Chef</string>
+    <string name="label_bio_description">Bio / penerangan</string>
+    <string name="label_location">Lokasi</string>
+    <string name="status_pending">Menunggu tindakan</string>
+
+    <string name="edit_profile">Edit profil</string>
+
+    <!-- Chef Edit Profile -->
+    <string name="selected_picture">Imej yang dipilih</string>
+    <string name="current_picture">Imej semasa</string>
+    <string name="change_profile_photo">Tukar foto profil</string>
+    <string name="save">Simpan</string>
+
+    <string name="personal_details">Profil</string>
+    <string name="contact_location">Maklumat hubungan &amp; lokasi</string>
+    <string name="label_full_name">Nama</string>
+    <string name="label_years_of_experience">Tahun pengalaman kerja</string>
+    <string name="label_price_currency">Harga (RM)</string>
+    <string name="label_phone_number">Nombor telefon</string>
+    <string name="label_state">Negeri</string>
+    <string name="currency_prefix">RM </string>
+
+    <string name="profile_updated_success">Profil berjaya dikemas kini!</string>
+    <string name="null_string"> </string>
+
+    <!-- Meal Planner Categories -->
+    <string name="category_high_protein">Tinggi protein</string>
+    <string name="category_quick_easy">Cepat &amp; mudah</string>
+    <string name="category_balanced">Seimbang</string>
+    <string name="category_ketogenic">Ketogenik</string>
+    <string name="category_low_carb">Rendah karbohidrat</string>
+    <string name="category_cost_friendly">Berpatutan</string>
+    <string name="category_others">Lain-lain</string>
+
+    <!-- Chef Change Password -->
+    <string name="change_password">Tukar kata laluan</string>
+    <string name="secure_account_chef">Lindungi akaun chef anda</string>
+    <string name="change_password_subtitle">Sila masukkan kata laluan semasa dan baharu untuk mengemas kini kelayakan keselamatan akaun anda.</string>
+    <string name="current_password">Kata laluan semasa</string>
+    <string name="new_password">Kata laluan baharu</string>
+    <string name="confirm_new_password">Sahkan kata laluan baharu</string>
+    <string name="error_chef_password_rule">Kata laluan mesti 8-30 aksara dan mengandungi huruf besar, huruf kecil serta nombor</string>
+    <string name="error_passwords_not_matching">Kata laluan tidak sepadan</string>
+    <string name="btn_update_password">Kemas kini kata laluan</string>
+    <string name="toast_password_updated_success">Kata laluan berjaya dikemas kini!</string>
+    <string name="account_security">Keselamatan akaun</string>
+
+    <!-- Chef Welcome Screen -->
+    <string name="back_to_login">Kembali ke log masuk</string>
+    <string name="chef_illustration">Ilustrasi chef</string>
+
+    <string name="chef_welcome_title">Jadi chef rakan kongsi</string>
+    <string name="chef_welcome_subtitle">Tunjukkan kemahiran memasak anda, cipta menu tersuai dan berhubung dengan pelanggan yang mementingkan kesihatan.</string>
+
+    <string name="chef_feature_customize_profile">Cipta dan sesuaikan profil chef peribadi anda</string>
+    <string name="chef_feature_home_cooking">Tawarkan perkhidmatan memasak di rumah yang fleksibel</string>
+    <string name="chef_feature_connect_customers">Berhubung terus dengan pelanggan yang memerlukan perkhidmatan anda</string>
+
+    <string name="get_started">Mulakan</string>
+    <string name="already_have_account_login">Sudah mempunyai akaun chef? Log masuk</string>
+
+    <!-- Meal Planner -->
+    <string name="msg_recipe_removed">Resipi telah dibuang daripada pelan hidangan</string>
+    <string name="share_weekly_plan">Kongsi pelan hidangan mingguan</string>
+    <string name="tab_planner">Pelan</string>
+    <string name="tab_template">Templat</string>
+    <string name="tab_all">Semua</string>
+    <string name="tab_my_templates">Templat saya</string>
+    <string name="search_template">Cari templat</string>
+    <string name="msg_template_added">Templat telah ditambahkan ke kegemaran anda!</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_delete">Padam</string>
+    <string name="menu_add_to_my_template">Tambah ke templat saya</string>
+    <string name="menu_share">Kongsi</string>
+    <string name="meals_scheduled_count">%1$d hidangan dijadualkan minggu ini</string>
+    <string name="btn_apply_template">Gunakan templat pada pelan anda</string>
+    <string name="dialog_title_apply_template">Gunakan templat pada pelan mingguan</string>
+    <string name="placeholder_no_meals_scheduled">Tiada hidangan dijadualkan hari ini</string>
+    <string name="confirm">Sahkan</string>
+    <string name="select_7_day_range">Pilih julat 7 hari</string>
+    <string name="select_date">Pilih tarikh</string>
+    <string name="dialog_discard_changes_title">Buang perubahan?</string>
+    <string name="dialog_discard_draft_title">Buang draf?</string>
+    <string name="dialog_discard_changes_msg">Adakah anda pasti mahu membuang suntingan anda? Perubahan tidak akan disimpan.</string>
+    <string name="dialog_discard_draft_msg">Adakah anda pasti mahu membuang templat ini? Perubahan yang belum disimpan akan hilang.</string>
+    <string name="button_discard">Buang</string>
+    <string name="btn_continue_editing">Teruskan mengedit</string>
+    <string name="dialog_edit_template_name_title">Edit nama templat</string>
+    <string name="dialog_set_template_name_title">Tetapkan nama templat</string>
+    <string name="dialog_template_name_prompt">Sila masukkan nama templat pelan hidangan ini:</string>
+    <string name="label_template_name">Nama templat</string>
+    <string name="placeholder_template_name_hint">Contoh: Minggu tinggi protein</string>
+    <string name="title_edit_template">Edit templat</string>
+    <string name="title_create_template">Cipta templat</string>
+    <string name="label_make_plan_public">Jadikan pelan awam</string>
+    <string name="msg_visible_to_community">Semua pengguna komuniti boleh melihatnya</string>
+    <string name="msg_only_visible_to_you">Hanya anda boleh melihatnya</string>
+    <string name="msg_template_updated">Templat berjaya dikemas kini!</string>
+    <string name="msg_template_created">Templat berjaya dicipta!</string>
+    <string name="err_select_category">Sila pilih kategori</string>
+    <string name="err_empty_template_name">Nama templat tidak boleh kosong</string>
+    <string name="err_failed_load_template">Gagal memuatkan templat</string>
+    <string name="err_failed_save_template">Gagal menyimpan templat</string>
+    <string name="placeholder_search_recipes">Cari resipi di sini</string>
+    <string name="label_course">Kursus</string>
+    <string name="btn_apply_filters">Gunakan penapis</string>
+    <string name="btn_clear_all">Kosongkan semua</string>
+    <string name="title_filter_recipes">Tapis resipi</string>
+    <string name="label_max_prep_time">Masa penyediaan maksimum (minit)</string>
+    <string name="label_max_calories">Kalori maksimum (kcal)</string>
+    <string name="label_cooking_skill">Tahap kesukaran memasak</string>
+    <string name="label_budget_rm">Bajet (RM)</string>
+    <string name="msg_recipes_added_singular">1 resipi telah ditambahkan!</string>
+    <string name="msg_recipes_added_plural">%1$d resipi telah ditambahkan!</string>
+    <string name="btn_add_selected_recipes">Tambah resipi yang dipilih (%1$d)</string>
+    <string name="title_select_recipes">Pilih resipi</string>
+    <string name="title_selected_count">%1$d dipilih</string>
+
+    <string name="dialog_title_confirm_paste_week">Sahkan tampalan pelan mingguan?</string>
+    <string name="dialog_msg_confirm_paste_week">Ini akan menggantikan hidangan sedia ada pada minggu %1$s. Teruskan?</string>
+    <string name="btn_paste">Tampal</string>
+
+    <!-- Chef Registration Flow -->
+    <string name="title_basic_info">Maklumat asas</string>
+    <string name="title_address_info">Maklumat alamat</string>
+    <string name="title_professional_bg">Latar belakang profesional</string>
+    <string name="title_profile_picture">Foto profil</string>
+    <string name="title_review_info">Sahkan maklumat</string>
+    <string name="step_1_of_5">Langkah 1 daripada 5</string>
+    <string name="step_2_of_5">Langkah 2 daripada 5</string>
+    <string name="step_3_of_5">Langkah 3 daripada 5</string>
+    <string name="step_4_of_5">Langkah 4 daripada 5</string>
+    <string name="step_5_of_5">Langkah 5 daripada 5</string>
+    <string name="submit_registration">Hantar pendaftaran</string>
+    <string name="error_name_invalid">Nama mesti 3-50 aksara dan hanya boleh mengandungi huruf.</string>
+    <string name="error_gender_required">Sila pilih jantina anda.</string>
+    <string name="error_age_required">Umur diperlukan.</string>
+    <string name="error_age_range">Umur chef mestilah antara 18 hingga 100 tahun.</string>
+    <string name="error_password_required">Kata laluan diperlukan.</string>
+    <string name="error_confirm_password_required">Sila sahkan kata laluan anda.</string>
+    <string name="error_email_required">Alamat e-mel diperlukan.</string>
+    <string name="error_email_invalid">Sila masukkan alamat e-mel yang sah.</string>
+    <string name="error_email_already_exists">E-mel ini telah didaftarkan.</string>
+    <string name="error_phone_required">Nombor telefon diperlukan.</string>
+    <string name="error_phone_invalid">Sila masukkan nombor telefon yang sah (contoh: 0123456789).</string>
+    <string name="error_address_required">Alamat diperlukan.</string>
+    <string name="error_address_invalid">Alamat mesti mengandungi sekurang-kurangnya 10 aksara.</string>
+    <string name="error_postcode_required">Poskod diperlukan.</string>
+    <string name="error_postcode_invalid">Poskod mesti mengandungi 5 digit.</string>
+    <string name="error_state_required">Sila pilih negeri.</string>
+    <string name="error_experience_required">Tahun pengalaman kerja diperlukan.</string>
+    <string name="error_experience_invalid">Pengalaman kerja mestilah antara 0 hingga 70 tahun.</string>
+    <string name="error_description_limit">Penerangan tidak boleh melebihi 300 perkataan.</string>
+    <string name="error_profile_picture_required">Foto profil diperlukan untuk melengkapkan pendaftaran.</string>
+    <string name="words_count_format">%1$d/300 perkataan</string>
+    <string name="placeholder_enter_address">Sila masukkan alamat anda</string>
+    <string name="placeholder_enter_postcode">Sila masukkan poskod anda</string>
+    <string name="placeholder_experience">Sila masukkan tahun pengalaman kerja anda</string>
+    <string name="prompt_upload_picture">Sila muat naik foto profil yang jelas supaya pelanggan dapat mengenali anda.</string>
+    <string name="choose_photo">Pilih foto</string>
+    <string name="change_photo">Tukar foto</string>
+    <string name="no_photo">Tiada foto</string>
+    <string name="section_personal_details">Profil</string>
+    <string name="section_address">Alamat</string>
+    <string name="section_professional_bg">Latar belakang profesional</string>
+    <string name="years_format">%1$s tahun</string>
+    <string name="chef_basic_info_linked_credentials">Kelayakan akaun FoodieHeal semasa anda telah dipautkan.</string>
+    <string name="chef_contact_account_email_reused">E-mel akaun (menggunakan e-mel dalam profil)</string>
+
+    <!-- SHOPPING LIST MODULE -->
+    <!-- Shopping List Home Screen -->
+    <string name="shopping_list_home_title">Senarai belian saya</string>
+    <string name="shopping_list_new_title">Senarai belian baharu</string>
+    <string name="shopping_list_home_search_placeholder">Cari senarai belian</string>
+    <string name="shopping_list_home_empty_state">Belum ada senarai belian dicipta.</string>
+    <string name="shopping_list_create_button">Cipta senarai belian</string>
+    <string name="shopping_list_home_no_match">Tiada senarai belian yang sepadan dengan carian.</string>
+    <string name="shopping_list_set_default_toast">“%1$s” telah ditetapkan sebagai senarai belian lalai</string>
+    <string name="shopping_list_deselect_default_toast">Tetapan lalai “%1$s” telah dibatalkan</string>
+    <string name="shopping_list_change_default_title">Tukar senarai belian lalai</string>
+    <string name="shopping_list_change_default_message">Senarai belian (%1$s) telah ditetapkan sebagai lalai. Mahu menggunakannya sebagai senarai belian lalai?</string>
+    <string name="shopping_list_delete_title">Padam senarai belian</string>
+    <string name="shopping_list_delete_message">Adakah anda pasti mahu memadam “%1$s”?</string>
+    <string name="shopping_list_deleted_toast">“%1$s” telah dipadam daripada senarai belian anda</string>
+    <string name="shopping_list_share">Kongsi senarai belian</string>
+    <string name="shopping_list_deselect_default">Batal tetapan lalai</string>
+    <string name="shopping_list_set_default">Tetapkan sebagai lalai</string>
+    <string name="shopping_list_delete">Padam senarai belian</string>
+    <string name="label_default">Lalai</string>
+    <string name="label_name">Nama</string>
+    <string name="btn_add">Tambah</string>
+
+    <!-- SelectShoppingListDialog.kt -->
+    <string name="select_shopping_list_dialog_title">Pilih senarai belian untuk ditambah</string>
+    <string name="shopping_list_name_title">Nama senarai belian</string>
+    <string name="existing_shopping_list_title">Senarai belian sedia ada</string>
+
+    <!-- Shopping List Detail Screen -->
+    <string name="shopping_list_title">Senarai belian</string>
+    <string name="shopping_list_options">Pilihan</string>
+    <string name="shopping_list_add_items">Tambah item</string>
+    <string name="shopping_list_clear_checked">Kosongkan item yang dipilih</string>
+    <string name="shopping_list_no_checked_items">Tiada item yang dipilih untuk dikosongkan.</string>
+    <string name="shopping_list_clear_all">Kosongkan semua item</string>
+    <string name="shopping_list_already_empty">Senarai belian ini sudah kosong.</string>
+    <string name="shopping_list_search_placeholder">Cari bahan</string>
+    <string name="shopping_list_empty_state">Senarai belian ini kosong.</string>
+    <string name="shopping_list_no_match">Tiada item yang sepadan dengan carian.</string>
+    <string name="shopping_list_clear_checked_dialog_title">Kosongkan item yang dipilih</string>
+    <string name="shopping_list_clear_checked_dialog_text">%1$d item yang dipilih dalam senarai belian akan dikosongkan. Pasti?</string>
+    <string name="shopping_list_clear_checked_toast">%1$d item yang dipilih telah dikosongkan daripada senarai belian</string>
+    <string name="shopping_list_clear_all_dialog_title">Kosongkan semua item</string>
+    <string name="shopping_list_clear_all_dialog_text">Semua item akan dikosongkan daripada senarai belian ini. Pasti?</string>
+    <string name="shopping_list_clear_all_toast">Semua item telah dikosongkan</string>
+    <string name="select_shopping_list_placeholder">Pilih senarai belian</string>
+    <string name="shopping_list_error_local_data">Data tempatan sahaja.</string>
+
+    <string name="shopping_list_last_updated">Kemas kini terakhir: %1$s</string>
+    <string name="shopping_list_copy_clipboard">Salin ke papan keratan</string>
+    <string name="shopping_list_paste_clipboard">Tampal daripada papan keratan</string>
+    <string name="shopping_list_add_item">Tambah item</string>
+    <string name="shopping_list_search_items_placeholder">Cari item</string>
+    <string name="shopping_list_add_items_button">Tambah item</string>
+    <string name="shopping_list_save_changes_title">Simpan perubahan?</string>
+    <string name="shopping_list_save_changes_message">Simpan perubahan pada tajuk senarai belian sebelum keluar?</string>
+    <string name="button_save">Simpan</string>
+
+    <!-- Add from Clipboard / Recipes to Shopping List (ShoppingListAddFromScreen.kt) -->
+    <string name="shopping_list_add_to_list">Tambah ke senarai belian</string>
+    <string name="shopping_list_no_ingredients_clipboard">Tiada bahan yang sah ditemui dalam papan keratan.</string>
+    <string name="shopping_list_no_ingredients_recipe">Tiada bahan ditemui dalam resipi ini.</string>
+    <string name="shopping_list_refresh_clipboard">Segar semula daripada papan keratan</string>
+    <string name="shopping_list_unselect_all">Nyahpilih semua</string>
+    <string name="shopping_list_select_all">Pilih semua</string>
+    <string name="shopping_list_add_selected">Tambah item yang dipilih</string>
+    <string name="shopping_list_items_added_to_list">%1$d item telah ditambahkan ke %2$s</string>
+
+    <!-- Add items to Shopping List (ShoppingListAddItemScreen.kt) -->
+    <string name="add_shopping_item_title">Tambah ke senarai belian</string>
+    <string name="add_shopping_item_no_ingredients">Tiada bahan ditemui.</string>
+    <string name="add_shopping_item_toast_added">%1$d item telah ditambahkan ke senarai belian ini</string>
+    <string name="add_shopping_item_button">Tambah %1$d item ke senarai belian</string>
+
+    <!-- INGREDIENTS MODULE -->
+    <!-- Ingredients Main Screen -->
+    <string name="ingredients_title">Bahan</string>
+    <string name="ingredients_tab_existing">Bahan sedia ada</string>
+    <string name="ingredients_tab_requests">Permohonan</string>
+    <string name="ingredients_fab_new_request">Tambah permohonan</string>
+    <string name="ingredients_toast_added">%1$s telah ditambahkan ke %2$s.</string>
+    <string name="ingredients_requests_empty">Tiada permohonan.</string>
+    <string name="ingredients_requests_filter_title">Tapis mengikut status</string>
+    <string name="ingredients_requests_filter_all">Semua</string>
+    <string name="ingredients_requests_filter_pending">Menunggu tindakan</string>
+    <string name="ingredients_requests_filter_approved">Diluluskan</string>
+    <string name="ingredients_requests_filter_rejected">Ditolak</string>
+    <string name="ingredients_requests_apply_filter">Gunakan penapis</string>
+    <string name="ingredients_existing_search_placeholder">Cari bahan</string>
+    <string name="ingredients_requests_search_placeholder">Cari permohonan bahan</string>
+    <string name="categories_filter_header">Penapis kategori</string>
+    <string name="ingredients_existing_empty">Tiada bahan yang sepadan dengan carian.</string>
+    <string name="ingredients_error_fetch_ingredients">Gagal mendapatkan bahan</string>
+    <string name="ingredients_error_fetch_requests">Gagal mendapatkan permohonan</string>
+    <string name="ingredients_error_fetch_details">Gagal mendapatkan butiran bahan</string>
+    <string name="ingredients_no_internet_requests">Sila sambungkan ke internet untuk melihat permohonan bahan</string>
+    <string name="ingredients_expand_categories">Kembangkan penapis kategori</string>
+    <string name="ingredients_collapse_categories">Runtuhkan penapis kategori</string>
+
+    <!-- Ingredient Detail -->
+    <string name="ingredient_detail_request_processed_title">Permohonan telah diproses</string>
+    <string name="ingredient_detail_request_processed_text">Permohonan ini telah diluluskan atau ditolak oleh pentadbir dan tidak boleh dipadam lagi.</string>
+    <string name="ingredient_detail_title_request">Lihat permohonan</string>
+    <string name="ingredient_detail_title_ingredient">Lihat bahan</string>
+    <string name="ingredient_detail_production_id_missing">Ralat: Permohonan ini tiada Production ID</string>
+    <string name="ingredient_detail_description_label">Penerangan</string>
+    <string name="ingredient_detail_no_description">Tiada penerangan.</string>
+    <string name="ingredient_detail_no_calorie_info">Tiada maklumat kalori.</string>
+    <string name="ingredient_detail_rejected_reason_label">Sebab penolakan</string>
+    <string name="ingredient_detail_admin_notes_label">Nota pentadbir</string>
+    <string name="ingredient_detail_delete_title">Padam permohonan</string>
+    <string name="ingredient_detail_delete_text">Adakah anda pasti mahu memadam permohonan ini?</string>
+    <string name="ingredient_detail_toast_deleted">Permohonan telah dipadam</string>
+    <string name="ingredient_detail_unspecified">Tidak ditetapkan.</string>
+
+    <!-- Ingredient Request Notifications -->
+    <string name="ingredient_request_channel_name">Kemas kini permohonan bahan</string>
+    <string name="ingredient_request_channel_desc">Pemberitahuan tentang kelulusan atau penolakan permohonan bahan anda</string>
+    <string name="ingredient_request_approved_title">Permohonan bahan diluluskan</string>
+    <string name="ingredient_request_approved_msg">“%1$s” yang anda mohon telah diluluskan dan ditambahkan ke katalog bahan!</string>
+    <string name="ingredient_request_rejected_title">Permohonan bahan ditolak</string>
+    <string name="ingredient_request_rejected_msg">“%1$s” yang anda mohon telah ditolak. Ketik untuk melihat butiran dan sebab.</string>
+
+    <!-- Ingredient Request -->
+    <string name="ingredient_name">Nama bahan</string>
+    <string name="category">Kategori</string>
+    <string name="add_ingredient">Tambah bahan</string>
+    <string name="serving_unit">Unit hidangan</string>
+    <string name="calories">Kalori</string>
+    <string name="minutes">Minit</string>
+    <string name="calorie_information">Maklumat kalori</string>
+    <string name="request_new_ingredient">Mohon bahan baharu</string>
+    <string name="delete_request">Padam permohonan</string>
+    <string name="edit_request">Edit permohonan</string>
+    <string name="update_request">Kemas kini permohonan</string>
+    <string name="reject">Tolak</string>
+    <string name="review_approve">Semak dan lulus</string>
+
+    <!-- Ingredient Request Form -->
+    <string name="ingredient_form_processed_title">Permohonan telah diproses</string>
+    <string name="ingredient_form_processed_text">Permohonan ini telah diproses oleh pentadbir dan tidak boleh diubah lagi.</string>
+    <string name="ingredient_form_title_add">Mohon bahan</string>
+    <string name="ingredient_form_title_update">Kemas kini permohonan</string>
+    <string name="ingredient_form_online_required">Anda perlu disambungkan ke internet untuk menghantar permohonan</string>
+    <string name="ingredient_form_category_placeholder">Contoh: sayur-sayuran</string>
+    <string name="ingredient_form_name_char_count_limit">%1$d / 40</string>
+    <string name="ingredient_form_desc_char_count_limit">%1$d / 150</string>
+    <string name="ingredient_form_add_unit">Tambah unit</string>
+    <string name="ingredient_form_toast_submitted">Permohonan berjaya dihantar</string>
+    <string name="ingredient_form_toast_updated">Permohonan berjaya dikemas kini</string>
+    <string name="ingredient_form_serving_unit_placeholder">Contoh: gram</string>
+    <string name="ingredient_form_calories_placeholder_per">Setiap %1$d %2$s</string>
+    <string name="ingredient_form_calories_placeholder_default">Contoh: setiap 100 gram</string>
+    <string name="ingredient_form_remove_unit">Buang unit</string>
+    <string name="ingredient_form_error_submission_failed">Gagal menghantar: %1$s</string>
+
+    <!-- Ingredients Module Validation Errors -->
+    <string name="ingredients_error_name_required">Nama bahan diperlukan</string>
+    <string name="ingredients_error_name_exists">Bahan (%1$s) sudah wujud.</string>
+    <string name="ingredients_error_request_exists">Permohonan bahan (%1$s) sudah wujud.</string>
+    <string name="error_category_required">Kategori diperlukan</string>
+    <string name="ingredients_error_description_required">Penerangan diperlukan</string>
+    <string name="error_at_least_one_unit_required">Sekurang-kurangnya satu maklumat kalori diperlukan</string>
+    <string name="error_unit_required">Unit hidangan diperlukan</string>
+    <string name="error_calories_required">Nilai kalori diperlukan</string>
+    <string name="error_invalid_number">Mesti nombor yang sah</string>
+    <string name="error_no_decimal_allowed">Perpuluhan tidak dibenarkan</string>
+
+    <!-- Admin Ingredients -->
+    <string name="admin_ingredients_title">Bahan pentadbir</string>
+    <string name="admin_tab_community">Komuniti</string>
+    <string name="admin_tab_requests">Permohonan</string>
+    <string name="admin_fab_add_ingredient">Tambah bahan baharu</string>
+    <string name="admin_offline_manage_message">Sila sambungkan ke internet untuk mengurus bahan dan permohonan</string>
+    <string name="admin_requests_search_placeholder">Cari permohonan bahan</string>
+    <string name="admin_categories_header">Kategori</string>
+    <string name="admin_no_requests_found">Tiada permohonan.</string>
+    <string name="admin_filter_status_title">Tapis mengikut status</string>
+    <string name="admin_filter_sheet_title">Tapis Permohonan</string>
+    <string name="admin_filter_reset_all">Set Semula Semua</string>
+    <string name="admin_filter_section_status">Status Permohonan</string>
+    <string name="admin_filter_section_created_date">Tarikh Permohonan</string>
+    <string name="admin_filter_section_processed_date">Tarikh Diproses</string>
+    <string name="admin_filter_from">Dari</string>
+    <string name="admin_filter_to">Hingga</string>
+    <string name="admin_filter_select_date">Pilih Tarikh</string>
+    <string name="admin_filter_apply_btn">Gunakan Penapis</string>
+    <string name="admin_filter_all">Semua</string>
+    <string name="admin_filter_pending">Menunggu tindakan</string>
+    <string name="admin_filter_approved">Diluluskan</string>
+    <string name="admin_filter_rejected">Ditolak</string>
+    <string name="admin_apply_filter">Gunakan penapis</string>
+    <string name="admin_requested_by">Dimohon oleh: %1$s</string>
+    <string name="admin_error_fetch_requests">Gagal mendapatkan permohonan</string>
+
+    <!-- Admin Ingredient Detail -->
+    <string name="admin_detail_title">Lihat permohonan</string>
+    <string name="admin_detail_no_description">Tiada penerangan.</string>
+    <string name="admin_detail_no_calorie_info">Tiada maklumat kalori.</string>
+    <string name="admin_detail_request_info_header">Maklumat permohonan</string>
+    <string name="admin_detail_user_id">ID pengguna:</string>
+    <string name="admin_detail_user_name">Nama pengguna:</string>
+    <string name="admin_detail_created_date">Tarikh dicipta:</string>
+    <string name="admin_detail_approved_date">Tarikh diluluskan:</string>
+    <string name="admin_detail_rejected_date">Tarikh ditolak:</string>
+    <string name="admin_detail_request_not_found">Permohonan tidak ditemui</string>
+    <string name="admin_detail_toast_rejected">Permohonan telah ditolak</string>
+    <string name="admin_detail_reject_title">Tolak permohonan</string>
+    <string name="admin_detail_reject_prompt">Sila berikan sebab menolak permohonan bahan ini.</string>
+    <string name="admin_detail_reject_placeholder">Sebab penolakan</string>
+    <string name="admin_detail_error_reason_empty">Sebab tidak boleh kosong</string>
+    <string name="admin_detail_conflict_deleted_title">Permohonan telah dipadam</string>
+    <string name="admin_detail_conflict_deleted_text">Permohonan ini telah dipadam oleh pengguna.</string>
+    <string name="admin_detail_conflict_processed_title">Permohonan telah diproses</string>
+    <string name="admin_detail_conflict_processed_text">Permohonan ini telah diluluskan atau ditolak oleh pentadbir lain.</string>
+
+    <!-- Admin Add Ingredient -->
+    <string name="admin_add_title">Tambah bahan baharu</string>
+    <string name="admin_add_offline_message">Anda perlu disambungkan ke internet untuk menambah bahan baharu</string>
+    <string name="admin_add_category_placeholder">Contoh: sayur-sayuran</string>
+    <string name="admin_add_toast_success">Bahan berjaya ditambahkan</string>
+    <string name="admin_add_button">Tambah bahan</string>
+    <string name="admin_error_request_id_missing">Ralat: ID permohonan tiada</string>
+    <string name="admin_error_serving_units_missing">Satu atau lebih unit hidangan belum dipilih</string>
+    <string name="admin_error_original_metadata_missing">Maklumat permohonan asal tiada. Sila cuba lagi.</string>
+    <string name="admin_error_submission_failed">Gagal menghantar: %1$s</string>
+    <string name="admin_error_approval_failed">Gagal meluluskan: %1$s</string>
+
+    <!--Admin Review Ingredient Request -->
+    <string name="admin_review_title">Semak permohonan bahan</string>
+    <string name="admin_review_error_validate">Sila betulkan ralat dalam borang!</string>
+    <string name="admin_approve_ingredient_request">Luluskan permohonan bahan</string>
+    <string name="admin_request_approved">Permohonan berjaya diluluskan!</string>
+    <string name="admin_approval_failed_dialog_title">Kelulusan gagal</string>
+    <string name="admin_approve_request_dialog_title">Luluskan permohonan</string>
+    <string name="admin_approve_request_dialog_warning">Amaran:\nPermohonan ini tidak boleh diedit selepas diluluskan!</string>
+    <string name="admin_approve_request_dialog_note">Anda boleh menambah nota pilihan untuk menerangkan kepada pengguna sebab anda mengubah permohonannya.</string>
+    <string name="admin_approve_request_dialog_placeholder">Nota (pilihan)</string>
+
+    <!-- In-App Wallet -->
+    <string name="wallet_title">Dompet dalam aplikasi</string>
+    <string name="transaction_history">Sejarah transaksi</string>
+    <string name="wallet_records_count">%1$d rekod</string>
+    <string name="wallet_pay_balance_title">Baki FoodieHeal Pay</string>
+    <string name="wallet_status_active">Aktif</string>
+    <string name="wallet_status_inactive">Tidak aktif</string>
+    <string name="wallet_current_balance">Baki semasa</string>
+    <string name="wallet_inactive_balance">Baki tidak aktif</string>
+    <string name="wallet_activate_prompt">Buat tambah nilai pertama untuk mengaktifkan dompet anda!</string>
+    <string name="wallet_show_balance">Tunjukkan baki</string>
+    <string name="wallet_hide_balance">Sembunyikan baki</string>
+    <string name="wallet_top_up">Tambah nilai</string>
+    <string name="wallet_activate_and_top_up">Aktifkan dan tambah nilai</string>
+    <string name="wallet_filter_all">Semua</string>
+    <string name="wallet_filter_top_up">Tambah nilai</string>
+    <string name="wallet_filter_payments">Pembayaran</string>
+    <string name="wallet_filter_refunds">Bayaran balik</string>
+    <string name="wallet_txn_top_up">Tambah nilai</string>
+    <string name="wallet_txn_appointment_payment">Bayaran tempahan</string>
+    <string name="wallet_txn_refund">Bayaran balik</string>
+    <string name="wallet_txn_reschedule_adjustment">Pelarasan tempahan semula</string>
+    <string name="wallet_txn_top_up_via">Tambah nilai melalui %1$s</string>
+    <string name="wallet_bal_hidden">Baki: ••••••</string>
+    <string name="wallet_bal_format">Baki: RM %1$s</string>
+    <string name="wallet_empty_all">Tiada rekod transaksi</string>
+    <string name="wallet_empty_topup">Tiada rekod tambah nilai</string>
+    <string name="wallet_empty_payment">Tiada rekod bayaran tempahan</string>
+    <string name="wallet_empty_refund">Tiada rekod bayaran balik</string>
+    <string name="wallet_empty_desc">Rekod transaksi dan resit anda akan direkodkan di sini secara automatik.</string>
+    <string name="wallet_top_up_now">Tambah nilai sekarang</string>
+    <string name="wallet_top_up_sheet_title">Tambah nilai dompet</string>
+    <string name="wallet_top_up_preset_prompt">Pilih jumlah pratetap atau masukkan jumlah tersuai:</string>
+    <string name="wallet_custom_amount_label">Jumlah tersuai (RM)</string>
+    <string name="wallet_custom_amount_placeholder">Contoh: 150.00</string>
+    <string name="wallet_payment_method_label">Kaedah pembayaran:</string>
+    <string name="wallet_demo_gateway_label">Gerbang tambah nilai segera (mod demo)</string>
+    <string name="wallet_top_up_btn_format">Tambah nilai RM %1$s</string>
+    <string name="wallet_date_recent">Terkini</string>
+    <string name="wallet_offline_cannot_refresh">Tidak boleh menyegarkan semasa luar talian.</string>
+    <string name="wallet_offline_banner">Mod luar talian: Memaparkan baki dan rekod transaksi cache. Sambung semula ke rangkaian untuk menambah nilai.</string>
+    <string name="wallet_offline_cannot_top_up">Tidak boleh menambah nilai semasa luar talian.</string>
+    <string name="currency_rm_int">RM %1$d</string>
+
+    <!-- Wallet Transaction Details & Receipt -->
+    <string name="transaction_details_title">Butiran transaksi</string>
+    <string name="share_receipt">Kongsi resit</string>
+    <string name="transaction_not_found_title">Transaksi tidak ditemui</string>
+    <string name="transaction_not_found_desc">Tidak dapat memuatkan butiran transaksi yang diminta.</string>
+    <string name="btn_go_back">Kembali</string>
+
+    <string name="receipt_header_title">FoodieHeal Pay</string>
+    <string name="receipt_header_subtitle">Resit dompet elektronik rasmi</string>
+    <string name="receipt_status_top_up">Tambah nilai berjaya</string>
+    <string name="receipt_status_payment">Pembayaran selesai</string>
+    <string name="receipt_status_refund">Bayaran balik telah dikreditkan</string>
+    <string name="receipt_status_adjustment">Pelarasan telah digunakan</string>
+
+    <string name="receipt_label_transaction_type">Jenis transaksi</string>
+    <string name="receipt_type_top_up">Tambah nilai dompet</string>
+    <string name="receipt_type_appointment">Bayaran tempahan</string>
+    <string name="receipt_type_refund">Bayaran balik diterima</string>
+    <string name="receipt_type_adjustment">Pelarasan tempahan semula</string>
+
+    <string name="receipt_label_transaction_id">ID transaksi</string>
+    <string name="receipt_toast_copied">ID transaksi disalin</string>
+    <string name="receipt_cd_copy">Salin</string>
+
+    <string name="receipt_label_payment_source">Sumber pembayaran</string>
+    <string name="receipt_method_gateway">Gerbang tambah nilai segera</string>
+    <string name="receipt_method_wallet_refund">Dompet dalam aplikasi (bayaran balik)</string>
+    <string name="receipt_method_foodieheal_wallet">Dompet dalam aplikasi FoodieHeal</string>
+    <string name="receipt_label_reference_id">ID rujukan</string>
+    <string name="receipt_label_balance_before">Baki sebelum transaksi</string>
+    <string name="receipt_label_balance_after">Baki selepas transaksi</string>
+    <string name="receipt_ref_format">Rujukan: %1$s</string>
+    <string name="receipt_computer_generated_notice">Resit ini dijana secara automatik oleh komputer • Tidak perlu tandatangan</string>
+
+    <!-- Add New Card -->
+    <string name="title_add_card">Tambah kad kredit atau debit</string>
+    <string name="label_card_number">Nombor kad</string>
+    <string name="placeholder_card_number">Nombor kad 16 digit</string>
+    <string name="label_cardholder_name">Nama pemegang kad</string>
+    <string name="label_expiry_date">MM/YY</string>
+    <string name="placeholder_expiry_date">MM/YY</string>
+    <string name="error_invalid_expiry_date">MM/YY tidak sah</string>
+    <string name="error_month_range">Bulan mesti 01-12</string>
+    <string name="error_format_mmyy">Format: MM/YY</string>
+    <string name="error_invalid_year">Tahun tidak sah</string>
+    <string name="error_card_expired">Kad telah tamat tempoh</string>
+    <string name="error_invalid_expiry_year">Tahun luput tidak sah</string>
+    <string name="label_cvv">CVV</string>
+    <string name="placeholder_cvv">3-4 digit</string>
+    <string name="save_card_for_future">Simpan kad untuk digunakan pada tempahan akan datang</string>
+    <string name="btn_save_select_card">Simpan dan pilih kad</string>
+    <string name="brand_card_fallback">Kad</string>
+    <string name="tag_default">Lalai</string>
+    <string name="tag_instant">Segera</string>
+
+    <!-- Payment Method Management -->
+    <string name="title_payment_methods">Kaedah pembayaran</string>
+    <string name="cd_add_payment_method">Tambah kaedah pembayaran</string>
+    <string name="toast_cannot_add_cards_offline">Tidak boleh menambah kad semasa luar talian.</string>
+    <string name="payment_methods_offline_banner">Mod luar talian: Memaparkan kad cache. Sambung semula untuk mengurus.</string>
+    <string name="msg_set_default_payment_method">Tetapkan sebagai kaedah pembayaran lalai</string>
+    <string name="msg_removed_default_payment_method">Kaedah pembayaran lalai dibatalkan</string>
+    <string name="toast_card_added_success">Kad berjaya ditambahkan!</string>
+    <string name="dialog_delete_payment_method_title">Padam kaedah pembayaran</string>
+    <string name="dialog_delete_payment_method_msg">Adakah anda pasti mahu membuang kaedah pembayaran ini? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="toast_payment_method_deleted">Kaedah pembayaran telah dipadam</string>
+    <string name="card_masked_number_format">• • • • %1$s</string>
+    <string name="card_expires_format">Tamat tempoh %1$s</string>
+    <string name="label_default_payment_method">Kaedah pembayaran lalai</string>
+    <string name="cd_set_as_default">Tetapkan sebagai lalai</string>
+    <string name="cd_delete_method">Padam kaedah pembayaran</string>
+    <string name="empty_payment_methods_title">Belum ada kaedah pembayaran ditambah</string>
+    <string name="empty_payment_methods_desc">Tambah kad kredit atau debit untuk melengkapkan tempahan dan pembayaran dengan cepat.</string>
+    <string name="btn_add_payment_method">Tambah kaedah pembayaran</string>
+
+    <!-- Checkout Payment -->
+    <string name="title_checkout_payment">Semak keluar &amp; pembayaran</string>
+    <string name="error_loading_appointment">Ralat berlaku semasa memuatkan tempahan.</string>
+    <string name="payment_offline_banner">Tiada sambungan internet. Sila sambungkan ke internet untuk meneruskan pembayaran.</string>
+    <string name="wallet_inactive_warning">Dompet dalam aplikasi anda belum diaktifkan. Sila tambah nilai dompet atau pilih kad bank.</string>
+    <string name="wallet_insufficient_warning_format">Baki dompet tidak mencukupi (%1$s). Sila tambah nilai atau pilih kad bank.</string>
+    <string name="label_total_amount">Jumlah keseluruhan</string>
+    <string name="toast_payment_success">Pembayaran berjaya!</string>
+    <string name="pay_amount_via_wallet_format">Bayar %1$s melalui dompet</string>
+    <string name="pay_amount_format">Bayar %1$s</string>
+    <string name="title_order_summary">Ringkasan pesanan</string>
+    <string name="title_select_payment_method">Pilih kaedah pembayaran</string>
+    <string name="add_new_card">+ Tambah kad kredit / debit baharu</string>
+    <string name="toast_chef_register_success">Pendaftaran chef berjaya!</string>
+    <string name="toast_chef_upgrade_success">Berjaya dinaik taraf kepada chef!</string>
+    <string name="biometric_prompt_title">Sahkan pembayaran</string>
+    <string name="biometric_prompt_subtitle">Sila sahkan identiti untuk membenarkan pembayaran %1$s melalui %2$s</string>
+
+    <!-- Calendar Feature-->
+    <string name="add_to_calendar">Tambah ke kalendar</string>
+    <string name="toast_opening_calendar">Membuka kalendar...</string>
+    <string name="dialog_calendar_title">Tempahan disahkan!</string>
+    <string name="dialog_calendar_message">Pembayaran anda berjaya dan tempahan telah disahkan. Mahu menambah perkhidmatan ini ke kalendar dan menetapkan peringatan?</string>
+    <string name="btn_add_to_calendar">Tambah ke kalendar</string>
+    <string name="btn_view_booking">Lihat tempahan</string>
+
+    <!-- Rebook Chef Feature -->
+    <string name="btn_rebook_chef">Tempah chef semula</string>
+    <string name="rebooking_in_progress">Menyediakan tempahan...</string>
+    <string name="rebook_failed">Tidak dapat menyediakan tempahan semula: %1$s</string>
+
+    <!-- Meal Planner Folders -->
+    <string name="tab_details">Butiran</string>
+    <string name="tab_weekly_plan">Pelan mingguan</string>
+    <string name="label_template_description">Penerangan templat</string>
+    <string name="placeholder_template_description">Terangkan pelan anda (contoh: matlamat, kumpulan sasaran)…</string>
+    <string name="title_scheduled_hiring_appointments">Tempahan chef yang dijadualkan</string>
+    <string name="msg_plan_id_copied">ID pelan telah disalin ke papan keratan</string>
+    <string name="msg_share_template_text">Lihat templat pelan hidangan ini di Foodie Heal: %1$s</string>
+    <string name="msg_share_my_template_text">Lihat templat pelan hidangan yang saya cipta di Foodie Heal: %1$s</string>
+    <string name="title_share_template">Kongsi templat</string>
+    <string name="msg_show_less">Tunjukkan kurang</string>
+    <string name="msg_more">Lebih banyak…</string>
+    <string name="msg_template_deleted">Templat berjaya dipadam!</string>
+    <string name="empty_no_community_templates">Tiada templat komuniti</string>
+    <string name="empty_no_templates_match">Tiada templat sepadan dengan carian</string>
+    <string name="empty_no_my_templates">Anda belum mencipta sebarang templat</string>
+    <string name="error_recipe_not_found">Resipi tidak ditemui.</string>
+    <string name="error_recipe_not_available_offline">Tidak dapat mendapatkan data resipi semasa luar talian.</string>
+    <string name="label_plan_id">ID pelan</string>
+    <string name="label_public_template">Templat awam</string>
+    <string name="label_private_template">Templat peribadi</string>
+    <string name="desc_copy_plan_id">Salin ID pelan</string>
+    <string name="desc_add_template">Tambah templat</string>
+    <string name="error_failed_to_delete_plan">Gagal memadam pelan</string>
+    <string name="error_source_plan_not_found">Pelan sumber tidak ditemui</string>
+    <string name="label_copy_suffix"> (salinan)</string>
+    <string name="error_failed_to_copy_template">Gagal menyalin templat</string>
+
+    <!-- ChefEarningsChart -->
+    <string name="chef_earnings_overview">Gambaran pendapatan</string>
+    <string name="chef_earnings_last_months_format">%1$d bulan lalu • Pendapatan bersih</string>
+    <string name="chef_earnings_total_gross">Jumlah pendapatan</string>
+    <string name="chef_earnings_platform_fee">Yuran platform (5%)</string>
+    <string name="chef_earnings_net_payout">Pendapatan bersih</string>
+    <string name="chef_earnings_breakdown_format">Butiran %1$s</string>
+    <string name="chef_earnings_appointment_single">1 tempahan</string>
+    <string name="chef_earnings_appointment_plural_format">%1$d tempahan</string>
+    <string name="chef_earnings_fee_deduction_format"> • Yuran: -RM %1$.2f</string>
+
+    <!-- AppointmentScreen -->
+    <string name="chef_appt_offline_cached_bookings">Luar talian: Memaparkan tempahan cache</string>
+    <string name="chef_appt_search_placeholder">Cari pelanggan, lokasi, keutamaan pemakanan…</string>
+    <string name="chef_appt_clear_search">Kosongkan</string>
+    <string name="chef_appt_reset_filters">Tetapkan semula penapis</string>
+    <string name="chef_appt_client_booking">Tempahan pelanggan</string>
+    <string name="chef_appt_serving_format">%1$d hidangan</string>
+    <string name="chef_appt_servings_format">%1$d hidangan</string>
+    <string name="chef_appt_note_format">Nota: %1$s</string>
+    <string name="chef_appt_net_payout">Pendapatan bersih</string>
+    <string name="chef_appt_total_charged">Jumlah dicaj</string>
+
+    <!-- AppointmentDetailsScreen -->
+    <string name="chef_details_earnings_desc">Pendapatan</string>
+    <string name="chef_details_status_paid">Dibayar</string>
+    <string name="chef_details_status_cancelled">Dibatalkan</string>
+    <string name="chef_details_status_na">Tidak berkenaan</string>
+    <string name="chef_details_status_awaiting_payment">Menunggu pembayaran</string>
+    <string name="chef_details_status_pending">Menunggu tindakan</string>
+    <string name="chef_details_open_with_maps">Buka menggunakan peta</string>
+    <string name="chef_details_recipe_image_desc">Imej resipi</string>
+    <string name="chef_details_view_details_desc">Lihat butiran</string>
+    <string name="chef_details_scan_qr_desc">Imbas kod QR</string>
+    <string name="toast_service_verified_completed">Perkhidmatan telah disahkan melalui kod QR! Tempahan telah ditandakan sebagai selesai.</string>
+
+    <!-- ChefAvailabilityGrid -->
+    <string name="chef_avail_title">Waktu kerja &amp; jadual</string>
+    <string name="chef_avail_subtitle">Ketik slot masa untuk menetapkan masa yang boleh ditempah pelanggan</string>
+    <string name="chef_avail_note_label">Nota</string>
+    <string name="chef_avail_not_configured_warning">Waktu kerja belum ditetapkan. Tetapkan waktu kerja mingguan di bawah dan ketik simpan supaya pelanggan boleh membuat tempahan.</string>
+    <string name="chef_avail_preset_weekdays">Hari bekerja</string>
+    <string name="chef_avail_preset_all_days">Setiap hari</string>
+    <string name="chef_avail_preset_clear">Kosongkan</string>
+    <string name="chef_avail_col_day">Tarikh</string>
+    <string name="chef_avail_slot_morning_time">8 pagi - 12 tengah hari</string>
+    <string name="chef_avail_slot_afternoon_time">12 tengah hari - 5 petang</string>
+    <string name="chef_avail_slot_evening_time">5 petang - 9 malam</string>
+    <string name="toast_chef_avail_save_success">Waktu kerja berjaya dikemas kini!</string>
+    <string name="toast_chef_avail_save_error">Ralat menyimpan: %1$s</string>
+    <string name="chef_avail_save">Simpan jadual</string>
+
+    <!-- ChefQrScannerDialog -->
+    <string name="toast_camera_permission_required">Kebenaran kamera diperlukan untuk mengimbas kod QR.</string>
+    <string name="chef_qr_permission_required_title">Kebenaran kamera diperlukan</string>
+    <string name="chef_qr_permission_required_desc">Kebenaran kamera diperlukan untuk mengimbas kod QR penyelesaian perkhidmatan pelanggan.</string>
+    <string name="chef_qr_btn_grant_permission">Beri kebenaran</string>
+    <string name="toast_scanned_qr_mismatch">Kod QR yang diimbas adalah untuk tempahan lain.</string>
+    <string name="chef_qr_desc_close">Tutup</string>
+    <string name="chef_qr_title_scan_completion">Imbas kod QR penyelesaian</string>
+    <string name="chef_qr_desc_torch">Lampu suluh</string>
+    <string name="chef_qr_instruction_align">Halakan kod QR pelanggan ke dalam bingkai</string>
+    <string name="chef_qr_instruction_subtitle">Selepas imbasan, penyelesaian perkhidmatan akan disahkan dan status tempahan akan ditukar kepada “Selesai”.</string>
+
+    <!-- ChefLoginScreen -->
+    <string name="chef_login_portal_title">Portal pengurusan chef</string>
+    <string name="chef_login_portal_subtitle">Log masuk untuk mengurus profil chef dan tempahan anda</string>
+    <string name="chef_login_email_label">E-mel chef</string>
+    <string name="chef_login_email_placeholder">chef@example.com</string>
+    <string name="chef_login_invalid_email">Format e-mel tidak sah</string>
+    <string name="chef_login_password_placeholder">Sila masukkan kata laluan anda</string>
+    <string name="chef_login_forgot_password">Lupa kata laluan?</string>
+    <string name="chef_login_btn_submit">Log masuk chef</string>
+    <string name="chef_login_new_chef_prompt">Chef baharu?</string>
+    <string name="chef_login_apply_here">Mohon di sini</string>
+    <string name="chef_login_back_to_customer">Kembali ke log masuk pelanggan</string>
+
+    <!-- AppointmentReview -->
+    <string name="hiring_review_itemized_receipt">Resit terperinci</string>
+    <string name="hiring_review_chef_labor">Caj perkhidmatan chef (RM %1$s/jam × %2$s jam)</string>
+    <string name="hiring_review_ingredients_cost">Kos bahan (%d hidangan)</string>
+    <string name="hiring_review_serving_singular">%d hidangan</string>
+    <string name="hiring_review_servings_plural">%d hidangan</string>
+    <string name="hiring_review_interstate_travel_surcharge">Surcaj perjalanan antara negeri</string>
+    <string name="hiring_review_subtotal">Jumlah kecil</string>
+    <string name="hiring_review_platform_service_fee">Yuran perkhidmatan platform (5%)</string>
+
+    <!-- UserAppointmentDetails -->
+    <string name="user_app_details_your_rating">Penilaian anda</string>
+    <string name="user_app_details_edit_review">Edit ulasan</string>
+    <string name="user_app_details_experience_question">Bagaimanakah pengalaman anda?</string>
+    <string name="user_app_details_share_feedback_prompt">Kongsi pengalaman anda dan nilai chef %s untuk membantu pengguna lain.</string>
+    <string name="user_app_details_fallback_chef">Chef</string>
+    <string name="user_app_details_rate_chef_now">Nilai chef sekarang</string>
+    <string name="user_app_details_show_completion_qr">Tunjukkan kod QR penyelesaian perkhidmatan</string>
+    <string name="user_app_details_cd_show_completion_qr">Tunjukkan kod QR penyelesaian</string>
+    <string name="user_app_details_recipe_image">Imej resipi</string>
+
+    <!-- AppointmentQrCodeDialog -->
+    <string name="qr_dialog_service_completion_title">Kod QR penyelesaian perkhidmatan</string>
+    <string name="qr_dialog_chef_prefix">Chef: %s</string>
+    <string name="qr_dialog_cd_close">Tutup</string>
+    <string name="qr_dialog_cd_qr_code">Kod QR penyelesaian</string>
+    <string name="qr_dialog_booking_id">ID tempahan</string>
+    <string name="qr_dialog_appointment_date">Tarikh tempahan</string>
+    <string name="qr_dialog_instruction">Tunjukkan kod QR ini kepada chef selepas perkhidmatan selesai. Selepas diimbas, tempahan akan disahkan dan ditandakan sebagai “Selesai”.</string>
+    <string name="qr_dialog_btn_done">Selesai</string>
+
+    <!-- ChefFilterComponents -->
+    <string name="chef_filter_search_placeholder">Cari chef mengikut nama, negeri...</string>
+    <string name="chef_filter_cd_search">Cari</string>
+    <string name="chef_filter_cd_clear_search">Kosongkan carian</string>
+    <string name="chef_filter_cd_open_filters">Buka penapis</string>
+    <string name="chef_filter_clear_all">Kosongkan semua</string>
+    <string name="chef_filter_chip_state">Negeri: %s</string>
+    <string name="chef_filter_chip_gender">Jantina: %s</string>
+    <string name="chef_filter_chip_age">Umur: %s</string>
+    <string name="chef_filter_sheet_title">Tapis &amp; susun chef</string>
+    <string name="chef_filter_reset_all">Tetapkan semula semua</string>
+    <string name="chef_filter_sort_by_rating">Susun mengikut penilaian</string>
+    <string name="chef_filter_rating_high_to_low">Tinggi ke rendah</string>
+    <string name="chef_filter_rating_low_to_high">Rendah ke tinggi</string>
+    <string name="chef_filter_sort_by_rate">Susun mengikut kadar sejam</string>
+    <string name="chef_filter_price_low_to_high">Harga: rendah ke tinggi</string>
+    <string name="chef_filter_price_high_to_low">Harga: tinggi ke rendah</string>
+    <string name="chef_filter_chef_gender">Jantina chef</string>
+    <string name="chef_filter_gender_male">Lelaki</string>
+    <string name="chef_filter_gender_female">Perempuan</string>
+    <string name="chef_filter_chef_age">Umur chef</string>
+    <string name="chef_filter_state_location">Negeri / kawasan</string>
+    <string name="chef_filter_search_state_placeholder">Cari kawasan / negeri...</string>
+    <string name="chef_filter_selected_location">Kawasan dipilih:</string>
+    <string name="chef_filter_remove">Buang</string>
+    <string name="chef_filter_apply_filters">Gunakan penapis</string>
+
+    <!-- PaymentScreen -->
+    <string name="payment_method_in_app_wallet">Dompet dalam aplikasi</string>
+    <string name="payment_method_card_format">Kad bank (•••• %s)</string>
+    <string name="payment_method_selected_fallback">Kaedah pembayaran dipilih</string>
+    <string name="payment_calendar_event_title">Perkhidmatan tempahan FoodieHeal</string>
+
+    <!-- PaymentMethod.kt -->
+    <string name="payment_method_wallet_balance_format">Baki: RM %s</string>
+    <string name="payment_saved_card">Kad bank disimpan</string>
+
+    <!-- AnimatedPriceBreakdown -->
+    <string name="breakdown_title_price_breakdown">Pecahan harga</string>
+    <string name="breakdown_base_rate">Kadar asas</string>
+    <string name="breakdown_serving_premium">Caj tetamu tambahan (%d tetamu tambahan)</string>
+    <string name="breakdown_recipes_add_on">Resipi &amp; tambahan</string>
+    <string name="breakdown_total">Jumlah</string>
+    <string name="breakdown_currency_format">RM %s</string>
+
+    <!-- AddNewCard -->
+    <string name="add_card_clear_all">Kosongkan semua</string>
+    <string name="add_card_section_card_info">Maklumat kad bank</string>
+    <string name="add_card_holder_placeholder">Contoh: John Doe</string>
+    <string name="add_card_section_expiry_security">Maklumat luput &amp; keselamatan</string>
+    <string name="add_card_error_month">Bulan mesti 01-12</string>
+    <string name="add_card_error_format_mmyy">Format: MM/YY</string>
+    <string name="add_card_error_invalid_year">Tahun tidak sah</string>
+    <string name="add_card_error_card_expired">Kad bank telah tamat tempoh</string>
+    <string name="add_card_error_invalid_expiry_year">Tahun luput tidak sah</string>
+    <string name="add_card_error_invalid_number">Nombor kad tidak sah</string>
+
+    <!-- WalletTransactionDetailScreen -->
+    <string name="wallet_detail_share_image">Kongsi imej</string>
+    <string name="wallet_detail_export_pdf">Eksport PDF</string>
+
+    <!-- TransactionReceiptCard -->
+    <string name="receipt_date_recent">Terkini</string>
+
+    <!-- SpendingAnalyticsCard -->
+    <string name="analytics_title">Analisis perbelanjaan</string>
+    <string name="analytics_subtitle_monthly">Pecahan bulanan</string>
+    <string name="analytics_total_spent">Jumlah perbelanjaan</string>
+    <string name="analytics_total_top_up">Jumlah tambah nilai</string>
+    <string name="analytics_total_refunds">Bayaran balik</string>
+    <string name="analytics_legend_payments">Pembayaran</string>
+    <string name="analytics_legend_top_ups">Tambah nilai</string>
+    <string name="analytics_legend_refunds">Bayaran balik</string>
+    <string name="analytics_month_breakdown_format">Pecahan %s</string>
+    <string name="analytics_net_format">Bersih: %1$sRM %2$s</string>
+
+    <!-- WalletScreen -->
+    <string name="wallet_tab_transaction_history">Sejarah transaksi</string>
+    <string name="wallet_tab_spending_analytics">Analisis perbelanjaan</string>
+    <string name="wallet_top_up_via_format">Tambah nilai melalui %s</string>
+    <string name="wallet_top_up_default_desc">Tambah nilai dompet</string>
+    <string name="wallet_reset">Tetapkan semula</string>
+
+    <!-- ReceiptShareUtil -->
+    <string name="receipt_share_subject">Resit transaksi FoodieHeal</string>
+    <string name="receipt_share_chooser_image">Kongsi resit menggunakan</string>
+    <string name="receipt_share_chooser_pdf">Kongsi resit PDF menggunakan</string>
+    <string name="receipt_share_err_generate_image">Gagal menjana imej resit: %s</string>
+    <string name="receipt_share_err_generate_pdf">Gagal menjana PDF resit: %s</string>
+</resources>

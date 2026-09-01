@@ -239,7 +239,7 @@ class IngredientsViewModel(
 
     fun requestAddToShoppingList(
         ingredient: Ingredients,
-        onAddedDirectly: (() -> Unit)? = null
+        onAddedDirectly: ((listTitle: String) -> Unit)? = null
     ) {
         requestAddToShoppingList(ingredient.ingredientId, ingredient.ingredientName, ingredient.ingredientCategory, onAddedDirectly)
     }
@@ -248,7 +248,7 @@ class IngredientsViewModel(
         ingredientId: String,
         ingredientName: String,
         category: IngredientCategory? = null,
-        onAddedDirectly: (() -> Unit)? = null
+        onAddedDirectly: ((listTitle: String) -> Unit)? = null
     ) {
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
         if (userId.isEmpty()) return
@@ -266,7 +266,8 @@ class IngredientsViewModel(
                     isChecked = false
                 )
                 shoppingRepo.insertItem(item)
-                onAddedDirectly?.invoke()
+                val listTitle = defaultList.title.ifEmpty { defaultList.shoppingListId }
+                onAddedDirectly?.invoke(listTitle)
                 return@launch
             }
 
@@ -283,7 +284,8 @@ class IngredientsViewModel(
                     isChecked = false
                 )
                 shoppingRepo.insertItem(item)
-                onAddedDirectly?.invoke()
+                val listTitle = newList.title.ifEmpty { newList.shoppingListId }
+                onAddedDirectly?.invoke(listTitle)
             } else if (allLists.size == 1) {
                 val singleList = allLists.first()
                 val item = ShoppingListItemEntity(
@@ -295,7 +297,8 @@ class IngredientsViewModel(
                     isChecked = false
                 )
                 shoppingRepo.insertItem(item)
-                onAddedDirectly?.invoke()
+                val listTitle = singleList.title.ifEmpty { singleList.shoppingListId }
+                onAddedDirectly?.invoke(listTitle)
             } else {
                 // > 1 lists and no default -> prompt selection dialog!
                 _uiState.update {
@@ -339,7 +342,7 @@ class IngredientsViewModel(
     }
 
     fun confirmAddPendingIngredientToShoppingList(
-        onSuccess: (String) -> Unit
+        onSuccess: (ingredientName: String, listTitle: String) -> Unit
     ) {
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
         val state = _uiState.value.addShoppingListState
@@ -357,13 +360,14 @@ class IngredientsViewModel(
             )
             shoppingRepo.insertItem(item)
             val name = pending.ingredientName
+            val listTitle = targetList.title.ifEmpty { targetList.shoppingListId }
             onDismissSelectShoppingListDialog()
-            onSuccess(name)
+            onSuccess(name, listTitle)
         }
     }
 
     fun confirmAddPendingIngredientToNewShoppingList(
-        onSuccess: (String) -> Unit
+        onSuccess: (ingredientName: String, listTitle: String) -> Unit
     ) {
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id ?: ""
         val state = _uiState.value.addShoppingListState
@@ -382,8 +386,9 @@ class IngredientsViewModel(
             )
             shoppingRepo.insertItem(item)
             val name = pending.ingredientName
+            val listTitle = newList.title.ifEmpty { newList.shoppingListId }
             onDismissSelectShoppingListDialog()
-            onSuccess(name)
+            onSuccess(name, listTitle)
         }
     }
 }

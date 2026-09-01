@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodieheal.ingredients.model.*
+import com.example.foodieheal.ingredients.shared.IngredientRequestFilterBottomSheet
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.shared.SelectShoppingListDialog
 import com.example.foodieheal.model.Status
@@ -220,10 +221,10 @@ fun IngredientsMainScreen(
                     navController = navController,
                     categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
-                        viewModel.requestAddToShoppingList(ingredient) {
+                        viewModel.requestAddToShoppingList(ingredient) { listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName),
+                                application.getString(R.string.ingredients_toast_added, ingredient.ingredientName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -250,19 +251,19 @@ fun IngredientsMainScreen(
                     onSelectedIndexChange = { viewModel.updateSelectedShoppingListIndex(it) },
                     onDismissRequest = { viewModel.onDismissSelectShoppingListDialog() },
                     onConfirm = {
-                        viewModel.confirmAddPendingIngredientToShoppingList { addedName ->
+                        viewModel.confirmAddPendingIngredientToShoppingList { addedName, listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, addedName),
+                                application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
                     },
                     onConfirmNewList = {
-                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName ->
+                        viewModel.confirmAddPendingIngredientToNewShoppingList { addedName, listTitle ->
                             Toast.makeText(
                                 context,
-                                application.getString(R.string.ingredients_toast_added, addedName),
+                                application.getString(R.string.ingredients_toast_added, addedName, listTitle),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -315,6 +316,12 @@ fun IngredientRequestsScreen(
         return
     }
 
+    val isFilterActive = uiState.selectedStatus != null ||
+        uiState.createdDateStart != null ||
+        uiState.createdDateEnd != null ||
+        uiState.processedDateStart != null ||
+        uiState.processedDateEnd != null
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -325,8 +332,8 @@ fun IngredientRequestsScreen(
             selectedCategories = uiState.selectedCategories,
             onToggleCategory = { viewModel.toggleCategory(it) },
             showFilterIcon = true,
-            isFilterActive = uiState.selectedStatus != null,
-            onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
+            isFilterActive = isFilterActive,
+            onFilterClick = { viewModel.onShowFilterSheet(true) },
             lazyRowState = categoryScrollState,
             isExpanded = uiState.isCategoriesExpanded,
             onExpandedChange = { viewModel.toggleCategoriesExpanded() }
@@ -408,64 +415,22 @@ fun IngredientRequestsScreen(
         }
     }
 
-    if (uiState.showStatusFilterDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onShowStatusFilterDialog(false) },
-            title = {
-                Text(
-                    text = stringResource(R.string.ingredients_requests_filter_title),
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    val options = listOf(
-                        stringResource(R.string.ingredients_requests_filter_all) to null,
-                        stringResource(R.string.ingredients_requests_filter_pending) to Status.PENDING,
-                        stringResource(R.string.ingredients_requests_filter_approved) to Status.APPROVED,
-                        stringResource(R.string.ingredients_requests_filter_rejected) to Status.REJECTED
-                    )
-                    options.forEach { (label, status) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.updateTempStatus(status) }
-                                .padding(vertical = dimensionResource(id = R.dimen.padding_xsm))
-                        ) {
-                            RadioButton(
-                                selected = uiState.tempSelectedStatus == status,
-                                onClick = { viewModel.updateTempStatus(status) }
-                            )
-                            Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
-                            Text(text = label)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.onStatusFilterChange(uiState.tempSelectedStatus)
-                        viewModel.onShowStatusFilterDialog(false)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.ingredients_requests_apply_filter),
-                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.onShowStatusFilterDialog(false) }) {
-                    Text(
-                        text = stringResource(R.string.dialog_cancel),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        )
-    }
+    IngredientRequestFilterBottomSheet(
+        show = uiState.showFilterSheet,
+        onDismissRequest = { viewModel.onShowFilterSheet(false) },
+        selectedStatus = uiState.tempSelectedStatus,
+        onStatusChange = { viewModel.updateTempStatus(it) },
+        createdStartDate = uiState.tempCreatedDateStart,
+        createdEndDate = uiState.tempCreatedDateEnd,
+        onCreatedStartDateChange = { viewModel.updateTempCreatedStartDate(it) },
+        onCreatedEndDateChange = { viewModel.updateTempCreatedEndDate(it) },
+        processedStartDate = uiState.tempProcessedDateStart,
+        processedEndDate = uiState.tempProcessedDateEnd,
+        onProcessedStartDateChange = { viewModel.updateTempProcessedStartDate(it) },
+        onProcessedEndDateChange = { viewModel.updateTempProcessedEndDate(it) },
+        onResetAll = { viewModel.resetTempFilters() },
+        onApply = { viewModel.applyFilterSheet() }
+    )
 }
 
 @Composable

@@ -1,0 +1,1413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Foodie Heal</string>
+
+    <string name="login_title">登录</string>
+    <string name="email_label">邮箱</string>
+    <string name="password_label">密码</string>
+    <string name="hide_password">隐藏密码</string>
+    <string name="show_password">显示密码</string>
+    <string name="nav_home">首页</string>
+    <string name="topapp_back">返回上一页</string>
+    <string name="search">搜索</string>
+
+    <!-- Login -->
+    <string name="full_name">姓名</string>
+    <string name="enter_name">请输入您的姓名</string>
+    <string name="age">年龄</string>
+    <string name="enter_age">请输入您的年龄</string>
+    <string name="email">邮箱</string>
+    <string name="phone_number">电话号码</string>
+    <string name="password">密码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="gender">性别</string>
+    <string name="select_gender">选择性别</string>
+    <string name="experience">工作经验年数</string>
+    <string name="description">描述</string>
+    <string name="address">地址</string>
+    <string name="postcode">邮政编码</string>
+    <string name="state">州属</string>
+    <string name="select_state">选择您的州属</string>
+    <string name="serving_size">份量</string>
+    <string name="select_size">选择份量</string>
+    <string name="health_pref_label">健康偏好</string>
+    <string name="select_health_pref">选择健康偏好</string>
+
+    <!-- Error Messages -->
+    <string name="error_fields_empty">请输入所有必要信息。</string>
+    <string name="error_unknown">发生未知错误，请稍后再试。</string>
+    <string name="error_user_not_found">没有找到使用此邮箱的账户。</string>
+    <string name="error_network_connection">没有网络连接，请检查您的网络后重试。</string>
+    <string name="error_logout_failed">登出失败，请重试。</string>
+    <string name="error_invalid_credentials">邮箱或密码错误，请重试。</string>
+    <string name="nav_logout">登出</string>
+    <string name="logout_confirm_title">确认登出</string>
+    <string name="logout_confirm_message">确定要登出吗？</string>
+
+    <!-- Image related -->
+    <string name="image">图片</string>
+    <string name="select_image">选择图片</string>
+    <string name="change_image">更换图片</string>
+    <string name="remove_image">移除图片</string>
+    <string name="image_unavailable">暂无图片</string>
+    <string name="upload_failed">图片上传失败。</string>
+
+    <!-- Common Dialog Buttons -->
+    <string name="dialog_done">完成</string>
+    <string name="dialog_yes">是</string>
+    <string name="dialog_cancel">取消</string>
+
+    <!-- Add meal to plan strings -->
+    <string name="daily_date_picker_dialog">选择目标日期范围</string>
+    <string name="offline">离线</string>
+    <string name="add_slots">添加 (%1$d)</string>
+    <string name="select_slots_below">选择以下时段</string>
+    <string name="adding_recipe">正在添加：%1$s</string>
+
+    <string name="previous_week">上一周</string>
+    <string name="calendar">日历</string>
+    <string name="next_week">下一周</string>
+
+    <string name="no_network">无网络</string>
+    <string name="no_internet_connection">无网络连接</string>
+    <string name="connect_to_internet_message">请连接互联网以查看和更新您的膳食计划。</string>
+
+    <string name="breakfast">早餐</string>
+    <string name="lunch">午餐</string>
+    <string name="dinner">晚餐</string>
+    <string name="snack">零食</string>
+    <string name="meal_planner">膳食计划</string>
+
+    <string name="success">成功！</string>
+    <string name="meals_added_successfully">您的餐点已成功添加到膳食计划中。</string>
+    <string name="ok">确定</string>
+
+    <!-- Calorie Status Identifiers -->
+    <string name="status_under_intake">摄入不足</string>
+    <string name="status_slightly_low">略低</string>
+    <string name="status_ideal_intake">理想摄入量</string>
+    <string name="status_slightly_high">略高</string>
+    <string name="status_excess_intake">摄入过量</string>
+
+    <!-- Content Labels and Value formatters -->
+    <string name="label_todays_calories">今日卡路里： </string>
+    <string name="format_kcal_current">%1$d 千卡</string>
+    <string name="format_kcal_max"> / %1$d 千卡</string>
+    <string name="desc_show_calorie_guide">显示卡路里分析指南</string>
+    <string name="format_bullet_percent">• %1$s</string>
+    <string name="btn_close">关闭</string>
+
+    <!-- Calorie Help Dialog Strings -->
+    <string name="dialog_title_calorie_works">卡路里目标如何运作</string>
+    <string name="dialog_description_ranges">您的建议卡路里状态范围是根据您的目标摄入量计算的：</string>
+
+    <!-- Percent Ranges -->
+    <string name="percent_under_80">&lt; 80%</string>
+    <string name="percent_80_94">80% - 94%</string>
+    <string name="percent_95_105">95% - 105%</string>
+    <string name="percent_106_120">106% - 120%</string>
+    <string name="percent_over_120">&gt; 120%</string>
+
+    <!-- Range Descriptions -->
+    <string name="desc_under_intake">卡路里摄入过低，可能无法满足身体的营养需求。</string>
+    <string name="desc_slightly_low">略低于目标，可接受，但仍有调整空间。</string>
+    <string name="desc_ideal_intake">非常接近建议摄入目标。</string>
+    <string name="desc_slightly_high">略高于标准建议上限。</string>
+    <string name="desc_excess_intake">明显高于目标摄入范围。</string>
+
+    <!-- Dynamic Footnote Notice Splits -->
+    <string name="profile_notice_part_1">您的每日建议卡路里摄入上限会根据您记录的 BMI、身高和体重目标动态调整。您可以随时通过</string>
+    <string name="profile_notice_link">个人资料页面</string>
+    <string name="profile_notice_part_2">更新这些参数。</string>
+
+    <!-- Date Picker Dialog Header Texts -->
+    <string name="dialog_title_select_date_view">选择查看日期</string>
+    <string name="dialog_title_choose_paste_date">选择要粘贴今日计划的日期</string>
+    <string name="dialog_title_choose_weekly_repeat_date">选择日期范围并重复您的每周计划！</string>
+    <string name="dialog_title_choose_date_range_paste">选择日期范围以粘贴每周计划</string>
+    <string name="msg_copy_daily_success">已成功将计划复制到 %1$s！</string>
+    <string name="msg_copy_daily_failed">复制膳食计划失败。</string>
+    <string name="msg_copy_weekly_success">已成功将 %1$d 天添加到您的膳食计划！</string>
+    <string name="msg_copy_weekly_none">没有找到可复制的食谱。</string>
+    <string name="msg_apply_template_success">已成功应用“%1$s”模板！</string>
+    <string name="daily_success_notify">每日计划复制成功！</string>
+    <string name="weekly_success_notify">每周计划复制成功！</string>
+
+    <!-- Content Descriptions -->
+    <string name="desc_calendar_back">日历上一页</string>
+    <string name="desc_calendar_icon">日历</string>
+    <string name="desc_calendar_forward">日历下一页</string>
+    <string name="desc_copy_daily_plan">复制每日计划</string>
+    <string name="desc_no_network">无可用网络</string>
+    <string name="share">分享</string>
+
+    <!-- Loading and Connectivity States -->
+    <string name="title_no_internet">无网络连接</string>
+    <string name="desc_connect_internet_prompt">请连接互联网以查看和更新您的膳食计划。</string>
+    <string name="desc_connect_internet_recipe">请连接互联网以查看和更新您的食谱。</string>
+    <string name="desc_connect_internet_profile">请连接互联网以更新您的个人资料。</string>
+    <string name="desc_connect_internet_password">请连接互联网以修改您的密码。</string>
+    <string name="desc_connect_internet_follow">没有网络连接，请检查网络后再关注或取消关注。</string>
+    <string name="desc_connect_internet_follow_request">请连接互联网以管理关注请求。</string>
+    <string name="follow_request_sent">关注请求已发送！</string>
+    <string name="follow_request_cancelled">关注请求已取消！</string>
+    <string name="unfollowed_user">已取消关注用户！</string>
+    <string name="follow_request_accepted">已接受关注请求！</string>
+    <string name="follow_request_rejected">已拒绝关注请求！</string>
+    <string name="label_loading_plans">正在加载计划…</string>
+
+    <!-- Meal Sections Categories -->
+    <string name="meal_title_breakfast">早餐</string>
+    <string name="meal_title_lunch">午餐</string>
+    <string name="meal_title_dinner">晚餐</string>
+    <string name="meal_title_snack">零食</string>
+
+    <!-- Action Buttons -->
+    <string name="btn_copy_todays_plan">复制今日计划？</string>
+
+    <!-- Recipe Numeric Metrics Formatters -->
+    <string name="format_recipe_calories">%1$d 千卡</string>
+    <string name="format_recipe_duration">%1$d 分钟</string>
+
+    <!-- UI Interaction Descriptions -->
+    <string name="desc_remove_recipe">移除食谱</string>
+    <string name="desc_add_recipe">添加</string>
+    <string name="desc_checkbox_checked">已勾选</string>
+
+    <!-- Empty State Placeholders -->
+    <string name="placeholder_empty_plan">开始规划吧？</string>
+
+    <!-- Hiring Screen-->
+    <string name="btn_retry">重试</string>
+    <string name="default_chef_name">厨师</string>
+    <string name="rate_per_hour">$%1$d/小时</string>
+
+    <string name="title_hiring">聘请厨师</string>
+    <string name="tab_popular">热门</string>
+    <string name="tab_appointment">预约</string>
+    <string name="tab_bookmarks">收藏</string>
+
+    <string name="header_chef">厨师</string>
+    <string name="header_my_bookings">我的预约 (%1$d)</string>
+    <string name="header_bookmarked_chefs">已收藏厨师 (%1$d)</string>
+
+    <string name="experience_years_short">%1$d 年经验</string>
+    <string name="role_private_chef">私人厨师</string>
+    <string name="label_total_price">总价格</string>
+    <string name="time_not_set">未设置时间</string>
+    <string name="time_range_format">%1$s - %2$s</string>
+    <string name="price_currency_format">RM %.2f</string>
+    <string name="status_confirmed">已确认</string>
+    <string name="chef_available_today">今日可预约</string>
+    <string name="chef_off_today">今日休息</string>
+    <string name="chef_new_rating">新</string>
+
+    <string name="empty_no_chefs_found">未找到厨师资料。</string>
+    <string name="empty_no_appointments_found">未找到预约</string>
+    <string name="empty_no_bookmarked_chefs">暂无收藏厨师</string>
+    <string name="empty_bookmarked_chefs_sub">您收藏的厨师会显示在这里。</string>
+
+    <string name="empty_no_bookmarked_recipes">暂无收藏食谱</string>
+    <string name="empty_bookmarked_recipes_sub">您收藏的食谱会显示在这里。</string>
+    <string name="empty_no_my_recipes">尚未创建食谱。</string>
+    <string name="empty_my_recipes_sub">您创建的食谱会显示在这里。</string>
+
+    <!-- Hiring Chef Details Screen-->
+    <string name="chef_profile_title">厨师资料</string>
+    <string name="title_about_chef">关于厨师</string>
+    <string name="title_contact_info">联系信息</string>
+
+    <string name="label_rate">收费</string>
+    <string name="btn_hire_this_chef">聘请此厨师</string>
+    <string name="label_rating">评分</string>
+    <string name="label_experience">经验</string>
+    <string name="years_experience">%1$d 年</string>
+    <string name="label_gender">性别</string>
+    <string name="label_phone">电话</string>
+    <string name="label_email">邮箱</string>
+    <string name="label_address">地址</string>
+    <string name="not_available">不适用</string>
+    <string name="unknown_chef">未知厨师</string>
+    <string name="default_initial_chef">C</string>
+
+    <string name="back_button">返回</string>
+    <string name="profile_picture">头像</string>
+    <string name="bookmark_chef">收藏厨师</string>
+    <string name="no_appointments">暂无预约</string>
+    <string name="no_bookmarks">暂无收藏</string>
+    <string name="rating_star">评分星级</string>
+    <string name="chef_placeholder">厨师占位图</string>
+    <string name="chef_profile_picture_format">%1$s 的头像</string>
+
+    <!--Hiring Appointment -->
+    <string name="title_appointment">预约</string>
+    <string name="title_select_appointment_date">选择预约日期</string>
+    <string name="review">查看</string>
+    <string name="label_appointment">预约</string>
+
+    <string name="empty_no_appointments_for_date">该日期没有已预约的服务。</string>
+    <string name="no_comment_provided">未提供评论</string>
+
+    <string name="hiring_offline_mode">离线模式：显示缓存数据</string>
+    <string name="search_chef_placeholder">按姓名和州属搜索</string>
+    <string name="no_chefs_match_filters">没有符合筛选条件的厨师</string>
+    <string name="adjust_search_criteria_or_reset">尝试调整搜索条件或重置筛选器。</string>
+    <string name="reset_all_filters">重置所有筛选</string>
+    <string name="reset_filters">重置筛选</string>
+    <string name="chefs_found_count">找到 %1$d 位</string>
+    <string name="search_bookmarks_placeholder">搜索收藏...</string>
+    <string name="no_bookmarks_match_filters">没有符合筛选条件的收藏</string>
+    <string name="chefs_saved_count">已收藏 %1$d 位</string>
+    <string name="hiring_weekly_working_schedule">每周工作时间</string>
+    <string name="hiring_schedule_morning">上午</string>
+    <string name="hiring_schedule_afternoon">下午</string>
+    <string name="hiring_schedule_evening">晚上</string>
+    <string name="hiring_schedule_today">今天</string>
+    <string name="hiring_schedule_off_duty">休息</string>
+    <string name="show_more">显示更多</string>
+    <string name="show_less">显示更少</string>
+
+    <string name="cd_previous_week">上一周</string>
+    <string name="cd_next_week">下一周</string>
+    <string name="cd_pick_date">选择日期</string>
+    <string name="cd_add_booking">添加预约</string>
+    <string name="cd_add_appointment">添加预约</string>
+
+    <string name="pick_date">选择日期</string>
+    <string name="add_booking">添加预约</string>
+    <string name="add_appointment">添加预约</string>
+    <string name="user">用户</string>
+    <string name="no_review">暂无评价</string>
+
+    <!-- Add Hiring Appointment -->
+    <string name="next">下一步</string>
+    <string name="select">选择</string>
+    <string name="cancel">取消</string>
+
+    <string name="label_appointment_time">预约时间</string>
+    <string name="label_start_time">开始时间</string>
+    <string name="label_end_time">结束时间</string>
+    <string name="label_postcode">邮政编码</string>
+    <string name="label_serving_size">份量</string>
+    <string name="label_description">描述</string>
+
+    <string name="booking_offline_mode">离线模式：提交预约需要互联网连接</string>
+    <string name="requested_dishes_optional">指定菜肴（可选）</string>
+    <string name="attach_bookmarked_recipes_sub">附加已收藏的食谱供厨师参考</string>
+    <string name="dishes_selected_count">已选择 %1$d 道</string>
+    <string name="no_specific_recipes_attached">没有附加指定食谱。您可以从收藏夹中选择菜肴，让厨师准备。</string>
+    <string name="portion_count_format">%1$d 份</string>
+    <string name="view_details">查看详情</string>
+    <string name="remove">移除</string>
+    <string name="attach_from_bookmarks_btn">+ 从收藏中添加</string>
+    <string name="edit_attached_recipes_btn">编辑附加食谱 (%1$d)</string>
+    <string name="dish_count_singular">1 道菜</string>
+    <string name="dish_count_plural">%1$d 道菜</string>
+    <string name="no_recipes_attached_booking">此预约没有附加指定食谱</string>
+    <string name="recipe_fallback_title">食谱 #%1$s</string>
+    <string name="attach_recipes_menu_title">附加食谱 / 菜单</string>
+    <string name="select_dishes_for_chef_sub">选择让厨师准备的菜肴</string>
+    <string name="search_recipes_placeholder">按名称搜索食谱...</string>
+    <string name="tab_my_recipes">我的食谱</string>
+    <string name="no_recipes_in_tab">%1$s 中没有食谱</string>
+    <string name="explore_and_bookmark_sub">探索并收藏食谱，以便在这里添加。</string>
+    <string name="no_matching_recipes">没有匹配的食谱</string>
+    <string name="no_recipe_matches_query">在 %2$s 中没有找到匹配“%1$s”的食谱</string>
+    <string name="done_selected_count">完成（已选择 %1$d）</string>
+    <string name="done">完成</string>
+    <string name="portions_for_this_dish">这道菜的份量：</string>
+    <string name="optional_note_chef_placeholder">给厨师的备注（例如：少盐、辣一点）</string>
+    <string name="by_author_format">作者：%1$s</string>
+    <string name="label_calories_badge">卡路里</string>
+    <string name="label_prep_time_badge">准备时间</string>
+    <string name="label_skill_badge">难度</string>
+    <string name="label_budget_badge">预算</string>
+    <string name="label_cooking_steps">烹饪步骤</string>
+    <string name="ingredients_items_count">%1$d 项</string>
+    <string name="portions_requested_label">要求份量：</string>
+    <string name="client_special_request_label">客户特别要求：</string>
+    <string name="portions_for_appointment_label">预约份量：</string>
+    <string name="custom_request_chef_placeholder">给厨师的特别要求（例如：少辣）</string>
+    <string name="remove_dish_btn">移除菜肴</string>
+    <string name="select_recipe_for_appointment_btn">选择此食谱用于预约</string>
+    <string name="hiring_chef_off_duty_title">厨师当天休息</string>
+    <string name="hiring_chef_off_duty_desc">该厨师当天休息，请在日历中选择其他日期。</string>
+
+    <string name="placeholder_address">地址</string>
+    <string name="placeholder_postcode">邮政编码</string>
+    <string name="placeholder_serving_size">输入人数（例如：5）</string>
+    <string name="placeholder_description">描述</string>
+
+    <string name="error_invalid_time_range">请选择预约时间范围。</string>
+    <string name="error_time_slot_occupied">该时间段已被预约，请选择其他时间。</string>
+    <string name="error_empty_address">地址不能为空。</string>
+    <string name="error_invalid_postcode">邮政编码必须包含 5 位数字。</string>
+    <string name="error_select_state">请选择州属。</string>
+    <string name="error_invalid_serving_size">请输入有效的份量。</string>
+    <string name="error_empty_description">描述不能为空。</string>
+
+    <!-- Pricing Estimate -->
+    <string name="label_estimated_price">预计总价格</string>
+    <string name="label_estimated_duration">时长</string>
+    <string name="estimated_price_summary">价格明细</string>
+    <string name="hourly_rate_format">RM %.2f / 小时</string>
+    <string name="hiring_pricing_chef_labor">厨师服务费（%s 小时）</string>
+    <string name="hiring_pricing_ingredients">食材（%d 道菜）</string>
+    <string name="hiring_pricing_interstate_surcharge">跨州交通附加费</string>
+    <string name="hiring_pricing_service_fee">平台服务费（5%）</string>
+
+    <!-- Appointment History-->
+    <string name="appointment_history_title">预约记录</string>
+    <string name="filter_prefix">筛选：%1$s</string>
+    <string name="filter_by_status">按状态筛选</string>
+    <string name="remove_from_history">从记录中移除</string>
+    <string name="confirm_remove_history_msg">确定要从记录中移除这项 %1$s 预约吗？此操作只会从您的预约记录视图中移除。</string>
+    <string name="appointment_removed_snackbar">已从预约记录中移除</string>
+    <string name="undo">撤销</string>
+    <string name="delete_action">删除</string>
+    <string name="retry_action">重试</string>
+    <string name="rating_format_prefix">评分：%1$s</string>
+    <string name="filter_all_statuses">所有状态</string>
+    <string name="status_unpaid">未付款</string>
+    <string name="status_completed">已完成</string>
+    <string name="status_cancelled">已取消</string>
+    <string name="status_rejected">已拒绝</string>
+    <string name="no_appointments_found_filter">没有 %1$s 预约</string>
+    <string name="rate_offline_mode">离线模式：提交评价需要互联网连接</string>
+    <string name="reschedule_offline_mode">离线模式：重新预约需要互联网连接</string>
+    <string name="appointment_id_format">ID：%1$s</string>
+    <string name="details_offline_mode">离线模式：执行操作需要互联网连接</string>
+
+    <!-- Appointment Review -->
+    <string name="review_booking">确认预约</string>
+
+    <string name="section_date_and_time">日期与时间</string>
+    <string name="section_location_and_event">地点与活动详情</string>
+    <string name="section_payment_breakdown">付款明细</string>
+
+    <string name="label_selected_chef">已选择的厨师</string>
+    <string name="default_selected_chef_name">已选择的厨师</string>
+    <string name="label_time_slot">时间段</string>
+    <string name="label_health_preference">健康偏好</string>
+    <string name="label_notes_special_requests">备注 / 特别要求</string>
+    <string name="label_hourly_rate">每小时收费</string>
+    <string name="label_chef">厨师</string>
+    <string name="label_time">时间</string>
+
+    <string name="portions_format">%1$d 份</string>
+    <string name="review_booking_offline_mode">离线模式：确认预约需要互联网连接</string>
+    <string name="attached_dishes_meal_plan">附加菜肴 / 膳食计划</string>
+    <string name="no_specific_recipes_requested">未指定食谱（厨师将提供标准菜单）</string>
+    <string name="requested_dishes_label">指定菜肴</string>
+    <string name="recipes_count_format">%1$d 个食谱</string>
+
+    <string name="not_selected">未选择</string>
+    <string name="not_provided">未提供</string>
+    <string name="none_selected">无</string>
+    <string name="serving_pax_format">%1$s 人</string>
+    <string name="currency_rm_format">RM %.2f</string>
+    <string name="currency_hourly_rate_format">RM %.2f / 小时</string>
+
+    <string name="confirm_and_book">确认并预约</string>
+    <string name="confirm_and_pay">确认并付款</string>
+
+    <string name="confirm_booking">确认预约</string>
+    <string name="confirm_booking_message">请在确认前仔细检查您的预约详情：</string>
+
+    <string name="default_profile">默认资料</string>
+
+    <string name="toast_processing_booking">正在处理您的预约…</string>
+    <string name="toast_booking_success">预约成功！</string>
+
+    <!-- Rate Screen -->
+    <string name="rate_experience">评价您的体验</string>
+    <string name="label_overall_rating">总体评分</string>
+    <string name="label_write_feedback">填写您的反馈</string>
+
+    <string name="private_chef_name">私人厨师</string>
+    <string name="this_booking">此次预约</string>
+    <string name="How_experience_on_date">您在 %1$s 的体验如何？</string>
+    <string name="placeholder_feedback_hint">分享您对菜肴、服务、卫生等方面的体验。</string>
+    <string name="char_count_format">%1$d / %2$d</string>
+
+    <string name="rating_select_prompt">请选择评分</string>
+    <string name="rating_poor">差</string>
+    <string name="rating_fair">一般</string>
+    <string name="rating_good">良好</string>
+    <string name="rating_very_good">很好</string>
+    <string name="rating_excellent">优秀！</string>
+
+    <string name="submit_review">提交评价</string>
+    <string name="toast_rating_success">感谢您的反馈！</string>
+
+    <string name="chef_picture">厨师照片</string>
+    <string name="star_rating_number">第 %1$d 颗星</string>
+
+    <!-- Reschedule Appointment -->
+    <string name="reschedule_booking">重新预约</string>
+    <string name="confirm_reschedule">确认重新预约</string>
+
+    <string name="label_current_booking_details">当前预约详情</string>
+    <string name="label_date">日期</string>
+    <string name="label_time_range">时间范围</string>
+    <string name="label_serving_size_pax">份量（人数）</string>
+    <string name="label_notes_requirements">备注 / 特别要求</string>
+
+    <string name="placeholder_postcode_hint">邮政编码（例如：10000）</string>
+    <string name="placeholder_notes_hint">添加备注或饮食偏好…</string>
+
+    <string name="cd_select_date">选择日期</string>
+    <string name="cd_warning">警告</string>
+
+    <string name="error_time_slot_occupied_reschedule">该时间段已被预约，请选择其他时间或日期。</string>
+    <string name="toast_reschedule_success">重新预约成功！</string>
+
+    <!-- User Appointment Screen -->
+    <string name="booking_details">预约详情</string>
+    <string name="professional_chef">专业厨师</string>
+
+    <string name="label_status">状态</string>
+    <string name="label_service_location">服务地点</string>
+    <string name="label_rejection_reason">拒绝原因</string>
+
+    <string name="address_not_provided">未提供地址</string>
+    <string name="serving_size_format">%1$s 人</string>
+    <string name="time_slot_format">%1$s - %2$s</string>
+    <string name="city_state_format">%1$s，%2$s</string>
+
+    <string name="complete_booking">完成预约</string>
+    <string name="cancel_booking">取消预约</string>
+    <string name="reschedule">重新预约</string>
+    <string name="yes_complete">是，完成</string>
+    <string name="not_yet">暂时不要</string>
+    <string name="yes_cancel">是，取消</string>
+    <string name="keep_booking">保留预约</string>
+    <string name="pay_now">立即付款</string>
+    <string name="no_rejection_reason">没有拒绝原因</string>
+    <string name="declined_by_chef">厨师拒绝了预约</string>
+    <string name="rejection_hint_text">您可以选择其他时间段或浏览其他厨师。</string>
+
+    <string name="dialog_complete_title">完成预约？</string>
+    <string name="dialog_complete_message">厨师是否已满意地完成服务？</string>
+    <string name="dialog_cancel_title">取消预约？</string>
+    <string name="dialog_cancel_message">确定要取消此预约吗？此操作无法撤销。</string>
+
+    <string name="toast_booking_completed">预约已标记为完成！</string>
+    <string name="toast_appointment_cancelled">预约已取消</string>
+
+    <string name="back">返回</string>
+    <string name="complete">完成</string>
+
+    <!-- Admin Approval Screen <Chef> -->
+    <string name="chef_approval">厨师审核</string>
+    <string name="ingredient_requests">食材申请</string>
+    <string name="label_chef_approval">厨师审核</string>
+    <string name="label_ingredients">食材</string>
+    <string name="label_logout">登出</string>
+
+    <string name="experience_years_format">%1$d 年经验</string>
+
+    <string name="review_application">审核申请</string>
+    <string name="no_pending_applications">暂无待处理申请</string>
+
+    <string name="logout">登出</string>
+
+    <!-- Admin Chef Details Screen -->
+    <string name="chef_details">厨师详情</string>
+    <string name="approve">批准</string>
+
+    <string name="personal_info">个人信息</string>
+    <string name="contact_info">联系信息</string>
+    <string name="professional_info">专业信息</string>
+
+    <string name="label_age">年龄</string>
+
+    <string name="full_address_format">%1$s，%2$s，%3$s</string>
+
+    <!-- Chef Home -->
+    <!-- Navigation Bar -->
+    <string name="nav_appointments">预约</string>
+    <string name="nav_hiring">雇佣</string>
+    <string name="nav_profile">个人资料</string>
+    <string name="nav_recipes">食谱</string>
+
+    <string name="greeting">欢迎回来</string>
+    <string name="unknown_client">未知客户</string>
+
+    <string name="banner_title_schedule">您的日程</string>
+    <string name="banner_appointment_count_format">%1$d 个预约</string>
+    <string name="banner_zero_appointments">0 个预约</string>
+    <string name="view_all">查看全部</string>
+
+    <string name="next_appointment">下一个预约</string>
+    <string name="no_upcoming_appointments">暂无即将到来的预约。</string>
+    <string name="error_loading_appointments">无法加载预约。</string>
+    <string name="msg_loading">正在加载...</string>
+    <string name="chef_home_offline_cached_appointments">离线：显示缓存的预约</string>
+
+    <!-- Chef Appointment Screen -->
+    <string name="bookings_and_events">预约与活动</string>
+    <string name="your_appointments">您的预约</string>
+
+    <string name="none">无</string>
+
+    <string name="appointment_serving_and_diet_format">人数：%1$d | 饮食：%2$s</string>
+    <string name="appointment_note_format">备注：%1$s</string>
+    <string name="appointment_datetime_format">%1$s（%2$s - %3$s）</string>
+    <string name="appointment_address_format">%1$s，%2$s</string>
+
+    <string name="no_appointments_found">未找到预约。</string>
+    <string name="no_matching_appointments">没有符合搜索/筛选条件的预约。</string>
+
+    <string name="time">时间图标</string>
+    <string name="location">位置图标</string>
+    <string name="more_options">更多选项</string>
+
+    <!-- Appointment Details <Chef> -->
+    <string name="date_time">日期与时间</string>
+    <string name="event_location">活动地点</string>
+    <string name="section_booking_details">预约详情</string>
+    <string name="label_party_size">服务人数</string>
+    <string name="label_dietary_preference">饮食偏好</string>
+    <string name="label_special_notes">描述：</string>
+    <string name="none_specified">未指定</string>
+
+    <string name="label_contact_format">联系方式：%1$s</string>
+    <string name="party_size_format">%1$d 人</string>
+
+    <string name="open_in_maps">在地图中打开</string>
+    <string name="decline">拒绝</string>
+    <string name="accept_booking">接受预约</string>
+    <string name="confirm_accept">确认接受</string>
+    <string name="confirm_decline">确认拒绝</string>
+    <string name="open_maps">使用地图打开</string>
+    <string name="total_booking_value">预约总金额</string>
+    <string name="call_client">联系客户</string>
+    <string name="scan_client_qr_to_complete">扫描客户二维码以完成预约</string>
+
+    <string name="price_format">RM %.2f</string>
+    <string name="rate_per_guest_label">每位客人的收费（%1$d 人）：</string>
+    <string name="rate_per_guest_value_format">RM %.2f / 人</string>
+
+    <string name="reason_for_declining">拒绝原因</string>
+    <string name="client_review_and_rating">客户评价与评分</string>
+    <string name="quoted_text_format">“%1$s”</string>
+    <string name="rating_format">%1$d.0</string>
+    <string name="no_review_submitted">客户尚未提交评价。</string>
+
+    <string name="section_attached_dishes">附加菜肴 / 膳食计划</string>
+    <string name="no_recipes_requested">客户没有指定食谱</string>
+    <string name="default_recipe_name">食谱 #%1$d</string>
+    <string name="recipe_portions_format">%1$d 份</string>
+    <string name="recipe_calories_format">%1$d 千卡</string>
+    <string name="recipe_time_format">• %1$d 分钟</string>
+    <string name="client_note_format">客户备注：“%1$s”</string>
+    <string name="recipe_image_content_description">食谱图片</string>
+
+    <string name="service_verified_qr_completed">服务已通过二维码验证！预约已标记为完成。</string>
+
+    <string name="payment_status_paid">已付款</string>
+    <string name="payment_status_cancelled">已取消</string>
+    <string name="payment_status_na">不适用</string>
+    <string name="payment_status_awaiting_payment">等待付款</string>
+    <string name="payment_status_pending">待处理</string>
+
+    <string name="accept_title">接受预约？</string>
+    <string name="accept_body_format">确定要接受 %1$s 在 %2$s 的预约吗？</string>
+    <string name="decline_title">拒绝预约</string>
+    <string name="decline_body_format">请提供拒绝此预约的原因。此原因将会分享给 %1$s。</string>
+    <string name="decline_reason">例如：已满员、地点超出服务范围...</string>
+    <string name="rejection_reason_empty">拒绝原因不能为空</string>
+
+    <string name="booking_accepted">预约接受成功！</string>
+    <string name="booking_declined">预约已拒绝。</string>
+
+    <!-- Chef Profile Screen -->
+    <string name="account_settings">账户设置</string>
+    <string name="chef_profile">厨师资料</string>
+
+    <string name="label_price">价格</string>
+    <string name="label_chef_id">厨师 ID</string>
+    <string name="label_bio_description">个人简介 / 描述</string>
+    <string name="label_location">位置</string>
+    <string name="status_pending">待处理</string>
+
+    <string name="edit_profile">编辑资料</string>
+
+    <!-- Chef Edit Profile -->
+    <string name="selected_picture">已选择的图片</string>
+    <string name="current_picture">当前图片</string>
+    <string name="change_profile_photo">更换头像</string>
+    <string name="save">保存</string>
+
+    <string name="personal_details">个人资料</string>
+    <string name="contact_location">联系方式与位置</string>
+    <string name="label_full_name">姓名</string>
+    <string name="label_years_of_experience">工作经验年数</string>
+    <string name="label_price_currency">价格（RM）</string>
+    <string name="label_phone_number">电话号码</string>
+    <string name="label_state">州属</string>
+    <string name="currency_prefix">RM </string>
+
+    <string name="profile_updated_success">资料更新成功！</string>
+    <string name="null_string"> </string>
+
+    <!-- Meal Planner Categories -->
+    <string name="category_high_protein">高蛋白</string>
+    <string name="category_quick_easy">快速简易</string>
+    <string name="category_balanced">均衡</string>
+    <string name="category_ketogenic">生酮</string>
+    <string name="category_low_carb">低碳水</string>
+    <string name="category_cost_friendly">经济实惠</string>
+    <string name="category_others">其他</string>
+
+    <!-- Chef Change Password -->
+    <string name="change_password">修改密码</string>
+    <string name="secure_account_chef">保护您的厨师账户</string>
+    <string name="change_password_subtitle">请输入当前密码和新密码以更新您的账户安全凭证。</string>
+    <string name="current_password">当前密码</string>
+    <string name="new_password">新密码</string>
+    <string name="confirm_new_password">确认新密码</string>
+    <string name="error_chef_password_rule">密码必须为 8-30 个字符，并包含大写字母、小写字母和数字</string>
+    <string name="error_passwords_not_matching">密码不匹配</string>
+    <string name="btn_update_password">更新密码</string>
+    <string name="toast_password_updated_success">密码更新成功！</string>
+    <string name="account_security">账户安全</string>
+
+    <!-- Chef Welcome Screen -->
+    <string name="back_to_login">返回登录</string>
+    <string name="chef_illustration">厨师插图</string>
+
+    <string name="chef_welcome_title">成为合作厨师</string>
+    <string name="chef_welcome_subtitle">展示您的烹饪才能，创建定制菜单，并与注重健康的客户建立联系。</string>
+
+    <string name="chef_feature_customize_profile">创建并自定义您的私人厨师资料</string>
+    <string name="chef_feature_home_cooking">提供灵活的上门烹饪服务</string>
+    <string name="chef_feature_connect_customers">直接与有需求的客户建立联系</string>
+
+    <string name="get_started">开始使用</string>
+    <string name="already_have_account_login">已有厨师账户？登录</string>
+
+    <!-- Meal Planner -->
+    <string name="msg_recipe_removed">食谱已从膳食计划中移除</string>
+    <string name="share_weekly_plan">分享每周膳食计划</string>
+    <string name="tab_planner">计划</string>
+    <string name="tab_template">模板</string>
+    <string name="tab_all">全部</string>
+    <string name="tab_my_templates">我的模板</string>
+    <string name="search_template">搜索模板</string>
+    <string name="msg_template_added">模板已添加到您的收藏中！</string>
+    <string name="menu_edit">编辑</string>
+    <string name="menu_delete">删除</string>
+    <string name="menu_add_to_my_template">添加到我的模板</string>
+    <string name="menu_share">分享</string>
+    <string name="meals_scheduled_count">本周已安排 %1$d 餐</string>
+    <string name="btn_apply_template">将模板应用到您的计划</string>
+    <string name="dialog_title_apply_template">将模板应用到每周计划</string>
+    <string name="placeholder_no_meals_scheduled">今天没有安排餐点</string>
+    <string name="confirm">确认</string>
+    <string name="select_7_day_range">选择 7 天范围</string>
+    <string name="select_date">选择日期</string>
+    <string name="dialog_discard_changes_title">放弃更改？</string>
+    <string name="dialog_discard_draft_title">放弃草稿？</string>
+    <string name="dialog_discard_changes_msg">确定要放弃您的编辑吗？更改将不会保存。</string>
+    <string name="dialog_discard_draft_msg">确定要放弃此模板吗？未保存的更改将会丢失。</string>
+    <string name="button_discard">放弃</string>
+    <string name="btn_continue_editing">继续编辑</string>
+    <string name="dialog_edit_template_name_title">编辑模板名称</string>
+    <string name="dialog_set_template_name_title">设置模板名称</string>
+    <string name="dialog_template_name_prompt">请输入此膳食计划模板的名称：</string>
+    <string name="label_template_name">模板名称</string>
+    <string name="placeholder_template_name_hint">例如：高蛋白一周</string>
+    <string name="title_edit_template">编辑模板</string>
+    <string name="title_create_template">创建模板</string>
+    <string name="label_make_plan_public">公开计划</string>
+    <string name="msg_visible_to_community">所有社区用户均可查看</string>
+    <string name="msg_only_visible_to_you">仅自己可见</string>
+    <string name="msg_template_updated">模板更新成功！</string>
+    <string name="msg_template_created">模板创建成功！</string>
+    <string name="err_select_category">请选择类别</string>
+    <string name="err_empty_template_name">模板名称不能为空</string>
+    <string name="err_failed_load_template">加载模板失败</string>
+    <string name="err_failed_save_template">保存模板失败</string>
+    <string name="placeholder_search_recipes">在此搜索食谱</string>
+    <string name="label_course">课程</string>
+    <string name="btn_apply_filters">应用筛选</string>
+    <string name="btn_clear_all">全部清除</string>
+    <string name="title_filter_recipes">筛选食谱</string>
+    <string name="label_max_prep_time">最长准备时间（分钟）</string>
+    <string name="label_max_calories">最高卡路里（千卡）</string>
+    <string name="label_cooking_skill">烹饪难度</string>
+    <string name="label_budget_rm">预算（RM）</string>
+    <string name="msg_recipes_added_singular">已添加 1 个食谱！</string>
+    <string name="msg_recipes_added_plural">已添加 %1$d 个食谱！</string>
+    <string name="btn_add_selected_recipes">添加已选择的食谱（%1$d）</string>
+    <string name="title_select_recipes">选择食谱</string>
+    <string name="title_selected_count">已选择 %1$d 个</string>
+
+    <string name="dialog_title_confirm_paste_week">确认粘贴每周计划？</string>
+    <string name="dialog_msg_confirm_paste_week">这将覆盖 %1$s 所在周已有的餐点。确定要继续吗？</string>
+    <string name="btn_paste">粘贴</string>
+
+    <!-- Chef Registration Flow -->
+    <string name="title_basic_info">基本信息</string>
+    <string name="title_address_info">地址信息</string>
+    <string name="title_professional_bg">专业背景</string>
+    <string name="title_profile_picture">个人头像</string>
+    <string name="title_review_info">确认信息</string>
+    <string name="step_1_of_5">第 1 步，共 5 步</string>
+    <string name="step_2_of_5">第 2 步，共 5 步</string>
+    <string name="step_3_of_5">第 3 步，共 5 步</string>
+    <string name="step_4_of_5">第 4 步，共 5 步</string>
+    <string name="step_5_of_5">第 5 步，共 5 步</string>
+    <string name="submit_registration">提交注册</string>
+    <string name="error_name_invalid">姓名必须为 3-50 个字符，且只能包含字母。</string>
+    <string name="error_gender_required">请选择您的性别。</string>
+    <string name="error_age_required">年龄为必填项。</string>
+    <string name="error_age_range">厨师年龄必须介于 18 至 100 岁之间。</string>
+    <string name="error_password_required">密码为必填项。</string>
+    <string name="error_confirm_password_required">请确认您的密码。</string>
+    <string name="error_email_required">邮箱地址为必填项。</string>
+    <string name="error_email_invalid">请输入有效的邮箱地址。</string>
+    <string name="error_email_already_exists">此邮箱已经注册。</string>
+    <string name="error_phone_required">电话号码为必填项。</string>
+    <string name="error_phone_invalid">请输入有效的电话号码（例如：0123456789）。</string>
+    <string name="error_address_required">地址为必填项。</string>
+    <string name="error_address_invalid">地址必须至少包含 10 个字符。</string>
+    <string name="error_postcode_required">邮政编码为必填项。</string>
+    <string name="error_postcode_invalid">邮政编码必须包含 5 位数字。</string>
+    <string name="error_state_required">请选择州属。</string>
+    <string name="error_experience_required">工作经验年数为必填项。</string>
+    <string name="error_experience_invalid">工作经验必须介于 0 至 70 年之间。</string>
+    <string name="error_description_limit">描述不能超过 300 个单词。</string>
+    <string name="error_profile_picture_required">需要上传个人头像才能完成注册。</string>
+    <string name="words_count_format">%1$d/300 个单词</string>
+    <string name="placeholder_enter_address">请输入您的地址</string>
+    <string name="placeholder_enter_postcode">请输入您的邮政编码</string>
+    <string name="placeholder_experience">请输入您的工作经验年数</string>
+    <string name="prompt_upload_picture">请上传清晰的个人头像，以便客户识别您。</string>
+    <string name="choose_photo">选择照片</string>
+    <string name="change_photo">更换照片</string>
+    <string name="no_photo">暂无照片</string>
+    <string name="section_personal_details">个人资料</string>
+    <string name="section_address">地址</string>
+    <string name="section_professional_bg">专业背景</string>
+    <string name="years_format">%1$s 年</string>
+    <string name="chef_basic_info_linked_credentials">已关联您当前的 FoodieHeal 账户凭证。</string>
+    <string name="chef_contact_account_email_reused">账户邮箱（使用个人资料中的邮箱）</string>
+
+    <!-- SHOPPING LIST MODULE -->
+    <!-- Shopping List Home Screen -->
+    <string name="shopping_list_home_title">我的购物清单</string>
+    <string name="shopping_list_new_title">新购物清单</string>
+    <string name="shopping_list_home_search_placeholder">搜索购物清单</string>
+    <string name="shopping_list_home_empty_state">尚未创建购物清单。</string>
+    <string name="shopping_list_create_button">创建购物清单</string>
+    <string name="shopping_list_home_no_match">没有符合搜索条件的购物清单。</string>
+    <string name="shopping_list_set_default_toast">“%1$s”已设为默认购物清单</string>
+    <string name="shopping_list_deselect_default_toast">“%1$s”已取消默认设置</string>
+    <string name="shopping_list_change_default_title">更改默认购物清单</string>
+    <string name="shopping_list_change_default_message">购物清单（%1$s）已经被设为默认清单。要改为使用此购物清单吗？</string>
+    <string name="shopping_list_delete_title">删除购物清单</string>
+    <string name="shopping_list_delete_message">确定要删除“%1$s”吗？</string>
+    <string name="shopping_list_deleted_toast">“%1$s”已从您的购物清单中删除</string>
+    <string name="shopping_list_share">分享购物清单</string>
+    <string name="shopping_list_deselect_default">取消默认设置</string>
+    <string name="shopping_list_set_default">设为默认</string>
+    <string name="shopping_list_delete">删除购物清单</string>
+    <string name="label_default">默认</string>
+    <string name="label_name">名称</string>
+    <string name="btn_add">添加</string>
+
+    <!-- SelectShoppingListDialog.kt -->
+    <string name="select_shopping_list_dialog_title">选择要添加的购物清单</string>
+    <string name="shopping_list_name_title">购物清单名称</string>
+    <string name="existing_shopping_list_title">现有购物清单</string>
+
+    <!-- Shopping List Detail Screen -->
+    <string name="shopping_list_title">购物清单</string>
+    <string name="shopping_list_options">选项</string>
+    <string name="shopping_list_add_items">添加项目</string>
+    <string name="shopping_list_clear_checked">清除已勾选项目</string>
+    <string name="shopping_list_no_checked_items">没有已勾选的项目可清除。</string>
+    <string name="shopping_list_clear_all">清除所有项目</string>
+    <string name="shopping_list_already_empty">此购物清单已经为空。</string>
+    <string name="shopping_list_search_placeholder">搜索食材</string>
+    <string name="shopping_list_empty_state">此购物清单为空。</string>
+    <string name="shopping_list_no_match">没有符合搜索条件的项目。</string>
+    <string name="shopping_list_clear_checked_dialog_title">清除已勾选项目</string>
+    <string name="shopping_list_clear_checked_dialog_text">购物清单中有 %1$d 个已勾选项目将被清除。确定吗？</string>
+    <string name="shopping_list_clear_checked_toast">已从购物清单中清除 %1$d 个已勾选项目</string>
+    <string name="shopping_list_clear_all_dialog_title">清除所有项目</string>
+    <string name="shopping_list_clear_all_dialog_text">所有项目都将从此购物清单中清除。确定吗？</string>
+    <string name="shopping_list_clear_all_toast">所有项目已清除</string>
+    <string name="select_shopping_list_placeholder">选择购物清单</string>
+    <string name="shopping_list_error_local_data">仅使用本地数据。</string>
+
+    <string name="shopping_list_last_updated">最后更新：%1$s</string>
+    <string name="shopping_list_copy_clipboard">复制到剪贴板</string>
+    <string name="shopping_list_paste_clipboard">从剪贴板粘贴</string>
+    <string name="shopping_list_add_item">添加项目</string>
+    <string name="shopping_list_search_items_placeholder">搜索项目</string>
+    <string name="shopping_list_add_items_button">添加项目</string>
+    <string name="shopping_list_save_changes_title">保存更改？</string>
+    <string name="shopping_list_save_changes_message">离开前是否要保存购物清单标题的更改？</string>
+    <string name="button_save">保存</string>
+
+    <!-- Add from Clipboard / Recipes to Shopping List (ShoppingListAddFromScreen.kt) -->
+    <string name="shopping_list_add_to_list">添加到购物清单</string>
+    <string name="shopping_list_no_ingredients_clipboard">剪贴板中没有找到有效的食材。</string>
+    <string name="shopping_list_no_ingredients_recipe">此食谱中没有找到食材。</string>
+    <string name="shopping_list_refresh_clipboard">从剪贴板刷新</string>
+    <string name="shopping_list_unselect_all">取消全选</string>
+    <string name="shopping_list_select_all">全选</string>
+    <string name="shopping_list_add_selected">添加已选择项目</string>
+    <string name="shopping_list_items_added_to_list">已将 %1$d 个项目添加到 %2$s</string>
+
+    <!-- Add items to Shopping List (ShoppingListAddItemScreen.kt) -->
+    <string name="add_shopping_item_title">添加到购物清单</string>
+    <string name="add_shopping_item_no_ingredients">没有找到食材。</string>
+    <string name="add_shopping_item_toast_added">已将 %1$d 个项目添加到此购物清单</string>
+    <string name="add_shopping_item_button">将 %1$d 个项目添加到购物清单</string>
+
+    <!-- INGREDIENTS MODULE -->
+    <!-- Ingredients Main Screen -->
+    <string name="ingredients_title">食材</string>
+    <string name="ingredients_tab_existing">现有食材</string>
+    <string name="ingredients_tab_requests">申请</string>
+    <string name="ingredients_fab_new_request">添加申请</string>
+    <string name="ingredients_toast_added">%1$s 已添加到 %2$s。</string>
+    <string name="ingredients_requests_empty">暂无申请。</string>
+    <string name="ingredients_requests_filter_title">按状态筛选</string>
+    <string name="ingredients_requests_filter_all">全部</string>
+    <string name="ingredients_requests_filter_pending">待处理</string>
+    <string name="ingredients_requests_filter_approved">已批准</string>
+    <string name="ingredients_requests_filter_rejected">已拒绝</string>
+    <string name="ingredients_requests_apply_filter">应用筛选</string>
+    <string name="ingredients_existing_search_placeholder">搜索食材</string>
+    <string name="ingredients_requests_search_placeholder">搜索食材申请</string>
+    <string name="categories_filter_header">类别筛选</string>
+    <string name="ingredients_existing_empty">没有符合搜索条件的食材。</string>
+    <string name="ingredients_error_fetch_ingredients">获取食材失败</string>
+    <string name="ingredients_error_fetch_requests">获取申请失败</string>
+    <string name="ingredients_error_fetch_details">获取食材详情失败</string>
+    <string name="ingredients_no_internet_requests">请连接互联网以查看食材申请</string>
+    <string name="ingredients_expand_categories">展开类别筛选</string>
+    <string name="ingredients_collapse_categories">收起类别筛选</string>
+
+    <!-- Ingredient Detail -->
+    <string name="ingredient_detail_request_processed_title">申请已处理</string>
+    <string name="ingredient_detail_request_processed_text">此申请已经被管理员批准或拒绝，无法再删除。</string>
+    <string name="ingredient_detail_title_request">查看申请</string>
+    <string name="ingredient_detail_title_ingredient">查看食材</string>
+    <string name="ingredient_detail_production_id_missing">错误：此申请缺少 Production ID</string>
+    <string name="ingredient_detail_description_label">描述</string>
+    <string name="ingredient_detail_no_description">暂无描述。</string>
+    <string name="ingredient_detail_no_calorie_info">暂无卡路里信息。</string>
+    <string name="ingredient_detail_rejected_reason_label">拒绝原因</string>
+    <string name="ingredient_detail_admin_notes_label">管理员备注</string>
+    <string name="ingredient_detail_delete_title">删除申请</string>
+    <string name="ingredient_detail_delete_text">确定要删除此申请吗？</string>
+    <string name="ingredient_detail_toast_deleted">申请已删除</string>
+    <string name="ingredient_detail_unspecified">未指定。</string>
+
+    <!-- Ingredient Request Notifications -->
+    <string name="ingredient_request_channel_name">食材申请更新</string>
+    <string name="ingredient_request_channel_desc">关于您提交的食材申请批准和拒绝的通知</string>
+    <string name="ingredient_request_approved_title">食材申请已批准</string>
+    <string name="ingredient_request_approved_msg">您申请的“%1$s”已获批准，并已添加到食材目录！</string>
+    <string name="ingredient_request_rejected_title">食材申请已拒绝</string>
+    <string name="ingredient_request_rejected_msg">您申请的“%1$s”已被拒绝。点击查看详情和原因。</string>
+
+    <!-- Ingredient Request -->
+    <string name="ingredient_name">食材名称</string>
+    <string name="category">类别</string>
+    <string name="add_ingredient">添加食材</string>
+    <string name="serving_unit">份量单位</string>
+    <string name="calories">卡路里</string>
+    <string name="minutes">分钟</string>
+    <string name="calorie_information">卡路里信息</string>
+    <string name="request_new_ingredient">申请新食材</string>
+    <string name="delete_request">删除申请</string>
+    <string name="edit_request">编辑申请</string>
+    <string name="update_request">更新申请</string>
+    <string name="reject">拒绝</string>
+    <string name="review_approve">审核并批准</string>
+
+    <!-- Ingredient Request Form -->
+    <string name="ingredient_form_processed_title">申请已处理</string>
+    <string name="ingredient_form_processed_text">此申请已经被管理员处理，无法再修改。</string>
+    <string name="ingredient_form_title_add">申请食材</string>
+    <string name="ingredient_form_title_update">更新申请</string>
+    <string name="ingredient_form_online_required">您需要联网才能提交申请</string>
+    <string name="ingredient_form_category_placeholder">例如：蔬菜</string>
+    <string name="ingredient_form_name_char_count_limit">%1$d / 40</string>
+    <string name="ingredient_form_desc_char_count_limit">%1$d / 150</string>
+    <string name="ingredient_form_add_unit">添加单位</string>
+    <string name="ingredient_form_toast_submitted">申请提交成功</string>
+    <string name="ingredient_form_toast_updated">申请更新成功</string>
+    <string name="ingredient_form_serving_unit_placeholder">例如：克</string>
+    <string name="ingredient_form_calories_placeholder_per">每 %1$d %2$s</string>
+    <string name="ingredient_form_calories_placeholder_default">例如：每 100 克</string>
+    <string name="ingredient_form_remove_unit">移除单位</string>
+    <string name="ingredient_form_error_submission_failed">提交失败：%1$s</string>
+
+    <!-- Ingredients Module Validation Errors -->
+    <string name="ingredients_error_name_required">食材名称为必填项</string>
+    <string name="ingredients_error_name_exists">食材（%1$s）已经存在。</string>
+    <string name="ingredients_error_request_exists">食材申请（%1$s）已经存在。</string>
+    <string name="error_category_required">类别为必填项</string>
+    <string name="ingredients_error_description_required">描述为必填项</string>
+    <string name="error_at_least_one_unit_required">至少需要一项卡路里信息</string>
+    <string name="error_unit_required">份量单位为必填项</string>
+    <string name="error_calories_required">卡路里数值为必填项</string>
+    <string name="error_invalid_number">必须是有效数字</string>
+    <string name="error_no_decimal_allowed">不允许使用小数</string>
+
+    <!-- Admin Ingredients -->
+    <string name="admin_ingredients_title">管理员食材</string>
+    <string name="admin_tab_community">社区</string>
+    <string name="admin_tab_requests">申请</string>
+    <string name="admin_fab_add_ingredient">添加新食材</string>
+    <string name="admin_offline_manage_message">请连接互联网以管理食材和申请</string>
+    <string name="admin_requests_search_placeholder">搜索食材申请</string>
+    <string name="admin_categories_header">类别</string>
+    <string name="admin_no_requests_found">暂无申请。</string>
+    <string name="admin_filter_status_title">按状态筛选</string>
+    <string name="admin_filter_sheet_title">筛选申请</string>
+    <string name="admin_filter_reset_all">重置全部</string>
+    <string name="admin_filter_section_status">申请状态</string>
+    <string name="admin_filter_section_created_date">申请日期</string>
+    <string name="admin_filter_section_processed_date">处理日期</string>
+    <string name="admin_filter_from">从</string>
+    <string name="admin_filter_to">至</string>
+    <string name="admin_filter_select_date">选择日期</string>
+    <string name="admin_filter_apply_btn">应用筛选</string>
+    <string name="admin_filter_all">全部</string>
+    <string name="admin_filter_pending">待处理</string>
+    <string name="admin_filter_approved">已批准</string>
+    <string name="admin_filter_rejected">已拒绝</string>
+    <string name="admin_apply_filter">应用筛选</string>
+    <string name="admin_requested_by">申请人：%1$s</string>
+    <string name="admin_error_fetch_requests">获取申请失败</string>
+
+    <!-- Admin Ingredient Detail -->
+    <string name="admin_detail_title">查看申请</string>
+    <string name="admin_detail_no_description">暂无描述。</string>
+    <string name="admin_detail_no_calorie_info">暂无卡路里信息。</string>
+    <string name="admin_detail_request_info_header">申请信息</string>
+    <string name="admin_detail_user_id">用户 ID：</string>
+    <string name="admin_detail_user_name">用户名：</string>
+    <string name="admin_detail_created_date">创建日期：</string>
+    <string name="admin_detail_approved_date">批准日期：</string>
+    <string name="admin_detail_rejected_date">拒绝日期：</string>
+    <string name="admin_detail_request_not_found">未找到申请</string>
+    <string name="admin_detail_toast_rejected">申请已拒绝</string>
+    <string name="admin_detail_reject_title">拒绝申请</string>
+    <string name="admin_detail_reject_prompt">请提供拒绝此食材申请的原因。</string>
+    <string name="admin_detail_reject_placeholder">拒绝原因</string>
+    <string name="admin_detail_error_reason_empty">原因不能为空</string>
+    <string name="admin_detail_conflict_deleted_title">申请已删除</string>
+    <string name="admin_detail_conflict_deleted_text">此申请已被用户删除。</string>
+    <string name="admin_detail_conflict_processed_title">申请已处理</string>
+    <string name="admin_detail_conflict_processed_text">此申请已被另一位管理员批准或拒绝。</string>
+
+    <!-- Admin Add Ingredient -->
+    <string name="admin_add_title">添加新食材</string>
+    <string name="admin_add_offline_message">您需要联网才能添加新食材</string>
+    <string name="admin_add_category_placeholder">例如：蔬菜</string>
+    <string name="admin_add_toast_success">食材添加成功</string>
+    <string name="admin_add_button">添加食材</string>
+    <string name="admin_error_request_id_missing">错误：缺少申请 ID</string>
+    <string name="admin_error_serving_units_missing">一个或多个份量单位尚未选择</string>
+    <string name="admin_error_original_metadata_missing">缺少原始申请信息，请重试。</string>
+    <string name="admin_error_submission_failed">提交失败：%1$s</string>
+    <string name="admin_error_approval_failed">批准失败：%1$s</string>
+
+    <!--Admin Review Ingredient Request -->
+    <string name="admin_review_title">审核食材申请</string>
+    <string name="admin_review_error_validate">请修正表单中的错误！</string>
+    <string name="admin_approve_ingredient_request">批准食材申请</string>
+    <string name="admin_request_approved">申请批准成功！</string>
+    <string name="admin_approval_failed_dialog_title">批准失败</string>
+    <string name="admin_approve_request_dialog_title">批准申请</string>
+    <string name="admin_approve_request_dialog_warning">警告：\n批准后将无法编辑此申请！</string>
+    <string name="admin_approve_request_dialog_note">您可以填写可选备注，向用户说明您修改其申请的原因。</string>
+    <string name="admin_approve_request_dialog_placeholder">备注（可选）</string>
+
+    <!-- In-App Wallet -->
+    <string name="wallet_title">应用内钱包</string>
+    <string name="transaction_history">交易记录</string>
+    <string name="wallet_records_count">%1$d 条记录</string>
+    <string name="wallet_pay_balance_title">FoodieHeal Pay 余额</string>
+    <string name="wallet_status_active">已启用</string>
+    <string name="wallet_status_inactive">未启用</string>
+    <string name="wallet_current_balance">当前余额</string>
+    <string name="wallet_inactive_balance">未启用余额</string>
+    <string name="wallet_activate_prompt">首次充值即可启用您的钱包！</string>
+    <string name="wallet_show_balance">显示余额</string>
+    <string name="wallet_hide_balance">隐藏余额</string>
+    <string name="wallet_top_up">充值</string>
+    <string name="wallet_activate_and_top_up">启用并充值</string>
+    <string name="wallet_filter_all">全部</string>
+    <string name="wallet_filter_top_up">充值</string>
+    <string name="wallet_filter_payments">付款</string>
+    <string name="wallet_filter_refunds">退款</string>
+    <string name="wallet_txn_top_up">充值</string>
+    <string name="wallet_txn_appointment_payment">预约付款</string>
+    <string name="wallet_txn_refund">退款</string>
+    <string name="wallet_txn_reschedule_adjustment">重新预约调整</string>
+    <string name="wallet_txn_top_up_via">通过 %1$s 充值</string>
+    <string name="wallet_bal_hidden">余额：••••••</string>
+    <string name="wallet_bal_format">余额：RM %1$s</string>
+    <string name="wallet_empty_all">暂无交易记录</string>
+    <string name="wallet_empty_topup">暂无充值记录</string>
+    <string name="wallet_empty_payment">暂无预约付款记录</string>
+    <string name="wallet_empty_refund">暂无退款记录</string>
+    <string name="wallet_empty_desc">您的交易记录和收据将自动记录在这里。</string>
+    <string name="wallet_top_up_now">立即充值</string>
+    <string name="wallet_top_up_sheet_title">钱包充值</string>
+    <string name="wallet_top_up_preset_prompt">选择预设金额或输入自定义金额：</string>
+    <string name="wallet_custom_amount_label">自定义金额（RM）</string>
+    <string name="wallet_custom_amount_placeholder">例如：150.00</string>
+    <string name="wallet_payment_method_label">付款方式：</string>
+    <string name="wallet_demo_gateway_label">即时充值网关（演示模式）</string>
+    <string name="wallet_top_up_btn_format">充值 RM %1$s</string>
+    <string name="wallet_date_recent">最近</string>
+    <string name="wallet_offline_cannot_refresh">离线时无法刷新。</string>
+    <string name="wallet_offline_banner">离线模式：显示缓存的余额和交易记录。重新连接网络后即可充值。</string>
+    <string name="wallet_offline_cannot_top_up">离线时无法充值。</string>
+    <string name="currency_rm_int">RM %1$d</string>
+
+    <!-- Wallet Transaction Details & Receipt -->
+    <string name="transaction_details_title">交易详情</string>
+    <string name="share_receipt">分享收据</string>
+    <string name="transaction_not_found_title">找不到交易</string>
+    <string name="transaction_not_found_desc">无法加载所请求的交易详情。</string>
+    <string name="btn_go_back">返回</string>
+
+    <string name="receipt_header_title">FoodieHeal Pay</string>
+    <string name="receipt_header_subtitle">官方电子钱包收据</string>
+    <string name="receipt_status_top_up">充值成功</string>
+    <string name="receipt_status_payment">付款完成</string>
+    <string name="receipt_status_refund">退款已到账</string>
+    <string name="receipt_status_adjustment">调整已应用</string>
+
+    <string name="receipt_label_transaction_type">交易类型</string>
+    <string name="receipt_type_top_up">钱包充值</string>
+    <string name="receipt_type_appointment">预约付款</string>
+    <string name="receipt_type_refund">退款到账</string>
+    <string name="receipt_type_adjustment">重新预约调整</string>
+
+    <string name="receipt_label_transaction_id">交易 ID</string>
+    <string name="receipt_toast_copied">交易 ID 已复制</string>
+    <string name="receipt_cd_copy">复制</string>
+
+    <string name="receipt_label_payment_source">付款来源</string>
+    <string name="receipt_method_gateway">即时充值网关</string>
+    <string name="receipt_method_wallet_refund">应用内钱包（退款）</string>
+    <string name="receipt_method_foodieheal_wallet">FoodieHeal 应用内钱包</string>
+    <string name="receipt_label_reference_id">参考 ID</string>
+    <string name="receipt_label_balance_before">交易前余额</string>
+    <string name="receipt_label_balance_after">交易后余额</string>
+    <string name="receipt_ref_format">参考：%1$s</string>
+    <string name="receipt_computer_generated_notice">此收据由计算机自动生成 • 无需签名</string>
+
+    <!-- Add New Card -->
+    <string name="title_add_card">添加信用卡或借记卡</string>
+    <string name="label_card_number">卡号</string>
+    <string name="placeholder_card_number">16 位卡号</string>
+    <string name="label_cardholder_name">持卡人姓名</string>
+    <string name="label_expiry_date">MM/YY</string>
+    <string name="placeholder_expiry_date">MM/YY</string>
+    <string name="error_invalid_expiry_date">MM/YY 无效</string>
+    <string name="error_month_range">月份必须为 01-12</string>
+    <string name="error_format_mmyy">格式：MM/YY</string>
+    <string name="error_invalid_year">年份无效</string>
+    <string name="error_card_expired">卡片已过期</string>
+    <string name="error_invalid_expiry_year">有效期年份无效</string>
+    <string name="label_cvv">CVV</string>
+    <string name="placeholder_cvv">3-4 位数字</string>
+    <string name="save_card_for_future">保存卡片以便未来预约使用</string>
+    <string name="btn_save_select_card">保存并选择卡片</string>
+    <string name="brand_card_fallback">卡片</string>
+    <string name="tag_default">默认</string>
+    <string name="tag_instant">即时</string>
+
+    <!-- Payment Method Management -->
+    <string name="title_payment_methods">付款方式</string>
+    <string name="cd_add_payment_method">添加付款方式</string>
+    <string name="toast_cannot_add_cards_offline">离线时无法添加卡片。</string>
+    <string name="payment_methods_offline_banner">离线模式：显示缓存的卡片。重新连接后即可管理。</string>
+    <string name="msg_set_default_payment_method">设为默认付款方式</string>
+    <string name="msg_removed_default_payment_method">已取消默认付款方式</string>
+    <string name="toast_card_added_success">卡片添加成功！</string>
+    <string name="dialog_delete_payment_method_title">删除付款方式</string>
+    <string name="dialog_delete_payment_method_msg">确定要移除此付款方式吗？此操作无法撤销。</string>
+    <string name="toast_payment_method_deleted">付款方式已删除</string>
+    <string name="card_masked_number_format">• • • • %1$s</string>
+    <string name="card_expires_format">有效期至 %1$s</string>
+    <string name="label_default_payment_method">默认付款方式</string>
+    <string name="cd_set_as_default">设为默认</string>
+    <string name="cd_delete_method">删除付款方式</string>
+    <string name="empty_payment_methods_title">尚未添加付款方式</string>
+    <string name="empty_payment_methods_desc">添加信用卡或借记卡，即可快速完成预约和付款。</string>
+    <string name="btn_add_payment_method">添加付款方式</string>
+
+    <!-- Checkout Payment -->
+    <string name="title_checkout_payment">结账与付款</string>
+    <string name="error_loading_appointment">加载预约时发生错误。</string>
+    <string name="payment_offline_banner">没有网络连接，请连接互联网后继续付款。</string>
+    <string name="wallet_inactive_warning">您的应用内钱包目前尚未启用。请先充值钱包或选择银行卡。</string>
+    <string name="wallet_insufficient_warning_format">钱包余额不足（%1$s）。请充值或选择银行卡。</string>
+    <string name="label_total_amount">总金额</string>
+    <string name="toast_payment_success">付款成功！</string>
+    <string name="pay_amount_via_wallet_format">通过钱包支付 %1$s</string>
+    <string name="pay_amount_format">支付 %1$s</string>
+    <string name="title_order_summary">订单摘要</string>
+    <string name="title_select_payment_method">选择付款方式</string>
+    <string name="add_new_card">+ 添加新的信用卡 / 借记卡</string>
+    <string name="toast_chef_register_success">厨师注册成功！</string>
+    <string name="toast_chef_upgrade_success">成功升级为厨师！</string>
+    <string name="biometric_prompt_title">确认付款</string>
+    <string name="biometric_prompt_subtitle">请进行身份验证，以授权通过 %2$s 支付 %1$s</string>
+
+    <!-- Calendar Feature-->
+    <string name="add_to_calendar">添加到日历</string>
+    <string name="toast_opening_calendar">正在打开日历...</string>
+    <string name="dialog_calendar_title">预约已确认！</string>
+    <string name="dialog_calendar_message">您的付款已成功，预约已确认。是否要将此次服务添加到日历并设置提醒？</string>
+    <string name="btn_add_to_calendar">添加到日历</string>
+    <string name="btn_view_booking">查看预约</string>
+
+    <!-- Rebook Chef Feature -->
+    <string name="btn_rebook_chef">再次预约厨师</string>
+    <string name="rebooking_in_progress">正在准备预约...</string>
+    <string name="rebook_failed">无法准备再次预约：%1$s</string>
+
+    <!-- Meal Planner Folders -->
+    <string name="tab_details">详情</string>
+    <string name="tab_weekly_plan">每周计划</string>
+    <string name="label_template_description">模板描述</string>
+    <string name="placeholder_template_description">描述您的计划（例如：目标、适用人群）…</string>
+    <string name="title_scheduled_hiring_appointments">已安排的厨师预约</string>
+    <string name="msg_plan_id_copied">计划 ID 已复制到剪贴板</string>
+    <string name="msg_share_template_text">看看 Foodie Heal 上的这个膳食计划模板：%1$s</string>
+    <string name="msg_share_my_template_text">看看我在 Foodie Heal 创建的膳食计划模板：%1$s</string>
+    <string name="title_share_template">分享模板</string>
+    <string name="msg_show_less">显示更少</string>
+    <string name="msg_more">更多…</string>
+    <string name="msg_template_deleted">模板删除成功！</string>
+    <string name="empty_no_community_templates">暂无社区模板</string>
+    <string name="empty_no_templates_match">没有符合搜索条件的模板</string>
+    <string name="empty_no_my_templates">您尚未创建任何模板</string>
+    <string name="error_recipe_not_found">找不到食谱。</string>
+    <string name="error_recipe_not_available_offline">离线时无法获取食谱数据。</string>
+    <string name="label_plan_id">计划 ID</string>
+    <string name="label_public_template">公开模板</string>
+    <string name="label_private_template">私人模板</string>
+    <string name="desc_copy_plan_id">复制计划 ID</string>
+    <string name="desc_add_template">添加模板</string>
+    <string name="error_failed_to_delete_plan">删除计划失败</string>
+    <string name="error_source_plan_not_found">找不到源计划</string>
+    <string name="label_copy_suffix">（副本）</string>
+    <string name="error_failed_to_copy_template">复制模板失败</string>
+
+    <!-- ChefEarningsChart -->
+    <string name="chef_earnings_overview">收入概览</string>
+    <string name="chef_earnings_last_months_format">过去 %1$d 个月 • 净收入</string>
+    <string name="chef_earnings_total_gross">总收入</string>
+    <string name="chef_earnings_platform_fee">平台费用（5%）</string>
+    <string name="chef_earnings_net_payout">净收入</string>
+    <string name="chef_earnings_breakdown_format">%1$s 明细</string>
+    <string name="chef_earnings_appointment_single">1 个预约</string>
+    <string name="chef_earnings_appointment_plural_format">%1$d 个预约</string>
+    <string name="chef_earnings_fee_deduction_format"> • 费用：-RM %1$.2f</string>
+
+    <!-- AppointmentScreen -->
+    <string name="chef_appt_offline_cached_bookings">离线：显示缓存的预约</string>
+    <string name="chef_appt_search_placeholder">搜索客户、地点、饮食偏好…</string>
+    <string name="chef_appt_clear_search">清除</string>
+    <string name="chef_appt_reset_filters">重置筛选</string>
+    <string name="chef_appt_client_booking">客户预约</string>
+    <string name="chef_appt_serving_format">%1$d 份</string>
+    <string name="chef_appt_servings_format">%1$d 份</string>
+    <string name="chef_appt_note_format">备注：%1$s</string>
+    <string name="chef_appt_net_payout">净收入</string>
+    <string name="chef_appt_total_charged">收取总额</string>
+
+    <!-- AppointmentDetailsScreen -->
+    <string name="chef_details_earnings_desc">收入</string>
+    <string name="chef_details_status_paid">已付款</string>
+    <string name="chef_details_status_cancelled">已取消</string>
+    <string name="chef_details_status_na">不适用</string>
+    <string name="chef_details_status_awaiting_payment">等待付款</string>
+    <string name="chef_details_status_pending">待处理</string>
+    <string name="chef_details_open_with_maps">使用地图打开</string>
+    <string name="chef_details_recipe_image_desc">食谱图片</string>
+    <string name="chef_details_view_details_desc">查看详情</string>
+    <string name="chef_details_scan_qr_desc">扫描二维码</string>
+    <string name="toast_service_verified_completed">服务已通过二维码验证！预约已标记为完成。</string>
+
+    <!-- ChefAvailabilityGrid -->
+    <string name="chef_avail_title">工作时间与日程</string>
+    <string name="chef_avail_subtitle">点击时间段设置客户可以预约您的时间</string>
+    <string name="chef_avail_note_label">注意</string>
+    <string name="chef_avail_not_configured_warning">尚未设置工作时间。请在下方设置每周工作时间，然后点击保存，以便客户预约。</string>
+    <string name="chef_avail_preset_weekdays">工作日</string>
+    <string name="chef_avail_preset_all_days">每天</string>
+    <string name="chef_avail_preset_clear">清除</string>
+    <string name="chef_avail_col_day">日期</string>
+    <string name="chef_avail_slot_morning_time">上午 8 点 - 中午 12 点</string>
+    <string name="chef_avail_slot_afternoon_time">中午 12 点 - 下午 5 点</string>
+    <string name="chef_avail_slot_evening_time">下午 5 点 - 晚上 9 点</string>
+    <string name="toast_chef_avail_save_success">工作时间更新成功！</string>
+    <string name="toast_chef_avail_save_error">保存错误：%1$s</string>
+    <string name="chef_avail_save">保存日程</string>
+
+    <!-- ChefQrScannerDialog -->
+    <string name="toast_camera_permission_required">扫描二维码需要相机权限。</string>
+    <string name="chef_qr_permission_required_title">需要相机权限</string>
+    <string name="chef_qr_permission_required_desc">需要相机权限来扫描客户的服务完成二维码。</string>
+    <string name="chef_qr_btn_grant_permission">授予权限</string>
+    <string name="toast_scanned_qr_mismatch">扫描的二维码属于其他预约。</string>
+    <string name="chef_qr_desc_close">关闭</string>
+    <string name="chef_qr_title_scan_completion">扫描完成二维码</string>
+    <string name="chef_qr_desc_torch">手电筒</string>
+    <string name="chef_qr_instruction_align">将客户二维码对准框内</string>
+    <string name="chef_qr_instruction_subtitle">扫描后将验证服务完成情况，并将预约状态更改为“已完成”。</string>
+
+    <!-- ChefLoginScreen -->
+    <string name="chef_login_portal_title">厨师管理平台</string>
+    <string name="chef_login_portal_subtitle">登录以管理您的厨师资料和预约</string>
+    <string name="chef_login_email_label">厨师邮箱</string>
+    <string name="chef_login_email_placeholder">chef@example.com</string>
+    <string name="chef_login_invalid_email">邮箱格式无效</string>
+    <string name="chef_login_password_placeholder">请输入您的密码</string>
+    <string name="chef_login_forgot_password">忘记密码？</string>
+    <string name="chef_login_btn_submit">厨师登录</string>
+    <string name="chef_login_new_chef_prompt">新厨师？</string>
+    <string name="chef_login_apply_here">在此直接申请</string>
+    <string name="chef_login_back_to_customer">返回客户登录</string>
+
+    <!-- AppointmentReview -->
+    <string name="hiring_review_itemized_receipt">详细收据</string>
+    <string name="hiring_review_chef_labor">厨师服务费（RM %1$s/小时 × %2$s 小时）</string>
+    <string name="hiring_review_ingredients_cost">食材费用（%d 道菜）</string>
+    <string name="hiring_review_serving_singular">%d 份</string>
+    <string name="hiring_review_servings_plural">%d 份</string>
+    <string name="hiring_review_interstate_travel_surcharge">跨州交通附加费</string>
+    <string name="hiring_review_subtotal">小计</string>
+    <string name="hiring_review_platform_service_fee">平台服务费（5%）</string>
+
+    <!-- UserAppointmentDetails -->
+    <string name="user_app_details_your_rating">您的评分</string>
+    <string name="user_app_details_edit_review">编辑评价</string>
+    <string name="user_app_details_experience_question">您的体验如何？</string>
+    <string name="user_app_details_share_feedback_prompt">分享您的体验并为厨师 %s 评分，帮助其他用户。</string>
+    <string name="user_app_details_fallback_chef">厨师</string>
+    <string name="user_app_details_rate_chef_now">立即评价厨师</string>
+    <string name="user_app_details_show_completion_qr">显示服务完成二维码</string>
+    <string name="user_app_details_cd_show_completion_qr">显示完成二维码</string>
+    <string name="user_app_details_recipe_image">食谱图片</string>
+
+    <!-- AppointmentQrCodeDialog -->
+    <string name="qr_dialog_service_completion_title">服务完成二维码</string>
+    <string name="qr_dialog_chef_prefix">厨师：%s</string>
+    <string name="qr_dialog_cd_close">关闭</string>
+    <string name="qr_dialog_cd_qr_code">完成二维码</string>
+    <string name="qr_dialog_booking_id">预约 ID</string>
+    <string name="qr_dialog_appointment_date">预约日期</string>
+    <string name="qr_dialog_instruction">服务完成后请向厨师出示此二维码。扫描后，预约将被验证并标记为“已完成”。</string>
+    <string name="qr_dialog_btn_done">完成</string>
+
+    <!-- ChefFilterComponents -->
+    <string name="chef_filter_search_placeholder">按姓名、州属搜索厨师...</string>
+    <string name="chef_filter_cd_search">搜索</string>
+    <string name="chef_filter_cd_clear_search">清除搜索</string>
+    <string name="chef_filter_cd_open_filters">打开筛选</string>
+    <string name="chef_filter_clear_all">全部清除</string>
+    <string name="chef_filter_chip_state">州属：%s</string>
+    <string name="chef_filter_chip_gender">性别：%s</string>
+    <string name="chef_filter_chip_age">年龄：%s</string>
+    <string name="chef_filter_sheet_title">筛选与排序厨师</string>
+    <string name="chef_filter_reset_all">全部重置</string>
+    <string name="chef_filter_sort_by_rating">按评分排序</string>
+    <string name="chef_filter_rating_high_to_low">从高到低</string>
+    <string name="chef_filter_rating_low_to_high">从低到高</string>
+    <string name="chef_filter_sort_by_rate">按每小时收费排序</string>
+    <string name="chef_filter_price_low_to_high">价格：从低到高</string>
+    <string name="chef_filter_price_high_to_low">价格：从高到低</string>
+    <string name="chef_filter_chef_gender">厨师性别</string>
+    <string name="chef_filter_gender_male">男性</string>
+    <string name="chef_filter_gender_female">女性</string>
+    <string name="chef_filter_chef_age">厨师年龄</string>
+    <string name="chef_filter_state_location">州属 / 地区</string>
+    <string name="chef_filter_search_state_placeholder">搜索地区 / 州属...</string>
+    <string name="chef_filter_selected_location">已选择地区：</string>
+    <string name="chef_filter_remove">移除</string>
+    <string name="chef_filter_apply_filters">应用筛选</string>
+
+    <!-- PaymentScreen -->
+    <string name="payment_method_in_app_wallet">应用内钱包</string>
+    <string name="payment_method_card_format">银行卡（•••• %s）</string>
+    <string name="payment_method_selected_fallback">已选择的付款方式</string>
+    <string name="payment_calendar_event_title">FoodieHeal 预约服务</string>
+
+    <!-- PaymentMethod.kt -->
+    <string name="payment_method_wallet_balance_format">余额：RM %s</string>
+    <string name="payment_saved_card">已保存的银行卡</string>
+
+    <!-- AnimatedPriceBreakdown -->
+    <string name="breakdown_title_price_breakdown">价格明细</string>
+    <string name="breakdown_base_rate">基础收费</string>
+    <string name="breakdown_serving_premium">额外人数费用（%d 位额外客人）</string>
+    <string name="breakdown_recipes_add_on">食谱与附加项目</string>
+    <string name="breakdown_total">总计</string>
+    <string name="breakdown_currency_format">RM %s</string>
+
+    <!-- AddNewCard -->
+    <string name="add_card_clear_all">全部清除</string>
+    <string name="add_card_section_card_info">银行卡信息</string>
+    <string name="add_card_holder_placeholder">例如：John Doe</string>
+    <string name="add_card_section_expiry_security">有效期与安全信息</string>
+    <string name="add_card_error_month">月份必须为 01-12</string>
+    <string name="add_card_error_format_mmyy">格式：MM/YY</string>
+    <string name="add_card_error_invalid_year">年份无效</string>
+    <string name="add_card_error_card_expired">银行卡已过期</string>
+    <string name="add_card_error_invalid_expiry_year">有效期年份无效</string>
+    <string name="add_card_error_invalid_number">卡号无效</string>
+
+    <!-- WalletTransactionDetailScreen -->
+    <string name="wallet_detail_share_image">分享图片</string>
+    <string name="wallet_detail_export_pdf">导出 PDF</string>
+
+    <!-- TransactionReceiptCard -->
+    <string name="receipt_date_recent">最近</string>
+
+    <!-- SpendingAnalyticsCard -->
+    <string name="analytics_title">消费分析</string>
+    <string name="analytics_subtitle_monthly">每月明细</string>
+    <string name="analytics_total_spent">总消费</string>
+    <string name="analytics_total_top_up">总充值</string>
+    <string name="analytics_total_refunds">退款</string>
+    <string name="analytics_legend_payments">付款</string>
+    <string name="analytics_legend_top_ups">充值</string>
+    <string name="analytics_legend_refunds">退款</string>
+    <string name="analytics_month_breakdown_format">%s 明细</string>
+    <string name="analytics_net_format">净额：%1$sRM %2$s</string>
+
+    <!-- WalletScreen -->
+    <string name="wallet_tab_transaction_history">交易记录</string>
+    <string name="wallet_tab_spending_analytics">消费分析</string>
+    <string name="wallet_top_up_via_format">通过 %s 充值</string>
+    <string name="wallet_top_up_default_desc">钱包充值</string>
+    <string name="wallet_reset">重置</string>
+
+    <!-- ReceiptShareUtil -->
+    <string name="receipt_share_subject">FoodieHeal 交易收据</string>
+    <string name="receipt_share_chooser_image">通过以下方式分享收据</string>
+    <string name="receipt_share_chooser_pdf">通过以下方式分享 PDF 收据</string>
+    <string name="receipt_share_err_generate_image">生成收据图片失败：%s</string>
+    <string name="receipt_share_err_generate_pdf">生成 PDF 收据失败：%s</string>
+</resources>

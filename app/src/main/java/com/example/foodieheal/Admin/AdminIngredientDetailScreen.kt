@@ -248,6 +248,17 @@ fun AdminIngredientDetailScreen(
                                     label = stringResource(R.string.admin_detail_created_date),
                                     value = formatDisplayDateTime(request.datetimeCreated)
                                 )
+                                if (request.requestStatus == Status.APPROVED && !request.datetimeProcessed.isNullOrBlank()) {
+                                    RequestInfoRow(
+                                        label = stringResource(R.string.admin_detail_approved_date),
+                                        value = formatDisplayDateTime(request.datetimeProcessed)
+                                    )
+                                } else if (request.requestStatus == Status.REJECTED && !request.datetimeProcessed.isNullOrBlank()) {
+                                    RequestInfoRow(
+                                        label = stringResource(R.string.admin_detail_rejected_date),
+                                        value = formatDisplayDateTime(request.datetimeProcessed)
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.height(120.dp))
                             }

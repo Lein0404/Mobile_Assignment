@@ -114,6 +114,7 @@ class IngredientRequestRepository {
                 set("rejected_reason", request.rejectedReason)
                 set("admin_note", request.adminNote)
                 set("ingredient_id", request.ingredientId)
+                set("datetime_processed", request.datetimeProcessed)
             }
         ) {
             filter {
@@ -135,7 +136,8 @@ class IngredientRequestRepository {
         status: Status,
         rejectedReason: String? = null,
         adminNote: String? = null,
-        ingredientId: String? = null
+        ingredientId: String? = null,
+        datetimeProcessed: String? = null
     ) = withContext(Dispatchers.IO) {
         SupabaseClient.client.from("ingredient_request").update(
             {
@@ -143,6 +145,7 @@ class IngredientRequestRepository {
                 set("rejected_reason", rejectedReason)
                 set("admin_note", adminNote)
                 set("ingredient_id", ingredientId)
+                set("datetime_processed", datetimeProcessed)
             }
         ) {
             filter {

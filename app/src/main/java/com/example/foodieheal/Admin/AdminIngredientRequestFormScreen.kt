@@ -234,10 +234,7 @@ fun AdminIngredientRequestFormScreen(
                         adminNote = if (adminNote.isBlank()) null else adminNote,
                         onComplete = {
                             Toast.makeText(context, requestApprovedMsg, Toast.LENGTH_SHORT).show()
-
-                            navController.navigate(Screen.AdminChefScreen.createRoute(tab = 1)) {
-                                popUpTo(Screen.AdminChefScreen.route) { this.inclusive = true }
-                            }
+                            navController.popBackStack()
                         }
                     )
                 }

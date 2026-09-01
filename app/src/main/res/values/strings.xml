@@ -890,7 +890,7 @@
     <string name="ingredients_tab_existing">Existing</string>
     <string name="ingredients_tab_requests">Requests</string>
     <string name="ingredients_fab_new_request">Add Request</string>
-    <string name="ingredients_toast_added">%1$s added to My Shopping Lists.</string>
+    <string name="ingredients_toast_added">%1$s added to %2$s.</string>
     <string name="ingredients_requests_empty">No requests found.</string>
     <string name="ingredients_requests_filter_title">Filter by Status</string>
     <string name="ingredients_requests_filter_all">All</string>
@@ -989,6 +989,15 @@
     <string name="admin_categories_header">Categories</string>
     <string name="admin_no_requests_found">No requests found.</string>
     <string name="admin_filter_status_title">Filter by Status</string>
+    <string name="admin_filter_sheet_title">Filter Requests</string>
+    <string name="admin_filter_reset_all">Reset All</string>
+    <string name="admin_filter_section_status">Request Status</string>
+    <string name="admin_filter_section_created_date">Requested Date</string>
+    <string name="admin_filter_section_processed_date">Processed Date</string>
+    <string name="admin_filter_from">From</string>
+    <string name="admin_filter_to">To</string>
+    <string name="admin_filter_select_date">Select Date</string>
+    <string name="admin_filter_apply_btn">Apply Filters</string>
     <string name="admin_filter_all">All</string>
     <string name="admin_filter_pending">Pending</string>
     <string name="admin_filter_approved">Approved</string>
@@ -1005,6 +1014,8 @@
     <string name="admin_detail_user_id">User ID : </string>
     <string name="admin_detail_user_name">User Name : </string>
     <string name="admin_detail_created_date">Created date : </string>
+    <string name="admin_detail_approved_date">Approved date : </string>
+    <string name="admin_detail_rejected_date">Rejected date : </string>
     <string name="admin_detail_request_not_found">Request not found</string>
     <string name="admin_detail_toast_rejected">Request rejected</string>
     <string name="admin_detail_reject_title">Reject Request</string>

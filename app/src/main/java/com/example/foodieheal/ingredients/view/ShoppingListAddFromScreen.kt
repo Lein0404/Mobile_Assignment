@@ -66,13 +66,26 @@ fun ShoppingListAddFromScreen(
         }
     }
 
+    val defaultLabel = stringResource(R.string.label_default)
+
     val selectedShoppingList = remember(addFromState.selectedListId, shoppingUiState.homeState.shoppingLists) {
         shoppingUiState.homeState.shoppingLists.find { it.shoppingListId == addFromState.selectedListId }
             ?: shoppingUiState.homeState.shoppingLists.firstOrNull()
     }
 
-    val shoppingListOptions = remember(shoppingUiState.homeState.shoppingLists) {
-        shoppingUiState.homeState.shoppingLists.map { it.title.ifEmpty { it.shoppingListId } }
+    val shoppingListOptions = remember(shoppingUiState.homeState.shoppingLists, defaultLabel) {
+        shoppingUiState.homeState.shoppingLists.map { list ->
+            val baseTitle = list.title.ifEmpty { list.shoppingListId }
+            if (list.isDefault) "$baseTitle ($defaultLabel)" else baseTitle
+        }
+    }
+
+    val selectedValueText = remember(selectedShoppingList, defaultLabel) {
+        if (selectedShoppingList == null) ""
+        else {
+            val baseTitle = selectedShoppingList.title.ifEmpty { selectedShoppingList.shoppingListId }
+            if (selectedShoppingList.isDefault) "$baseTitle ($defaultLabel)" else baseTitle
+        }
     }
 
     // Load recipe if recipeId is present
@@ -200,12 +213,11 @@ fun ShoppingListAddFromScreen(
                             DropDownList(
                                 labelId = R.string.shopping_list_title,
                                 placeholderId = R.string.select_shopping_list_placeholder,
-                                selectedValue = selectedShoppingList?.title?.ifEmpty { selectedShoppingList.shoppingListId } ?: "",
+                                selectedValue = selectedValueText,
                                 options = shoppingListOptions,
-                                onOptionSelected = { chosenTitle ->
-                                    val found = shoppingUiState.homeState.shoppingLists.find {
-                                        (it.title.ifEmpty { it.shoppingListId }) == chosenTitle
-                                    }
+                                onOptionSelected = { chosenOption ->
+                                    val index = shoppingListOptions.indexOf(chosenOption)
+                                    val found = shoppingUiState.homeState.shoppingLists.getOrNull(index)
                                     if (found != null) {
                                         shoppingListViewModel.updateAddFromSelectedListId(found.shoppingListId)
                                     }

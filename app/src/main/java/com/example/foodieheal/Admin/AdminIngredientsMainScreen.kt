@@ -1,21 +1,26 @@
 package com.example.foodieheal.Admin
 
 import android.app.Application
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -33,6 +38,7 @@ import com.example.foodieheal.Admin.ViewModel.AdminIngredientsViewModel
 import com.example.foodieheal.Admin.ViewModel.AdminViewModelFactory
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.shared.IngredientRequestFilterBottomSheet
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.view.IngredientsExistingScreen
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
@@ -41,6 +47,10 @@ import com.example.foodieheal.ui.components.StatusBadge
 import com.example.foodieheal.ui.components.getHighlightedText
 import com.example.foodieheal.model.Status
 import com.example.foodieheal.navigation.Screen
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -243,6 +253,12 @@ fun AdminIngredientRequestsScreen(
     navController: NavController,
     categoryScrollState: LazyListState = rememberLazyListState()
 ) {
+    val isFilterActive = uiState.selectedStatus != null ||
+        uiState.createdDateStart != null ||
+        uiState.createdDateEnd != null ||
+        uiState.processedDateStart != null ||
+        uiState.processedDateEnd != null
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -254,8 +270,8 @@ fun AdminIngredientRequestsScreen(
             onToggleCategory = { viewModel.toggleCategory(it) },
             categoriesLabel = stringResource(R.string.admin_categories_header),
             showFilterIcon = true,
-            isFilterActive = uiState.selectedStatus != null,
-            onFilterClick = { viewModel.onShowStatusFilterDialog(true) },
+            isFilterActive = isFilterActive,
+            onFilterClick = { viewModel.onShowFilterSheet(true) },
             lazyRowState = categoryScrollState,
             isExpanded = uiState.isCategoriesExpanded,
             onExpandedChange = { viewModel.toggleCategoriesExpanded() }
@@ -311,53 +327,22 @@ fun AdminIngredientRequestsScreen(
         }
     }
 
-    if (uiState.showStatusFilterDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onShowStatusFilterDialog(false) },
-            title = { Text(stringResource(R.string.admin_filter_status_title), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    val options = listOf(
-                        stringResource(R.string.admin_filter_all) to null,
-                        stringResource(R.string.admin_filter_pending) to Status.PENDING,
-                        stringResource(R.string.admin_filter_approved) to Status.APPROVED,
-                        stringResource(R.string.admin_filter_rejected) to Status.REJECTED
-                    )
-                    options.forEach { (label, status) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.updateTempStatus(status) }
-                                .padding(vertical = dimensionResource(id = R.dimen.padding_xsm))
-                        ) {
-                            RadioButton(
-                                selected = uiState.tempSelectedStatus == status,
-                                onClick = { viewModel.updateTempStatus(status) }
-                            )
-                            Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_smd)))
-                            Text(text = label)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.onStatusFilterChange(uiState.tempSelectedStatus)
-                        viewModel.onShowStatusFilterDialog(false)
-                    }
-                ) {
-                    Text(stringResource(R.string.admin_apply_filter), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.onShowStatusFilterDialog(false) }) {
-                    Text(stringResource(R.string.dialog_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        )
-    }
+    IngredientRequestFilterBottomSheet(
+        show = uiState.showFilterSheet,
+        onDismissRequest = { viewModel.onShowFilterSheet(false) },
+        selectedStatus = uiState.tempSelectedStatus,
+        onStatusChange = { viewModel.updateTempStatus(it) },
+        createdStartDate = uiState.tempCreatedDateStart,
+        createdEndDate = uiState.tempCreatedDateEnd,
+        onCreatedStartDateChange = { viewModel.updateTempCreatedStartDate(it) },
+        onCreatedEndDateChange = { viewModel.updateTempCreatedEndDate(it) },
+        processedStartDate = uiState.tempProcessedDateStart,
+        processedEndDate = uiState.tempProcessedDateEnd,
+        onProcessedStartDateChange = { viewModel.updateTempProcessedStartDate(it) },
+        onProcessedEndDateChange = { viewModel.updateTempProcessedEndDate(it) },
+        onResetAll = { viewModel.resetTempFilters() },
+        onApply = { viewModel.applyFilterSheet() }
+    )
 }
 
 @Composable
