@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,10 +17,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,18 +48,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -105,33 +102,51 @@ fun RecipeBookmarkSelectorSheet(
 
     var previewingRecipe by remember { mutableStateOf<Recipe?>(null) }
 
-    val tabTitles = listOf(
-        R.string.recipe_tab_popular,
-        R.string.recipe_tab_my_recipes,
-        R.string.recipe_tab_bookmarks
-    )
-    var localSelectedTab by remember { mutableIntStateOf(recipeViewModel?.activeTab ?: 0) }
-    val currentUserId = authViewModel?.currentUser?.id
+    // Toggle between Following and Bookmarks (same as Recipe Screen Tab 2)
+    var showFollowingFeed by remember { mutableStateOf(false) }
+    val currentUserId = authViewModel?.currentUser?.customId
 
-    // Fetch data via RecipeViewModel when tab changes
-    LaunchedEffect(localSelectedTab, currentUserId) {
-        val cid = authViewModel?.currentUser?.customId
-        if (recipeViewModel != null && cid != null) {
-            when (localSelectedTab) {
-                0 -> if (recipeViewModel.recipeList.isEmpty()) recipeViewModel.fetchAllRecipes()
-                1 -> if (recipeViewModel.myRecipes.isEmpty()) recipeViewModel.fetchMyRecipes(cid)
-                2 -> if (recipeViewModel.bookmarkedRecipes.isEmpty()) recipeViewModel.fetchBookmarkedRecipes(cid)
+    // Fetch following & bookmarked recipes
+    LaunchedEffect(currentUserId) {
+        val cid = currentUserId
+        if (recipeViewModel != null && !cid.isNullOrBlank()) {
+            recipeViewModel.fetchBookmarkIds(cid)
+            recipeViewModel.fetchBookmarkedRecipes(cid)
+            recipeViewModel.fetchFollowingRecipes(cid)
+        }
+    }
+
+    LaunchedEffect(showFollowingFeed, currentUserId) {
+        val cid = currentUserId
+        if (recipeViewModel != null && !cid.isNullOrBlank()) {
+            if (showFollowingFeed) {
+                if (recipeViewModel.followingRecipes.isEmpty()) {
+                    recipeViewModel.fetchFollowingRecipes(cid)
+                }
+            } else {
+                if (recipeViewModel.bookmarkedRecipes.isEmpty()) {
+                    recipeViewModel.fetchBookmarkedRecipes(cid)
+                }
             }
         }
     }
 
-    val currentDataList: List<Recipe> = remember(recipeViewModel, localSelectedTab, bookmarkedRecipes) {
+    val currentDataList: List<Recipe> = remember(
+        recipeViewModel,
+        showFollowingFeed,
+        bookmarkedRecipes,
+        recipeViewModel?.followingRecipes,
+        recipeViewModel?.bookmarkedRecipes
+    ) {
         if (recipeViewModel != null) {
-            when (localSelectedTab) {
-                0 -> recipeViewModel.recipeList.filter { it.author_id != currentUserId }
-                1 -> recipeViewModel.myRecipes
-                2 -> recipeViewModel.bookmarkedRecipes
-                else -> emptyList()
+            if (showFollowingFeed) {
+                recipeViewModel.followingRecipes
+            } else {
+                if (recipeViewModel.bookmarkedRecipes.isNotEmpty()) {
+                    recipeViewModel.bookmarkedRecipes
+                } else {
+                    bookmarkedRecipes
+                }
             }
         } else {
             bookmarkedRecipes
@@ -150,13 +165,31 @@ fun RecipeBookmarkSelectorSheet(
         "beverage" to stringResource(R.string.recipe_course_beverage)
     )
 
-    val filteredRecipes by remember(currentDataList, searchQuery, selectedCourse, courseTranslations) {
+    val filteredRecipes by remember(
+        currentDataList,
+        searchQuery,
+        selectedCourse,
+        courseTranslations,
+        currentUserId,
+        recipeViewModel?.followedUserIds
+    ) {
         derivedStateOf {
             currentDataList.filter { recipe ->
+                // Visibility & Privacy check
+                val isVisible = when {
+                    recipe.author_id == currentUserId -> true
+                    recipe.visibility == "public" -> true
+                    recipe.visibility == "followers" -> recipeViewModel?.followedUserIds?.contains(recipe.author_id) == true
+                    else -> false
+                }
+                if (!isVisible) return@filter false
+
                 val matchesSearch = if (searchQuery.isBlank()) true else {
                     val query = searchQuery.trim().lowercase()
                     val localizedCourse = courseTranslations[recipe.recipeCourse.trim().lowercase()]?.lowercase().orEmpty()
                     recipe.recipeName.lowercase().contains(query) ||
+                            (recipe.authorName?.lowercase()?.contains(query) == true) ||
+                            (recipe.authorInfo?.name?.lowercase()?.contains(query) == true) ||
                             recipe.recipeCourse.lowercase().contains(query) ||
                             localizedCourse.contains(query) ||
                             recipe.cookingSkill.lowercase().contains(query)
@@ -233,42 +266,58 @@ fun RecipeBookmarkSelectorSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            if (recipeViewModel != null) {
-                PrimaryTabRow(
-                    selectedTabIndex = localSelectedTab,
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    indicator = {
-                        TabRowDefaults.PrimaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(localSelectedTab),
-                            color = MaterialTheme.colorScheme.primary,
-                            height = 3.dp
-                        )
-                    },
-                    divider = {}
+            // Followed and Bookmark
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                        RoundedCornerShape(22.dp)
+                    )
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val subTabModifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(18.dp))
+
+                Box(
+                    modifier = subTabModifier
+                        .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { showFollowingFeed = true },
+                    contentAlignment = Alignment.Center
                 ) {
-                    tabTitles.forEachIndexed { index, titleRes ->
-                        Tab(
-                            selected = localSelectedTab == index,
-                            onClick = {
-                                localSelectedTab = index
-                                recipeViewModel.activeTab = index
-                            },
-                            text = {
-                                Text(
-                                    text = stringResource(titleRes),
-                                    fontSize = 13.sp,
-                                    fontWeight = if (localSelectedTab == index) FontWeight.Bold else FontWeight.Medium
-                                )
-                            }
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.label_followed),
+                        color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = subTabModifier
+                        .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { showFollowingFeed = false },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_bookmarks_toggle),
+                        color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = searchQuery,
@@ -367,21 +416,29 @@ fun RecipeBookmarkSelectorSheet(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.bookmark),
+                                painter = painterResource(id = if (showFollowingFeed) R.drawable.follower else R.drawable.bookmark),
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(40.dp)
                             )
-                            val currentTabName = tabTitles.getOrNull(localSelectedTab)?.let { stringResource(it) } ?: ""
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = stringResource(R.string.no_recipes_in_tab, currentTabName),
+                                text = if (showFollowingFeed) {
+                                    stringResource(R.string.empty_no_followed_recipes)
+                                } else {
+                                    stringResource(R.string.empty_no_bookmarked_recipes)
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = stringResource(R.string.explore_and_bookmark_sub),
+                                text = if (showFollowingFeed) {
+                                    stringResource(R.string.empty_no_followed_recipes_sub)
+                                } else {
+                                    stringResource(R.string.empty_bookmarked_recipes_sub)
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -396,6 +453,13 @@ fun RecipeBookmarkSelectorSheet(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.filter),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = stringResource(R.string.no_matching_recipes),
                                 style = MaterialTheme.typography.titleMedium,
@@ -406,7 +470,8 @@ fun RecipeBookmarkSelectorSheet(
                             Text(
                                 text = stringResource(R.string.no_recipe_matches_query, searchQuery, selectedCourse),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -553,6 +618,18 @@ private fun RecipeSelectableCard(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 14.sp
                     )
+
+                    val authorName = recipe.authorName ?: recipe.authorInfo?.name
+                    if (!authorName.isNullOrBlank()) {
+                        Text(
+                            text = "by $authorName",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(3.dp))
 
