@@ -167,7 +167,7 @@ fun ChefLoginScreen(
                     placeholder = {
                         Text(
                             stringResource(R.string.chef_login_email_placeholder),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -175,8 +175,8 @@ fun ChefLoginScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -215,7 +215,7 @@ fun ChefLoginScreen(
                     placeholder = {
                         Text(
                             stringResource(R.string.chef_login_password_placeholder),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -228,14 +228,14 @@ fun ChefLoginScreen(
                                 painter = painterResource(id = image),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,

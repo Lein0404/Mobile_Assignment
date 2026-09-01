@@ -471,8 +471,12 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.width(20.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
+                                val rawName = if (displayUser == null && isVisitor) stringResource(R.string.profile_offline_user) else (displayUser?.name ?: "")
+                                val displayName = remember(rawName) {
+                                    if (rawName.startsWith("User (U") && rawName.endsWith(")")) "User" else rawName
+                                }
                                 Text(
-                                    text = if (displayUser == null && isVisitor) stringResource(R.string.profile_offline_user) else (displayUser?.name ?: ""),
+                                    text = displayName,
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold,
@@ -680,6 +684,7 @@ fun ProfileScreen(
                                     onClick = { showChefFilterSheet = true },
                                     shape = RoundedCornerShape(12.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                                     modifier = Modifier.size(52.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -711,6 +716,7 @@ fun ProfileScreen(
                                     .fillMaxWidth()
                                     .height(48.dp)
                                     .clip(RoundedCornerShape(24.dp))
+                                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), RoundedCornerShape(24.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                                     .padding(4.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -818,6 +824,7 @@ fun ProfileScreen(
                                     onClick = { showRecipeFilterSheet = true },
                                     shape = RoundedCornerShape(12.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                                     modifier = Modifier.size(52.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -857,6 +864,7 @@ fun ProfileScreen(
                                         .padding(bottom = 12.dp)
                                         .height(48.dp)
                                         .clip(RoundedCornerShape(24.dp))
+                                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), RoundedCornerShape(24.dp))
                                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                                         .padding(4.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -941,7 +949,14 @@ fun ProfileScreen(
                                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                             labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                                         ),
-                                        border = null
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = isSelected,
+                                            borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                            selectedBorderColor = Color.Transparent,
+                                            borderWidth = 1.dp,
+                                            selectedBorderWidth = 0.dp
+                                        )
                                     )
                                 }
                             }

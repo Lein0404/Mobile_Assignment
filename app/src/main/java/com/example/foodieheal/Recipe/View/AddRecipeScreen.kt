@@ -210,6 +210,7 @@ fun AddRecipeScreen(
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(16.dp))
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { imageLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
@@ -255,7 +256,7 @@ fun AddRecipeScreen(
             }
 
             LabelText(stringResource(R.string.label_description_optional))
-            TextField(
+            OutlinedTextField(
                 value = description,
                 onValueChange = { 
                     val newlineCount = it.count { char -> char == '\n' }
@@ -263,7 +264,7 @@ fun AddRecipeScreen(
                         description = it 
                     }
                 },
-                placeholder = { Text(stringResource(R.string.hint_description), fontSize = 14.sp, color = Color.Gray) },
+                placeholder = { Text(stringResource(R.string.hint_description), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                 modifier = Modifier.fillMaxWidth().height(160.dp),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
@@ -274,11 +275,11 @@ fun AddRecipeScreen(
                         Text(stringResource(R.string.label_recipe_chars_format, description.length, 150), fontSize = 12.sp, color = if (description.length >= 150) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -445,7 +446,7 @@ fun AddRecipeScreen(
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            TextField(
+            OutlinedTextField(
                 value = steps,
                 onValueChange = { 
                     val newlineCount = it.count { char -> char == '\n' }
@@ -453,7 +454,7 @@ fun AddRecipeScreen(
                         steps = it 
                     }
                 },
-                placeholder = { Text(stringResource(R.string.hint_recipe_steps), fontSize = 14.sp, color = Color.Gray) },
+                placeholder = { Text(stringResource(R.string.hint_recipe_steps), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(350.dp)
@@ -474,11 +475,11 @@ fun AddRecipeScreen(
                         Text(stringResource(R.string.label_recipe_chars_format, steps.length, 1000), fontSize = 12.sp, color = if (steps.length >= 1000) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
@@ -653,10 +654,10 @@ fun AddRecipeTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default, // 🌟 Accept standard options
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
-    TextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, fontSize = 14.sp, color = Color.Gray) },
+        placeholder = { Text(placeholder, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
         modifier = modifier.fillMaxWidth().then(if (singleLine) Modifier.height(52.dp) else Modifier),
         singleLine = singleLine,
         readOnly = readOnly,
@@ -664,11 +665,11 @@ fun AddRecipeTextField(
         shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
         textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         )
@@ -691,7 +692,7 @@ fun DropdownField(
         onExpandedChange = { expanded = it },
         modifier = modifier.fillMaxWidth()
     ) {
-        TextField(
+        OutlinedTextField(
             value = labelProvider(value),
             onValueChange = {},
             readOnly = true,
@@ -702,11 +703,11 @@ fun DropdownField(
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
             shape = RoundedCornerShape(12.dp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
@@ -767,7 +768,7 @@ fun IngredientRow(
                 expanded = nameExpanded,
                 onExpandedChange = { nameExpanded = it }
             ) {
-                TextField(
+                OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { input -> 
                         searchQuery = input
@@ -785,7 +786,7 @@ fun IngredientRow(
                             ))
                         }
                     },
-                    placeholder = { Text(stringResource(R.string.hint_ingredient_name), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    placeholder = { Text(stringResource(R.string.hint_ingredient_name), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -805,11 +806,11 @@ fun IngredientRow(
                     shape = RoundedCornerShape(12.dp),
                     textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nameExpanded) },
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
@@ -902,7 +903,7 @@ fun IngredientRow(
                     Text(stringResource(R.string.label_ingredient_qty), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 4.dp))
                     var qtyExpanded by remember { mutableStateOf(false) }
                     
-                    TextField(
+                    OutlinedTextField(
                         value = item.quantity,
                         onValueChange = { input ->
                             // 🌟 FIX: Allow only digits and a SINGLE decimal point
@@ -910,7 +911,7 @@ fun IngredientRow(
                                 onUpdate(item.copy(quantity = input))
                             }
                         },
-                        placeholder = { Text(stringResource(R.string.placeholder_zero), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        placeholder = { Text(stringResource(R.string.placeholder_zero), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         singleLine = true,
                         // 🌟 Declared directly inside here
@@ -940,11 +941,11 @@ fun IngredientRow(
                                 }
                             }
                         },
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         )

@@ -1,6 +1,8 @@
 package com.example.foodieheal.User.View
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -198,7 +200,7 @@ fun PasswordInputField(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(8.dp))
-        TextField(
+        OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -227,16 +229,16 @@ fun PasswordInputField(
                     Icon(painter = painterResource(id = image), contentDescription = null, modifier = Modifier.size(20.dp))
                 }
             },
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 // 🌟 Keep background normal even if there is an error
-                errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                errorIndicatorColor = Color.Transparent,
+                errorContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                errorBorderColor = MaterialTheme.colorScheme.error,
                 errorTextColor = MaterialTheme.colorScheme.onSurface,
                 errorCursorColor = MaterialTheme.colorScheme.onSurface
             )

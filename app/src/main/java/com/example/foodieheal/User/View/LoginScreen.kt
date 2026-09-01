@@ -141,7 +141,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     placeholder = {
                         Text(
                             stringResource(R.string.email_label),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -149,8 +149,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -196,7 +196,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     placeholder = {
                         Text(
                             stringResource(R.string.password_label),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -209,14 +209,14 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                                 painter = painterResource(id = image),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
