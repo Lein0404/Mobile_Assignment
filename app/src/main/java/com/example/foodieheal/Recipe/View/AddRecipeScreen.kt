@@ -81,13 +81,13 @@ fun AddRecipeScreen(
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     // 🌟 Validation logic: All fields must be filled and valid
+    val isAccountLoaded = authViewModel.currentUser?.customId != null
     val isFormValid by remember {
         derivedStateOf {
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             description.length <= 150 &&
-            // 🌟 Description and Image are now optional, so they are removed from validation
             totalTime.isNotBlank() &&
-            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 &&
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() && steps.length <= 1000 &&
             ingredients.isNotEmpty() &&
@@ -96,7 +96,7 @@ fun AddRecipeScreen(
                 input.quantity.isNotBlank() &&
                 input.quantity.toDoubleOrNull() != null &&
                 viewModel.availableIngredients.any { it.name?.equals(input.name, ignoreCase = true) == true }
-            }
+            } && isAccountLoaded
         }
     }
 
@@ -539,9 +539,14 @@ fun AddRecipeScreen(
 
             // 🌟 Form Validation Message
             if (!isFormValid) {
+                val msg = if (!isAccountLoaded) {
+                    stringResource(R.string.msg_checking_account)
+                } else {
+                    stringResource(R.string.msg_fill_all_fields)
+                }
                 Text(
-                    text = stringResource(R.string.msg_fill_all_fields),
-                    color = Color.Gray,
+                    text = msg,
+                    color = if (!isAccountLoaded) MaterialTheme.colorScheme.primary else Color.Gray,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
                 )
@@ -598,7 +603,8 @@ fun AddRecipeScreen(
                 if (viewModel.isLoading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
-                    Text(stringResource(R.string.btn_add_recipe_submit), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    val btnText = if (!isAccountLoaded && recipeName.isNotEmpty()) stringResource(R.string.btn_waiting_for_profile) else stringResource(R.string.btn_add_recipe_submit)
+                    Text(btnText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
             

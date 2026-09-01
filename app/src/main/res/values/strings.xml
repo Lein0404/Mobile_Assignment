@@ -1825,4 +1825,7 @@
     <string name="unit_kg">kg</string>
     <string name="unit_cm">cm</string>
     <string name="bmi_category_format"> (%1$s)</string>
+    <string name="msg_checking_account">Checking account details… Please check your connection.</string>
+    <string name="btn_waiting_for_profile">WAITING FOR PROFILE…</string>
+    <string name="error_missing_author_link">Database Error: Missing author link. Please check your connection.</string>
 </resources>
