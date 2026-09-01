@@ -1695,4 +1695,90 @@
     <string name="recipe_skill_intermediate">Intermediate</string>
     <string name="recipe_skill_advanced">Advanced</string>
     <string name="recipe_skill_master_expert">Master/Expert</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_menu">Menu</string>
+    <string name="profile_followers">Followers</string>
+    <string name="profile_following">Following</string>
+    <string name="profile_edit_body_status">Edit Body Status</string>
+    <string name="profile_view_ingredients">View &amp; Request Ingredients</string>
+    <string name="profile_shopping_lists">My Shopping Lists</string>
+    <string name="profile_become_chef">Become a Chef</string>
+    <string name="profile_app_review_title">Application Under Review</string>
+    <string name="profile_app_review_msg">Your chef application is currently under review by our administrators. Please wait for approval.</string>
+    <string name="profile_chef_active_title">Chef Account Active</string>
+    <string name="profile_chef_active_msg">You are already an approved Chef! Please use the Chef Login Portal from the login screen to access your chef dashboard.</string>
+    <string name="profile_appt_history">Appointment History</string>
+    <string name="profile_follow_requests">Follow Requests</string>
+    <string name="profile_my_wallet">My Wallet</string>
+    <string name="profile_payment_methods">Payment Methods</string>
+    <string name="profile_change_password">Change Password</string>
+    <string name="profile_offline_user">Offline User</string>
+    <string name="profile_offline_desc">Cannot load profile while offline.</string>
+    <string name="profile_user_recipes">User Recipes</string>
+    <string name="profile_recipes">Recipes</string>
+    <string name="profile_bookmarks">Bookmarks</string>
+    <string name="profile_search_chefs">Search chefs here</string>
+    <string name="profile_chefs">Chefs</string>
+    <string name="profile_search_recipes">Search recipes here</string>
+    <string name="profile_search_recipes_authors">Search recipes/authors</string>
+    <string name="profile_max_prep_time">Max Prep Time</string>
+    <string name="profile_max_calories">Max Calories</string>
+    <string name="profile_search_ingredients">Search ingredients...</string>
+    <string name="profile_cooking_skill">Cooking Skill</string>
+    <string name="profile_budget">Budget (RM)</string>
+    <string name="profile_delete_recipe">Delete Recipe</string>
+    <string name="profile_delete_confirm_msg">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="profile_filter_recipes">Filter Recipes</string>
+    <string name="profile_reset_all">Reset All</string>
+    <string name="profile_any_time">Any Time</string>
+    <string name="profile_mins_suffix">mins</string>
+    <string name="profile_any_calories">Any Calories</string>
+    <string name="profile_kcal_suffix">kcal</string>
+    <string name="profile_ingredients">Ingredients</string>
+    <string name="profile_selected_count">Selected (%1$d):</string>
+    <string name="profile_apply_filters">Apply Filters</string>
+    <string name="profile_reapply_chef_title">Re-apply as Chef</string>
+    <string name="profile_reapply_chef_msg">Your previous application was rejected. Would you like to submit an updated application?</string>
+    <string name="profile_reapply_btn">Re-apply</string>
+    <string name="profile_password_success">Password updated successfully!</string>
+    <string name="profile_body_status_success">Body status updated successfully!</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile_pic">Profile Picture</string>
+    <string name="edit_profile_select_image">SELECT IMAGE</string>
+    <string name="edit_profile_username">Username</string>
+    <string name="edit_profile_desc_hint">Tell us about yourself...</string>
+    <string name="edit_profile_save_changes">SAVE CHANGES</string>
+
+    <!-- Edit Body Status Screen -->
+    <string name="body_status_title">Body Status</string>
+    <string name="body_status_question">What’s your body status?</string>
+    <string name="body_status_desc">This is for BMI calculation and meal planning purposes. You may skip first if you didn’t have any plans yet.</string>
+    <string name="body_status_weight">Weight</string>
+    <string name="body_status_height">Height</string>
+    <string name="body_status_age">Age</string>
+    <string name="body_status_years">years</string>
+    <string name="body_status_calculated_bmi">Calculated BMI</string>
+    <string name="body_status_bmi_underweight">Underweight</string>
+    <string name="body_status_bmi_normal">Normal</string>
+    <string name="body_status_bmi_overweight">Overweight</string>
+    <string name="body_status_bmi_obese">Obese</string>
+    <string name="body_status_skip">SKIP</string>
+    <string name="body_status_register">REGISTER</string>
+    <string name="body_status_submit">SUBMIT</string>
+
+    <!-- Follow Requests Screen -->
+    <string name="follow_requests_empty">No pending follow requests</string>
+    <string name="follow_requests_wants_to_follow">wants to follow you</string>
+    <string name="follow_requests_accept">Accept</string>
+    <string name="follow_requests_reject">Reject</string>
+
+    <!-- Change Password Screen -->
+    <string name="change_password_secure_account">Secure Your Account</string>
+    <string name="change_password_enter_passwords">Enter your current and new password below to update.</string>
+    <string name="change_password_validation_error">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
+    <string name="change_password_match_error">Passwords do not match</string>
+    <string name="change_password_update_btn">UPDATE PASSWORD</string>
 </resources>

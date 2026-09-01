@@ -56,10 +56,10 @@ fun ChangePasswordScreen(navController: NavController) {
         modifier = Modifier.imePadding(), 
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Change Password", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
+                title = { Text(stringResource(R.string.profile_change_password), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -86,14 +86,14 @@ fun ChangePasswordScreen(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
             Text(
-                text = "Secure Your Account",
+                text = stringResource(R.string.change_password_secure_account),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.align(Alignment.Start)
             )
             Text(
-                text = "Enter your current and new password below to update.",
+                text = stringResource(R.string.change_password_enter_passwords),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Start).padding(top = 4.dp)
@@ -103,7 +103,7 @@ fun ChangePasswordScreen(navController: NavController) {
 
             // Old Password
             PasswordInputField(
-                label = "Current Password",
+                label = stringResource(R.string.current_password),
                 value = oldPassword,
                 onValueChange = { 
                     if (it.length <= 20) {
@@ -121,7 +121,7 @@ fun ChangePasswordScreen(navController: NavController) {
 
             // New Password
             PasswordInputField(
-                label = "New Password",
+                label = stringResource(R.string.new_password),
                 value = newPassword,
                 onValueChange = { 
                     if (it.length <= 20) {
@@ -132,14 +132,14 @@ fun ChangePasswordScreen(navController: NavController) {
                 },
                 // 🌟 FIX: Wait for server result so it pops up at the exact same time as the current password error
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid,
-                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid) "Password must be 8-20 characters with uppercase, lowercase and numbers" else null
+                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid) stringResource(R.string.change_password_validation_error) else null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Confirm Password
             PasswordInputField(
-                label = "Confirm New Password",
+                label = stringResource(R.string.confirm_new_password),
                 value = confirmPassword,
                 onValueChange = { 
                     if (it.length <= 20) {
@@ -150,7 +150,7 @@ fun ChangePasswordScreen(navController: NavController) {
                 },
                 // 🌟 FIX: Wait for server result so it pops up at the exact same time as the others
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch,
-                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch) "Passwords do not match" else null
+                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch) stringResource(R.string.change_password_match_error) else null
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -177,7 +177,7 @@ fun ChangePasswordScreen(navController: NavController) {
                 if (authViewModel.isProcessing) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("UPDATE PASSWORD", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.btn_update_password), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }

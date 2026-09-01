@@ -107,10 +107,10 @@ fun FollowRequestsScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Follow Requests", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.profile_follow_requests), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back")
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -136,7 +136,7 @@ fun FollowRequestsScreen(
             }
         } else if (requests.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No pending follow requests", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.follow_requests_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
@@ -206,14 +206,14 @@ fun RequestItem(
             
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                 Text(
-                    text = requester?.name ?: "User ${request.followerId}",
+                    text = requester?.name ?: "${stringResource(R.string.user)} ${request.followerId}",
                     fontWeight = FontWeight.Bold, 
                     fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "wants to follow you", 
+                    text = stringResource(R.string.follow_requests_wants_to_follow), 
                     fontSize = 12.sp, 
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -232,7 +232,7 @@ fun RequestItem(
                         modifier = Modifier.height(32.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Accept", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.follow_requests_accept), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     
                     Spacer(modifier = Modifier.width(8.dp))
@@ -242,7 +242,7 @@ fun RequestItem(
                         modifier = Modifier.height(32.dp),
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Reject", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.follow_requests_reject), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
