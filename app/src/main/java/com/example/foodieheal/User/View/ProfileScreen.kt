@@ -387,7 +387,11 @@ fun ProfileScreen(
                                     if (isMyProfile) {
                                         scope.launch { drawerState.open() }
                                     } else {
-                                        navController.popBackStack()
+                                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes
+                                        val currentRoute = navController.currentDestination?.route
+                                        if (currentRoute?.contains("profile") == true) {
+                                            navController.popBackStack()
+                                        }
                                     }
                                 }
                             )
@@ -488,7 +492,7 @@ fun ProfileScreen(
                                 Row(modifier = Modifier.padding(top = 12.dp)) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.clickable { 
+                                        modifier = Modifier.clickable(enabled = isMyProfile) { 
                                             effectiveCustomId?.let { cid ->
                                                 navController.navigate(Screen.FollowList.createRoute(cid, "followers"))
                                             }
@@ -519,7 +523,7 @@ fun ProfileScreen(
                                     Spacer(modifier = Modifier.width(24.dp))
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.clickable { 
+                                        modifier = Modifier.clickable(enabled = isMyProfile) { 
                                             effectiveCustomId?.let { cid ->
                                                 navController.navigate(Screen.FollowList.createRoute(cid, "following"))
                                             }

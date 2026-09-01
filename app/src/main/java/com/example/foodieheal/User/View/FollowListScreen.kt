@@ -109,7 +109,13 @@ fun FollowListScreen(
             CenterAlignedTopAppBar(
                 title = { Text(if (type == "followers") stringResource(R.string.profile_followers) else stringResource(R.string.profile_following), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.FollowList.route.substringBefore("/{")) == true) {
+                            navController.popBackStack() 
+                        }
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back))
                     }
                 },

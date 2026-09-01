@@ -117,7 +117,13 @@ fun RecipeDetailsScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.title_view_recipe), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.RecipeDetails.route.substringBefore("/{")) == true) {
+                            navController.popBackStack() 
+                        }
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = Color.White)
                     }
                 },
