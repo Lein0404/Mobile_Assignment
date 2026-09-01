@@ -2,8 +2,17 @@
     <string name="app_name">Foodie Heal</string>
 
     <string name="login_title">Login</string>
+    <string name="register_title">Register</string>
     <string name="email_label">Email</string>
     <string name="password_label">Password</string>
+    <string name="confirm_password_label">Confirm Password</string>
+    <string name="forgot_password">Forget Password?</string>
+    <string name="login_button">LOGIN</string>
+    <string name="signup_prompt">Don\'t have an account? Sign up here!</string>
+    <string name="login_prompt">Already have an account? Login here!</string>
+    <string name="chef_login_portal">Chef Login Portal</string>
+    <string name="new_chef_register_prompt">New Chef? Register here</string>
+    <string name="next_button">NEXT</string>
     <string name="hide_password">Hide password</string>
     <string name="show_password">Show password</string>
     <string name="nav_home">Home</string>
@@ -22,18 +31,23 @@
     <string name="gender">Gender</string>
     <string name="select_gender">Select Gender</string>
     <string name="experience">Year of Experience</string>
-    <string name="description">Description</string>">
+    <string name="description">Description</string>
     <string name="address">Address</string>
-    <string name="postcode">Postcode</string>">
+    <string name="postcode">Postcode</string>
     <string name="state">State</string>
     <string name="select_state">Choose your state</string>
     <string name = "serving_size">Serving Size</string>
     <string name = "select_size">Select Serving Size</string>
-    <string name = "health_pref_label">Health Preference</string>">
-    <string name = "select_health_pref">Select Health Preference</string>
+    <string name="health_pref_label">Health Preference</string>
+    <string name="select_health_pref">Select Health Preference</string>
 
     <!-- Error Messages -->
     <string name="error_fields_empty">Please fill in the input fields.</string>
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_account_not_found">Account not found</string>
+    <string name="error_invalid_password_short">Invalid password</string>
+    <string name="error_password_requirement">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
+    <string name="error_email_registered">Email already registered</string>
     <string name="error_unknown">An unknown error occurred. Please try again later.</string>
     <string name="error_user_not_found">No account found with this email.</string>
     <string name="error_network_connection">No internet connection. Please check your network and try again.</string>

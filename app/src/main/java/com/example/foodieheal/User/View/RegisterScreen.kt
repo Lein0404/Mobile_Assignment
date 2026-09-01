@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -103,7 +104,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Register",
+                text = stringResource(R.string.register_title),
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -114,7 +115,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Email",
+                    text = stringResource(R.string.email_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -127,7 +128,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         if (hasAttemptedSubmit) hasAttemptedSubmit = false
                         if (viewModel.errorMessage.isNotEmpty()) viewModel.resetPasswordState()
                     },
-                    placeholder = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    placeholder = { Text(stringResource(R.string.email_label), color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -144,9 +145,9 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
                 // 🌟 Email Specific Errors (Local Validation + Server Check)
                 val emailError = when {
-                    hasAttemptedSubmit && !isEmailValid && email.isNotEmpty() -> "Invalid email"
+                    hasAttemptedSubmit && !isEmailValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
                     viewModel.errorMessage.contains("already registered", ignoreCase = true) || 
-                    viewModel.errorMessage.contains("already exists", ignoreCase = true) -> "Email already registered"
+                    viewModel.errorMessage.contains("already exists", ignoreCase = true) -> stringResource(R.string.error_email_registered)
                     else -> null
                 }
 
@@ -165,7 +166,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             // Password Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Password",
+                    text = stringResource(R.string.password_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -181,7 +182,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Password",
+                            stringResource(R.string.password_label),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -216,7 +217,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 if (hasAttemptedSubmit && !isPasswordValid && password.isNotEmpty()) {
                     Text(
-                        text = "Password must be 8-20 characters with uppercase, lowercase and numbers",
+                        text = stringResource(R.string.error_password_requirement),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -229,7 +230,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             // Confirm Password Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Confirm Password",
+                    text = stringResource(R.string.confirm_password_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -245,7 +246,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     },
                     placeholder = {
                         Text(
-                            "Confirm Password",
+                            stringResource(R.string.confirm_password_label),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
@@ -281,7 +282,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 if (hasAttemptedSubmit && !passwordsMatch && confirmPassword.isNotEmpty()) {
                     Text(
-                        text = "Passwords do not match",
+                        text = stringResource(R.string.error_passwords_not_matching),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -322,7 +323,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text("NEXT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.next_button), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 
@@ -330,7 +331,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
             // Footer
             Text(
-                text = "Already have an account? Login here!",
+                text = stringResource(R.string.login_prompt),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,

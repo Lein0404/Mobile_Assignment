@@ -152,7 +152,7 @@ fun WeeklyDateCardRow(
     ) {
         weekDays.forEach { date ->
             DateCard(
-                day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
                 date = date.dayOfMonth.toString(),
                 modifier = Modifier,
                 selected = date == selectedDate,
@@ -179,7 +179,7 @@ fun WeeklyDayCardRow(
     ) {
         days.forEach { day ->
             val isSelected = day == selectedDay
-            val dayText = day.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            val dayText = day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
 
             Box(
                 modifier = Modifier
@@ -400,7 +400,7 @@ fun CustomizedDatePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${currentMonth.year}",
+                        text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${currentMonth.year}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )

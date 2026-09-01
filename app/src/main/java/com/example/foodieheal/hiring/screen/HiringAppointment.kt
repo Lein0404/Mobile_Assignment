@@ -104,7 +104,7 @@ fun HiringAppointment(
     }
 
     val endOfWeek = weekDays.last()
-    val weekRangeText = "${startOfWeek.dayOfMonth} - ${endOfWeek.dayOfMonth} ${endOfWeek.format(DateTimeFormatter.ofPattern("MMM yyyy"))}"
+    val weekRangeText = "${startOfWeek.dayOfMonth} - ${endOfWeek.dayOfMonth} ${endOfWeek.format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH))}"
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -227,7 +227,7 @@ private fun DayScheduleSection(
     modifier: Modifier = Modifier
 ) {
     val formattedTitle = remember(selectedDate) {
-        selectedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMM"))
+        selectedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMM", Locale.ENGLISH))
     }
     val isPastDate = remember(selectedDate) {
         selectedDate.isBefore(LocalDate.now())

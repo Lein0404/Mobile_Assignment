@@ -121,7 +121,7 @@ fun MealPlannerScreen(
     val weekDays = mealPlannerViewModel.getCurrentWeekDays(currentWeekStart)
     val weekEndDate = weekDays.last()
     val headerText = "${weekDays.first().dayOfMonth} - ${weekEndDate.dayOfMonth} ${
-        weekEndDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+        weekEndDate.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
     } ${weekEndDate.year}"
 
     val calendarState = remember(currentWeekStart, weekDays, selectedDate, headerText) {
@@ -253,7 +253,7 @@ fun MealPlannerScreen(
 
     if (showConfirmWeeklyPaste && targetWeeklyPasteDate != null) {
         val targetWeekStart = targetWeeklyPasteDate!!.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val weekLabel = "${targetWeekStart.dayOfMonth} ${targetWeekStart.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())}"
+        val weekLabel = "${targetWeekStart.dayOfMonth} ${targetWeekStart.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
 
         AlertDialog(
             onDismissRequest = { showConfirmWeeklyPaste = false },
