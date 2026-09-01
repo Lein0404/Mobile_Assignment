@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.navigation.Screen
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.User.Model.Follow
@@ -110,7 +111,13 @@ fun FollowRequestsScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.profile_follow_requests), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.FollowRequests.route) == true) {
+                            navController.popBackStack() 
+                        }
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button))
                     }
                 },

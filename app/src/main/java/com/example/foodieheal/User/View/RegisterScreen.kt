@@ -91,7 +91,12 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             // Back Button
             Box(modifier = Modifier.fillMaxWidth()) {
                 IconButton(
-                    onClick = { navController.popBackStack() },
+                    onClick = {
+                        // 🌟 FIX: Prevent "nothing screen" and crashes by ensuring we only pop if we are on Register
+                        if (navController.currentDestination?.route == Screen.Register.route) {
+                            navController.popBackStack(Screen.Login.route, inclusive = false)
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .offset(x = (-12).dp)
@@ -104,16 +109,37 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 🌟 Brand Logo (Consistent with Login)
+            Icon(
+                painter = painterResource(id = R.drawable.login_register),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(bottom = 16.dp),
+                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
 
             Text(
                 text = stringResource(R.string.register_title),
-                fontSize = 40.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Text(
+                text = stringResource(R.string.register_subtitle),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                style = androidx.compose.ui.text.TextStyle(
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                ),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -310,7 +336,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     }
                 },
                 modifier = Modifier
-                    .width(150.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -340,7 +367,11 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 textDecoration = TextDecoration.Underline,
-                modifier = Modifier.clickable { navController.popBackStack() }
+                modifier = Modifier.clickable {
+                    if (navController.currentDestination?.route == Screen.Register.route) {
+                        navController.popBackStack(Screen.Login.route, inclusive = false)
+                    }
+                }
             )
 
             // 🌟 Only show non-auth errors here (e.g. Network errors)

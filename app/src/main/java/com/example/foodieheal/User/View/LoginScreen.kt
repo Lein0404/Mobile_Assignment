@@ -111,16 +111,37 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(0.6f))
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // 🌟 Brand Logo (Replaced with new high-class icon)
+            Icon(
+                painter = painterResource(id = R.drawable.login_register),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(bottom = 16.dp),
+                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
 
             Text(
                 text = stringResource(R.string.login_title),
-                fontSize = 40.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Text(
+                text = stringResource(R.string.login_subtitle),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                style = androidx.compose.ui.text.TextStyle(
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                ),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
 
                 // Email Section
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -266,7 +287,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     }
                 },
                 modifier = Modifier
-                    .width(150.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -333,21 +355,6 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp
-                )
-            }
-
-            // Register as Chef option
-            TextButton(
-                onClick = {
-                    chefRegisterViewModel.initForDirectRegistration()
-                    navController.navigate(Screen.Welcome.route)
-                },
-                modifier = Modifier.padding(top = 4.dp)
-            ) {
-                Text(
-                    stringResource(R.string.new_chef_register_prompt),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
                 )
             }
 

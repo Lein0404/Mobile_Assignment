@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
@@ -60,7 +61,13 @@ fun ChangePasswordScreen(navController: NavController) {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.profile_change_password), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.ChangePassword.route) == true) {
+                            navController.popBackStack() 
+                        }
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },

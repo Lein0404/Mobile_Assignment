@@ -78,13 +78,17 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 title = { Text(stringResource(R.string.body_status_title), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        if (fromRegister) {
-                            // 🌟 If we just registered, explicitly go back to Register screen
-                            navController.navigate(Screen.Register.route) {
-                                popUpTo(Screen.Register.route) { inclusive = true }
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.EditBodyStatus.route) == true) {
+                            if (fromRegister) {
+                                // 🌟 If we came from Register, explicitly go back to Register screen
+                                navController.navigate(Screen.Register.route) {
+                                    popUpTo(Screen.Register.route) { inclusive = true }
+                                }
+                            } else {
+                                navController.popBackStack() 
                             }
-                        } else {
-                            navController.popBackStack() 
                         }
                     }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = MaterialTheme.colorScheme.onPrimary)

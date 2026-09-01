@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.foodieheal.navigation.Screen
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -68,7 +69,13 @@ fun EditProfileScreen(navController: NavController) {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.edit_profile), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { 
+                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        val currentRoute = navController.currentDestination?.route
+                        if (currentRoute?.contains(Screen.EditProfile.route) == true) {
+                            navController.popBackStack() 
+                        }
+                    }) {
                         Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back_button), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
