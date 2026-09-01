@@ -435,6 +435,11 @@ class RecipeViewModel(
                 return@launch
             }
 
+            if (recipe.author_id.isNullOrBlank()) {
+                errorMessage = getApplication<Application>().getString(R.string.error_missing_author_link)
+                return@launch
+            }
+
             // 🌟 1. Instant Memory Update (Optimistic): Shows the new recipe card immediately
             recipeList = (recipeList + recipe).sortedBy { it.recipe_id }
             myRecipes = (myRecipes + recipe).sortedBy { it.recipe_id }
