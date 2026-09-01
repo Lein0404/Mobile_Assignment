@@ -121,35 +121,52 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
 
     fun fetchFollowing(userId: String) {
         viewModelScope.launch {
-            isLoadingFollowList = true
-            followingList = repository.getFollowing(userId)
-            followingCount = followingList.filter { it.status == "ACCEPTED" }.size
-            isLoadingFollowList = false
+            try {
+                isLoadingFollowList = true
+                followingList = repository.getFollowing(userId)
+                followingCount = followingList.filter { it.status == "ACCEPTED" }.size
+            } catch (e: Exception) {
+                // If it fails, we keep existing list or emit error
+                _followEvents.emit(FollowEvent.Error)
+            } finally {
+                isLoadingFollowList = false
+            }
         }
     }
 
     fun fetchFollowers(userId: String) {
         viewModelScope.launch {
-            isLoadingFollowList = true
-            followersList = repository.getFollowers(userId)
-            followerCount = followersList.filter { it.status == "ACCEPTED" }.size
-            isLoadingFollowList = false
+            try {
+                isLoadingFollowList = true
+                followersList = repository.getFollowers(userId)
+                followerCount = followersList.filter { it.status == "ACCEPTED" }.size
+            } catch (e: Exception) {
+                _followEvents.emit(FollowEvent.Error)
+            } finally {
+                isLoadingFollowList = false
+            }
         }
     }
 
     fun fetchFollowCounts(userId: String) {
         viewModelScope.launch {
-            isLoadingFollowCounts = true
-            // Fetch both in parallel or sequence
-            repository.getFollowers(userId).let { list ->
-                followersList = list
-                followerCount = list.filter { it.status == "ACCEPTED" }.size
+            try {
+                isLoadingFollowCounts = true
+                // Fetch followers
+                repository.getFollowers(userId).let { list ->
+                    followersList = list
+                    followerCount = list.filter { it.status == "ACCEPTED" }.size
+                }
+                // Fetch following
+                repository.getFollowing(userId).let { list ->
+                    followingList = list
+                    followingCount = list.filter { it.status == "ACCEPTED" }.size
+                }
+            } catch (e: Exception) {
+                // Fail silently for counts to not disrupt UI
+            } finally {
+                isLoadingFollowCounts = false
             }
-            repository.getFollowing(userId).let { list ->
-                followingList = list
-                followingCount = list.filter { it.status == "ACCEPTED" }.size
-            }
-            isLoadingFollowCounts = false
         }
     }
 
@@ -160,5 +177,6 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
         object RequestAccepted : FollowEvent()
         object RequestRejected : FollowEvent()
         object NoInternet : FollowEvent()
+        object Error : FollowEvent()
     }
 }

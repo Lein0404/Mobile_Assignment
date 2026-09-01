@@ -152,7 +152,12 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             StatusInputField(
                 label = stringResource(R.string.body_status_weight), 
                 value = weight, 
-                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) weight = it }, 
+                onValueChange = { input -> 
+                    if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
+                        val num = input.toDoubleOrNull()
+                        if (num == null || num <= 500) weight = input
+                    }
+                }, 
                 suffix = stringResource(R.string.unit_kg)
             )
             
@@ -162,7 +167,12 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             StatusInputField(
                 label = stringResource(R.string.body_status_height), 
                 value = height, 
-                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) height = it }, 
+                onValueChange = { input -> 
+                    if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
+                        val num = input.toDoubleOrNull()
+                        if (num == null || num <= 300) height = input
+                    }
+                }, 
                 suffix = stringResource(R.string.unit_cm)
             )
 
@@ -172,7 +182,12 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
             StatusInputField(
                 label = stringResource(R.string.body_status_age), 
                 value = age, 
-                onValueChange = { if (it.all { char -> char.isDigit() }) age = it }, 
+                onValueChange = { input -> 
+                    if (input.all { it.isDigit() }) {
+                        val num = input.toIntOrNull()
+                        if (num == null || num <= 120) age = input
+                    }
+                }, 
                 suffix = stringResource(R.string.body_status_years)
             )
 
