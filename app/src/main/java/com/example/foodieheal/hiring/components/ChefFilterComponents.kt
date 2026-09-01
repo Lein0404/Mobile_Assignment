@@ -8,9 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -143,7 +140,7 @@ fun ChefSearchBar(
             },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    painter = painterResource(R.drawable.ic_search),
                     contentDescription = stringResource(R.string.chef_filter_cd_search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -152,7 +149,7 @@ fun ChefSearchBar(
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(
-                            imageVector = Icons.Default.Clear,
+                            painter = painterResource(R.drawable.cancel),
                             contentDescription = stringResource(R.string.chef_filter_cd_clear_search),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -242,7 +239,7 @@ fun ActiveFiltersRow(
                 onClick = { onFilterChange(filterState.copy(rateSortOrder = RateSortOrder.NONE)) },
                 label = { Text(stringResource(filterState.rateSortOrder.labelRes), fontSize = 12.sp) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(painter = painterResource(R.drawable.cancel), contentDescription = null, modifier = Modifier.size(14.dp))
                 }
             )
         }
@@ -254,7 +251,7 @@ fun ActiveFiltersRow(
                 onClick = { onFilterChange(filterState.copy(priceSortOrder = PriceSortOrder.NONE)) },
                 label = { Text(stringResource(filterState.priceSortOrder.labelRes), fontSize = 12.sp) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(painter = painterResource(R.drawable.cancel), contentDescription = null, modifier = Modifier.size(14.dp))
                 }
             )
         }
@@ -267,7 +264,7 @@ fun ActiveFiltersRow(
                 onClick = { onFilterChange(filterState.copy(selectedState = null)) },
                 label = { Text(stringResource(R.string.chef_filter_chip_state, stateDisplay), fontSize = 12.sp) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(painter = painterResource(R.drawable.cancel), contentDescription = null, modifier = Modifier.size(14.dp))
                 }
             )
         }
@@ -286,7 +283,7 @@ fun ActiveFiltersRow(
                 onClick = { onFilterChange(filterState.copy(selectedGender = null)) },
                 label = { Text(stringResource(R.string.chef_filter_chip_gender, genderDisplay), fontSize = 12.sp) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(painter = painterResource(R.drawable.cancel), contentDescription = null, modifier = Modifier.size(14.dp))
                 }
             )
         }
@@ -298,7 +295,7 @@ fun ActiveFiltersRow(
                 onClick = { onFilterChange(filterState.copy(selectedAgeRange = null)) },
                 label = { Text(stringResource(R.string.chef_filter_chip_age, age.label), fontSize = 12.sp) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(painter = painterResource(R.drawable.cancel), contentDescription = null, modifier = Modifier.size(14.dp))
                 }
             )
         }
@@ -505,12 +502,12 @@ fun ChefFilterBottomSheet(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Icon(painter = painterResource(R.drawable.ic_search), contentDescription = null, modifier = Modifier.size(24.dp))
                 },
                 trailingIcon = {
                     if (stateSearchQuery.isNotEmpty()) {
                         IconButton(onClick = { stateSearchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.chef_filter_cd_clear_search))
+                            Icon(painter = painterResource(R.drawable.cancel), contentDescription = stringResource(R.string.chef_filter_cd_clear_search))
                         }
                     }
                 },
@@ -573,7 +570,7 @@ fun ChefFilterBottomSheet(
                         label = { Text(selectedStateDisplay, fontSize = 11.sp) },
                         trailingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Clear,
+                                painter = painterResource(R.drawable.cancel),
                                 contentDescription = stringResource(R.string.chef_filter_remove),
                                 modifier = Modifier.size(14.dp)
                             )

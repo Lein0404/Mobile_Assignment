@@ -13,33 +13,101 @@ import kotlinx.coroutines.launch
 
 class AdminApprovalViewModel : ViewModel() {
 
+    var allChefs by mutableStateOf<List<Chef>>(emptyList())
+        private set
+
     var pendingChefs by mutableStateOf<List<Chef>>(emptyList())
         private set
+
+    var selectedStatusTab by mutableStateOf(0) // 0: All, 1: Pending, 2: Approved, 3: Rejected
 
     var selectedChef by mutableStateOf<Chef?>(null)
         private set
 
+    var searchQuery by mutableStateOf("")
+        private set
+
+    var isRefreshing by mutableStateOf(false)
+        private set
+
     var showLogoutDialog by mutableStateOf(false)
+
+    val pendingCount: Int
+        get() = allChefs.count { it.status.equals("Pending", ignoreCase = true) }
+
+    val approvedCount: Int
+        get() = allChefs.count { it.status.equals("Approved", ignoreCase = true) }
+
+    val rejectedCount: Int
+        get() = allChefs.count { it.status.equals("Rejected", ignoreCase = true) }
+
+    val totalCount: Int
+        get() = allChefs.size
+
+    val displayedChefs: List<Chef>
+        get() {
+            val statusFiltered = when (selectedStatusTab) {
+                0 -> allChefs
+                1 -> allChefs.filter { it.status.equals("Pending", ignoreCase = true) }
+                2 -> allChefs.filter { it.status.equals("Approved", ignoreCase = true) }
+                3 -> allChefs.filter { it.status.equals("Rejected", ignoreCase = true) }
+                else -> allChefs
+            }
+            return if (searchQuery.isBlank()) {
+                statusFiltered
+            } else {
+                statusFiltered.filter {
+                    it.name.contains(searchQuery, ignoreCase = true) ||
+                    it.email.contains(searchQuery, ignoreCase = true) ||
+                    it.description.contains(searchQuery, ignoreCase = true) ||
+                    it.chefId.contains(searchQuery, ignoreCase = true)
+                }
+            }
+        }
+
+    fun onSearchQueryChanged(query: String) {
+        searchQuery = query
+    }
+
+    fun onStatusTabSelected(tab: Int) {
+        selectedStatusTab = tab
+    }
 
     fun onShowLogoutDialog(show: Boolean) {
         showLogoutDialog = show
     }
 
-    fun loadPendingChefs() {
+    fun refreshChefs() {
         viewModelScope.launch {
-
-            val client = SupabaseClient.client
-
-            pendingChefs = client
-                .postgrest
-                .from("Chef")
-                .select {
-                    filter {
-                        eq("Status", "Pending")
-                    }
-                }
-                .decodeList()
+            isRefreshing = true
+            try {
+                val client = SupabaseClient.client
+                val list = client.postgrest.from("Chef").select().decodeList<Chef>()
+                allChefs = list
+                pendingChefs = list.filter { it.status.equals("Pending", ignoreCase = true) }
+            } catch (e: Exception) {
+                Log.e("AdminApproval", "Error refreshing chefs: ${e.localizedMessage}", e)
+            } finally {
+                isRefreshing = false
+            }
         }
+    }
+
+    fun loadAllChefs() {
+        viewModelScope.launch {
+            try {
+                val client = SupabaseClient.client
+                val list = client.postgrest.from("Chef").select().decodeList<Chef>()
+                allChefs = list
+                pendingChefs = list.filter { it.status.equals("Pending", ignoreCase = true) }
+            } catch (e: Exception) {
+                Log.e("AdminApproval", "Error loading chefs: ${e.localizedMessage}", e)
+            }
+        }
+    }
+
+    fun loadPendingChefs() {
+        loadAllChefs()
     }
 
     fun loadChefDetail(chefId: String) {
@@ -88,6 +156,7 @@ class AdminApprovalViewModel : ViewModel() {
                             )
                         }
                     }
+                loadAllChefs()
             } catch (e: Exception) {
 
                 Log.e(

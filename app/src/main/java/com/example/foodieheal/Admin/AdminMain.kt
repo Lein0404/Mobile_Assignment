@@ -68,7 +68,7 @@ fun AdminMainScreen(
     )
 
     LaunchedEffect(Unit) {
-        viewModel.loadPendingChefs()
+        viewModel.loadAllChefs()
     }
 
     Scaffold(

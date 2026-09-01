@@ -1877,4 +1877,40 @@
     <string name="average_client_rating">Average Customer Rating</string>
     <string name="no_ratings_yet">No ratings yet</string>
     <string name="ratings_hint">Ratings will appear as appointments are completed</string>
+
+    <!-- Admin Chef Approval Tabs and Status Filter -->
+    <string name="chef_approval_tab_pending">Pending</string>
+    <string name="chef_approval_tab_approved">Approved</string>
+    <string name="chef_approval_tab_rejected">Rejected</string>
+    <string name="chef_approval_tab_all">All</string>
+    <string name="no_approved_chefs">No approved chefs yet</string>
+    <string name="no_rejected_chefs">No rejected applications</string>
+    <string name="no_chefs_found">No chef applications found</string>
+
+    <!-- Admin Chef Approval Confirmation and Rejection Dialog -->
+    <string name="admin_approve_confirm_title">Approve Chef Application</string>
+    <string name="admin_approve_confirm_msg">Are you sure you want to approve %1$s? Their profile will be published and available for client appointments.</string>
+    <string name="admin_reject_dialog_title">Reject Chef Application</string>
+    <string name="admin_reject_dialog_msg">Please provide a reason for rejecting %1$s\'s application:</string>
+    <string name="admin_reject_reason_hint">Enter rejection feedback for the applicant...</string>
+    <string name="admin_reject_reason_error">Please specify a reason before rejecting.</string>
+    <string name="admin_reject_preset_doc">Incomplete documentation</string>
+    <string name="admin_reject_preset_contact">Invalid contact details</string>
+    <string name="admin_reject_preset_exp">Insufficient culinary experience</string>
+    <string name="admin_reject_preset_photo">Unclear profile photo</string>
+    <string name="admin_confirm_approve">Confirm Approval</string>
+    <string name="admin_confirm_reject">Confirm Rejection</string>
+    <string name="admin_chef_already_approved">This chef is approved and active in the marketplace.</string>
+    <string name="admin_chef_already_rejected">This chef application is currently rejected.</string>
+    <string name="admin_reapprove">Re-Approve Chef</string>
+    <string name="admin_revoke_approval">Revoke / Reject</string>
+
+    <!-- Admin Chef Search -->
+    <string name="admin_chef_search_hint">Search chef by name, email, or bio...</string>
+    <string name="admin_chef_search_no_results">No chefs matching \"%1$s\"</string>
+    <string name="clear_search">Clear Search</string>
+
+    <!-- Admin Chef Action Toast -->
+    <string name="admin_chef_toast_approved">Chef %1$s approved successfully</string>
+    <string name="admin_chef_toast_rejected">Chef %1$s application rejected</string>
 </resources>
