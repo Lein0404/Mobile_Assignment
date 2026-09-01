@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,10 +92,10 @@ fun FollowListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(if (type == "followers") "Followers" else "Following", fontWeight = FontWeight.Bold) },
+                title = { Text(if (type == "followers") stringResource(R.string.profile_followers) else stringResource(R.string.profile_following), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(painterResource(id = R.drawable.ic_arrowback), "Back")
+                        Icon(painterResource(id = R.drawable.ic_arrowback), stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -111,7 +112,7 @@ fun FollowListScreen(
             }
         } else if (users.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No users found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.no_users_found), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
@@ -155,7 +156,7 @@ fun UserListItem(user: User, onClick: () -> Unit) {
         }
         
         Column(modifier = Modifier.padding(start = 16.dp), verticalArrangement = Arrangement.Center) {
-            Text(text = user.name ?: "Unknown User", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = user.name ?: stringResource(R.string.unknown_user), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }

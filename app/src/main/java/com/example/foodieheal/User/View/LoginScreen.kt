@@ -50,6 +50,10 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    // 🌟 Resource strings for robust error comparison
+    val invalidCreds = stringResource(R.string.error_invalid_credentials)
+    val accountNotFound = stringResource(R.string.error_account_not_found)
+
     // Update Status Bar Color
     SideEffect {
         val window = (view.context as Activity).window
@@ -157,7 +161,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 // 🌟 Email Specific Errors
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
-                    viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> stringResource(R.string.error_account_not_found)
+                    viewModel.errorMessage == accountNotFound || viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> accountNotFound
                     else -> null
                 }
 
@@ -221,7 +225,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
 
                 // 🌟 Password Specific Errors
-                if (viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
+                if (viewModel.errorMessage == invalidCreds || 
+                    viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
                     viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
                     Text(
                         text = stringResource(R.string.error_invalid_password_short),
@@ -347,7 +352,9 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             }
 
             // 🌟 Generic/System Error Messages (e.g., Network, Reset Link, Chef Redirect Notice)
-            val isAuthError = viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
+            val isAuthError = viewModel.errorMessage == invalidCreds || 
+                             viewModel.errorMessage == accountNotFound ||
+                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
                              viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)
 
             if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {

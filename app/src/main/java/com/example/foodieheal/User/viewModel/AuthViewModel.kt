@@ -98,7 +98,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 }.decodeList<User>().isNotEmpty()
 
                 if (userExists) {
-                    errorMessage = "Email already registered"
+                    errorMessage = MainActivity.appContext?.getString(R.string.error_email_already_registered) ?: "Email already registered"
                     isProcessing = false
                     return@launch
                 }
@@ -293,7 +293,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         val cleanPassword = passwordInput.trim()
 
         if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
-            errorMessage = "Email and password cannot be empty"
+            errorMessage = MainActivity.appContext?.getString(R.string.error_fields_empty_auth) ?: "Email and password cannot be empty"
             return
         }
 
@@ -333,9 +333,9 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
                     client.auth.signOut()
                     if (chefData != null) {
-                        errorMessage = "This account is registered as a Chef. Please use the Chef Login Portal."
+                        errorMessage = MainActivity.appContext?.getString(R.string.error_chef_portal_redirect) ?: "This account is registered as a Chef. Please use the Chef Login Portal."
                     } else {
-                        errorMessage = "Account details not found."
+                        errorMessage = MainActivity.appContext?.getString(R.string.error_account_not_found) ?: "Account details not found."
                     }
                 }
             } catch (e: Exception) {
@@ -351,7 +351,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         val cleanPassword = passwordInput.trim()
 
         if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
-            errorMessage = "Email and password cannot be empty"
+            errorMessage = MainActivity.appContext?.getString(R.string.error_fields_empty_auth) ?: "Email and password cannot be empty"
             return
         }
 
@@ -372,7 +372,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
                 if (chefData == null) {
                     client.auth.signOut()
-                    errorMessage = "No chef account found."
+                    errorMessage = MainActivity.appContext?.getString(R.string.error_no_chef_account) ?: "No chef account found."
                     return@launch
                 }
 
@@ -386,15 +386,15 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     }
                     "pending" -> {
                         client.auth.signOut()
-                        errorMessage = "Your chef application is currently under review by admin."
+                        errorMessage = MainActivity.appContext?.getString(R.string.error_chef_app_review_short) ?: "Your chef application is currently under review by admin."
                     }
                     "rejected" -> {
                         client.auth.signOut()
-                        errorMessage = "Your chef application was rejected by admin."
+                        errorMessage = MainActivity.appContext?.getString(R.string.error_chef_app_rejected_short) ?: "Your chef application was rejected by admin."
                     }
                     else -> {
                         client.auth.signOut()
-                        errorMessage = "Chef account status: ${chefData.status}."
+                        errorMessage = "Chef account status: ${chefData.status}"
                     }
                 }
             } catch (e: Exception) {
@@ -437,14 +437,14 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
             msg.contains("HttpRequestException", ignoreCase = true) ||
             msg.contains("Failed to connect", ignoreCase = true) ||
             msg.contains("connection", ignoreCase = true) ->
-                "Please connect to wifi or network connection"
+                MainActivity.appContext?.getString(R.string.error_wifi_required) ?: "Please connect to wifi or network connection"
             msg.contains("timeout", ignoreCase = true) ->
-                "Connection timeout. Please try again."
+                MainActivity.appContext?.getString(R.string.error_connection_timeout) ?: "Connection timeout. Please try again."
             msg.contains("Invalid login credentials", ignoreCase = true) ->
-                "Invalid email or password"
+                MainActivity.appContext?.getString(R.string.error_invalid_credentials) ?: "Invalid email or password"
             msg.contains("user_already_exists", ignoreCase = true) || msg.contains("User already registered", ignoreCase = true) || msg.contains("already registered", ignoreCase = true) ->
-                "Email already registered"
-            else -> msg.split("\n").firstOrNull() ?: "An error occurred"
+                MainActivity.appContext?.getString(R.string.error_email_already_registered) ?: "Email already registered"
+            else -> msg.split("\n").firstOrNull() ?: MainActivity.appContext?.getString(R.string.error_unknown) ?: "An error occurred"
         }
     }
 
@@ -453,11 +453,11 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         weight: Double?, height: Double?, age: Int?, gender: String, bmi: Double?
     ) {
         if (!isNetworkAvailable) {
-            errorMessage = "No internet connection. Cannot register."
+            errorMessage = MainActivity.appContext?.getString(R.string.error_network_connection) ?: "No internet connection. Cannot register."
             return
         }
         if (tempEmail.isBlank() || tempPassword.isBlank()) {
-            errorMessage = "Registration data lost. Please try again."
+            errorMessage = MainActivity.appContext?.getString(R.string.error_registration_data_lost) ?: "Registration data lost. Please try again."
             return
         }
 
@@ -504,7 +504,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
                 registerSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Registration Failed: ${parseError(e)}"
+                errorMessage = "${MainActivity.appContext?.getString(R.string.error_registration_failed) ?: "Registration Failed"}: ${parseError(e)}"
             } finally {
                 isProcessing = false
             }
@@ -530,7 +530,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 loginSuccess = true
                 registerSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Database Error: ${e.message}"
+                errorMessage = "${MainActivity.appContext?.getString(R.string.error_database) ?: "Database Error"}: ${e.message}"
             } finally {
                 isProcessing = false
             }
@@ -617,11 +617,11 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         
         // 🌟 Character Limit Safeguards
         if (name.length > 20) {
-            profileMessage = "Username cannot exceed 20 characters"
+            profileMessage = MainActivity.appContext?.getString(R.string.error_username_length) ?: "Username cannot exceed 20 characters"
             return
         }
         if (description.length > 150) {
-            profileMessage = "Description cannot exceed 150 characters"
+            profileMessage = MainActivity.appContext?.getString(R.string.error_description_length) ?: "Description cannot exceed 150 characters"
             return
         }
 
@@ -663,7 +663,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 }
 
                 errorMessage = ""
-                profileMessage = "Profile Updated" // 🌟 Uses dedicated profile holder
+                profileMessage = MainActivity.appContext?.getString(R.string.profile_updated_msg) ?: "Profile Updated" // 🌟 Uses dedicated profile holder
                 onSuccess()
             } catch (e: Exception) {
                 profileMessage = "Update Failed: ${parseError(e)}"
@@ -703,7 +703,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
     fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit = {}) {
         if (!isNetworkAvailable) {
-            passwordErrorMessage = "No internet connection. Cannot change password."
+            passwordErrorMessage = MainActivity.appContext?.getString(R.string.error_network_connection) ?: "No internet connection. Cannot change password."
             return
         }
         val email = currentUser?.email ?: return
@@ -720,7 +720,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 // 2. ONLY proceed if the password is correct AND meets our 8-20 rule
                 val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
                 if (!newPassword.matches(passwordRegex)) {
-                    passwordErrorMessage = "Password must be 8-20 characters with uppercase, lowercase and numbers"
+                    passwordErrorMessage = MainActivity.appContext?.getString(R.string.change_password_validation_error) ?: "Password must be 8-20 characters with uppercase, lowercase and numbers"
                     isProcessing = false
                     return@launch
                 }
@@ -734,8 +734,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
             } catch (e: Exception) {
                 val msg = e.message ?: ""
                 passwordErrorMessage = when { // 🌟 Uses dedicated password holder
-                    msg.contains("Invalid login credentials", ignoreCase = true) -> "Invalid current password"
-                    else -> "Failed to change password. ${parseError(e)}"
+                    msg.contains("Invalid login credentials", ignoreCase = true) -> MainActivity.appContext?.getString(R.string.error_invalid_current_password) ?: "Invalid current password"
+                    else -> "${MainActivity.appContext?.getString(R.string.error_password_change_failed) ?: "Failed to change password"}. ${parseError(e)}"
                 }
             } finally {
                 isProcessing = false
@@ -746,22 +746,22 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     fun updatePassword(newPassword: String) {
         val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
         if (!newPassword.matches(passwordRegex)) {
-            errorMessage = "Password must be 8-20 characters with uppercase, lowercase and numbers"
+            errorMessage = MainActivity.appContext?.getString(R.string.change_password_validation_error) ?: "Password must be 8-20 characters with uppercase, lowercase and numbers"
             return
         }
         viewModelScope.launch {
             try {
                 client.auth.updateUser { password = newPassword }
-                errorMessage = "Profile Updated"
+                errorMessage = MainActivity.appContext?.getString(R.string.profile_updated_msg) ?: "Profile Updated"
             } catch (e: Exception) {
-                errorMessage = "Password update failed: ${parseError(e)}"
+                errorMessage = "${MainActivity.appContext?.getString(R.string.error_password_update_failed) ?: "Password update failed"}: ${parseError(e)}"
             }
         }
     }
 
     fun forgotPassword(emailInput: String) {
         if (emailInput.isEmpty()) {
-            errorMessage = "Please enter your email address"
+            errorMessage = MainActivity.appContext?.getString(R.string.error_enter_email) ?: "Please enter your email address"
             return
         }
         isProcessing = true
@@ -769,9 +769,9 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         viewModelScope.launch {
             try {
                 client.auth.resetPasswordForEmail(emailInput)
-                errorMessage = "Reset link sent to your email"
+                errorMessage = MainActivity.appContext?.getString(R.string.error_reset_link_sent) ?: "Reset link sent to your email"
             } catch (e: Exception) {
-                errorMessage = "Failed to send reset email: ${parseError(e)}"
+                errorMessage = "${MainActivity.appContext?.getString(R.string.error_reset_email_failed) ?: "Failed to send reset email"}: ${parseError(e)}"
             } finally {
                 isProcessing = false
             }
