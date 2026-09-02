@@ -62,7 +62,8 @@ data class Ingredient(
     @SerialName("ing_description") val description: String? = null,
     @SerialName("calories_per_default_quantity") val kcal: Double? = 0.0,
     @SerialName("unit_name") val defaultUnit: String? = null,
-    @SerialName("units") val unitDetails: UnitDetails? = null 
+    @SerialName("units") val unitDetails: UnitDetails? = null,
+    @SerialName("ing_alt_names") val altNames: List<String> = emptyList()
 ) {
     val defaultQuantity: Double get() = unitDetails?.defaultQuantity ?: 1.0
 }

@@ -165,7 +165,7 @@ class IngredientsViewModel(
                 val ingredient = item.ingredient
                 (query.isEmpty() ||
                  ingredient.ingredientName.contains(query, ignoreCase = true) ||
-                 ingredient.ingredientDesc.contains(query, ignoreCase = true)) &&
+                 ingredient.ingredientAltNames.any { it.contains(query, ignoreCase = true) }) &&
                 (state.selectedCategories.isEmpty() || ingredient.ingredientCategory == null || state.selectedCategories.contains(ingredient.ingredientCategory))
             }
             state.copy(filteredIngredients = filtered)

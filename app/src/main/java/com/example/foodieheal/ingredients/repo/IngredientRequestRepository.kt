@@ -115,6 +115,7 @@ class IngredientRequestRepository {
                 set("admin_note", request.adminNote)
                 set("ingredient_id", request.ingredientId)
                 set("datetime_processed", request.datetimeProcessed)
+                set("ing_alt_names", request.ingredientAltNames)
             }
         ) {
             filter {

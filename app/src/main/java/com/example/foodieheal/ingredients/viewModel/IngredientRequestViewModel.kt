@@ -132,7 +132,7 @@ class IngredientRequestViewModel(
     }
 
     private fun checkAndNotifyStatusUpdates(requests: List<IngredientRequest>) {
-        IngredientRequestStatusMonitor.processRequestList(requests, getApplication())
+        IngredientRequestStatusMonitor.processRequestList(currentUserId, requests, getApplication())
     }
 
     fun refresh() {
@@ -287,6 +287,7 @@ class IngredientRequestViewModel(
                             description = request.ingredientDesc,
                             imageUrl = request.ingredientImage,
                             isStatusConflict = false,
+                            altNames = if (request.ingredientAltNames.isEmpty()) listOf("") else request.ingredientAltNames,
                             unitRows = unitRequests.map { ur ->
                                 UnitRowState(
                                     selectedUnit = allUnits[ur.unitID],
@@ -308,7 +309,6 @@ class IngredientRequestViewModel(
 
     fun clearStatusConflict() {
         _uiState.update { it.copy(isStatusConflict = false) }
-        _formState.update { it.copy(isStatusConflict = false) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -348,6 +348,9 @@ class IngredientRequestViewModel(
     fun updateFormName(name: String) = _formState.update { IngredientFormHelper.updateName(it, name) }
     fun updateFormCategory(category: IngredientCategory) = _formState.update { IngredientFormHelper.updateCategory(it, category) }
     fun updateFormDescription(desc: String) = _formState.update { IngredientFormHelper.updateDescription(it, desc) }
+    fun addAltNameRow() = _formState.update { IngredientFormHelper.addAltNameRow(it) }
+    fun updateAltNameRow(index: Int, value: String) = _formState.update { IngredientFormHelper.updateAltNameRow(it, index, value) }
+    fun removeAltNameRow(index: Int) = _formState.update { IngredientFormHelper.removeAltNameRow(it, index) }
     fun addUnitRow() = _formState.update { IngredientFormHelper.addUnitRow(it) }
 
     fun updateUnitRow(index: Int, unit: Units?, calories: String) {
@@ -358,7 +361,7 @@ class IngredientRequestViewModel(
         _formState.update { IngredientFormHelper.removeUnitRow(it, index) }
     }
 
-    private fun validateForm(): Boolean {
+    fun validateForm(): Boolean {
         val (isValid, updatedState) = IngredientFormHelper.validateForm(_formState.value)
         _formState.value = updatedState
         return isValid
@@ -414,6 +417,7 @@ class IngredientRequestViewModel(
                 val requestId = state.requestId ?: repository.getNextRequestId()
                 val filledRows = state.unitRows.filter { it.selectedUnit != null && it.calories.isNotBlank() }
                 val unitIds = repository.getNextUnitRequestIds(filledRows.size)
+                val cleanAltNames = state.altNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
 
                 val request = IngredientRequest(
                     ingredientRequestId = requestId,
@@ -425,7 +429,8 @@ class IngredientRequestViewModel(
                     requestStatus = Status.PENDING,
                     datetimeCreated = ZonedDateTime.now(ZoneId.of("Asia/Kuala_Lumpur"))
                         .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                    datetimeProcessed = null
+                    datetimeProcessed = null,
+                    ingredientAltNames = cleanAltNames
                 )
 
                 val unitRequests = filledRows.mapIndexed { index, row ->

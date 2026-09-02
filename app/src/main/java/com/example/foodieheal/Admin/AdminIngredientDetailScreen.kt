@@ -164,6 +164,14 @@ fun AdminIngredientDetailScreen(
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                if (request.ingredientAltNames.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxsm)))
+                                    Text(
+                                        text = stringResource(R.string.ingredient_detail_alt_names) + request.ingredientAltNames.joinToString(", "),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
                                 StatusBadge(status = request.requestStatus)
 

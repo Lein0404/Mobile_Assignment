@@ -973,6 +973,13 @@
     <string name="ingredient_form_remove_unit">Remove Unit</string>
     <string name="ingredient_form_error_submission_failed">Submission failed: %1$s</string>
 
+    <!-- Ingredient Alternate Names -->
+    <string name="ingredient_form_alt_names_header">Alternate Names / Aliases (Optional)</string>
+    <string name="ingredient_form_alt_name_placeholder">Also known as …</string>
+    <string name="ingredient_form_add_alt_name">Add alternate name</string>
+    <string name="ingredient_form_remove_alt_name">Remove alternate name</string>
+    <string name="ingredient_detail_alt_names">Alternate Names: </string>
+
     <!-- Ingredients Module Validation Errors -->
     <string name="ingredients_error_name_required">Ingredient name is required</string>
     <string name="ingredients_error_name_exists">An ingredient (%1$s) already exists.</string>

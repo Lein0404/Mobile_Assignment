@@ -192,7 +192,8 @@ class RecipeRepository(
                                 description = ing.ingredientDesc,
                                 kcal = 0.0,
                                 defaultUnit = "pieces",
-                                unitDetails = UnitDetails(defaultQuantity = 1.0)
+                                unitDetails = UnitDetails(defaultQuantity = 1.0),
+                                altNames = ing.ingredientAltNames
                             )
                         )
                     } else {
@@ -204,7 +205,8 @@ class RecipeRepository(
                                 description = ing.ingredientDesc,
                                 kcal = iu.caloriesPerDefaultQuantity,
                                 defaultUnit = unit?.unitDisplay?.ifEmpty { unit.unitName } ?: "pieces",
-                                unitDetails = UnitDetails(defaultQuantity = unit?.defaultQuantity ?: 1.0)
+                                unitDetails = UnitDetails(defaultQuantity = unit?.defaultQuantity ?: 1.0),
+                                altNames = ing.ingredientAltNames
                             )
                         }
                     }

@@ -88,27 +88,9 @@ fun ShoppingListAddFromScreen(
         }
     }
 
-    // Load recipe if recipeId is present
-    LaunchedEffect(recipeId) {
-        if (isFromRecipe) {
-            val existing = recipeViewModel.selectedRecipe?.takeIf { it.recipe_id == recipeId }
-                ?: recipeViewModel.recipeList.find { it.recipe_id == recipeId }
-                ?: recipeViewModel.myRecipes.find { it.recipe_id == recipeId }
-                ?: recipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
-
-            if (existing != null && existing.ingredients.isNotEmpty()) {
-                val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
-                shoppingListViewModel.setIngredientsFromRecipe(existing.ingredients, allEntities)
-            } else {
-                recipeViewModel.fetchRecipeById(recipeId!!)
-            }
-        }
-    }
-
     // Parse ingredients from Recipe or Clipboard
-    LaunchedEffect(recipeId, recipeViewModel.selectedRecipe, ingredientsUiState.ingredients) {
+    LaunchedEffect(recipeId, recipeViewModel.selectedRecipe) {
         if (!addFromState.isParsed) {
-            val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
             if (isFromRecipe) {
                 val recipe = recipeViewModel.selectedRecipe?.takeIf { it.recipe_id == recipeId || it.recipe_id == null }
                     ?: recipeViewModel.recipeList.find { it.recipe_id == recipeId }
@@ -116,12 +98,12 @@ fun ShoppingListAddFromScreen(
                     ?: recipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
 
                 if (recipe != null && recipe.ingredients.isNotEmpty()) {
-                    shoppingListViewModel.setIngredientsFromRecipe(recipe.ingredients, allEntities)
+                    shoppingListViewModel.setIngredientsFromRecipe(recipe.ingredients)
+                } else if (recipeId != null) {
+                    recipeViewModel.fetchRecipeById(recipeId)
                 }
             } else {
-                if (ingredientsUiState.ingredients.isNotEmpty()) {
-                    shoppingListViewModel.refreshFromClipboard(context, allEntities)
-                }
+                shoppingListViewModel.refreshFromClipboard(context)
             }
         }
     }
@@ -307,8 +289,7 @@ fun ShoppingListAddFromScreen(
                         if (!isFromRecipe) {
                             Button(
                                 onClick = {
-                                    val allEntities = ingredientsUiState.ingredients.map { it.ingredient.toEntity() }
-                                    shoppingListViewModel.refreshFromClipboard(context, allEntities)
+                                    shoppingListViewModel.refreshFromClipboard(context)
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 shape = RoundedCornerShape(dimensionResource(R.dimen.corner_radius_sm))

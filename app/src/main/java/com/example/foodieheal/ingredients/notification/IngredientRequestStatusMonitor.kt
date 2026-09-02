@@ -30,30 +30,32 @@ object IngredientRequestStatusMonitor {
                 .select { filter { eq("user_id", userId) } }
                 .decodeList<IngredientRequest>()
 
-            processRequestList(requests, context)
+            Log.d(TAG, "Fetched ${requests.size} requests for user: $userId")
+            processRequestList(userId, requests, context)
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking ingredient request status updates: ${e.message}", e)
+            Log.e(TAG, "Error checking ingredient request status updates for user $userId: ${e.message}", e)
         }
     }
 
     /**
      * Processes a list of ingredient requests and dispatches notifications for newly APPROVED or REJECTED items.
      */
-    fun processRequestList(requests: List<IngredientRequest>, context: Context) {
+    fun processRequestList(userId: String, requests: List<IngredientRequest>, context: Context) {
         if (requests.isEmpty()) return
 
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefsName = if (userId.isNotBlank()) "${PREFS_NAME}_$userId" else PREFS_NAME
+        val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
         val hasInitialized = prefs.getBoolean(KEY_INITIALIZED, false)
 
         if (!hasInitialized) {
-            // First time tracking: record all existing statuses so we don't spam old notifications
+            // First time tracking: record all existing statuses so we don't spam old historical notifications
             val editor = prefs.edit()
             requests.forEach { req ->
                 editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", req.requestStatus.name)
             }
             editor.putBoolean(KEY_INITIALIZED, true)
             editor.apply()
-            Log.d(TAG, "Initialized ingredient request tracking with ${requests.size} existing requests.")
+            Log.d(TAG, "Initialized ingredient request tracking for user '$userId' with ${requests.size} existing requests.")
             return
         }
 
@@ -63,10 +65,12 @@ object IngredientRequestStatusMonitor {
             val prevStatus = prefs.getString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", null)
             val currentStatus = req.requestStatus
 
+            Log.d(TAG, "Checking request ${req.ingredientRequestId} (${req.ingredientName}): prevStatus=$prevStatus, currentStatus=${currentStatus.name}")
+
             if ((currentStatus == Status.APPROVED || currentStatus == Status.REJECTED) &&
                 prevStatus != currentStatus.name
             ) {
-                Log.d(TAG, "Request ${req.ingredientRequestId} status changed: $prevStatus -> ${currentStatus.name}. Posting notification.")
+                Log.d(TAG, "Status transition detected for ${req.ingredientRequestId}: $prevStatus -> ${currentStatus.name}. Posting notification.")
                 IngredientRequestNotificationHelper.showRequestStatusNotification(
                     context = context,
                     requestId = req.ingredientRequestId,

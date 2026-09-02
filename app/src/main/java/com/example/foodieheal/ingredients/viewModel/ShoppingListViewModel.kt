@@ -413,60 +413,75 @@ class ShoppingListViewModel(
         }
     }
 
-    fun refreshFromClipboard(context: android.content.Context, allIngredients: List<IngredientsEntity>) {
-        val rawText = ShoppingListShareHelper.getClipboardText(context)
-        val validMatched = ShoppingListShareHelper.parseAndValidateClipboardText(rawText, allIngredients)
-        _uiState.update {
-            it.copy(
-                addFromState = it.addFromState.copy(
-                    parsedIngredients = validMatched,
-                    selectedIngredientIds = validMatched.map { ing -> ing.ingredientId }.toSet(),
-                    isParsed = true
+    fun refreshFromClipboard(context: android.content.Context, allIngredients: List<IngredientsEntity> = emptyList()) {
+        viewModelScope.launch {
+            val databaseIngredients = if (allIngredients.isNotEmpty()) {
+                allIngredients
+            } else {
+                ingredientsRepo.getIngredients().map { it.toEntity() }
+            }
+            val rawText = ShoppingListShareHelper.getClipboardText(context)
+            val validMatched = ShoppingListShareHelper.parseAndValidateClipboardText(rawText, databaseIngredients)
+            _uiState.update {
+                it.copy(
+                    addFromState = it.addFromState.copy(
+                        parsedIngredients = validMatched,
+                        selectedIngredientIds = validMatched.map { ing -> ing.ingredientId }.toSet(),
+                        isParsed = true
+                    )
                 )
-            )
+            }
         }
     }
 
     fun setIngredientsFromRecipe(
         recipeIngredients: List<com.example.foodieheal.Recipe.Model.IngredientItem>,
-        allIngredients: List<IngredientsEntity>
+        allIngredients: List<IngredientsEntity> = emptyList()
     ) {
-        val parsedList = recipeIngredients.mapIndexed { index, recipeIng ->
-            val name = recipeIng.name.trim()
-            val qty = recipeIng.displayQuantity.trim()
-            val unit = recipeIng.unit.trim()
-
-            // Option C format: e.g. "Frozen Chicken Nuggets (6 count)"
-            val formattedName = when {
-                qty.isNotEmpty() && qty != "0" && unit.isNotEmpty() -> "$name ($qty $unit)"
-                qty.isNotEmpty() && qty != "0" -> "$name ($qty)"
-                unit.isNotEmpty() -> "$name ($unit)"
-                else -> name
+        viewModelScope.launch {
+            val databaseIngredients = if (allIngredients.isNotEmpty()) {
+                allIngredients
+            } else {
+                ingredientsRepo.getIngredients().map { it.toEntity() }
             }
 
-            // Match against cached ingredients to find official ID and Category
-            val matched = allIngredients.find { it.ingredientName.equals(name, ignoreCase = true) }
-                ?: allIngredients.find { name.contains(it.ingredientName, ignoreCase = true) || it.ingredientName.contains(name, ignoreCase = true) }
+            val parsedList = recipeIngredients.mapIndexed { index, recipeIng ->
+                val name = recipeIng.name.trim()
+                val qty = recipeIng.displayQuantity.trim()
+                val unit = recipeIng.unit.trim()
 
-            val resolvedCategory = matched?.ingredientCategory ?: IngredientCategory.OTHERS.name
+                // Option C format: e.g. "Frozen Chicken Nuggets (6 count)"
+                val formattedName = when {
+                    qty.isNotEmpty() && qty != "0" && unit.isNotEmpty() -> "$name ($qty $unit)"
+                    qty.isNotEmpty() && qty != "0" -> "$name ($qty)"
+                    unit.isNotEmpty() -> "$name ($unit)"
+                    else -> name
+                }
 
-            IngredientsEntity(
-                ingredientId = matched?.ingredientId ?: "RECIPE_ING_${index}_${name.hashCode()}",
-                ingredientName = formattedName,
-                ingredientCategory = resolvedCategory,
-                ingredientDesc = "",
-                ingredientImage = matched?.ingredientImage
-            )
-        }
+                // Match against cached ingredients to find official ID and Category
+                val matched = databaseIngredients.find { it.ingredientName.equals(name, ignoreCase = true) }
+                    ?: databaseIngredients.find { name.contains(it.ingredientName, ignoreCase = true) || it.ingredientName.contains(name, ignoreCase = true) }
 
-        _uiState.update {
-            it.copy(
-                addFromState = it.addFromState.copy(
-                    parsedIngredients = parsedList,
-                    selectedIngredientIds = parsedList.map { ing -> ing.ingredientId }.toSet(),
-                    isParsed = true
+                val resolvedCategory = matched?.ingredientCategory ?: IngredientCategory.OTHERS.name
+
+                IngredientsEntity(
+                    ingredientId = matched?.ingredientId ?: "RECIPE_ING_${index}_${name.hashCode()}",
+                    ingredientName = formattedName,
+                    ingredientCategory = resolvedCategory,
+                    ingredientDesc = "",
+                    ingredientImage = matched?.ingredientImage
                 )
-            )
+            }
+
+            _uiState.update {
+                it.copy(
+                    addFromState = it.addFromState.copy(
+                        parsedIngredients = parsedList,
+                        selectedIngredientIds = parsedList.map { ing -> ing.ingredientId }.toSet(),
+                        isParsed = true
+                    )
+                )
+            }
         }
     }
 

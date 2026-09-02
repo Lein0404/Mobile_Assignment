@@ -25,7 +25,7 @@ import androidx.room.RoomDatabase
         ShoppingListEntity::class,
         ShoppingListItemEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class IngredientsDatabase : RoomDatabase() {
@@ -53,7 +53,6 @@ abstract class IngredientsDatabase : RoomDatabase() {
                     IngredientsDatabase::class.java,
                     "ingredients_database"
                 )
-                    // TODO?
                     .fallbackToDestructiveMigration() // if database schema changes, the database will be recreated from scratch
                     .build()
                     .also { INSTANCE = it }

@@ -48,6 +48,7 @@ fun ColumnScope.IngredientFormBody(
     description: String,
     unitRows: List<UnitRowState>,
     availableUnits: List<Units>,
+    altNames: List<String> = emptyList(),
 
     // Validation errors
     nameError: Int?,
@@ -66,6 +67,9 @@ fun ColumnScope.IngredientFormBody(
     onUnitRowUpdate: (Int, Units?, String) -> Unit,
     onUnitRowRemove: (Int) -> Unit,
     onAddUnitRow: () -> Unit,
+    onAltNameUpdate: (Int, String) -> Unit = { _, _ -> },
+    onAltNameRemove: (Int) -> Unit = {},
+    onAddAltNameRow: () -> Unit = {},
 
     // Screen-specific bottom section (button, inline error, spacing, etc.)
     bottomContent: @Composable ColumnScope.() -> Unit
@@ -113,7 +117,43 @@ fun ColumnScope.IngredientFormBody(
     )
     Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
-    // 3. Category
+    // 3. Alternate Names / Aliases (Optional)
+    Text(
+        text = stringResource(R.string.ingredient_form_alt_names_header),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
+
+    altNames.forEachIndexed { index, altName ->
+        AltNameRow(
+            index = index,
+            altName = altName,
+            onUpdate = { onAltNameUpdate(index, it) },
+            onRemove = if (altNames.size > 1 || altName.isNotEmpty()) { { onAltNameRemove(index) } } else null
+        )
+    }
+
+    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxsm)))
+    TextButton(
+        onClick = onAddAltNameRow,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_outline_add),
+                contentDescription = null,
+                modifier = Modifier.size(dimensionResource(R.dimen.icon_medium_size))
+            )
+            Text(stringResource(R.string.ingredient_form_add_alt_name))
+        }
+    }
+    Spacer(Modifier.height(dimensionResource(id = R.dimen.padding_l)))
+
+    // 4. Category
     LargeSearchableDropdownMenu(
         modifier = Modifier.fillMaxWidth().padding(top = dimensionResource(id = R.dimen.padding_xxsm)),
         title = stringResource(R.string.category),
@@ -402,6 +442,80 @@ fun UnitRow(
                 Icon(
                     painter = painterResource(R.drawable.ic_remove),
                     contentDescription = stringResource(R.string.ingredient_form_remove_unit)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AltNameRow(
+    index: Int,
+    altName: String,
+    onUpdate: (String) -> Unit,
+    onRemove: (() -> Unit)?,
+) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val coroutineScope = rememberCoroutineScope()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = dimensionResource(id = R.dimen.padding_xsm)),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd)),
+        verticalAlignment = Alignment.Top
+    ) {
+        OutlinedTextField(
+            value = altName,
+            onValueChange = { if (it.length <= 40) onUpdate(it) },
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.ingredient_form_alt_name_placeholder),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                )
+            },
+            modifier = Modifier
+                .weight(1f)
+                .bringIntoViewRequester(bringIntoViewRequester)
+                .onFocusEvent { focusState ->
+                    if (focusState.isFocused) {
+                        coroutineScope.launch {
+                            bringIntoViewRequester.bringIntoView()
+                        }
+                    }
+                },
+            singleLine = true,
+            shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                errorContainerColor = MaterialTheme.colorScheme.background,
+            ),
+            supportingText = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = stringResource(R.string.ingredient_form_name_char_count_limit, altName.length),
+                        modifier = Modifier.offset(x = dimensionResource(id = R.dimen.padding_l)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (altName.length >= 40) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        )
+
+        if (onRemove != null) {
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_xxsm))
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_remove),
+                    contentDescription = stringResource(R.string.ingredient_form_remove_alt_name)
                 )
             }
         }

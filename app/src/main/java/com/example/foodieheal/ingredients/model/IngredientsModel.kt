@@ -12,6 +12,7 @@ data class Ingredients(
     @SerialName("ing_image") val ingredientImage: String? = null,
     @SerialName("created_by_user_id") val createdByUserId: String? = null,
     @SerialName("is_default") val isDefault: Boolean = false,
+    @SerialName("ing_alt_names") val ingredientAltNames: List<String> = emptyList(),
 )
 
 @Serializable
@@ -48,6 +49,7 @@ enum class IngredientCategory(val categoryName: String){
     @SerialName("OILS_FATS") OILS_FATS("Oils & Fats"),
     @SerialName("SEAFOOD") SEAFOOD("Seafood"),
     @SerialName("SNACKS_SWEETS") SNACKS_SWEETS("Snack & Sweets"),
+    @SerialName("SPREADS") SPREADS("Spreads"),
     @SerialName("VEGETABLES") VEGETABLES("Vegetables"),
     @SerialName("OTHERS") OTHERS("Others")
 }

@@ -112,6 +112,7 @@ fun AdminAddIngredientScreen(
                         description = formState.description,
                         unitRows = formState.unitRows,
                         availableUnits = availableUnits,
+                        altNames = formState.altNames,
                         nameError = formState.nameError,
                         nameErrorArg = formState.nameErrorArg,
                         categoryError = formState.categoryError,
@@ -124,6 +125,9 @@ fun AdminAddIngredientScreen(
                         onUnitRowUpdate = { index, unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
                         onUnitRowRemove = { viewModel.removeUnitRow(it) },
                         onAddUnitRow = { viewModel.addUnitRow() },
+                        onAltNameUpdate = { index, value -> viewModel.updateAltNameRow(index, value) },
+                        onAltNameRemove = { viewModel.removeAltNameRow(it) },
+                        onAddAltNameRow = { viewModel.addAltNameRow() },
                     ) {
                         // Screen-specific bottom content
                         uiState.errorMessage?.let { resId ->
@@ -137,23 +141,28 @@ fun AdminAddIngredientScreen(
 
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                         val successToastMsg = stringResource(R.string.admin_add_toast_success)
+                        val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
                         PrimaryButton(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
-                                scope.launch {
-                                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
-                                        cloudinaryViewModel.uploadImage(context)
-                                    } else {
-                                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
-                                    }
-
-                                    viewModel.submitIngredient(
-                                        imageUrl = imageUrl,
-                                        onComplete = {
-                                            Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
-                                            navController.popBackStack()
+                                if (viewModel.validateForm()) {
+                                    scope.launch {
+                                        val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                                            cloudinaryViewModel.uploadImage(context)
+                                        } else {
+                                            cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                                         }
-                                    )
+
+                                        viewModel.submitIngredient(
+                                            imageUrl = imageUrl,
+                                            onComplete = {
+                                                Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
+                                                navController.popBackStack()
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             textID = R.string.admin_add_button,

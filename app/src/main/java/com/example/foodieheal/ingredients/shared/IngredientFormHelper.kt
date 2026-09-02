@@ -27,6 +27,7 @@ data class IngredientFormState(
     val description: String = "",
     val imageUrl: String? = null,
     val unitRows: List<UnitRowState> = listOf(UnitRowState()),
+    val altNames: List<String> = listOf(""),
     val isSubmitting: Boolean = false,
     val isStatusConflict: Boolean = false,
     val errorMessage: Int? = null,
@@ -100,6 +101,28 @@ object IngredientFormHelper {
 
     fun updateDescription(state: IngredientFormState, desc: String): IngredientFormState =
         state.copy(description = desc, descriptionError = null)
+
+    // ──────────────────────────────────────────────
+    // Alternate Name row helpers
+    // ──────────────────────────────────────────────
+
+    fun addAltNameRow(state: IngredientFormState): IngredientFormState =
+        state.copy(altNames = state.altNames + "")
+
+    fun updateAltNameRow(state: IngredientFormState, index: Int, value: String): IngredientFormState {
+        if (index !in state.altNames.indices) return state
+        val newList = state.altNames.toMutableList()
+        newList[index] = value
+        return state.copy(altNames = newList)
+    }
+
+    fun removeAltNameRow(state: IngredientFormState, index: Int): IngredientFormState {
+        if (index !in state.altNames.indices) return state
+        if (state.altNames.size <= 1) return state.copy(altNames = listOf(""))
+        val newList = state.altNames.toMutableList()
+        newList.removeAt(index)
+        return state.copy(altNames = newList)
+    }
 
     // ──────────────────────────────────────────────
     // Unit row helpers
