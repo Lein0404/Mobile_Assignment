@@ -3,14 +3,7 @@ package com.example.foodieheal.Chef.Home
 import android.widget.Toast
 import es.dmoral.toasty.Toasty
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -46,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterValidate
 import com.example.foodieheal.R
 import com.example.foodieheal.User.viewModel.AuthViewModel
 
@@ -65,9 +57,13 @@ fun ChefChangePasswordScreen(
 
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // Validation using ChefRegisterValidate
-    val isNewPasswordValid = ChefRegisterValidate.isValidPassword(newPassword)
-    val passwordsMatch = ChefRegisterValidate.isPasswordMatched(newPassword, confirmPassword)
+    // Validation Logic
+    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,20}$".toRegex()
+    val isPasswordValid = newPassword.matches(passwordRegex)
+    val passwordsMatch = newPassword == confirmPassword
+    val isSameAsOld = newPassword.trim() == oldPassword.trim() && newPassword.isNotEmpty()
+
+    // Button is enabled if all fields are filled
     val isFormFilled = oldPassword.isNotBlank() && newPassword.isNotBlank() && confirmPassword.isNotBlank()
 
     DisposableEffect(Unit) {
@@ -135,9 +131,11 @@ fun ChefChangePasswordScreen(
                 label = stringResource(R.string.current_password),
                 value = oldPassword,
                 onValueChange = {
-                    oldPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        oldPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
                 isError = authViewModel.passwordErrorMessage.isNotEmpty(),
                 supportingText = if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.passwordErrorMessage else null
@@ -150,13 +148,20 @@ fun ChefChangePasswordScreen(
                 label = stringResource(R.string.new_password),
                 value = newPassword,
                 onValueChange = {
-                    newPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        newPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
-                isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isNewPasswordValid,
-                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isNewPasswordValid) {
-                    stringResource(R.string.error_chef_password_rule)
+                isError = hasAttemptedSubmit && !authViewModel.isProcessing && (!isPasswordValid || isSameAsOld),
+                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing) {
+                    when {
+                        newPassword.contains(" ") -> stringResource(R.string.error_password_no_spaces)
+                        !isPasswordValid -> stringResource(R.string.change_password_validation_error)
+                        isSameAsOld -> stringResource(R.string.error_password_same_as_old)
+                        else -> null
+                    }
                 } else null
             )
 
@@ -167,13 +172,15 @@ fun ChefChangePasswordScreen(
                 label = stringResource(R.string.confirm_new_password),
                 value = confirmPassword,
                 onValueChange = {
-                    confirmPassword = it
-                    if (hasAttemptedSubmit) hasAttemptedSubmit = false
-                    if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    if (it.length <= 20) {
+                        confirmPassword = it
+                        if (hasAttemptedSubmit) hasAttemptedSubmit = false
+                        if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
+                    }
                 },
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch,
                 supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch) {
-                    stringResource(R.string.error_passwords_not_matching)
+                    stringResource(R.string.change_password_match_error)
                 } else null
             )
 
@@ -182,8 +189,10 @@ fun ChefChangePasswordScreen(
             Button(
                 onClick = {
                     hasAttemptedSubmit = true
-                    if (isNewPasswordValid && passwordsMatch) {
-                        authViewModel.changePassword(oldPassword, newPassword) {
+                    val cleanOldPassword = oldPassword.trim()
+                    val cleanNewPassword = newPassword.trim()
+                    if (isPasswordValid && passwordsMatch && !isSameAsOld) {
+                        authViewModel.changePassword(cleanOldPassword, cleanNewPassword) {
                             Toasty.custom(
                                 context,
                                 passwordUpdateSuccessMessage,
@@ -252,12 +261,27 @@ fun ChefPasswordInputField(
             isError = isError,
             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp),
             supportingText = {
-                if (supportingText != null) {
-                    Text(
-                        text = supportingText,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp
-                    )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (supportingText != null) {
+                            Text(
+                                text = supportingText,
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                        Text(
+                            "${value.length}/20",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             },
             shape = RoundedCornerShape(12.dp),

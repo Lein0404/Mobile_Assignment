@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -26,8 +27,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +69,41 @@ fun ChefProfileScreen(
 ) {
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    var showLogoutConfirmation by remember { mutableStateOf(false) }
+
+    if (showLogoutConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showLogoutConfirmation = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.logout_confirm_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = { Text(stringResource(R.string.logout_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutConfirmation = false
+                        viewModel.logout {
+                            onLogoutSuccess()
+                        }
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.nav_logout),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutConfirmation = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
+        )
+    }
 
     // Sync status bar color with the top primary header
     SideEffect {
@@ -286,74 +327,6 @@ fun ChefProfileScreen(
                     )
                 }
 
-                // Client Rating Section
-                DetailSectionCard(title = stringResource(R.string.client_rating_label)) {
-                    val avgRating = chef.averagerating ?: 0.0
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = Color(0xFFFFF8E1),
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_star),
-                                            contentDescription = null,
-                                            tint = Color(0xFFFFB300),
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                }
-                                Column {
-                                    Text(
-                                        text = if (avgRating > 0.0) "%.1f ★".format(avgRating) else stringResource(R.string.no_ratings_yet),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = if (avgRating > 0.0) stringResource(R.string.average_client_rating) else stringResource(R.string.ratings_hint),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-
-                            if (avgRating > 0.0) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    repeat(5) { index ->
-                                        val isFilled = index < avgRating.toInt()
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_star),
-                                            contentDescription = null,
-                                            tint = if (isFilled) Color(0xFFFFB300) else Color.LightGray,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // Weekly Availability Schedule Grid
                 ChefAvailabilityCard(
                     chef = chef,
@@ -424,9 +397,7 @@ fun ChefProfileScreen(
 
                     Button(
                         onClick = {
-                            viewModel.logout {
-                                onLogoutSuccess()
-                            }
+                            showLogoutConfirmation = true
                         },
                         modifier = Modifier
                             .weight(1f)
