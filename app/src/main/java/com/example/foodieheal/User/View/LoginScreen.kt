@@ -41,9 +41,10 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     // Track if user has tried to submit for validation display
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // EXTRA Strict Email Validation (Requires at least 3 chars for TLD like .com)
-    val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
+    // Email must be *@gmail.com format
+    val emailRegex = "^[A-Za-z0-9._%+-]+@gmail\\.com$".toRegex()
     val isEmailFormatValid = email.matches(emailRegex)
+    // Button enabled when fields are filled (same as Register — error shown on click)
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
 
     val view = LocalView.current
@@ -178,7 +179,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     )
                 )
 
-                // Email Specific Errors
+                // Email Specific Errors — show after clicking Login
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
                     viewModel.errorMessage == accountNotFound || viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> accountNotFound
