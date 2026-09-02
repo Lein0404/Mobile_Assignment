@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.navigation.Screen
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.User.Model.Follow
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
@@ -71,7 +72,7 @@ fun FollowRequestsScreen(
             val ids = requests.mapNotNull { it.followerId }.distinct()
             if (ids.isNotEmpty()) {
                 isFetchingRequesterProfiles = true
-                val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
+                val repo = RecipeRepository()
                 repo.getUsersByCustomIds(ids).onSuccess { result ->
                     result.forEach { u ->
                         u.customId?.let { requestUsers[it] = u }

@@ -33,6 +33,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import androidx.lifecycle.ViewModelProvider
+import com.example.foodieheal.Chef.model.WeeklyAvailability
 import com.example.foodieheal.R
 import kotlinx.serialization.json.JsonElement
 import java.util.Calendar
@@ -558,7 +559,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun updateChefAvailability(
-        weeklyAvailability: com.example.foodieheal.Chef.model.WeeklyAvailability,
+        weeklyAvailability: WeeklyAvailability,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {

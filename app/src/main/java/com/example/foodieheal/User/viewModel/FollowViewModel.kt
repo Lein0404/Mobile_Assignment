@@ -11,8 +11,8 @@ import com.example.foodieheal.User.Repo.FollowRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-
 import com.example.foodieheal.MainActivity
+import com.example.foodieheal.User.Repo.UserRepository
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 
 class FollowViewModel(private val repository: FollowRepository = FollowRepository()) : ViewModel() {
@@ -99,7 +99,7 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
             repository.acceptFollowRequest(followerId, myId)
             
             // Refresh counts after accepting
-            val userRepo = com.example.foodieheal.User.Repo.UserRepository()
+            val userRepo = UserRepository()
             userRepo.getUserByCustomId(myId) // This is just to trigger any DB logic if needed, 
             
             fetchFollowers(myId)
