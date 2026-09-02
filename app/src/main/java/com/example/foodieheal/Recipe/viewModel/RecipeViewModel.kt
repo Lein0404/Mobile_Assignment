@@ -165,13 +165,20 @@ class RecipeViewModel(
         if (authorIds.isEmpty()) return
 
         viewModelScope.launch {
-            // BATCH FETCH: Get author info for all recipes in ONE request
+            // Live Fetch: Get fresh author info from users table
             repository.getUsersByCustomIds(authorIds).onSuccess { users ->
                 if (users.isNotEmpty()) {
                     val userMap = users.associateBy { it.customId }
                     val updater: (Recipe) -> Recipe = { r ->
                         userMap[r.author_id]?.let { u ->
-                            r.copy(authorName = u.name, authorImageUrl = u.profilePicUrl)
+                            r.copy(
+                                authorName = u.name,
+                                authorImageUrl = u.profilePicUrl,
+                                authorInfo = (r.authorInfo ?: com.example.foodieheal.Recipe.Model.AuthorInfo()).copy(
+                                    name = u.name,
+                                    profile_pic_url = u.profilePicUrl
+                                )
+                            )
                         } ?: r
                     }
                     recipeList = recipeList.map(updater)

@@ -176,13 +176,13 @@ fun RecipesScreen(
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
         
-        // Always fetch Popular recipes even if not logged in yet
-        if (selectedTab == 0 && viewModel.recipeList.isEmpty()) {
+        // Tab 0: Popular recipes -> Always fetch in background to sync newly added recipes from other accounts without flashing
+        if (selectedTab == 0) {
             viewModel.fetchAllRecipes()
         }
 
         if (cid != null) {
-            // Always refresh bookmarks if the owner has changed (Leon vs KK)
+            // Always refresh bookmarks if the owner has changed
             // We check if the current IDs in memory actually belong to the current user
             viewModel.fetchBookmarkIds(cid)
 
