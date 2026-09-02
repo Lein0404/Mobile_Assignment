@@ -111,7 +111,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Brand Logo
             Icon(
@@ -275,7 +275,36 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Generic/System Error Messages (e.g., Network error, Chef Redirect Notice)
+            val isAuthError = viewModel.errorMessage == invalidCreds ||
+                             viewModel.errorMessage == accountNotFound ||
+                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) ||
+                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)
+
+            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
+                val isSuccess = viewModel.errorMessage.contains("sent", ignoreCase = true)
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Text(
+                        text = viewModel.errorMessage,
+                        color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                        fontSize = 13.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+                }
+            }
 
             // Login Button
             Button(
@@ -358,34 +387,6 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
             }
 
-            // Generic/System Error Messages (e.g., Network, Reset Link, Chef Redirect Notice)
-            val isAuthError = viewModel.errorMessage == invalidCreds || 
-                             viewModel.errorMessage == accountNotFound ||
-                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
-                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)
-
-            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
-                val isSuccess = viewModel.errorMessage.contains("sent", ignoreCase = true)
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text(
-                        text = viewModel.errorMessage,
-                        color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                        fontSize = 13.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp)
-                    )
-                }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
         }

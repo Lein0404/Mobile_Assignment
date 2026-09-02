@@ -319,7 +319,36 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Generic/System Error Messages (e.g., Network error) shown above Next button
+            val isAuthError = viewModel.errorMessage == emailAlreadyRegistered ||
+                             viewModel.errorMessage.contains("already registered", ignoreCase = true) ||
+                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) ||
+                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true) ||
+                             viewModel.errorMessage.contains("Registration Failed", ignoreCase = true)
+
+            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Text(
+                        text = viewModel.errorMessage,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontSize = 13.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+                }
+            }
 
             // Register Button
             Button(
@@ -372,23 +401,6 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     }
                 }
             )
-
-            // Only show non-auth errors here (e.g. Network errors)
-            // We filtered out "already registered" and auth-related messages since they are shown under fields
-            val isAuthError = viewModel.errorMessage == emailAlreadyRegistered ||
-                             viewModel.errorMessage.contains("already registered", ignoreCase = true) ||
-                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) ||
-                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true) ||
-                             viewModel.errorMessage.contains("Registration Failed", ignoreCase = true)
-
-            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = viewModel.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 12.sp
-                )
-            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
