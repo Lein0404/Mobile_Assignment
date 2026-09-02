@@ -14,6 +14,8 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.Recipe
+import com.example.foodieheal.User.Repo.FollowRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -71,7 +73,7 @@ class RecipeViewModel(
     private var isFetchingIngredients = false
 
     // Track active toggle jobs to allow cancellation/restarts
-    private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+    private val bookmarkJobs = mutableMapOf<String, Job>()
     private var currentCustomId: String? = null
 
     init {
@@ -206,7 +208,7 @@ class RecipeViewModel(
                 // but RecipeRepository doesn't know about it.
 
                 // Let's use FollowRepository to get the IDs first.
-                val followRepo = com.example.foodieheal.User.Repo.FollowRepository()
+                val followRepo = FollowRepository()
                 val following = followRepo.getFollowing(followerId)
                 val followedIds = following.filter { it.status == "ACCEPTED" }.mapNotNull { it.followingId }
                 followedUserIds = followedIds.toSet()
