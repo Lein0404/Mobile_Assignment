@@ -284,7 +284,7 @@ fun AddRecipeBottomActionBar(
             border = BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
         ) {
             Text(
-                text = stringResource(android.R.string.cancel),
+                text = stringResource(R.string.dialog_cancel),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
             )
