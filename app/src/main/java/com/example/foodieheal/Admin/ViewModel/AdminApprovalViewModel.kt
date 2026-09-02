@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.Chef.notification.ChefEmailNotificationService
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 
@@ -134,7 +135,10 @@ class AdminApprovalViewModel : ViewModel() {
 
     fun updateChefStatus(
         chefId: String,
-        status: String
+        status: String,
+        chefEmail: String = "",
+        chefName: String = "",
+        rejectionReason: String = ""
     ) {
         viewModelScope.launch {
             try {
@@ -157,8 +161,23 @@ class AdminApprovalViewModel : ViewModel() {
                         }
                     }
                 loadAllChefs()
-            } catch (e: Exception) {
 
+                // Dispatch email safely in viewModelScope so it survives back-navigation
+                if (chefEmail.isNotBlank()) {
+                    if (status.equals("Approved", ignoreCase = true)) {
+                        ChefEmailNotificationService.sendChefApprovalEmail(
+                            toEmail = chefEmail,
+                            chefName = chefName
+                        )
+                    } else if (status.equals("Rejected", ignoreCase = true)) {
+                        ChefEmailNotificationService.sendChefRejectionEmail(
+                            toEmail = chefEmail,
+                            chefName = chefName,
+                            rejectionReason = rejectionReason
+                        )
+                    }
+                }
+            } catch (e: Exception) {
                 Log.e(
                     "AdminApproval",
                     e.message ?: "Update failed"

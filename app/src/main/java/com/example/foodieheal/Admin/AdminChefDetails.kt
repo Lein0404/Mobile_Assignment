@@ -71,8 +71,8 @@ fun ChefDetailScreen(
     val chef = viewModel.selectedChef
     val context = LocalContext.current
     val chefName = chef?.name.orEmpty()
-    val approvedToastMsg = stringResource(R.string.admin_chef_toast_approved, chefName)
-    val rejectedToastMsg = stringResource(R.string.admin_chef_toast_rejected, chefName)
+    val approvedToastMsg = stringResource(R.string.admin_chef_toast_approved_email, chefName)
+    val rejectedToastMsg = stringResource(R.string.admin_chef_toast_rejected_email, chefName)
     var showApproveConfirmDialog by remember { mutableStateOf(false) }
     var showRejectDialog by remember { mutableStateOf(false) }
     var rejectionReason by remember { mutableStateOf("") }
@@ -405,7 +405,12 @@ fun ChefDetailScreen(
                     Button(
                         onClick = {
                             showApproveConfirmDialog = false
-                            viewModel.updateChefStatus(chef.chefId, "Approved")
+                            viewModel.updateChefStatus(
+                                chefId = chef.chefId,
+                                status = "Approved",
+                                chefEmail = chef.email,
+                                chefName = chef.name
+                            )
                             Toasty.custom(
                                 context,
                                 approvedToastMsg,
@@ -515,9 +520,16 @@ fun ChefDetailScreen(
                             if (rejectionReason.isBlank()) {
                                 rejectionReasonError = true
                             } else {
+                                val reasonToSend = rejectionReason.trim()
                                 showRejectDialog = false
                                 rejectionReasonError = false
-                                viewModel.updateChefStatus(chef.chefId, "Rejected")
+                                viewModel.updateChefStatus(
+                                    chefId = chef.chefId,
+                                    status = "Rejected",
+                                    chefEmail = chef.email,
+                                    chefName = chef.name,
+                                    rejectionReason = reasonToSend
+                                )
                                 Toasty.custom(
                                     context,
                                     rejectedToastMsg,

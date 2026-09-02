@@ -1923,4 +1923,6 @@
     <!-- Admin Chef Action Toast -->
     <string name="admin_chef_toast_approved">Chef %1$s approved successfully</string>
     <string name="admin_chef_toast_rejected">Chef %1$s application rejected</string>
+    <string name="admin_chef_toast_approved_email">Chef %1$s approved &amp; notification email sent</string>
+    <string name="admin_chef_toast_rejected_email">Chef %1$s rejected &amp; explanation email sent</string>
 </resources>
