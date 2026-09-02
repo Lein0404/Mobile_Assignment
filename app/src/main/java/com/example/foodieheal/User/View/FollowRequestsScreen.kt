@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.foodieheal.meal_planner.screen.OfflinePlaceholder
@@ -76,20 +75,19 @@ fun FollowRequestsScreen(
         if (requests.isNotEmpty()) {
             val ids = requests.mapNotNull { it.followerId }.distinct()
             if (ids.isNotEmpty()) {
-                isFetchingRequesterProfiles = true
-                val repo = RecipeRepository()
-                repo.getUsersByCustomIds(ids).onSuccess { result ->
-                    result.forEach { u ->
-                        u.customId?.let { requestUsers[it] = u }
+                try {
+                    isFetchingRequesterProfiles = true
+                    val repo = RecipeRepository()
+                    repo.getUsersByCustomIds(ids).onSuccess { result ->
+                        result.forEach { u ->
+                            u.customId?.let { requestUsers[it] = u }
+                        }
                     }
-                    isFetchingRequesterProfiles = false
-                    isInitialLoadComplete = true
-                }.onFailure {
+                } finally {
                     isFetchingRequesterProfiles = false
                     isInitialLoadComplete = true
                 }
             } else {
-                isFetchingRequesterProfiles = false
                 isInitialLoadComplete = true
             }
         } else {
