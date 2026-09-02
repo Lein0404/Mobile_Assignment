@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import com.example.foodieheal.MainActivity
-import com.example.foodieheal.User.Repo.UserRepository
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 
 class FollowViewModel(private val repository: FollowRepository = FollowRepository()) : ViewModel() {
@@ -85,6 +84,11 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
                     repository.unfollowUser(myId, targetId)
                     followStatus = null
                     _followEvents.emit(FollowEvent.Unfollowed)
+                    
+                    // Immediate refresh of lists and counts to update UI
+                    fetchFollowing(myId)
+                    fetchFollowCounts(myId)
+                    fetchFollowCounts(targetId)
                 }
             }
         }
@@ -96,14 +100,22 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
             return
         }
         viewModelScope.launch {
-            repository.acceptFollowRequest(followerId, myId)
-            
-            // Refresh counts after accepting
-            val userRepo = UserRepository()
-            userRepo.getUserByCustomId(myId) // This is just to trigger any DB logic if needed, 
-            
-            fetchFollowers(myId)
-            _followEvents.emit(FollowEvent.RequestAccepted)
+            try {
+                isLoadingFollowList = true
+                repository.acceptFollowRequest(followerId, myId)
+                
+                // Refresh local state immediately in the same coroutine
+                followersList = repository.getFollowers(myId)
+                followerCount = followersList.filter { it.status == "ACCEPTED" }.size
+                
+                // Fire and forget counts
+                fetchFollowCounts(myId)
+                fetchFollowCounts(followerId)
+                
+                _followEvents.emit(FollowEvent.RequestAccepted)
+            } finally {
+                isLoadingFollowList = false
+            }
         }
     }
 
@@ -113,9 +125,20 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
             return
         }
         viewModelScope.launch {
-            repository.cancelFollowRequest(followerId, myId)
-            fetchFollowers(myId)
-            _followEvents.emit(FollowEvent.RequestRejected)
+            try {
+                isLoadingFollowList = true
+                repository.cancelFollowRequest(followerId, myId)
+                
+                // Refresh local state immediately in the same coroutine
+                followersList = repository.getFollowers(myId)
+                followerCount = followersList.filter { it.status == "ACCEPTED" }.size
+                
+                fetchFollowCounts(myId)
+                
+                _followEvents.emit(FollowEvent.RequestRejected)
+            } finally {
+                isLoadingFollowList = false
+            }
         }
     }
 
