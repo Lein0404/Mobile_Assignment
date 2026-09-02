@@ -82,7 +82,7 @@ class TemplateViewModel(
             try {
                 //  1. Extract ALL unique recipe IDs from ALL plans in the list
                 val allRecipeIds = entityList.flatMap { entity ->
-                    entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.recipeId } }
+                    entity.dailyPlans.values.flatten().flatMap { slot -> slot.recipes.map { it.realId } }
                 }.distinct()
 
                 Log.d(TAG, "allWeeklyPlans: Batch fetching ${allRecipeIds.size} recipes for ${entityList.size} plans")
@@ -234,11 +234,11 @@ class TemplateViewModel(
 
             val realMealSlots = slotDTOs.map { slotDTO ->
                 val populatedRecipes = slotDTO.recipes.mapNotNull { recipeRef ->
-                    recipeMap[recipeRef.recipeId]
+                    recipeMap[recipeRef.realId]
                 }
 
                 RealMealSlot(
-                    mealType = slotDTO.mealType,
+                    mealType = slotDTO.realType,
                     recipes = populatedRecipes
                 )
             }

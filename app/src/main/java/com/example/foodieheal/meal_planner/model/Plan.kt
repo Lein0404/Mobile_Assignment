@@ -24,25 +24,41 @@ data class WeeklyPlan(
 @Serializable
 data class WeeklyPlanEntity(
     @SerialName("planId")
-    val planId: String = "",
+    val planIdOld: String? = null,
+    @SerialName("plan_id")
+    val planIdNew: String? = null,
 
     @SerialName("planName")
-    val planName: String = "",
+    val planNameOld: String? = null,
+    @SerialName("plan_name")
+    val planNameNew: String? = null,
 
     @SerialName("planDescription")
-    val planDescription: String = "",
+    val planDescriptionOld: String? = null,
+    @SerialName("plan_description")
+    val planDescriptionNew: String? = null,
 
     @SerialName("userId")
-    val userId: String = "",
+    val userIdOld: String? = null,
+    @SerialName("user_id")
+    val userIdNew: String? = null,
 
     val category: PlanCategory = PlanCategory.BALANCED,
 
     @SerialName("dailyPlans")
-    val dailyPlans: Map<String, List<MealSlotDTO>> = emptyMap(),
+    val dailyPlansOld: Map<String, List<MealSlotDTO>>? = null,
+    @SerialName("daily_plans")
+    val dailyPlansNew: Map<String, List<MealSlotDTO>>? = null,
 
     @SerialName("is_public")
-    val public: Boolean
-)
+    val public: Boolean = false
+) {
+    val planId: String get() = planIdNew ?: planIdOld ?: ""
+    val planName: String get() = planNameNew ?: planNameOld ?: ""
+    val planDescription: String get() = planDescriptionNew ?: planDescriptionOld ?: ""
+    val userId: String get() = userIdNew ?: userIdOld ?: ""
+    val dailyPlans: Map<String, List<MealSlotDTO>> get() = dailyPlansNew ?: dailyPlansOld ?: emptyMap()
+}
 
 // ==========================================
 // Extension Converters
@@ -53,12 +69,12 @@ data class WeeklyPlanEntity(
  */
 fun WeeklyPlan.toEntity(): WeeklyPlanEntity {
     return WeeklyPlanEntity(
-        planId = this.planId,
-        planName = this.planName,
-        planDescription = this.planDescription,
-        userId = this.userId,
+        planIdNew = this.planId,
+        planNameNew = this.planName,
+        planDescriptionNew = this.planDescription,
+        userIdNew = this.userId,
         category = this.category,
-        dailyPlans = this.dailyPlans.entries.associate { (day, mealSlots) ->
+        dailyPlansNew = this.dailyPlans.entries.associate { (day, mealSlots) ->
             day.name to mealSlots.map { slot ->
                 MealSlotDTO(
                     mealType = slot.mealType,
@@ -73,7 +89,6 @@ fun WeeklyPlan.toEntity(): WeeklyPlanEntity {
 }
 
 /**
- * 🌟 NEW: Converts Remote Entity/DTO back to UI Domain model.
  * Pass the fetched recipes map/list so the UI has full Recipe details.
  */
 fun WeeklyPlanEntity.toDomain(allRecipes: List<Recipe>): WeeklyPlan {
@@ -82,9 +97,9 @@ fun WeeklyPlanEntity.toDomain(allRecipes: List<Recipe>): WeeklyPlan {
     }.mapValues { (_, slotDTOs) ->
         slotDTOs.map { slotDTO ->
             RealMealSlot(
-                mealType = slotDTO.mealType,
+                mealType = slotDTO.realType,
                 recipes = slotDTO.recipes.mapNotNull { ref ->
-                    allRecipes.find { it.recipe_id == ref.recipeId }
+                    allRecipes.find { it.recipe_id == ref.realId }
                 }
             )
         }

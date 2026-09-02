@@ -59,7 +59,7 @@
                         // 1. Collect all unique recipe IDs referenced in the saved plan
                         val allRecipeIds = existingPlanDto.dailyPlans.values
                             .flatten()
-                            .flatMap { slotDto -> slotDto.recipes.map { ref -> ref.recipeId } }
+                            .flatMap { slotDto -> slotDto.recipes.map { ref -> ref.realId } }
                             .distinct()
 
                         Log.d(TAG, "loadExistingPlan(): Found ${allRecipeIds.size} unique recipe IDs to fetch: $allRecipeIds")
