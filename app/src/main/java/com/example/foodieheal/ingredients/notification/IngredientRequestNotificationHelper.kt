@@ -103,13 +103,15 @@ object IngredientRequestNotificationHelper {
                 .setStyle(NotificationCompat.BigTextStyle().bigText(message))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setWhen(System.currentTimeMillis())
+                .setShowWhen(true)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .build()
 
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(notificationId, notification)
-            Log.d(TAG, "Successfully posted request status notification for request: $requestId (Status: $status)")
+            Log.d(TAG, "Successfully posted request status notification [id=$notificationId] for request: $requestId (Status: $status, Name: $ingredientName)")
         } catch (e: SecurityException) {
             Log.e(TAG, "SecurityException while showing notification: ${e.message}", e)
         } catch (e: Exception) {

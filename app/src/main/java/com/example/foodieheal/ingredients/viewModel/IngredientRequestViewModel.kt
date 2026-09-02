@@ -132,7 +132,7 @@ class IngredientRequestViewModel(
     }
 
     private fun checkAndNotifyStatusUpdates(requests: List<IngredientRequest>) {
-        IngredientRequestStatusMonitor.processRequestList(requests, getApplication())
+        IngredientRequestStatusMonitor.processRequestList(currentUserId, requests, getApplication())
     }
 
     fun refresh() {
