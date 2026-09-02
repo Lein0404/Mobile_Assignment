@@ -190,6 +190,7 @@
     <!-- UI Interaction Descriptions -->
     <string name="desc_remove_recipe">Remove recipe</string>
     <string name="desc_add_recipe">Add</string>
+    <string name="menu_add_to_meal_planner">Add to Meal Planner</string>
     <string name="desc_checkbox_checked">Checked</string>
 
     <!-- Empty State Placeholders -->

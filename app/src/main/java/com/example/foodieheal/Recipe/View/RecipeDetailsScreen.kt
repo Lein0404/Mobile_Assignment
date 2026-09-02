@@ -202,7 +202,7 @@ fun RecipeDetailsScreen(
                             )
 
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.desc_add_recipe)) },
+                                text = { Text(stringResource(R.string.menu_add_to_meal_planner)) },
                                 onClick = {
                                     expanded = false
                                     if (viewModel.isNetworkAvailable) {
