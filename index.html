@@ -67,12 +67,15 @@
         const messageDiv = document.getElementById('message');
 
         submitBtn.onclick = async () => {
-            const password = document.getElementById('new-password').value.trim();
-            const confirm = document.getElementById('confirm-password').value.trim();
+            const rawPassword = document.getElementById('new-password').value;
+            const rawConfirm = document.getElementById('confirm-password').value;
+
+            const password = rawPassword.trim();
+            const confirm = rawConfirm.trim();
 
             const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\S{8,20}$/;
 
-            if (!passwordRegex.test(password)) {
+            if (!passwordRegex.test(rawPassword)) {
                 showMessage("Password must be 8-20 characters with uppercase, lowercase, numbers, and no spaces.", "error");
                 return;
             }
@@ -109,7 +112,16 @@
         function updateCounter(inputId, counterId) {
             const input = document.getElementById(inputId);
             const counter = document.getElementById(counterId);
-            counter.innerText = `${input.value.length}/20`;
+            const val = input.value;
+
+            counter.innerText = `${val.length}/20`;
+
+            // Real-time Space Validation: Immediately warn if a space is typed
+            if (val.includes(" ")) {
+                showMessage("Spaces are not allowed in the password.", "error");
+            } else if (messageDiv.innerText === "Spaces are not allowed in the password.") {
+                showMessage("", "");
+            }
         }
 
         function toggleVisibility(inputId, btn) {
