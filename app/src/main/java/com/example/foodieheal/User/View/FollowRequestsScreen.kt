@@ -47,15 +47,20 @@ fun FollowRequestsScreen(
     var isInitialLoadComplete by remember { mutableStateOf(false) }
     
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val requestAcceptedMsg = stringResource(R.string.follow_request_accepted)
+    val requestRejectedMsg = stringResource(R.string.follow_request_rejected)
+    val noInternetMsg = stringResource(R.string.desc_connect_internet_follow)
 
     LaunchedEffect(Unit) {
         followViewModel.followEvents.collect { event ->
             val message = when(event) {
-                FollowViewModel.FollowEvent.RequestAccepted -> context.getString(R.string.follow_request_accepted)
-                FollowViewModel.FollowEvent.RequestRejected -> context.getString(R.string.follow_request_rejected)
-                FollowViewModel.FollowEvent.NoInternet -> context.getString(R.string.desc_connect_internet_follow)
-                else -> ""
+                FollowViewModel.FollowEvent.RequestAccepted -> requestAcceptedMsg
+                FollowViewModel.FollowEvent.RequestRejected -> requestRejectedMsg
+                FollowViewModel.FollowEvent.NoInternet -> noInternetMsg
+                FollowViewModel.FollowEvent.RequestSent -> ""
+                FollowViewModel.FollowEvent.RequestCancelled -> ""
+                FollowViewModel.FollowEvent.Unfollowed -> ""
+                FollowViewModel.FollowEvent.Error -> ""
             }
             if (message.isNotEmpty()) {
                 snackbarHostState.showSnackbar(message)
