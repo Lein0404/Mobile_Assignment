@@ -361,7 +361,7 @@ class IngredientRequestViewModel(
         _formState.update { IngredientFormHelper.removeUnitRow(it, index) }
     }
 
-    private fun validateForm(): Boolean {
+    fun validateForm(): Boolean {
         val (isValid, updatedState) = IngredientFormHelper.validateForm(_formState.value)
         _formState.value = updatedState
         return isValid

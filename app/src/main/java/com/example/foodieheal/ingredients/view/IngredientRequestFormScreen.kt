@@ -187,29 +187,34 @@ fun IngredientRequestFormScreen(
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))
                         val successToastSubmitted = stringResource(R.string.ingredient_form_toast_submitted)
                         val successToastUpdated = stringResource(R.string.ingredient_form_toast_updated)
+                        val validateErrorToastMsg = stringResource(R.string.admin_review_error_validate)
                         PrimaryButton(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
-                                scope.launch {
-                                    val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
-                                        cloudinaryViewModel.uploadImage(context)
-                                    } else {
-                                        cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
-                                    }
-
-                                    viewModel.submitRequest(
-                                        imageUrl = imageUrl,
-                                        onComplete = {
-                                            Toast.makeText(
-                                                context,
-                                                if (requestId == null) successToastSubmitted else successToastUpdated,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                                popUpTo(Screen.Ingredients.route) { this.inclusive = true }
-                                            }
+                                if (viewModel.validateForm()) {
+                                    scope.launch {
+                                        val imageUrl = if (cloudinaryViewModel.uiState.value.selectedImageUri != null) {
+                                            cloudinaryViewModel.uploadImage(context)
+                                        } else {
+                                            cloudinaryViewModel.uiState.value.uploadedImageUrl.ifEmpty { null }
                                         }
-                                    )
+
+                                        viewModel.submitRequest(
+                                            imageUrl = imageUrl,
+                                            onComplete = {
+                                                Toast.makeText(
+                                                    context,
+                                                    if (requestId == null) successToastSubmitted else successToastUpdated,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                                    popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                                                }
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             textID = if (requestId == null) R.string.request_new_ingredient else R.string.update_request,
