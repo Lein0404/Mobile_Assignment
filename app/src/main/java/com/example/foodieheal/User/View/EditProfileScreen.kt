@@ -156,7 +156,10 @@ fun EditProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { if (it.length <= 20) name = it },
+                    onValueChange = { 
+                        val cleaned = it.replace("\r", "").replace("\n", "")
+                        if (cleaned.length <= 20) name = cleaned 
+                    },
                     placeholder = { Text(stringResource(R.string.edit_profile_username), color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,

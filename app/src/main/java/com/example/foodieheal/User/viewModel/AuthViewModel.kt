@@ -643,8 +643,10 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     }
                 }
 
+                val sanitizedName = name.replace("\r", "").replace("\n", "").trim()
+
                 val updatedUser = currentUser?.copy(
-                    name = name, profilePicUrl = finalUrl, description = description,
+                    name = sanitizedName, profilePicUrl = finalUrl, description = description,
                     weight = weight ?: currentUser?.weight, height = height ?: currentUser?.height,
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
