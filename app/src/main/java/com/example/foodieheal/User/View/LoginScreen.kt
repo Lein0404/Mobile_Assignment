@@ -271,7 +271,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .clickable { viewModel.forgotPassword(email) }
+                        .clickable { viewModel.forgotPassword(email.trim()) }
                 )
             }
 

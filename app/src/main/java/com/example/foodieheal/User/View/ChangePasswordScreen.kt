@@ -40,9 +40,10 @@ fun ChangePasswordScreen(navController: NavController) {
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
     // Validation Logic
-    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,20}$".toRegex()
     val isPasswordValid = newPassword.matches(passwordRegex)
     val passwordsMatch = newPassword == confirmPassword
+    val isSameAsOld = newPassword.trim() == oldPassword.trim() && newPassword.isNotEmpty()
     
     // Button is enabled if all fields are filled
     val isFormFilled = oldPassword.isNotBlank() && newPassword.isNotBlank() && confirmPassword.isNotBlank()
@@ -138,8 +139,15 @@ fun ChangePasswordScreen(navController: NavController) {
                     }
                 },
                 // Wait for server result so it pops up at the exact same time as the current password error
-                isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid,
-                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid) stringResource(R.string.change_password_validation_error) else null
+                isError = hasAttemptedSubmit && !authViewModel.isProcessing && (!isPasswordValid || isSameAsOld),
+                supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing) {
+                    when {
+                        newPassword.contains(" ") -> stringResource(R.string.error_password_no_spaces)
+                        !isPasswordValid -> stringResource(R.string.change_password_validation_error)
+                        isSameAsOld -> stringResource(R.string.error_password_same_as_old)
+                        else -> null
+                    }
+                } else null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -165,9 +173,11 @@ fun ChangePasswordScreen(navController: NavController) {
             Button(
                 onClick = { 
                     hasAttemptedSubmit = true 
-                    if (isPasswordValid && passwordsMatch) {
+                    val cleanOldPassword = oldPassword.trim()
+                    val cleanNewPassword = newPassword.trim()
+                    if (isPasswordValid && passwordsMatch && !isSameAsOld) {
                         // Use the callback to navigate ONLY when the server confirms success
-                        authViewModel.changePassword(oldPassword, newPassword) {
+                        authViewModel.changePassword(cleanOldPassword, cleanNewPassword) {
                             navController.popBackStack()
                         }
                     }
