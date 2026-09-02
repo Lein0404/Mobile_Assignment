@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -39,10 +38,10 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     var passwordVisible by remember { mutableStateOf(false) }
     val chefRegisterViewModel: ChefRegisterViewModel = viewModel()
     
-    // 🌟 Track if user has tried to submit for validation display
+    // Track if user has tried to submit for validation display
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // 🌟 EXTRA Strict Email Validation (Requires at least 3 chars for TLD like .com)
+    // EXTRA Strict Email Validation (Requires at least 3 chars for TLD like .com)
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
     val isEmailFormatValid = email.matches(emailRegex)
     val isFormValid = email.isNotEmpty() && password.isNotEmpty() && !viewModel.isProcessing
@@ -50,7 +49,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    // 🌟 Resource strings for robust error comparison
+    // Resource strings for robust error comparison
     val invalidCreds = stringResource(R.string.error_invalid_credentials)
     val accountNotFound = stringResource(R.string.error_account_not_found)
 
@@ -63,7 +62,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
 
     LaunchedEffect(Unit) {
         chefRegisterViewModel.resetRegistrationFlow()
-        viewModel.resetPasswordState() // 🌟 Clear errors when re-entering Login
+        viewModel.resetPasswordState() // Clear errors when re-entering Login
     }
 
 
@@ -92,7 +91,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            // 🌟 Seamless Orange Status Bar Strip
+            // Seamless Orange Status Bar Strip
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -113,7 +112,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // 🌟 Brand Logo (Replaced with new high-class icon)
+            // Brand Logo
             Icon(
                 painter = painterResource(id = R.drawable.login_register),
                 contentDescription = null,
@@ -179,7 +178,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     )
                 )
 
-                // 🌟 Email Specific Errors
+                // Email Specific Errors
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
                     viewModel.errorMessage == accountNotFound || viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> accountNotFound
@@ -245,7 +244,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     )
                 )
 
-                // 🌟 Password Specific Errors
+                // Password Specific Errors
                 if (viewModel.errorMessage == invalidCreds || 
                     viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
                     viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
@@ -358,7 +357,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
             }
 
-            // 🌟 Generic/System Error Messages (e.g., Network, Reset Link, Chef Redirect Notice)
+            // Generic/System Error Messages (e.g., Network, Reset Link, Chef Redirect Notice)
             val isAuthError = viewModel.errorMessage == invalidCreds || 
                              viewModel.errorMessage == accountNotFound ||
                              viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 

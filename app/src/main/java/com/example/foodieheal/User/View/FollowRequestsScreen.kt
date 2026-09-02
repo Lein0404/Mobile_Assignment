@@ -112,7 +112,7 @@ fun FollowRequestsScreen(
                 title = { Text(stringResource(R.string.profile_follow_requests), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.FollowRequests.route) == true) {
                             navController.popBackStack() 
@@ -192,7 +192,7 @@ fun RequestItem(
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.Top // 🌟 Align to top for multi-line content
+            verticalAlignment = Alignment.Top
         ) {
             if (!requester?.profilePicUrl.isNullOrBlank()) {
                 AsyncImage(
