@@ -32,15 +32,15 @@ import com.example.foodieheal.User.Model.User
 fun RecipeCardItem(
     recipe: Recipe,
     modifier: Modifier = Modifier,
-    currentUser: User? = null, // 🌟 Added for live name sync
+    currentUser: User? = null, // Added for live name sync
     showMenu: Boolean = false,
     isBookmarked: Boolean = false,
-    isSelected: Boolean = false, // 🌟 Added for Selection Mode
-    isSelectionMode: Boolean = false, // 🌟 Added for Selection Mode
+    isSelected: Boolean = false, // Added for Selection Mode
+    isSelectionMode: Boolean = false, // Added for Selection Mode
     onBookmarkClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
-    onShareClick: (Recipe) -> Unit = {}, // 🌟 Added share callback
+    onShareClick: (Recipe) -> Unit = {}, // Added share callback
     onAddClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
@@ -83,7 +83,7 @@ fun RecipeCardItem(
                     }
                 }
 
-                // 🌟 Selection Check Badge
+                // Selection Check Badge
                 if (isSelectionMode && isSelected) {
                     Surface(
                         color = MaterialTheme.colorScheme.primary,

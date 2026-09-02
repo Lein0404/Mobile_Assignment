@@ -26,23 +26,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
-import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
@@ -64,7 +59,7 @@ fun RecipesScreen(
     val recipeAddedPluralFormat = stringResource(R.string.msg_recipes_added_plural)
 
     val selectedTab = viewModel.activeTab
-    // 🌟 3 Main Tabs to keep it from looking "scratchy"
+    // 3 Main Tabs to keep it from looking "scratchy"
     val tabs = listOf(
         stringResource(R.string.tab_popular_recipes),
         stringResource(R.string.tab_my_recipes_title),
@@ -96,7 +91,7 @@ fun RecipesScreen(
     var filterBudget by remember { mutableStateOf<String?>(null) }
     var filterIngredients by remember { mutableStateOf(setOf<String>()) }
 
-    // 🌟 FIX: Reset all filters when switching tabs
+    // Reset all filters when switching tabs
     LaunchedEffect(selectedTab) {
         searchQuery = ""
         selectedCourse = "All"
@@ -107,13 +102,13 @@ fun RecipesScreen(
         filterIngredients = emptySet()
     }
 
-    // 🌟 FIX: Use the short customId (U001) for all filtering to stay consistent
+    // Use the short customId (U001) for all filtering to stay consistent
     val currentUserId = authViewModel.currentUser?.customId
 
-    // 🌟 LOGIC: Filtering based on your instructions
+    // Filtering based on your instructions
     val currentDataList = when (selectedTab) {
         // Tab 0: Popular -> Show ALL recipes for testing sync (Include mine)
-        // 🌟 Selection Mode Adjustment: Filter out my recipes from Popular tab as per RecipesSelectingScreen
+        // Selection Mode Adjustment: Filter out my recipes from Popular tab as per RecipesSelectingScreen
         0 -> if (isSelectionMode) viewModel.recipeList.filter { it.author_id != currentUserId } else viewModel.recipeList
         // Tab 1: My Recipes -> Created by ME
         1 -> viewModel.myRecipes
@@ -127,7 +122,7 @@ fun RecipesScreen(
     val filteredRecipes by remember(searchQuery, selectedCourse, currentDataList, filterMaxTime, filterMaxCalories, filterSkill, filterBudget, viewModel.followedUserIds) {
         derivedStateOf {
             currentDataList.filter { recipe ->
-                // 🌟 Privacy & Visibility Logic
+                // Privacy & Visibility Logic
                 val isVisible = when {
                     recipe.author_id == currentUserId -> true // My recipes are always visible to me
                     recipe.visibility == "public" -> true // Public recipes are visible to everyone
@@ -160,7 +155,7 @@ fun RecipesScreen(
 
     LaunchedEffect(Unit) {
         viewModel.bookmarkMessage.collect { message ->
-            // 🌟 Use currentSnackbarData?.dismiss() to show new messages instantly
+            // Use currentSnackbarData?.dismiss() to show new messages instantly
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
@@ -181,13 +176,13 @@ fun RecipesScreen(
     LaunchedEffect(selectedTab, currentUserId) {
         val cid = authViewModel.currentUser?.customId
         
-        // 🌟 FIX: Always fetch Popular recipes even if not logged in yet
+        // Always fetch Popular recipes even if not logged in yet
         if (selectedTab == 0 && viewModel.recipeList.isEmpty()) {
             viewModel.fetchAllRecipes()
         }
 
         if (cid != null) {
-            // 🌟 FIX: Always refresh bookmarks if the owner has changed (Leon vs KK)
+            // Always refresh bookmarks if the owner has changed (Leon vs KK)
             // We check if the current IDs in memory actually belong to the current user
             viewModel.fetchBookmarkIds(cid)
 
@@ -199,11 +194,11 @@ fun RecipesScreen(
                         }
                 }
                 2 -> {
-                    // 🌟 Always fetch following list to keep 'followedUserIds' updated for privacy checks
+                    // Always fetch following list to keep 'followedUserIds' updated for privacy checks
                     viewModel.fetchFollowingRecipes(cid)
                     
                     if (!showFollowingFeed) {
-                        // 🌟 FIX: Use customId (cid) to match the Supabase table and local Room DB
+                        // Use customId (cid) to match the Supabase table and local Room DB
                         viewModel.fetchBookmarkedRecipes(cid)
                     }
                 }
@@ -213,7 +208,7 @@ fun RecipesScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.background, // 🌟 Themed Background
+            containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
             Box(
@@ -242,7 +237,7 @@ fun RecipesScreen(
                                 if (selectedRecipeIds.isEmpty()) stringResource(R.string.title_select_recipes)
                                 else stringResource(R.string.title_selected_count, selectedRecipeIds.size)
                             } else stringResource(R.string.title_recipe_main),
-                            color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -251,12 +246,12 @@ fun RecipesScreen(
                     SecondaryTabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Content
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         indicator = {
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier.tabIndicatorOffset(selectedTab),
                                 height = 3.dp,
-                                color = MaterialTheme.colorScheme.onPrimary // 🌟 Themed Indicator
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         },
                         divider = {}
@@ -270,7 +265,7 @@ fun RecipesScreen(
                                         text = title,
                                         fontSize = 15.sp,
                                         fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selectedTab == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) // 🌟 Themed Tab
+                                        color = if (selectedTab == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
                                 }
                             )
@@ -333,7 +328,7 @@ fun RecipesScreen(
                     shape = CircleShape,
                     modifier = Modifier
                         .size(64.dp)
-                        .offset(y = (-32).dp) // 🌟 Pushed the button higher up by using a negative offset
+                        .offset(y = (-32).dp) // Pushed the button higher up by using a negative offset
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_outline_add),
@@ -423,7 +418,7 @@ fun RecipesScreen(
 
             if (selectedTab == 2) {
                 item(span = { GridItemSpan(2) }) {
-                    // 🌟 Compact Followed/Bookmarks Toggle (Connected Pill style)
+                    // Compact Followed/Bookmarks Toggle (Connected Pill style)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -555,25 +550,25 @@ fun RecipesScreen(
                     EmptyState(iconRes = icon, title = title, subtitle = subtitle)
                 }
             } else {
-                // 🌟 Using gridItemsIndexed to alternate padding between columns
+                // Using gridItemsIndexed to alternate padding between columns
                 gridItemsIndexed(filteredRecipes) { index, recipe ->
                     val isSelected = selectedRecipeIds.contains(recipe.recipe_id)
                     RecipeCardItem(
                         recipe = recipe,
-                        // 🌟 Alternate padding: Left col gets start padding, Right col gets end padding
+                        // Alternate padding: Left col gets start padding, Right col gets end padding
                         modifier = Modifier.padding(
                             start = if (index % 2 == 0) 16.dp else 0.dp,
                             end = if (index % 2 != 0) 16.dp else 0.dp
                         ),
-                        // 🌟 FIX: Pass current user to ensure live name sync
+                        // Pass current user to ensure live name sync
                         currentUser = authViewModel.currentUser,
-                        // 🌟 ONLY show menu for Tab 1 (My Recipes) and NOT in selection mode
+                        // Only show menu for Tab 1 (My Recipes) and NOT in selection mode
                         showMenu = selectedTab == 1 && !isSelectionMode,
                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                         isSelected = isSelected,
                         isSelectionMode = isSelectionMode,
                         onBookmarkClick = {
-                            // 🌟 FIX: Revert to customId (U001) as per Supabase table screenshot
+                            // Revert to customId (U001) as per Supabase table screenshot
                             authViewModel.currentUser?.customId?.let { cid ->
                                 recipe.recipe_id?.let { rid ->
                                     viewModel.toggleBookmark(cid, rid, recipe.recipeName)
@@ -609,14 +604,14 @@ fun RecipesScreen(
                     )
                 }
             }
-            // 🌟 Added back the 80dp spacer to lift the Floating Action Button up
+            // Added back the 80dp spacer to lift the Floating Action Button up
             item(span = { GridItemSpan(2) }) {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }
 
-    // 🌟 Manually anchor the Snackbar at the bottom, perfectly into the "empty place" under the FAB
+    // Manually anchor the Snackbar at the bottom, perfectly into the "empty place" under the FAB
     SnackbarHost(
         hostState = snackbarHostState,
         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
@@ -714,7 +709,7 @@ fun RecipesScreen(
                 // 3. Ingredients
                 FilterSectionHeader(icon = R.drawable.ic_ingredient_list, title = stringResource(R.string.label_ingredients_list))
 
-                // 🌟 ENLARGED: Ingredient Search Bar
+                // ENLARGED: Ingredient Search Bar
                 OutlinedTextField(
                     value = ingredientSearchQuery,
                     onValueChange = { ingredientSearchQuery = it },
@@ -734,7 +729,7 @@ fun RecipesScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (availableIngredients.isNotEmpty()) {
-                    // 🌟 FIXED: Use LazyRow to prevent lag when there are many ingredients
+                    // Use LazyRow to prevent lag when there are many ingredients
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -759,7 +754,7 @@ fun RecipesScreen(
                         }
                     }
 
-                    // 🌟 NEW: Show Selected Ingredients List
+                    // Show Selected Ingredients List
                     if (filterIngredients.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -865,7 +860,7 @@ fun RecipesScreen(
         }
     }
 
-    // 🌟 Share Dialog
+    // Share Dialog
     recipeToShare?.let { recipe ->
         ShareRecipeDialog(
             recipe = recipe,
@@ -906,7 +901,7 @@ fun RecipesScreen(
                     TextButton(
                         onClick = {
                             val rid = recipeToDelete?.recipe_id
-                            // 🌟 Ensure we use the short customId for deletion
+                            // Ensure we use the short customId for deletion
                             val uid = authViewModel.currentUser?.customId
                             if (rid != null && uid != null) {
                                 viewModel.deleteRecipe(rid, uid)

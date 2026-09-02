@@ -111,7 +111,7 @@ fun EditRecipeScreen(
             recipeName.isNotBlank() && recipeName.length <= 30 &&
             description.length <= 150 &&
             totalTime.isNotBlank() &&
-            (totalTime.toIntOrNull() ?: 0) in 1..1440 && // 🌟 Time must be between 1 and 1440 mins (24h)
+            (totalTime.toIntOrNull() ?: 0) in 1..1440 && //Time must be between 1 and 1440 mins (24h)
             totalTime.toIntOrNull() != null &&
             steps.isNotBlank() && steps.length <= 1000 &&
             ingredients.isNotEmpty() &&
@@ -133,7 +133,7 @@ fun EditRecipeScreen(
                     it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
                 }
                 
-                // 🌟 NEW CALCULATION: qty * caloriePerUnitValue / unitValue
+                // qty * caloriePerUnitValue / unitValue
                 // Defaulting unitValue to 1.0 to avoid division by zero
                 val caloriePerUnitValue = ingredientData?.kcal ?: 0.0
                 val unitValue = ingredientData?.defaultQuantity ?: 1.0
@@ -195,7 +195,7 @@ fun EditRecipeScreen(
                 title = { Text(stringResource(R.string.title_edit_recipe), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 BACK: ensure we go back to "My Recipes" tab
+                        // ensure we go back to "My Recipes" tab
                         viewModel.activeTab = 1
                         navController.popBackStack() 
                     }) {
@@ -353,7 +353,7 @@ fun EditRecipeScreen(
                                 )
                             }
                         )
-                        // 🌟 Added time limit hint
+                        // Added time limit hint
                         if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
                             Text(
                                 text = stringResource(R.string.error_time_limit),
@@ -496,12 +496,12 @@ fun EditRecipeScreen(
                                 }
                                 Text(
                                     text = label,
-                                    modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding
+                                    modifier = Modifier.padding(vertical = 8.dp),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
                                 ) 
                             },
-                            modifier = Modifier.weight(1f).height(48.dp), // 🌟 Set height explicitly
+                            modifier = Modifier.weight(1f).height(48.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = Color.White
@@ -558,7 +558,7 @@ fun EditRecipeScreen(
                             estimatedBudget = budget,
                             recipeStep = steps,
                             ingredients = ingredients.map { IngredientItem(it.name, JsonPrimitive(it.quantity), it.unit) },
-                            authorName = authViewModel.currentUser?.name, // 🌟 Refresh author info
+                            authorName = authViewModel.currentUser?.name, // Refresh author info
                             authorImageUrl = authViewModel.currentUser?.profilePicUrl
                         )
                         viewModel.updateRecipe(updatedRecipe, imageBytes)

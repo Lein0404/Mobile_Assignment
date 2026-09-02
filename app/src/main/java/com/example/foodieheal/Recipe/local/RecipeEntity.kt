@@ -2,6 +2,8 @@ package com.example.foodieheal.Recipe.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.foodieheal.Recipe.Model.IngredientItem
+import com.example.foodieheal.Recipe.Model.Recipe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -19,14 +21,14 @@ data class RecipeEntity(
     val recipeStep: String,
     val recipeImageUrl: String?,
     val ingredientsJson: String,
-    val lastUpdated: String?, // 🌟 New column
-    val visibility: String = "public", // 🌟 New column
-    val authorName: String? = null, // 🌟 Cache author info for offline
+    val lastUpdated: String?,
+    val visibility: String = "public",
+    val authorName: String? = null,
     val authorImageUrl: String? = null
 )
 
-fun RecipeEntity.toDomain(json: kotlinx.serialization.json.Json): com.example.foodieheal.Recipe.Model.Recipe {
-    return com.example.foodieheal.Recipe.Model.Recipe(
+fun RecipeEntity.toDomain(json:Json): Recipe {
+    return Recipe(
         recipe_id = this.recipe_id,
         author_id = this.author_id,
         recipeName = this.recipeName,
@@ -39,7 +41,7 @@ fun RecipeEntity.toDomain(json: kotlinx.serialization.json.Json): com.example.fo
         recipeStep = this.recipeStep,
         recipeImageUrl = this.recipeImageUrl,
         ingredients = try {
-            json.decodeFromString<List<com.example.foodieheal.Recipe.Model.IngredientItem>>(this.ingredientsJson)
+            json.decodeFromString<List<IngredientItem>>(this.ingredientsJson)
         } catch (e: Exception) {
             emptyList()
         },
@@ -50,7 +52,7 @@ fun RecipeEntity.toDomain(json: kotlinx.serialization.json.Json): com.example.fo
     )
 }
 
-fun com.example.foodieheal.Recipe.Model.Recipe.toEntity(json: kotlinx.serialization.json.Json): RecipeEntity {
+fun Recipe.toEntity(json: Json): RecipeEntity {
     return RecipeEntity(
         recipe_id = this.recipe_id ?: "",
         author_id = this.author_id,
@@ -66,8 +68,6 @@ fun com.example.foodieheal.Recipe.Model.Recipe.toEntity(json: kotlinx.serializat
         ingredientsJson = json.encodeToString(this.ingredients),
         lastUpdated = this.lastUpdated,
         visibility = this.visibility,
-        // 🌟 SAFETY: Prioritizes the direct authorName field (Supabase column), 
-        // falling back to authorInfo (Join result) to ensure offline visibility.
         authorName = this.authorInfo?.name ?: this.authorName,
         authorImageUrl = this.authorInfo?.profile_pic_url ?: this.authorImageUrl
     )

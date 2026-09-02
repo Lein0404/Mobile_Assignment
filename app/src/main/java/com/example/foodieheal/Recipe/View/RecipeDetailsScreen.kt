@@ -57,7 +57,7 @@ fun RecipeDetailsScreen(
         }
     }
 
-    // 🌟 2. Clear state when leaving the screen
+    // 2. Clear state when leaving the screen
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearSelectedRecipe()
@@ -76,7 +76,7 @@ fun RecipeDetailsScreen(
     var expanded by remember { mutableStateOf(false) }
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
-    // 🌟 Share logic
+    // Share logic
     var showSharePreview by remember { mutableStateOf(false) }
     var showOfflineShareDialog by remember { mutableStateOf(false) }
     var showOfflinePlannerDialog by remember { mutableStateOf(false) }
@@ -118,7 +118,7 @@ fun RecipeDetailsScreen(
                 title = { Text(stringResource(R.string.title_view_recipe), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.RecipeDetails.route.substringBefore("/{")) == true) {
                             navController.popBackStack() 
@@ -311,7 +311,7 @@ fun RecipeDetailsScreen(
                         }
                         Text(text = courseLabel, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         
-                        // 🌟 Show Last Updated Time on the same line, right next to the course
+                        // Show Last Updated Time on the same line, right next to the course
                         if (!recipe.lastUpdated.isNullOrBlank()) {
                             val displayTime = recipe.lastUpdated.split("T").firstOrNull() ?: ""
                             Text(
@@ -322,7 +322,7 @@ fun RecipeDetailsScreen(
                         }
                     }
 
-                    // 🌟 Show Visibility Status on its own line
+                    // Show Visibility Status on its own line
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp)
@@ -367,12 +367,12 @@ fun RecipeDetailsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) // 🌟 Themed Divider
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 🌟 Author Section
+                    // Author Section
                     val author = viewModel.recipeAuthor
-                    // 🌟 FIX: Prioritize recipe's own cached info, then live session, then join result
+                    // Prioritize recipe's own cached info, then live session, then join result
                     val displayAuthorName = (recipe.authorName ?: (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorInfo?.name))) ?: stringResource(R.string.unknown_author)
                     val displayAuthorImage = (recipe.authorImageUrl ?: (if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorInfo?.profile_pic_url)))
 
@@ -452,7 +452,7 @@ fun RecipeDetailsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // 🌟 Description (Hidden if empty)
+                    // Description (Hidden if empty)
                     if (recipe.recipeDescription.isNotBlank()) {
                         Text(text = stringResource(R.string.label_description_optional), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         var isExpanded by remember { mutableStateOf(false) }
@@ -473,7 +473,7 @@ fun RecipeDetailsScreen(
                                 text = stringResource(R.string.msg_more),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary, // 🌟 Use primary for action text
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { isExpanded = true }
                             )
                         }
@@ -526,7 +526,7 @@ fun RecipeDetailsScreen(
         }
     }
 
-    // 🌟 Offline Share Dialog
+    // Offline Share Dialog
     if (showOfflineShareDialog) {
         AlertDialog(
             onDismissRequest = { showOfflineShareDialog = false },
@@ -551,7 +551,7 @@ fun RecipeDetailsScreen(
         )
     }
 
-    // 🌟 Offline Planner Dialog
+    // Offline Planner Dialog
     if (showOfflinePlannerDialog) {
         AlertDialog(
             onDismissRequest = { showOfflinePlannerDialog = false },
@@ -628,7 +628,7 @@ fun RecipeDetailsScreen(
         }
     }
 
-    // 🌟 Share Preview Dialog
+    // Share Preview Dialog
     if (showSharePreview && recipe != null) {
         val author = viewModel.recipeAuthor
         val displayAuthorName = (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorName ?: recipe.authorInfo?.name)) ?: "Unknown Author"
@@ -652,7 +652,7 @@ fun StatItem(@DrawableRes icon: Int, label: String, modifier: Modifier = Modifie
             painter = painterResource(id = icon), 
             null, 
             modifier = Modifier.size(18.dp), 
-            tint = MaterialTheme.colorScheme.primary // 🌟 Consistent Icon Color
+            tint = MaterialTheme.colorScheme.primary // Consistent Icon Color
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(

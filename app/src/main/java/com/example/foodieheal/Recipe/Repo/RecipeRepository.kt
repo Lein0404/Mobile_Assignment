@@ -1,5 +1,6 @@
 package com.example.foodieheal.Recipe.Repo
 
+import android.content.Context
 import android.util.Log
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -15,6 +16,8 @@ import com.example.foodieheal.User.local.UserDatabase
 import com.example.foodieheal.User.local.toPublicEntity
 import com.example.foodieheal.User.local.toDomain
 import com.example.foodieheal.Recipe.Model.UnitDetails
+import com.example.foodieheal.Recipe.local.RecipeBookmarkEntity
+import com.example.foodieheal.Recipe.local.RecipeDao
 import com.example.foodieheal.ingredients.local.IngredientsDatabase
 import com.example.foodieheal.ingredients.repo.IngredientsRepository
 import io.github.jan.supabase.auth.auth
@@ -33,7 +36,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 class RecipeRepository(
-    private val recipeDao: com.example.foodieheal.Recipe.local.RecipeDao? = null,
+    private val recipeDao: RecipeDao? = null,
     private val ingredientsRepository: IngredientsRepository? = null
 ) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -87,7 +90,7 @@ class RecipeRepository(
                     client.from("recipes").select { filter { eq("recipe_author", authorId) } }.decodeList<Recipe>()
                 }
                 
-                // 🌟 FIX: Flatten author info immediately so UI and Local DB can see it
+                // Flatten author info immediately so UI and Local DB can see it
                 recipes.forEach { recipe ->
                     recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
                     recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
@@ -220,7 +223,7 @@ class RecipeRepository(
             if (isBookmarked) {
                 recipeDao?.deleteBookmark(userId, recipeId)
             } else {
-                recipeDao?.insertBookmarks(listOf(com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, recipeId)))
+                recipeDao?.insertBookmarks(listOf(RecipeBookmarkEntity(userId, recipeId)))
             }
 
             // 2. Try Supabase
@@ -244,10 +247,7 @@ class RecipeRepository(
         }
     }
 
-    /**
-     * 🌟 Sync local bookmarks with Supabase.
-     * Simple Logic: Update local Room to match Supabase exactly.
-     */
+
     suspend fun syncBookmarks(userId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             if (userId.isBlank()) return@runCatching
@@ -259,7 +259,7 @@ class RecipeRepository(
 
             // 2. Update local Room to match server exactly
             recipeDao?.clearBookmarks(userId)
-            recipeDao?.insertBookmarks(serverIds.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
+            recipeDao?.insertBookmarks(serverIds.map { RecipeBookmarkEntity(userId, it) })
 
             Log.d("RecipeRepository", "Bookmark sync complete for $userId. Fetched ${serverIds.size} bookmarks.")
             Unit
@@ -296,7 +296,7 @@ class RecipeRepository(
 
                 recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
                 recipeDao?.clearBookmarks(userId)
-                recipeDao?.insertBookmarks(bookmarkedIds.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
+                recipeDao?.insertBookmarks(bookmarkedIds.map { RecipeBookmarkEntity(userId, it) })
 
                 recipes
             } catch (e: Exception) {
@@ -318,7 +318,7 @@ class RecipeRepository(
                 .select(Columns.list("recipe_id")) { filter { eq("user_id", userId) } }
             val ids = response.decodeList<BookmarkId>().map { it.recipeId }
             recipeDao?.clearBookmarks(userId)
-            recipeDao?.insertBookmarks(ids.map { com.example.foodieheal.Recipe.local.RecipeBookmarkEntity(userId, it) })
+            recipeDao?.insertBookmarks(ids.map { RecipeBookmarkEntity(userId, it) })
             ids
         }.recoverCatching { e ->
             Log.w("RecipeRepository", "Server fetch failed for bookmark IDs, falling back to local: ${e.message}")
@@ -366,9 +366,8 @@ class RecipeRepository(
         }
     }
 
-    /**
-     * 🌟 EXCLUSIVE FUNCTION: Prioritizes local cache for instant meal planner viewing.
-     */
+
+     //EXCLUSIVE FUNCTION: Prioritizes local cache for instant meal planner viewing
     suspend fun getRecipeByIdLocalFirst(recipeId: String): Result<Recipe?> = withContext(Dispatchers.IO) {
         runCatching {
             val local = recipeDao?.getRecipeById(recipeId)?.toDomain(json)
@@ -416,7 +415,7 @@ class RecipeRepository(
                     .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
                         filter {
                             isIn("recipe_author", followedUserIds)
-                            // 🌟 SAFETY: If visibility column is missing, the query might fail.
+                            // If visibility column is missing, the query might fail.
                             // We attempt to filter, but if it fails, we fetch without filtering and filter in memory.
                             try {
                                 or {
@@ -444,7 +443,7 @@ class RecipeRepository(
                 recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
             }
 
-            // 🌟 Cache for offline
+            // Cache for offline
             recipeDao?.insertRecipes(recipes.map { it.toEntity(json) })
 
             recipes
@@ -498,10 +497,9 @@ class RecipeRepository(
         }
     }
 
-    /**
-     * Pre-fetches images for a list of recipes and stores them in Coil's disk cache.
-     */
-    suspend fun prefetchRecipeImages(recipes: List<Recipe>, context: android.content.Context) = withContext(Dispatchers.IO) {
+
+     //Pre-fetches images for a list of recipes and stores them in Coil's disk cache.
+    suspend fun prefetchRecipeImages(recipes: List<Recipe>, context: Context) = withContext(Dispatchers.IO) {
         val imageLoader = context.imageLoader
         recipes.forEach { recipe ->
             recipe.recipeImageUrl?.let { url ->
