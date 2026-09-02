@@ -993,7 +993,7 @@ fun ProfileScreen(
                                 }
                             }
                             
-                            // Removed selectedCourse header text
+
                         }
                     }
                 }

@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
+import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.FollowViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
@@ -74,7 +75,7 @@ fun FollowListScreen(
                 
                 if (ids.isNotEmpty()) {
                     isFetchingUsers = true
-                    val repo = com.example.foodieheal.Recipe.Repo.RecipeRepository()
+                    val repo = RecipeRepository()
                     repo.getUsersByCustomIds(ids).onSuccess { result ->
                         users.clear()
                         users.addAll(result)
