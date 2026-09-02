@@ -14,7 +14,7 @@ object ChefRegisterValidate {
     fun getNameErrorRes(name: String): Int? {
         val trimmed = name.trim()
         return when {
-            trimmed.isEmpty() -> R.string.ingredients_error_name_required
+            trimmed.isEmpty() -> R.string.chef_name_error_name_required
             trimmed.length < 3 || trimmed.length > 50 || !trimmed.matches(Regex("^[a-zA-Z ]+$")) -> R.string.error_name_invalid
             else -> null
         }
@@ -83,8 +83,26 @@ object ChefRegisterValidate {
         }
     }
 
+    fun normalizePhoneNumber(phoneNumber: String): String {
+        val trimmed = phoneNumber.trim()
+            .replace(" ", "")
+            .replace("-", "")
+            .replace("(", "")
+            .replace(")", "")
+
+        return when {
+            trimmed.startsWith("+60") -> "0" + trimmed.substring(3)
+            trimmed.startsWith("60") && trimmed.length >= 11 -> "0" + trimmed.substring(2)
+            else -> trimmed
+        }
+    }
+
     fun isValidPhoneNumber(phoneNumber: String): Boolean {
-        return phoneNumber.trim().matches(Regex("^(01)[0-9]{8,9}$"))
+        val normalized = normalizePhoneNumber(phoneNumber)
+        val mobileRegex = Regex("^(011[0-9]{7,8}|01[045][0-9]{7,8}|01[236789][0-9]{7})$")
+        val fixedLineRegex = Regex("^(03[0-9]{8}|0[4-9][0-9]{7,8})$")
+
+        return normalized.matches(mobileRegex) || normalized.matches(fixedLineRegex)
     }
 
     fun getPhoneNumberErrorRes(phoneNumber: String): Int? {
@@ -97,14 +115,14 @@ object ChefRegisterValidate {
     }
 
     fun isValidAddress(address: String): Boolean {
-        return address.trim().length in 10..200
+        return address.trim().length in 5..200
     }
 
     fun getAddressErrorRes(address: String): Int? {
         val trimmed = address.trim()
         return when {
             trimmed.isEmpty() -> R.string.error_address_required
-            trimmed.length < 10 -> R.string.error_address_invalid
+            trimmed.length < 5 -> R.string.error_address_invalid
             else -> null
         }
     }
@@ -118,7 +136,7 @@ object ChefRegisterValidate {
     }
 
     fun isValidPostcode(postcode: String): Boolean {
-        return postcode.matches(Regex("^[0-9]{5}$"))
+        return postcode.trim().matches(Regex("^[0-9]{5}$"))
     }
 
     fun getPostcodeErrorRes(postcode: String): Int? {

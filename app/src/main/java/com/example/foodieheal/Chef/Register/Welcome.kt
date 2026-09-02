@@ -3,6 +3,8 @@ package com.example.foodieheal.Chef.Register
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -59,58 +61,53 @@ fun ChefWelcomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Image for deco
+            Image(
+                painter = painterResource(R.drawable.ic_hiring),
+                contentDescription = stringResource(R.string.chef_illustration),
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(vertical = 12.dp)
+            )
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f, fill = false)
-            ) {
-                // Image for deco
-                Image(
-                    painter = painterResource(R.drawable.ic_hiring),
-                    contentDescription = stringResource(R.string.chef_illustration),
-                    modifier = Modifier
-                        .size(220.dp)
-                        .padding(bottom = 16.dp)
-                )
+            // Title
+            Text(
+                text = stringResource(R.string.chef_welcome_title),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
 
-                // Title
-                Text(
-                    text = stringResource(R.string.chef_welcome_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Subtitle
-                Text(
-                    text = stringResource(R.string.chef_welcome_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // Feature Highlights List
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    FeatureCard(text = stringResource(R.string.chef_feature_customize_profile))
-                    FeatureCard(text = stringResource(R.string.chef_feature_home_cooking))
-                    FeatureCard(text = stringResource(R.string.chef_feature_connect_customers))
-                }
-            }
+            // Subtitle
+            Text(
+                text = stringResource(R.string.chef_welcome_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Feature Highlights List
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                FeatureCard(text = stringResource(R.string.chef_feature_customize_profile))
+                FeatureCard(text = stringResource(R.string.chef_feature_home_cooking))
+                FeatureCard(text = stringResource(R.string.chef_feature_connect_customers))
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Action Buttons Section
             Column(
@@ -153,6 +150,8 @@ fun ChefWelcomeScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

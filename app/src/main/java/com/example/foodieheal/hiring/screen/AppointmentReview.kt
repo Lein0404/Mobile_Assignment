@@ -433,14 +433,40 @@ fun AppointmentReviewScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     // 1. Chef Labor
-                    PriceSummaryRow(
-                        label = stringResource(
-                            R.string.hiring_review_chef_labor,
-                            String.format(Locale.US, "%.2f", pricingBreakdown.hourlyRate),
-                            String.format(Locale.US, "%.1f", pricingBreakdown.hours)
-                        ),
-                        value = String.format(Locale.US, "RM %.2f", pricingBreakdown.laborCost)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.hiring_review_chef_labor_title),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.hiring_review_chef_labor_rate,
+                                    String.format(Locale.US, "%.2f", pricingBreakdown.hourlyRate),
+                                    String.format(Locale.US, "%.1f", pricingBreakdown.hours)
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            )
+                        }
+                        Text(
+                            text = String.format(Locale.US, "RM %.2f", pricingBreakdown.laborCost),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
 
                     // 2. Ingredients Cost (Itemized dishes)
                     if (pricingBreakdown.recipeCostItems.isNotEmpty()) {
@@ -450,14 +476,15 @@ fun AppointmentReviewScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                val dishCountText = if (pricingBreakdown.recipeCostItems.size == 1) {
+                                    stringResource(R.string.dish_count_singular)
+                                } else {
+                                    stringResource(R.string.dish_count_plural, pricingBreakdown.recipeCostItems.size)
+                                }
                                 Text(
-                                    text = stringResource(
-                                        R.string.hiring_review_ingredients_cost,
-                                        pricingBreakdown.recipeCostItems.size
-                                    ),
+                                    text = "${stringResource(R.string.label_ingredients_cost)} ($dishCountText)",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier
                                         .weight(1f, fill = false)
                                         .padding(end = 8.dp)
@@ -471,42 +498,52 @@ fun AppointmentReviewScreen(
                                     softWrap = false
                                 )
                             }
-                            pricingBreakdown.recipeCostItems.forEach { dish ->
-                                val portionText = if (dish.portions > 1) {
-                                    stringResource(R.string.hiring_review_servings_plural, dish.portions)
-                                } else {
-                                    stringResource(R.string.hiring_review_serving_singular, dish.portions)
-                                }
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(
-                                        text = "• ${dish.recipeName} ($portionText)",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(end = 8.dp),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    val costText = if (dish.chefProvidesIngredients) {
-                                        String.format(Locale.US, "RM %.2f", dish.totalCost)
-                                    } else {
-                                        stringResource(R.string.self_provided_cost_label)
+                                    pricingBreakdown.recipeCostItems.forEach { dish ->
+                                        val portionText = if (dish.portions > 1) {
+                                            stringResource(R.string.hiring_review_servings_plural, dish.portions)
+                                        } else {
+                                            stringResource(R.string.hiring_review_serving_singular, dish.portions)
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "• ${dish.recipeName} ($portionText)",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 8.dp),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            val costText = if (dish.chefProvidesIngredients) {
+                                                String.format(Locale.US, "RM %.2f", dish.totalCost)
+                                            } else {
+                                                stringResource(R.string.self_provided_cost_label)
+                                            }
+                                            Text(
+                                                text = costText,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = if (dish.chefProvidesIngredients) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                fontWeight = if (!dish.chefProvidesIngredients) FontWeight.SemiBold else FontWeight.Normal,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
                                     }
-                                    Text(
-                                        text = costText,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (dish.chefProvidesIngredients) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                                        fontWeight = if (!dish.chefProvidesIngredients) FontWeight.SemiBold else FontWeight.Normal,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
                                 }
                             }
                         }
@@ -527,7 +564,7 @@ fun AppointmentReviewScreen(
                                 Text(
                                     text = stringResource(R.string.hiring_review_interstate_travel_surcharge),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = "${pricingBreakdown.userState} → ${pricingBreakdown.chefState}",
@@ -545,6 +582,11 @@ fun AppointmentReviewScreen(
                             )
                         }
                     }
+
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
 
                     // Subtotal
                     PriceSummaryRow(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -284,19 +285,20 @@ fun ChefHomeScreen(
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(end = 12.dp)
+                                        .padding(end = 8.dp)
                                 ) {
                                     Text(
                                         text = stringResource(R.string.banner_title_schedule),
-                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                                        style = MaterialTheme.typography.labelLarge
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                                        style = MaterialTheme.typography.labelMedium
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = appointmentCountText,
                                         color = MaterialTheme.colorScheme.onPrimary,
-                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                        maxLines = 1,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        fontSize = 20.sp,
+                                        maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
@@ -308,12 +310,12 @@ fun ChefHomeScreen(
                                         contentColor = MaterialTheme.colorScheme.primary
                                     ),
                                     shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier.widthIn(min = 90.dp)
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                                 ) {
                                     Text(
                                         text = stringResource(R.string.view_all),
                                         fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelMedium
                                     )
                                 }
                             }

@@ -592,7 +592,7 @@ fun UserAppointmentDetailScreen(
                                         .clickable(enabled = recipe != null) {
                                             previewingRecipeItem = item
                                         },
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                     border = BorderStroke(
                                         1.dp,
@@ -601,14 +601,14 @@ fun UserAppointmentDetailScreen(
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
+                                        verticalAlignment = Alignment.Top,
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         AsyncImage(
                                             model = recipe?.recipeImageUrl,
                                             contentDescription = recipe?.recipeName ?: stringResource(R.string.user_app_details_recipe_image),
                                             modifier = Modifier
-                                                .size(46.dp)
+                                                .size(52.dp)
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                                             contentScale = ContentScale.Crop,
@@ -616,22 +616,42 @@ fun UserAppointmentDetailScreen(
                                             placeholder = painterResource(R.drawable.ic_recipe)
                                         )
 
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = recipe?.recipeName ?: stringResource(R.string.recipe_fallback_title, item.recipeId),
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                fontSize = 14.sp
-                                            )
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            // Dish name with tapable recipe icon indicator
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = recipe?.recipeName ?: stringResource(R.string.recipe_fallback_title, item.recipeId),
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    fontSize = 14.sp,
+                                                    modifier = Modifier.weight(1f, fill = false)
+                                                )
 
-                                            Spacer(modifier = Modifier.height(2.dp))
+                                                if (recipe != null) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_recipe),
+                                                        contentDescription = stringResource(R.string.view_details),
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
 
+                                            // Badges row: portions & ingredient supply
                                             FlowRow(
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp),
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
                                                 Surface(
@@ -640,7 +660,7 @@ fun UserAppointmentDetailScreen(
                                                 ) {
                                                     Text(
                                                         text = stringResource(R.string.portion_count_format, item.service_count.toInt()),
-                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.Bold,
                                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -664,7 +684,7 @@ fun UserAppointmentDetailScreen(
                                                         } else {
                                                             stringResource(R.string.tag_user_provides)
                                                         },
-                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.SemiBold,
                                                         color = if (item.chef_provide_ingredient) {
@@ -677,32 +697,47 @@ fun UserAppointmentDetailScreen(
                                                         softWrap = false
                                                     )
                                                 }
+                                            }
 
-                                                if ((recipe?.calories ?: 0) > 0) {
-                                                    Text(
-                                                        text = "${recipe?.calories} kcal",
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        fontSize = 11.sp,
-                                                        maxLines = 1,
-                                                        softWrap = false
-                                                    )
-                                                }
-
-                                                if ((recipe?.time ?: 0) > 0) {
-                                                    Text(
-                                                        text = "• ${recipe?.time}m",
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        fontSize = 11.sp,
-                                                        maxLines = 1,
-                                                        softWrap = false
-                                                    )
+                                            // Calories and Cooking Time grouped together cleanly
+                                            val hasCalories = (recipe?.calories ?: 0) > 0
+                                            val hasTime = (recipe?.time ?: 0) > 0
+                                            if (hasCalories || hasTime) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                    modifier = Modifier.padding(top = 1.dp)
+                                                ) {
+                                                    if (hasCalories) {
+                                                        Text(
+                                                            text = "${recipe?.calories} kcal",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            fontSize = 11.sp,
+                                                            maxLines = 1
+                                                        )
+                                                    }
+                                                    if (hasCalories && hasTime) {
+                                                        Text(
+                                                            text = "•",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            fontSize = 11.sp
+                                                        )
+                                                    }
+                                                    if (hasTime) {
+                                                        Text(
+                                                            text = "${recipe?.time}m",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            fontSize = 11.sp,
+                                                            maxLines = 1
+                                                        )
+                                                    }
                                                 }
                                             }
 
                                             if (!item.custom_note.isNullOrBlank()) {
-                                                Spacer(modifier = Modifier.height(2.dp))
                                                 Text(
                                                     text = "“${item.custom_note}”",
                                                     style = MaterialTheme.typography.bodySmall,
@@ -710,21 +745,8 @@ fun UserAppointmentDetailScreen(
                                                     fontStyle = FontStyle.Italic,
                                                     fontSize = 11.sp,
                                                     maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            }
-                                        }
-
-                                        if (recipe != null) {
-                                            IconButton(
-                                                onClick = { previewingRecipeItem = item },
-                                                modifier = Modifier.size(28.dp)
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_recipe),
-                                                    contentDescription = stringResource(R.string.view_details),
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(16.dp)
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.padding(top = 1.dp)
                                                 )
                                             }
                                         }

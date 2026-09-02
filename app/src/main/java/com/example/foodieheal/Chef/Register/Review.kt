@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -119,14 +120,14 @@ fun reviewInfo(
             }
 
             SectionCard(title = stringResource(R.string.section_address)) {
-                ReviewItem(stringResource(R.string.address), chefRegisterViewModel.address, isLongText = true)
+                ReviewItem(stringResource(R.string.address), chefRegisterViewModel.address)
                 ReviewItem(stringResource(R.string.postcode), chefRegisterViewModel.postcode)
                 ReviewItem(stringResource(R.string.state), stateDisplay)
             }
 
             SectionCard(title = stringResource(R.string.section_professional_bg)) {
                 ReviewItem(stringResource(R.string.experience), stringResource(R.string.years_format, chefRegisterViewModel.experience))
-                ReviewItem(stringResource(R.string.description), chefRegisterViewModel.description, isLongText = true)
+                ReviewItem(stringResource(R.string.description), chefRegisterViewModel.description)
             }
 
             chefRegisterViewModel.errorMessage?.let { error ->
@@ -247,17 +248,20 @@ private fun ReviewItem(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 12.dp)
             )
             Text(
                 text = displayValue,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f, fill = false)
             )
         }
     }

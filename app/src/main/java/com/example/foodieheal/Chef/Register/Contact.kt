@@ -118,10 +118,16 @@ fun contactInfo(
             CommonInputField(
                 value = chefViewModel.phoneNumber,
                 onValueChange = { input ->
-                    chefViewModel.phoneNumber = input.filter { it.isDigit() }.take(11)
+                    val cleanInput = input.trim().replace(" ", "").replace("-", "")
+                    val normalized = when {
+                        cleanInput.startsWith("+60") -> "0" + cleanInput.drop(3)
+                        cleanInput.startsWith("60") && cleanInput.length > 9 -> "0" + cleanInput.drop(2)
+                        else -> cleanInput
+                    }
+                    chefViewModel.phoneNumber = normalized.filter { it.isDigit() }.take(11)
                 },
                 textId = R.string.phone_number,
-                placeholder = stringResource(R.string.phone_number),
+                placeholder = stringResource(R.string.placeholder_phone_number),
                 isError = phoneError != null,
                 supportingText = phoneError?.let { msg -> { Text(msg) } },
                 keyboardOptions = KeyboardOptions(

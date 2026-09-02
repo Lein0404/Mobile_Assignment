@@ -379,7 +379,7 @@ fun AddAppointmentFormScreen(
                                     text = stringResource(R.string.requested_dishes_optional),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -387,7 +387,7 @@ fun AddAppointmentFormScreen(
                                     text = stringResource(R.string.attach_bookmarked_recipes_sub),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
@@ -443,20 +443,20 @@ fun AddAppointmentFormScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable { previewingRecipeInForm = recipe },
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalAlignment = Alignment.Top,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                                         ) {
                                             AsyncImage(
                                                 model = recipe.recipeImageUrl,
                                                 contentDescription = recipe.recipeName,
                                                 modifier = Modifier
-                                                    .size(42.dp)
+                                                    .size(48.dp)
                                                     .clip(RoundedCornerShape(8.dp))
                                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                                 contentScale = ContentScale.Crop,
@@ -464,25 +464,75 @@ fun AddAppointmentFormScreen(
                                                 placeholder = painterResource(R.drawable.ic_recipe)
                                             )
 
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = recipe.recipeName,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                // Header row: Dish name with recipe preview indicator and delete button
                                                 Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Text(
-                                                        text = stringResource(R.string.portion_count_format, item.serviceCount),
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
+                                                    Row(
+                                                        modifier = Modifier.weight(1f, fill = false),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = recipe.recipeName,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            color = MaterialTheme.colorScheme.onSurface,
+                                                            modifier = Modifier.weight(1f, fill = false)
+                                                        )
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.ic_recipe),
+                                                            contentDescription = stringResource(R.string.view_details),
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(15.dp)
+                                                        )
+                                                    }
+
+                                                    IconButton(
+                                                        onClick = {
+                                                            recipe.recipe_id?.let { viewModel.removeSelectedRecipe(it) }
+                                                        },
+                                                        modifier = Modifier.size(24.dp)
+                                                    ) {
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.cancel),
+                                                            contentDescription = stringResource(R.string.remove),
+                                                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
+                                                }
+
+                                                // Badges row: Portions & Ingredient Supply
+                                                FlowRow(
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Surface(
+                                                        shape = RoundedCornerShape(4.dp),
+                                                        color = MaterialTheme.colorScheme.primaryContainer
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(R.string.portion_count_format, item.serviceCount),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                            fontSize = 10.sp,
+                                                            maxLines = 1,
+                                                            softWrap = false
+                                                        )
+                                                    }
+
                                                     Surface(
                                                         shape = RoundedCornerShape(4.dp),
                                                         color = if (item.chefProvidesIngredients) {
@@ -497,15 +547,54 @@ fun AddAppointmentFormScreen(
                                                             } else {
                                                                 stringResource(R.string.tag_user_provides)
                                                             },
-                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                             style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.SemiBold,
                                                             color = if (item.chefProvidesIngredients) {
                                                                 MaterialTheme.colorScheme.onPrimaryContainer
                                                             } else {
                                                                 MaterialTheme.colorScheme.onSurfaceVariant
                                                             },
-                                                            fontSize = 10.sp
+                                                            fontSize = 10.sp,
+                                                            maxLines = 1,
+                                                            softWrap = false
                                                         )
+                                                    }
+                                                }
+
+                                                // Calories & Cooking time
+                                                val hasCalories = recipe.calories > 0
+                                                val hasTime = recipe.time > 0
+                                                if (hasCalories || hasTime) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        if (hasCalories) {
+                                                            Text(
+                                                                text = "${recipe.calories} kcal",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                fontSize = 11.sp,
+                                                                maxLines = 1
+                                                            )
+                                                        }
+                                                        if (hasCalories && hasTime) {
+                                                            Text(
+                                                                text = "•",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                fontSize = 11.sp
+                                                            )
+                                                        }
+                                                        if (hasTime) {
+                                                            Text(
+                                                                text = "${recipe.time}m",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                fontSize = 11.sp
+                                                            )
+                                                        }
                                                     }
                                                 }
 
@@ -514,39 +603,10 @@ fun AddAppointmentFormScreen(
                                                         text = "“${item.customNote}”",
                                                         style = MaterialTheme.typography.bodySmall,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                                        maxLines = 1,
+                                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                                        fontSize = 11.sp,
+                                                        maxLines = 2,
                                                         overflow = TextOverflow.Ellipsis
-                                                    )
-                                                }
-                                            }
-
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = { previewingRecipeInForm = recipe },
-                                                    modifier = Modifier.size(30.dp)
-                                                ) {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.ic_recipe),
-                                                        contentDescription = stringResource(R.string.view_details),
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(17.dp)
-                                                    )
-                                                }
-
-                                                IconButton(
-                                                    onClick = {
-                                                        recipe.recipe_id?.let { viewModel.removeSelectedRecipe(it) }
-                                                    },
-                                                    modifier = Modifier.size(30.dp)
-                                                ) {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.cancel),
-                                                        contentDescription = stringResource(R.string.remove),
-                                                        tint = MaterialTheme.colorScheme.error,
-                                                        modifier = Modifier.size(17.dp)
                                                     )
                                                 }
                                             }
@@ -569,9 +629,14 @@ fun AddAppointmentFormScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (selectedRecipes.isEmpty()) stringResource(R.string.attach_from_bookmarks_btn) else stringResource(R.string.edit_attached_recipes_btn, selectedRecipes.size),
+                                text = if (selectedRecipes.isEmpty()) {
+                                    stringResource(R.string.attach_from_bookmarks_btn)
+                                } else {
+                                    stringResource(R.string.edit_attached_recipes_btn, selectedRecipes.size)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -627,11 +692,13 @@ fun AddAppointmentFormScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                val dishText = if (pricingBreakdown.recipeCostItems.size == 1) {
+                                    stringResource(R.string.dish_count_singular)
+                                } else {
+                                    stringResource(R.string.dish_count_plural, pricingBreakdown.recipeCostItems.size)
+                                }
                                 Text(
-                                    text = stringResource(
-                                        R.string.hiring_pricing_ingredients,
-                                        pricingBreakdown.recipeCostItems.size
-                                    ),
+                                    text = "${stringResource(R.string.label_ingredients_cost)} ($dishText)",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

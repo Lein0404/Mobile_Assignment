@@ -704,7 +704,6 @@
     <string name="chef_feature_customize_profile">Create &amp; customize your personal chef profile</string>
     <string name="chef_feature_home_cooking">Offer flexible home cooking services</string>
     <string name="chef_feature_connect_customers">Connect directly with hungry customers</string>
-
     <string name="get_started">Get Started</string>
     <string name="already_have_account_login">Already have a chef account? Login</string>
 
@@ -781,6 +780,7 @@
     <string name="step_4_of_5">Step 4 of 5</string>
     <string name="step_5_of_5">Step 5 of 5</string>
     <string name="submit_registration">Submit Registration</string>
+    <string name="chef_name_error_name_required">Chef name is required</string>
     <string name="error_name_invalid">Name must be 3-50 characters containing only letters.</string>
     <string name="error_gender_required">Please select your gender.</string>
     <string name="error_age_required">Age is required.</string>
@@ -791,9 +791,10 @@
     <string name="error_email_invalid">Please enter a valid email address.</string>
     <string name="error_email_already_exists">This email is already registered.</string>
     <string name="error_phone_required">Phone number is required.</string>
-    <string name="error_phone_invalid">Please enter a valid phone number (e.g. 0123456789).</string>
+    <string name="error_phone_invalid">Please enter a valid Malaysian phone number (e.g. 0123456789 or 01112345678).</string>
+    <string name="placeholder_phone_number">e.g. 0123456789</string>
     <string name="error_address_required">Address is required.</string>
-    <string name="error_address_invalid">Address must be at least 10 characters.</string>
+    <string name="error_address_invalid">Address must be at least 5 characters.</string>
     <string name="error_postcode_required">Postcode is required.</string>
     <string name="error_postcode_invalid">Postcode must contain exactly 5 digits.</string>
     <string name="error_state_required">Please select a state.</string>
@@ -1243,9 +1244,9 @@
 
     <!-- ChefEarningsChart -->
     <string name="chef_earnings_overview">Earnings Overview</string>
-    <string name="chef_earnings_last_months_format">Last %1$d months • Net Payout</string>
+    <string name="chef_earnings_last_months_format">Last %1$d Months</string>
     <string name="chef_earnings_total_gross">Total Gross</string>
-    <string name="chef_earnings_platform_fee">Platform Fee (5%)</string>
+    <string name="chef_earnings_platform_fee">Platform Fee</string>
     <string name="chef_earnings_net_payout">Net Payout</string>
     <string name="chef_earnings_breakdown_format">%1$s Breakdown</string>
     <string name="chef_earnings_appointment_single">1 appointment</string>
@@ -1321,6 +1322,8 @@
     <!-- AppointmentReview -->
     <string name="hiring_review_itemized_receipt">Itemized Receipt</string>
     <string name="hiring_review_chef_labor">Chef Labor (RM %1$s/hr × %2$s hrs)</string>
+    <string name="hiring_review_chef_labor_title">Chef Labor</string>
+    <string name="hiring_review_chef_labor_rate">RM %1$s/hr × %2$s hrs</string>
     <string name="hiring_review_ingredients_cost">Ingredients Cost (%d dishes)</string>
     <string name="hiring_review_serving_singular">%d serving</string>
     <string name="hiring_review_servings_plural">%d servings</string>
@@ -1419,10 +1422,12 @@
     <string name="analytics_total_spent">Total Spent</string>
     <string name="analytics_total_top_up">Total Top-Up</string>
     <string name="analytics_total_refunds">Refunds</string>
-    <string name="analytics_legend_payments">Payments</string>
+    <string name="analytics_legend_payments">Spent</string>
+    <string name="analytics_legend_spent">Spent</string>
     <string name="analytics_legend_top_ups">Top-Ups</string>
     <string name="analytics_legend_refunds">Refunds</string>
     <string name="analytics_month_breakdown_format">%s Breakdown</string>
+    <string name="analytics_refund_deduction_note">* Refunds (RM %s) are deducted to reflect your actual spending.</string>
     <string name="analytics_net_format">Net: %1$sRM %2$s</string>
 
     <!-- WalletScreen -->
@@ -1916,7 +1921,7 @@
     <string name="admin_revoke_approval">Revoke / Reject</string>
 
     <!-- Admin Chef Search -->
-    <string name="admin_chef_search_hint">Search chef by name, email, or bio...</string>
+    <string name="admin_chef_search_hint">Search chef by name &amp; email</string>
     <string name="admin_chef_search_no_results">No chefs matching \"%1$s\"</string>
     <string name="clear_search">Clear Search</string>
 

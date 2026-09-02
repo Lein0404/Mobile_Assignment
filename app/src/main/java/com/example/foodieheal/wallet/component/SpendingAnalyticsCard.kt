@@ -65,9 +65,9 @@ data class MonthAnalyticsData(
     val topUps: Double,
     val refunds: Double
 ) {
-    val totalVolume: Double get() = payments + topUps + refunds
-    val maxSingleCategory: Double get() = maxOf(payments, topUps, refunds)
-    val netFlow: Double get() = (topUps + refunds) - payments
+    val actualSpent: Double get() = (payments - refunds).coerceAtLeast(0.0)
+    val totalVolume: Double get() = actualSpent + topUps + refunds
+    val maxSingleCategory: Double get() = maxOf(actualSpent, topUps, refunds)
 }
 
 enum class AnalyticsTimeRange(val label: String, val monthCount: Int) {
@@ -158,7 +158,7 @@ fun SpendingAnalyticsCard(
 
     val selectedMonth = monthlyData.getOrNull(selectedMonthIndex) ?: monthlyData.lastOrNull()
 
-    val totalSpent = remember(monthlyData) { monthlyData.sumOf { it.payments } }
+    val totalSpent = remember(monthlyData) { (monthlyData.sumOf { it.payments } - monthlyData.sumOf { it.refunds }).coerceAtLeast(0.0) }
     val totalTopUp = remember(monthlyData) { monthlyData.sumOf { it.topUps } }
     val totalRefund = remember(monthlyData) { monthlyData.sumOf { it.refunds } }
 
@@ -188,13 +188,13 @@ fun SpendingAnalyticsCard(
                 Row(
                     modifier = Modifier
                         .weight(1f, fill = false)
-                        .padding(end = 8.dp),
+                        .padding(end = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(30.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
@@ -203,15 +203,16 @@ fun SpendingAnalyticsCard(
                             painter = painterResource(R.drawable.dollar_symbol),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                     Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = stringResource(R.string.analytics_title),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -241,7 +242,7 @@ fun SpendingAnalyticsCard(
                                 .clip(RoundedCornerShape(9.dp))
                                 .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                 .clickable { selectedRange = range }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 7.dp, vertical = 3.5.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -290,7 +291,7 @@ fun SpendingAnalyticsCard(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ChartLegendItem(color = ColorPayment, label = stringResource(R.string.analytics_legend_payments))
+                ChartLegendItem(color = ColorPayment, label = stringResource(R.string.analytics_legend_spent))
                 ChartLegendItem(color = ColorTopUp, label = stringResource(R.string.analytics_legend_top_ups))
                 ChartLegendItem(color = ColorRefund, label = stringResource(R.string.analytics_legend_refunds))
             }
@@ -371,7 +372,7 @@ private fun MonthBarColumn(
     isCompact: Boolean = false,
     onClick: () -> Unit
 ) {
-    val paymentHeightRatio = (monthData.payments / maxVal).toFloat().coerceIn(0f, 1f)
+    val paymentHeightRatio = (monthData.actualSpent / maxVal).toFloat().coerceIn(0f, 1f)
     val topUpHeightRatio = (monthData.topUps / maxVal).toFloat().coerceIn(0f, 1f)
     val refundHeightRatio = (monthData.refunds / maxVal).toFloat().coerceIn(0f, 1f)
 
@@ -409,13 +410,13 @@ private fun MonthBarColumn(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(2.5.dp)
         ) {
-            // Payment Bar
+            // Payment / Spent Bar
             SingleBar(
                 width = barWidth,
                 heightRatio = animatedPayment,
                 maxHeight = maxHeightDp,
                 barColor = ColorPayment,
-                hasValue = monthData.payments > 0
+                hasValue = monthData.actualSpent > 0
             )
 
             // Top-Up Bar
@@ -571,18 +572,6 @@ private fun SelectedMonthDetailView(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                val isPositiveFlow = selectedMonth.netFlow >= 0
-                Text(
-                    text = stringResource(
-                        R.string.analytics_net_format,
-                        if (isPositiveFlow) "+" else "",
-                        String.format(Locale.US, "%.2f", selectedMonth.netFlow)
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isPositiveFlow) ColorTopUp else ColorPayment,
-                    softWrap = false
-                )
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
@@ -593,8 +582,8 @@ private fun SelectedMonthDetailView(
             ) {
                 MonthDetailRow(
                     modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.analytics_legend_payments),
-                    amount = selectedMonth.payments,
+                    label = stringResource(R.string.analytics_legend_spent),
+                    amount = selectedMonth.actualSpent,
                     color = ColorPayment
                 )
                 MonthDetailRow(
@@ -608,6 +597,18 @@ private fun SelectedMonthDetailView(
                     label = stringResource(R.string.analytics_legend_refunds),
                     amount = selectedMonth.refunds,
                     color = ColorRefund
+                )
+            }
+
+            if (selectedMonth.refunds > 0) {
+                Text(
+                    text = stringResource(
+                        R.string.analytics_refund_deduction_note,
+                        String.format(Locale.US, "%.2f", selectedMonth.refunds)
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    fontSize = 10.5.sp
                 )
             }
         }

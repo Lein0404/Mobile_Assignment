@@ -32,6 +32,7 @@ import com.example.foodieheal.Chef.getStateDbName
 import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
+import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.ui.components.CommonInputField
 import com.example.foodieheal.ui.components.DropDownList
 
@@ -116,22 +117,17 @@ fun addressInfo(
                 placeholderId = R.string.select_state,
                 selectedValue = getStateResId(chefViewModel.state)?.let { stringResource(it) } ?: chefViewModel.state,
                 options = StateResList,
-                onOptionSelected = { resId -> chefViewModel.updateState(getStateDbName(resId)) }
+                onOptionSelected = { resId -> chefViewModel.updateState(getStateDbName(resId)) },
+                isError = stateError != null,
+                errorMessageId = chefViewModel.stateErrorRes
             )
-            if (stateError != null) {
-                Text(
-                    text = stateError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     if (chefViewModel.validateAddressInfo()) {
-                        navController.navigate("descriptionInfo")
+                        navController.navigate(Screen.Description.route)
                     }
                 },
                 modifier = Modifier

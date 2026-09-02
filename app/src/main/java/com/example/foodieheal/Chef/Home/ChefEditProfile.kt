@@ -55,9 +55,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.StateResList
+import com.example.foodieheal.Chef.getStateDbName
+import com.example.foodieheal.Chef.getStateResId
 import com.example.foodieheal.Chef.ViewModel.Register.ChefRegisterViewModel
 import com.example.foodieheal.R
 import com.example.foodieheal.ui.components.DetailSectionCard
+import com.example.foodieheal.ui.components.DropDownList
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
 
@@ -248,27 +252,24 @@ fun EditChefProfileScreen(
                     singleLine = true
                 )
 
-                Row(
+                OutlinedTextField(
+                    value = postcode,
+                    onValueChange = { input ->
+                        postcode = input.filter { it.isDigit() }.take(5)
+                    },
+                    label = { Text(stringResource(R.string.label_postcode)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = postcode,
-                        onValueChange = { postcode = it },
-                        label = { Text(stringResource(R.string.label_postcode)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
+                    singleLine = true
+                )
 
-                    OutlinedTextField(
-                        value = state,
-                        onValueChange = { state = it },
-                        label = { Text(stringResource(R.string.label_state)) },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
-                }
+                DropDownList(
+                    labelId = R.string.state,
+                    placeholderId = R.string.select_state,
+                    selectedValue = getStateResId(state)?.let { stringResource(it) } ?: state,
+                    options = StateResList,
+                    onOptionSelected = { resId -> state = getStateDbName(resId) }
+                )
             }
 
             // Action Buttons

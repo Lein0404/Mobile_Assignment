@@ -171,13 +171,13 @@ fun ChefEarningsChart(
                 Row(
                     modifier = Modifier
                         .weight(1f, fill = false)
-                        .padding(end = 8.dp),
+                        .padding(end = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(30.dp)
                             .clip(CircleShape)
                             .background(accentColor.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
@@ -186,15 +186,16 @@ fun ChefEarningsChart(
                             painter = painterResource(R.drawable.wallet),
                             contentDescription = null,
                             tint = accentColor,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                     Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = stringResource(R.string.chef_earnings_overview),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -224,7 +225,7 @@ fun ChefEarningsChart(
                                 .clip(RoundedCornerShape(9.dp))
                                 .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                 .clickable { selectedRange = range }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 7.dp, vertical = 3.5.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -444,52 +445,108 @@ private fun EarningsDetailCard(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f, fill = false)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.chef_earnings_breakdown_format, month.fullLabel),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f, fill = false),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(2.dp))
                 val apptCountStr = if (month.appointmentCount == 1) {
                     stringResource(R.string.chef_earnings_appointment_single)
                 } else {
                     stringResource(R.string.chef_earnings_appointment_plural_format, month.appointmentCount)
                 }
-                val feeStr = if (month.grossEarnings > 0) {
-                    stringResource(R.string.chef_earnings_fee_deduction_format, month.platformFee)
-                } else ""
-                Text(
-                    text = apptCountStr + feeStr,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = accentColor.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = apptCountStr,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = stringResource(R.string.chef_earnings_net_payout),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                MonthDetailStatItem(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.chef_earnings_total_gross),
+                    amount = month.grossEarnings,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = String.format(Locale.US, "RM %.2f", month.earnings),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (month.earnings > 0) accentColor else MaterialTheme.colorScheme.onSurfaceVariant
+                MonthDetailStatItem(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.chef_earnings_platform_fee),
+                    amount = month.platformFee,
+                    color = MaterialTheme.colorScheme.error,
+                    prefix = "-RM "
+                )
+                MonthDetailStatItem(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.chef_earnings_net_payout),
+                    amount = month.earnings,
+                    color = accentColor
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun MonthDetailStatItem(
+    modifier: Modifier = Modifier,
+    label: String,
+    amount: Double,
+    color: Color,
+    prefix: String = "RM "
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 10.5.sp,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = String.format(Locale.US, "$prefix%.2f", amount),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            fontSize = 12.sp,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

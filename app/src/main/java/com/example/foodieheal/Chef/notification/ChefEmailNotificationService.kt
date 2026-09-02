@@ -19,7 +19,7 @@ object ChefEmailNotificationService {
     private const val TAG = "ChefEmailService"
 
     // Configuration for EmailJS
-    var EMAILJS_SERVICE_ID = "service_2jn7cvg"
+    var EMAILJS_SERVICE_ID = "service_wrt4scb"
     var EMAILJS_TEMPLATE_ID = "template_lixhcui"
     var EMAILJS_PUBLIC_KEY = "CXYjljzKoitemJbfr"
 
@@ -123,6 +123,9 @@ object ChefEmailNotificationService {
         val requestBody = jsonPayload.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
         val request = Request.Builder()
             .url("https://api.emailjs.com/api/v1.0/email/send")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("origin", "http://localhost")
+            .addHeader("User-Agent", "Mozilla/5.0")
             .post(requestBody)
             .build()
 
