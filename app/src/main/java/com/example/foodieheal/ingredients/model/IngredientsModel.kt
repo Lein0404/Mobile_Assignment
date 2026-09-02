@@ -49,6 +49,7 @@ enum class IngredientCategory(val categoryName: String){
     @SerialName("OILS_FATS") OILS_FATS("Oils & Fats"),
     @SerialName("SEAFOOD") SEAFOOD("Seafood"),
     @SerialName("SNACKS_SWEETS") SNACKS_SWEETS("Snack & Sweets"),
+    @SerialName("SPREADS") SPREADS("Spreads"),
     @SerialName("VEGETABLES") VEGETABLES("Vegetables"),
     @SerialName("OTHERS") OTHERS("Others")
 }
