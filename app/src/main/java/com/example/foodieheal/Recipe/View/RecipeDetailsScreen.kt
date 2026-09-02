@@ -24,17 +24,15 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Model.Recipe
-import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.FollowViewModel
 import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.draw.drawWithContent
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodieheal.ui.components.ShareRecipeDialog
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,11 +41,11 @@ fun RecipeDetailsScreen(
     recipeId: String,
     viewModel: RecipeViewModel,
     authViewModel: AuthViewModel,
-    followViewModel: FollowViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    followViewModel: FollowViewModel = viewModel()
 ) {
     val user = authViewModel.currentUser
     val recipe = viewModel.selectedRecipe
-    val view = androidx.compose.ui.platform.LocalView.current
+    val view = LocalView.current
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
     val isMyRecipe = recipe?.author_id == user?.customId
 
