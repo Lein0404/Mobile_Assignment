@@ -753,8 +753,7 @@ fun IngredientRow(
                 } else {
                     availableIngredients
                         .filter { 
-                            it.name?.contains(searchQuery, ignoreCase = true) == true ||
-                            it.description?.contains(searchQuery, ignoreCase = true) == true
+                            it.name?.contains(searchQuery, ignoreCase = true) == true
                         }
                         .take(50)
                 }
