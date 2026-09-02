@@ -69,25 +69,28 @@
         submitBtn.onclick = async () => {
             const rawPassword = document.getElementById('new-password').value;
             const rawConfirm = document.getElementById('confirm-password').value;
-
-            const password = rawPassword.trim();
-            const confirm = rawConfirm.trim();
-
             const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\S{8,20}$/;
 
+            // Perform all checks only when Update is clicked
+            if (rawPassword.includes(" ") || rawConfirm.includes(" ")) {
+                showMessage("Spaces are not allowed in the password.", "error");
+                return;
+            }
             if (!passwordRegex.test(rawPassword)) {
                 showMessage("Password must be 8-20 characters with uppercase, lowercase, numbers, and no spaces.", "error");
                 return;
             }
-            if (password !== confirm) {
+            if (rawPassword.trim() !== rawConfirm.trim()) {
                 showMessage("Passwords do not match.", "error");
                 return;
             }
 
+            showMessage("", ""); // Clear message if validation passes
             submitBtn.disabled = true;
             submitBtn.innerText = "Updating...";
 
-            // Supabase automatically picks up the 'access_token' from the URL hash
+            const password = rawPassword.trim();
+
             const { error } = await supabaseClient.auth.updateUser({ password: password });
 
             if (error) {
@@ -95,9 +98,7 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Update Password";
             } else {
-                // Log out immediately so the mobile app doesn't auto-login to Home
                 await supabaseClient.auth.signOut();
-
                 showMessage("Password updated successfully!", "success");
                 submitBtn.style.display = "none";
                 document.getElementById('app-link').style.display = "block";
@@ -112,14 +113,10 @@
         function updateCounter(inputId, counterId) {
             const input = document.getElementById(inputId);
             const counter = document.getElementById(counterId);
-            const val = input.value;
+            counter.innerText = `${input.value.length}/20`;
 
-            counter.innerText = `${val.length}/20`;
-
-            // Real-time Space Validation: Immediately warn if a space is typed
-            if (val.includes(" ")) {
-                showMessage("Spaces are not allowed in the password.", "error");
-            } else if (messageDiv.innerText === "Spaces are not allowed in the password.") {
+            // Clear message as soon as user starts typing again
+            if (messageDiv.innerText !== "") {
                 showMessage("", "");
             }
         }
