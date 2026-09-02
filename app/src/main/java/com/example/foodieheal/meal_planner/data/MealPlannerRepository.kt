@@ -67,9 +67,124 @@ class MealPlannerRepository(
 
     suspend fun clearLocalData(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val currentUserId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
             localDao.clearAllPlans()
             Unit
+        }
+    }
+
+    /**
+     * Performs a full sync of all user plans from Supabase to Local Room DB.
+     * This is useful after a fresh install or login.
+     */
+    suspend fun syncAllUserPlans(userId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            // 1. Fetch all DTOs for this user
+            val rawPlans = postgrest.from("daily_plans")
+                .select {
+                    filter {
+                        eq("user_id", userId)
+                    }
+                }
+                .decodeList<DailyPlanDTO>()
+
+            if (rawPlans.isEmpty()) return@runCatching Unit
+
+            // 2. Extract all unique recipe IDs
+            val allRecipeIds = rawPlans.flatMap { plan ->
+                plan.meals?.flatMap { slot -> slot.recipes.map { it.realId } } ?: emptyList()
+            }.distinct()
+
+            // 3. Fetch all recipes in bulk (with Join retry logic)
+            val fetchedRecipes = if (allRecipeIds.isNotEmpty()) {
+                try {
+                    postgrest.from("recipes")
+                        .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)")) {
+                            filter { isIn("recipe_id", allRecipeIds) }
+                        }
+                        .decodeList<Recipe>()
+                } catch (e: Exception) {
+                    Log.d("MealPlannerRepo", "Sync Recipes Join Fallback Triggered: ${e.localizedMessage}")
+                    postgrest.from("recipes").select {
+                        filter { isIn("recipe_id", allRecipeIds) }
+                    }.decodeList<Recipe>()
+                }
+            } else emptyList()
+
+            fetchedRecipes.forEach { recipe ->
+                recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
+                recipe.authorImageUrl = recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+            }
+
+            // Cache recipes
+            if (fetchedRecipes.isNotEmpty()) {
+                recipeDao.insertRecipes(fetchedRecipes.map { it.toEntity(com.example.foodieheal.SupabaseClient.json) })
+            }
+
+            val recipeMap = fetchedRecipes.associateBy { it.recipe_id }
+
+            // 4. Group plans by Week Start (Monday) - using Flexible Date Parsing
+            val domainPlans = rawPlans.mapNotNull { dto ->
+                val parsedDate = parseFlexibleDate(dto.date) ?: return@mapNotNull null
+                DailyPlan(
+                    user_id = dto.userId,
+                    date = parsedDate.toString(), // Normalize to ISO YYYY-MM-DD
+                    meals = MealType.entries.map { type ->
+                        val matchingSlot = dto.meals?.find { it.realType == type }
+                        RealMealSlot(
+                            mealType = type,
+                            recipes = matchingSlot?.recipes?.mapNotNull { ref ->
+                                recipeMap[ref.realId]
+                            } ?: emptyList()
+                        )
+                    }
+                )
+            }
+
+            val plansByWeek = domainPlans.groupBy { plan ->
+                LocalDate.parse(plan.date)
+                    .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+            }
+
+            // 5. Save each week to Room
+            plansByWeek.forEach { (weekStart, plans) ->
+                saveWeeklyPlanLocally(weekStart, plans)
+            }
+            
+            Log.d("MealPlannerRepo", "Full sync complete for user $userId. Synced ${domainPlans.size} days across ${plansByWeek.size} weeks.")
+            Unit
+        }.onFailure { error ->
+            Log.e("MealPlannerRepo", "Failed to perform full sync for user $userId", error)
+        }
+    }
+
+    private fun parseFlexibleDate(dateStr: String): LocalDate? {
+        val patterns = listOf(
+            "yyyy-MM-dd",
+            "M/d/yyyy",
+            "MM/dd/yyyy",
+            "d/M/yyyy",
+            "dd/MM/yyyy",
+            "yyyy/MM/dd"
+        )
+        for (pattern in patterns) {
+            try {
+                val formatter = java.time.format.DateTimeFormatter.ofPattern(pattern)
+                return LocalDate.parse(dateStr, formatter)
+            } catch (e: Exception) { }
+        }
+        // Fallback for slashes with variable single/double digits
+        return try {
+            val parts = dateStr.split("/", "-")
+            if (parts.size == 3) {
+                if (parts[0].length == 4) { // yyyy-mm-dd
+                    LocalDate.of(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
+                } else if (parts[2].length == 4) { // m/d/yyyy
+                    LocalDate.of(parts[2].toInt(), parts[0].toInt(), parts[1].toInt())
+                } else null
+            } else null
+        } catch (e: Exception) {
+            Log.w("MealPlannerRepo", "Failed to parse date: $dateStr")
+            null
         }
     }
 
@@ -160,18 +275,33 @@ class MealPlannerRepository(
                 val targetUserId = userId ?: supabaseClient.auth.currentUserOrNull()?.id
                 ?: throw Exception("No authenticated user session found.")
 
-                val rawPlan = postgrest.from("daily_plans")
-                    .select {
-                        filter {
-                            eq("date", date.toString())
-                            eq("user_id", targetUserId)
+                val rawPlan = try {
+                    postgrest.from("daily_plans")
+                        .select {
+                            filter {
+                                or {
+                                    eq("date", date.toString())
+                                    eq("date", "${date.monthValue}/${date.dayOfMonth}/${date.year}")
+                                }
+                                eq("user_id", targetUserId)
+                            }
                         }
-                    }
-                    .decodeList<DailyPlanDTO>()
-                    .firstOrNull() ?: return@runCatching null
+                        .decodeList<DailyPlanDTO>()
+                        .firstOrNull()
+                } catch (e: Exception) {
+                    // Fallback to simpler select if complex filter fails
+                    postgrest.from("daily_plans")
+                        .select {
+                            filter {
+                                eq("user_id", targetUserId)
+                            }
+                        }
+                        .decodeList<DailyPlanDTO>()
+                        .find { it.date == date.toString() || it.date == "${date.monthValue}/${date.dayOfMonth}/${date.year}" }
+                } ?: return@runCatching null
 
                 val recipeIds = rawPlan.meals?.flatMap { slot ->
-                    slot.recipes.map { it.recipeId }
+                    slot.recipes.map { it.realId }
                 }?.distinct().orEmpty()
 
                 if (recipeIds.isEmpty()) {
@@ -206,11 +336,11 @@ class MealPlannerRepository(
                     user_id = rawPlan.userId,
                     date = rawPlan.date,
                     meals = MealType.entries.map { type ->
-                        val matchingSlot = rawPlan.meals?.find { it.mealType == type }
+                        val matchingSlot = rawPlan.meals?.find { it.realType == type }
                         RealMealSlot(
                             mealType = type,
                             recipes = matchingSlot?.recipes?.mapNotNull { ref ->
-                                fetchedRecipes.find { it.recipe_id == ref.recipeId }
+                                fetchedRecipes.find { it.recipe_id == ref.realId }
                             } ?: emptyList()
                         )
                     }
@@ -247,17 +377,19 @@ class MealPlannerRepository(
                 .select {
                     filter {
                         eq("user_id", targetUserId)
-                        gte("date", startDate.toString())
-                        lte("date", endDate.toString())
                     }
                 }
                 .decodeList<DailyPlanDTO>()
+                .filter { dto ->
+                    val parsed = parseFlexibleDate(dto.date)
+                    parsed != null && (parsed.isEqual(startDate) || parsed.isAfter(startDate)) && (parsed.isEqual(endDate) || parsed.isBefore(endDate))
+                }
 
             if (rawPlans.isEmpty()) return@runCatching emptyList()
 
             // 2. Extract all unique recipe IDs for the entire month/range
             val allRecipeIds = rawPlans.flatMap { plan ->
-                plan.meals?.flatMap { slot -> slot.recipes.map { it.recipeId } } ?: emptyList()
+                plan.meals?.flatMap { slot -> slot.recipes.map { it.realId } } ?: emptyList()
             }.distinct()
 
             // 3. Fetch all recipe details in ONE request with Author Info Join
@@ -288,11 +420,11 @@ class MealPlannerRepository(
                     user_id = dto.userId,
                     date = dto.date,
                     meals = MealType.entries.map { type ->
-                        val matchingSlot = dto.meals?.find { it.mealType == type }
+                        val matchingSlot = dto.meals?.find { it.realType == type }
                         RealMealSlot(
                             mealType = type,
                             recipes = matchingSlot?.recipes?.mapNotNull { ref ->
-                                recipeMap[ref.recipeId]
+                                recipeMap[ref.realId]
                             } ?: emptyList()
                         )
                     }

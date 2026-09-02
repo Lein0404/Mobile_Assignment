@@ -794,8 +794,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 
                 // 🌟 Clear local meal plans on logout
                 MainActivity.appContext?.let { context ->
-                    MealPlanDatabase.getDatabase(context).mealPlanDao().clearAllPlans()
-                }
+                    MealPlanDatabase.getDatabase(context).mealPlanDao().clearAllPlans()                }
 
                 client.auth.signOut()
             } catch (e: Exception) { }

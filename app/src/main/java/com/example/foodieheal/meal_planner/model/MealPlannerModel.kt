@@ -15,14 +15,20 @@ data class DailyPlanDTO(
 
 @Serializable
 data class MealSlotDTO(
-    @SerialName("mealType") val mealType: MealType,
-    val recipes: List<RecipeReference> = emptyList()
-)
+    @SerialName("meal_type") val mealType: MealType = MealType.BREAKFAST,
+    @SerialName("mealType") val mealTypeAlt: MealType? = null,
+    @SerialName("recipes") val recipes: List<RecipeReference> = emptyList()
+) {
+    val realType: MealType get() = mealTypeAlt ?: mealType
+}
 
 @Serializable
 data class RecipeReference(
-    @SerialName("recipeId") val recipeId: String
-)
+    @SerialName("recipe_id") val recipeId: String = "",
+    @SerialName("recipeId") val recipeIdAlt: String? = null
+) {
+    val realId: String get() = recipeId.ifEmpty { recipeIdAlt ?: "" }
+}
 
 // --- Domain Models for UI use ---
 @Serializable
@@ -64,8 +70,8 @@ fun Map<String, List<MealSlotDTO>>.toDomain(
  */
 fun MealSlotDTO.toDomain(allRecipesMap: Map<String, Recipe> = emptyMap()): RealMealSlot {
     return RealMealSlot(
-        mealType = this.mealType,
-        recipes = this.recipes.mapNotNull { ref -> allRecipesMap[ref.recipeId] }
+        mealType = this.realType,
+        recipes = this.recipes.mapNotNull { ref -> allRecipesMap[ref.realId] }
     )
 }
 
