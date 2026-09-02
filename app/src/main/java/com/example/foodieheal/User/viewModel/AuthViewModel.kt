@@ -64,7 +64,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     var isNetworkAvailable by mutableStateOf(true)
         private set
 
-    // 🌟 Greeting resource ID based on current time of day
+    // Greeting resource ID based on current time of day
     val greetingResId: Int
         get() {
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -76,7 +76,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
             }
         }
 
-    // 🌟 Temporary holders for registration data
+    // Temporary holders for registration data
     private var tempEmail = ""
     private var tempPassword = ""
 
@@ -85,7 +85,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         tempPassword = password
     }
 
-    // 🌟 Validation: Check if email already exists in users table
+    // Validation: Check if email already exists in users table
     fun validateEmailUniqueness(emailInput: String, onSuccess: () -> Unit) {
         isProcessing = true
         errorMessage = ""
@@ -122,16 +122,16 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     var errorMessage by mutableStateOf("")
         private set
 
-    var passwordErrorMessage by mutableStateOf("") // 🌟 Specific holder for password errors
+    var passwordErrorMessage by mutableStateOf("") // Specific holder for password errors
         private set
 
-    var profileMessage by mutableStateOf("") // 🌟 Specific holder for profile updates
+    var profileMessage by mutableStateOf("") // Specific holder for profile updates
         private set
 
     var CheferrorMessage by mutableStateOf<String?>(null)
         private set
 
-    // 🌟 Professional One-Time Event System (Channel ensures the message only shows ONCE)
+    // Professional One-Time Event System (Channel ensures the message only shows ONCE)
     sealed class ProfileEvent {
         object PasswordSuccess : ProfileEvent()
         object ProfileSuccess : ProfileEvent()
@@ -448,7 +448,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         }
     }
 
-    // 🌟 Unified Registration: Creates Auth + User Profile at once
+    // Unified Registration: Creates Auth + User Profile at once
     fun registerWithProfile(
         weight: Double?, height: Double?, age: Int?, gender: String, bmi: Double?
     ) {
@@ -499,7 +499,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 saveUserToCache(newUser)
                 loginSuccess = true
 
-                // 🌟 Emit success event to trigger navigation and show message
+                // Emit success event to trigger navigation and show message
                 _profileEvents.send(ProfileEvent.BodyStatusSuccess)
 
                 registerSuccess = true
@@ -514,7 +514,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     private fun setupNewUser(uid: String, email: String) {
         viewModelScope.launch {
             try {
-                // 🌟 RESTORED ID logic: Fetch all users and calculate max numeric ID + 1
+                // RESTORED ID logic: Fetch all users and calculate max numeric ID + 1
                 val allUsers = client.postgrest.from("users").select().decodeList<User>()
                 val maxIdNum = allUsers.mapNotNull { it.customId?.removePrefix("U")?.toIntOrNull() }.maxOrNull() ?: 0
                 val customId = "U${(maxIdNum + 1).toString().padStart(3, '0')}"
@@ -526,7 +526,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 this@AuthViewModel.currentUser = newUser
                 saveUserToCache(newUser)
 
-                // 🌟 FIX: Explicitly set loginSuccess so the Bottom Navigation Bar appears immediately
+                // Explicitly set loginSuccess so the Bottom Navigation Bar appears immediately
                 loginSuccess = true
                 registerSuccess = true
             } catch (e: Exception) {
@@ -606,8 +606,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     fun updateProfile(
         name: String, email: String, profilePicUrl: String, description: String = "",
         weight: Double? = null, height: Double? = null, age: Int? = null, gender: String? = null, bmi: Double? = null,
-        imageBytes: ByteArray? = null, // 🌟 New parameter
-        onSuccess: () -> Unit = {} // 🌟 Added callback for reliable navigation
+        imageBytes: ByteArray? = null,
+        onSuccess: () -> Unit = {} // Added callback for reliable navigation
     ) {
         if (!isNetworkAvailable) {
             profileMessage = "No internet connection. Cannot update profile."
@@ -655,7 +655,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     client.auth.updateUser { this.email = email }
                 }
 
-                // 🌟 Send one-time success events
+                // Send one-time success events
                 if (weight != null || height != null || age != null || bmi != null) {
                     _profileEvents.send(ProfileEvent.BodyStatusSuccess)
                 } else {
@@ -663,7 +663,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 }
 
                 errorMessage = ""
-                profileMessage = MainActivity.appContext?.getString(R.string.profile_updated_msg) ?: "Profile Updated" // 🌟 Uses dedicated profile holder
+                profileMessage = MainActivity.appContext?.getString(R.string.profile_updated_msg) ?: "Profile Updated" // Uses dedicated profile holder
                 onSuccess()
             } catch (e: Exception) {
                 profileMessage = "Update Failed: ${parseError(e)}"
@@ -729,11 +729,11 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 client.auth.updateUser { password = newPassword }
 
                 _profileEvents.send(ProfileEvent.PasswordSuccess)
-                passwordErrorMessage = "" // 🌟 Clear errors on success
+                passwordErrorMessage = "" // Clear errors on success
                 onSuccess()
             } catch (e: Exception) {
                 val msg = e.message ?: ""
-                passwordErrorMessage = when { // 🌟 Uses dedicated password holder
+                passwordErrorMessage = when { // Uses dedicated password holder
                     msg.contains("Invalid login credentials", ignoreCase = true) -> MainActivity.appContext?.getString(R.string.error_invalid_current_password) ?: "Invalid current password"
                     else -> "${MainActivity.appContext?.getString(R.string.error_password_change_failed) ?: "Failed to change password"}. ${parseError(e)}"
                 }
@@ -792,7 +792,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 dao?.deleteUser()
                 dao?.deleteChef()
                 
-                // 🌟 Clear local meal plans on logout
+                // Clear local meal plans on logout
                 MainActivity.appContext?.let { context ->
                     MealPlanDatabase.getDatabase(context).mealPlanDao().clearAllPlans()
                 }
@@ -809,7 +809,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         isAdmin = false
     }
 
-    // 🌟 Added to allow going back to Register screen to fix details
+    // Added to allow going back to Register screen to fix details
     fun resetRegisterState() {
         registerSuccess = false
     }

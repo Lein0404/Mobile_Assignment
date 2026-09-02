@@ -25,11 +25,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.view.WindowCompat
-
 import coil.compose.AsyncImage
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.Chef.model.Chef
-
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.navigation.Screen
@@ -68,7 +66,7 @@ fun  HomeScreen(
         }
 
         if (randomRecipes.isEmpty() && recipeViewModel.recipeList.isNotEmpty()) {
-            // 🌟 Only show PUBLIC recipes from the master list on Home Screen
+            // Only show PUBLIC recipes from the master list on Home Screen
             randomRecipes = recipeViewModel.recipeList
                 .filter { it.visibility.lowercase() == "public" }
                 .shuffled()
@@ -343,7 +341,7 @@ fun ChefListSection(
         else -> {
             Text(
                 text = if (!isNetworkAvailable) stringResource(id = R.string.no_cached_chefs_offline) else stringResource(id = R.string.no_chefs_available),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )

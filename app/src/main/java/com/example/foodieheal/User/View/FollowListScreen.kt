@@ -1,7 +1,6 @@
 package com.example.foodieheal.User.View
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -13,8 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -100,7 +97,7 @@ fun FollowListScreen(
         }
     }
 
-    // 🌟 Correct Loading Logic: Show spinner until the viewmodel finishes AND the user profile fetch completes
+    // Show spinner until the viewmodel finishes AND the user profile fetch completes
     val showLoading = followViewModel.isLoadingFollowList || isFetchingUsers || !hasLoadedAtLeastOnce
 
     Scaffold(
@@ -110,7 +107,7 @@ fun FollowListScreen(
                 title = { Text(if (type == "followers") stringResource(R.string.profile_followers) else stringResource(R.string.profile_following), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.FollowList.route.substringBefore("/{")) == true) {
                             navController.popBackStack() 

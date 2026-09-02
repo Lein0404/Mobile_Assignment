@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -38,10 +37,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    // 🌟 Track if user has tried to submit
+    // Track if user has tried to submit
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // 🌟 Strict Validation Logic
+    // Strict Validation Logic
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
     val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
     val isEmailValid = email.matches(emailRegex)
@@ -52,11 +51,11 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    // 🌟 Resource strings for robust error comparison
+    // Resource strings for robust error comparison
     val emailAlreadyRegistered = stringResource(R.string.error_email_already_registered)
 
     LaunchedEffect(Unit) {
-        viewModel.resetPasswordState() // 🌟 Clear errors when re-entering Register
+        viewModel.resetPasswordState() // Clear errors when re-entering Register
     }
 
     // Sync Status Bar Color
@@ -69,7 +68,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            // 🌟 Seamless Orange Status Bar Strip
+            // Seamless Orange Status Bar Strip
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,7 +91,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 IconButton(
                     onClick = {
-                        // 🌟 FIX: Prevent "nothing screen" and crashes by ensuring we only pop if we are on Register
+                        // Prevent splash screen and crashes by ensuring we only pop if we are on Register
                         if (navController.currentDestination?.route == Screen.Register.route) {
                             navController.popBackStack(Screen.Login.route, inclusive = false)
                         }
@@ -111,7 +110,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🌟 Brand Logo (Consistent with Login)
+            // User icon
             Icon(
                 painter = painterResource(id = R.drawable.login_register),
                 contentDescription = null,
@@ -172,7 +171,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     )
                 )
 
-                // 🌟 Email Specific Errors (Local Validation + Server Check)
+                // Email Specific Errors (Local Validation + Server Check)
                 val emailError = when {
                     hasAttemptedSubmit && !isEmailValid && email.isNotEmpty() -> stringResource(R.string.error_invalid_email)
                     viewModel.errorMessage == emailAlreadyRegistered ||
@@ -326,7 +325,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             Button(
                 onClick = {
                     if (isEmailValid && isPasswordValid && passwordsMatch) {
-                        // 🌟 Validate email uniqueness before moving to next screen
+                        // Validate email uniqueness before moving to next screen
                         viewModel.validateEmailUniqueness(email) {
                             viewModel.setTempCredentials(email, password)
                             navController.navigate(Screen.EditBodyStatus.route + "?fromRegister=true")
@@ -374,7 +373,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 }
             )
 
-            // 🌟 Only show non-auth errors here (e.g. Network errors)
+            // Only show non-auth errors here (e.g. Network errors)
             // We filtered out "already registered" and auth-related messages since they are shown under fields
             val isAuthError = viewModel.errorMessage == emailAlreadyRegistered ||
                              viewModel.errorMessage.contains("already registered", ignoreCase = true) ||

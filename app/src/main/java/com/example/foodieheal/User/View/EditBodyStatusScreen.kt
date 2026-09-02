@@ -56,13 +56,13 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
     val bmiValue = bmiInfo.first
     val bmiCategoryResId = bmiInfo.second
 
-    // 🌟 No more collection logic here, avoids the "kick back" bug entirely
+    // No more collection logic here, avoids the "kick back" bug entirely
     DisposableEffect(Unit) {
         authViewModel.clearProfileEvents()
         onDispose { }
     }
 
-    // 🌟 Handle navigation after successful registration
+    // Handle navigation after successful registration
     LaunchedEffect(authViewModel.loginSuccess) {
         if (authViewModel.loginSuccess && fromRegister) {
             navController.navigate(Screen.Home.route) {
@@ -72,17 +72,17 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
     }
 
     Scaffold(
-        modifier = Modifier.imePadding().navigationBarsPadding(), // 🌟 Added IME and Navigation padding
+        modifier = Modifier.imePadding().navigationBarsPadding(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.body_status_title), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.EditBodyStatus.route) == true) {
                             if (fromRegister) {
-                                // 🌟 If we came from Register, explicitly go back to Register screen
+                                // If we came from Register, explicitly go back to Register screen
                                 navController.navigate(Screen.Register.route) {
                                     popUpTo(Screen.Register.route) { inclusive = true }
                                 }
@@ -256,7 +256,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 if (fromRegister) {
                     OutlinedButton(
                         onClick = {
-                            // 🌟 SKIP during registration: Create account with empty body status
+                            // SKIP during registration: Create account with empty body status
                             authViewModel.registerWithProfile(
                                 weight = null, height = null, age = null, gender = "Male", bmi = null
                             )
@@ -274,7 +274,7 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 Button(
                     onClick = {
                         if (fromRegister) {
-                            // 🌟 SUBMIT during registration: Create account with full body status
+                            // SUBMIT during registration: Create account with full body status
                             authViewModel.registerWithProfile(
                                 weight = weight.toDoubleOrNull(),
                                 height = height.toDoubleOrNull(),

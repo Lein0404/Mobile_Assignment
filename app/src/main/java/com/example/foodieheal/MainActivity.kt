@@ -316,7 +316,7 @@ class MainActivity : FragmentActivity() {
                                                 indicatorColor = Color.Transparent
                                             ),
                                             onClick = {
-                                                // 🌟 FIX: Only navigate if the clicked tab is NOT already selected
+                                                // Only navigate if the clicked tab is NOT already selected
                                                 // This prevents the screen from "refreshing/flickering" when re-clicking the same tab.
                                                 val isAlreadySelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
 
@@ -492,7 +492,7 @@ fun SplashLogoOverlay() {
             .fillMaxSize()
             .background(backgroundColor) //Sync Background
     ) {
-        // 🌟 Seamless Background Spacer
+        // Seamless Background Spacer
         Box(
             modifier = Modifier
                 .fillMaxWidth()

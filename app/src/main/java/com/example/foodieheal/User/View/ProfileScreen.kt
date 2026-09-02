@@ -4,7 +4,6 @@ import android.app.Activity
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
@@ -75,7 +74,7 @@ fun ProfileScreen(
 ) {
     val user = authViewModel.currentUser
     
-    // 🌟 isVisitor Check: True only if we have a valid target ID that isn't ours or the nav placeholder
+    // isVisitor Check: True only if we have a valid target ID that isn't ours or the nav placeholder
     val isVisitor = targetCustomId != null && 
                     targetCustomId != user?.customId && 
                     targetCustomId != "{customId}"
@@ -95,7 +94,7 @@ fun ProfileScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 🌟 Show success messages for password, profile, and body status updates
+    // Show success messages for password, profile, and body status updates
     LaunchedEffect(Unit) {
         authViewModel.profileEvents.collect { event ->
             val message = when(event) {
@@ -131,7 +130,7 @@ fun ProfileScreen(
 
     var showBigImage by remember { mutableStateOf(false) }
     
-    // 🌟 State for the Delete Confirmation Dialog
+    // State for the Delete Confirmation Dialog
     var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
     var recipeToShare by remember { mutableStateOf<Recipe?>(null) }
 
@@ -162,11 +161,11 @@ fun ProfileScreen(
     var userRecipesSearchQuery by remember { mutableStateOf("") }
     var bookmarksSearchQuery by remember { mutableStateOf("") }
     
-    // 🌟 Chef Filter State (matching hiring screen)
+    // Chef Filter State (matching hiring screen)
     var chefFilterState by remember { mutableStateOf(ChefFilterState()) }
     var showChefFilterSheet by remember { mutableStateOf(false) }
     
-    // 🌟 Recipe Filter State (matching recipes screen)
+    // Recipe Filter State (matching recipes screen)
     var filterMaxTime by remember { mutableFloatStateOf(240f) }
     var filterMaxCalories by remember { mutableFloatStateOf(5000f) }
     var filterSkill by remember { mutableStateOf<String?>(null) }
@@ -187,7 +186,7 @@ fun ProfileScreen(
     val bookmarkedRecipes = viewModel.bookmarkedRecipes
     val bookmarkedChefs = bookmarkViewModel.bookmarkedChefsList
 
-    // 🌟 Search & Filter Chefs Logic (Hiring Screen Style)
+    // Search & Filter Chefs Logic (Hiring Screen Style)
     val filteredChefs = remember(bookmarkedChefs, chefFilterState) {
         filterAndSortChefs(bookmarkedChefs, chefFilterState)
     }
@@ -213,7 +212,7 @@ fun ProfileScreen(
         if (selectedMainTab == 0) {
             viewModel.fetchMyRecipes(cid)
         } else {
-            // 🌟 Always fetch following list to keep 'followedUserIds' updated for privacy checks
+            // Always fetch following list to keep 'followedUserIds' updated for privacy checks
             viewModel.fetchFollowingRecipes(cid)
 
             if (!showChefBookmarks) {
@@ -230,7 +229,7 @@ fun ProfileScreen(
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(300.dp).fillMaxHeight(),
-                drawerContainerColor = MaterialTheme.colorScheme.surface // 🌟 Themed Drawer
+                drawerContainerColor = MaterialTheme.colorScheme.surface
             ) {
                 Column(
                     modifier = Modifier
@@ -238,7 +237,7 @@ fun ProfileScreen(
                         .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp)
                         .navigationBarsPadding()
                 ) {
-                    Text(text = stringResource(R.string.profile_menu), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
+                    Text(text = stringResource(R.string.profile_menu), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(24.dp))
@@ -337,10 +336,9 @@ fun ProfileScreen(
                     
                     TextButton(
                         onClick = {
-                            // 🌟 FIX: Clear user-specific memory data on logout to prevent "Leon vs KK" data pollution
+                            // Clear user-specific memory data on logout to prevent data pollution
                             authViewModel.logout { 
                                 viewModel.clearUserData()
-                                // Optionally clear bookmarkViewModel too if needed
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -365,7 +363,6 @@ fun ProfileScreen(
                 }
             },
             topBar = {
-                // 🌟 Fixed Orange Top Bar for navigation
                 Surface(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth()
@@ -387,7 +384,7 @@ fun ProfileScreen(
                                     if (isMyProfile) {
                                         scope.launch { drawerState.open() }
                                     } else {
-                                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes
+                                        // Safety check to prevent spam-clicks from causing navigation crashes
                                         val currentRoute = navController.currentDestination?.route
                                         if (currentRoute?.contains("profile") == true) {
                                             navController.popBackStack()
@@ -412,7 +409,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = paddingValues.calculateBottomPadding())
-                    .background(MaterialTheme.colorScheme.background), // 🌟 Standard background
+                    .background(MaterialTheme.colorScheme.background),
             ) {
                 // 🌟 Profile Header Section
                 item(span = { GridItemSpan(2) }) {
@@ -580,7 +577,7 @@ fun ProfileScreen(
                             }
                         }
 
-                        // 🌟 Description Block
+                        //Description Block
                         if (displayUser != null && !displayUser.description.isNullOrEmpty()) {
                             Text(
                                 text = displayUser.description!!,
@@ -602,7 +599,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // 🌟 Tabs Section
+                // Tabs Section
                 item(span = { GridItemSpan(2) }) {
                     Box(
                         modifier = Modifier
@@ -645,7 +642,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // 🌟 Search & Course Section
+                // Search & Course Section
                 item(span = { GridItemSpan(2) }) {
                     Column(
                         modifier = Modifier
@@ -655,7 +652,7 @@ fun ProfileScreen(
                     ) {
                         Spacer(modifier = Modifier.height(8.dp))
                         if (selectedMainTab == 1 && showChefBookmarks) {
-                            // 🌟 Compact Search Bar (matching RecipesScreen style)
+                            // Compact Search Bar (matching RecipesScreen style)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
@@ -715,7 +712,7 @@ fun ProfileScreen(
                             
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // 🌟 Compact Recipes/Chefs Toggle (Now under search bar)
+                            // Compact Recipes/Chefs Toggle (Now under search bar)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -787,7 +784,7 @@ fun ProfileScreen(
                                 onResetAll = { chefFilterState = ChefFilterState(searchQuery = chefFilterState.searchQuery) }
                             )
                         } else {
-                            // 🌟 Compact Recipe Search Bar (matching RecipesScreen style)
+                            // Compact Recipe Search Bar (matching RecipesScreen style)
                             val currentQuery = if (selectedMainTab == 0) userRecipesSearchQuery else bookmarksSearchQuery
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -861,7 +858,7 @@ fun ProfileScreen(
                             
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // 🌟 Compact Recipes/Chefs Toggle (Now under search bar for Bookmarks tab)
+                            // Compact Recipes/Chefs Toggle
                             if (selectedMainTab == 1) {
                                 Row(
                                     modifier = Modifier
@@ -971,7 +968,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // 🌟 Content Items (Recipes/Chefs)
+                // Content Items (Recipes/Chefs)
                 if (selectedMainTab == 0) {
                     if (viewModel.isLoading) {
                         item(span = { GridItemSpan(2) }) {
@@ -1051,7 +1048,7 @@ fun ProfileScreen(
                             }
                         } else {
                             val filtered = bookmarkedRecipes.filter { recipe ->
-                                // 🌟 Privacy & Visibility Logic
+                                // Privacy & Visibility Logic
                                 val isVisible = when {
                                     recipe.author_id == user?.customId -> true // My recipes are always visible to me
                                     recipe.visibility == "public" -> true // Public recipes are visible to everyone
@@ -1155,7 +1152,7 @@ fun ProfileScreen(
         }
     }
 
-    // 🌟 Delete Confirmation Dialog for Profile Screen
+    // Delete Confirmation Dialog for Profile Screen
     if (recipeToDelete != null) {
         AlertDialog(
             onDismissRequest = { recipeToDelete = null },
@@ -1183,7 +1180,7 @@ fun ProfileScreen(
         )
     }
 
-    // 🌟 Share Dialog
+    // Share Dialog
     recipeToShare?.let { recipe ->
         ShareRecipeDialog(
             recipe = recipe,
@@ -1192,7 +1189,7 @@ fun ProfileScreen(
         )
     }
 
-    // 🌟 Chef Application Status Dialogs
+    // Chef Application Status Dialogs
     chefStatusDialogInfo?.let { (title, message) ->
         AlertDialog(
             onDismissRequest = { chefStatusDialogInfo = null },
@@ -1278,7 +1275,7 @@ fun ProfileScreen(
         }
     }
 
-    // 🌟 Chef Filter Bottom Sheet (matching hiring screen)
+    // Chef Filter Bottom Sheet (matching hiring screen)
     if (showChefFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showChefFilterSheet = false },
@@ -1297,7 +1294,7 @@ fun ProfileScreen(
         }
     }
 
-    // 🌟 Recipe Filter Bottom Sheet (matching recipes screen)
+    // Recipe Filter Bottom Sheet
     if (showRecipeFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showRecipeFilterSheet = false },
@@ -1548,10 +1545,10 @@ fun DrawerItem(
             painter = painterResource(id = iconRes),
             contentDescription = null,
             modifier = Modifier.size(22.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // 🌟 Themed Icon
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
         Spacer(modifier = Modifier.width(20.dp))
-        Text(text = label, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface) // 🌟 Themed Text
+        Text(text = label, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -1597,10 +1594,10 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // 🌟 Themed Card
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
-            .fillMaxWidth() // 🌟 Changed from width(165.dp) to fillMaxWidth to fit grid
+            .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
         Column {
@@ -1609,7 +1606,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(135.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // 🌟 Themed Background
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (!chef.profilePictureUrl.isNullOrEmpty()) {
                     AsyncImage(
@@ -1636,7 +1633,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                 ) {
                     Text(
                         text = stringResource(R.string.rate_per_hour, chef.Pricing?.toInt() ?: 0),
-                        color = MaterialTheme.colorScheme.onPrimary, // 🌟 Themed Text
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -1654,7 +1651,7 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                     text = chef.name.ifEmpty { "Chef" },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface, // 🌟 Themed Text
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1679,20 +1676,20 @@ fun ChefCardItem(chef: Chef, onClick: () -> Unit = {}) {
                             text = chef.averagerating?.toString() ?: stringResource(R.string.not_available),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     // Experience Tag
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant, // 🌟 Themed Background
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.experience_years_short, chef.experience),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, // 🌟 Themed Text
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }

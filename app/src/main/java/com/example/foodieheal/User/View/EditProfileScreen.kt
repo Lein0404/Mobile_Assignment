@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -70,7 +69,7 @@ fun EditProfileScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.edit_profile), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.EditProfile.route) == true) {
                             navController.popBackStack() 

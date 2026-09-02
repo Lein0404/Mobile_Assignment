@@ -1,8 +1,7 @@
 package com.example.foodieheal.User.View
 
-import androidx.compose.foundation.BorderStroke
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,10 +36,10 @@ fun ChangePasswordScreen(navController: NavController) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     
-    // 🌟 Track if user has tried to submit
+    // Track if user has tried to submit
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // 🌟 Validation Logic
+    // Validation Logic
     val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
     val isPasswordValid = newPassword.matches(passwordRegex)
     val passwordsMatch = newPassword == confirmPassword
@@ -49,7 +47,7 @@ fun ChangePasswordScreen(navController: NavController) {
     // Button is enabled if all fields are filled
     val isFormFilled = oldPassword.isNotBlank() && newPassword.isNotBlank() && confirmPassword.isNotBlank()
 
-    // 🌟 Simplified: No more collection logic here, avoids the "kick back" bug entirely
+    // Simplified: No more collection logic here, avoids the "kick back" bug entirely
     DisposableEffect(Unit) {
         authViewModel.clearProfileEvents() // Clear any old success messages when entering
         onDispose { }
@@ -62,7 +60,7 @@ fun ChangePasswordScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.profile_change_password), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 FIX: Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
+                        // Safety check to prevent spam-clicks from causing navigation crashes or "blank screens"
                         val currentRoute = navController.currentDestination?.route
                         if (currentRoute?.contains(Screen.ChangePassword.route) == true) {
                             navController.popBackStack() 
@@ -121,7 +119,7 @@ fun ChangePasswordScreen(navController: NavController) {
                         if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.resetPasswordState()
                     }
                 },
-                // 🌟 FIX: Only looks at password-specific errors now
+                // Only looks at password-specific errors now
                 isError = authViewModel.passwordErrorMessage.isNotEmpty(),
                 supportingText = if (authViewModel.passwordErrorMessage.isNotEmpty()) authViewModel.passwordErrorMessage else null
             )
@@ -139,7 +137,7 @@ fun ChangePasswordScreen(navController: NavController) {
                         if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
                     }
                 },
-                // 🌟 FIX: Wait for server result so it pops up at the exact same time as the current password error
+                // Wait for server result so it pops up at the exact same time as the current password error
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid,
                 supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !isPasswordValid) stringResource(R.string.change_password_validation_error) else null
             )
@@ -157,7 +155,7 @@ fun ChangePasswordScreen(navController: NavController) {
                         if (authViewModel.errorMessage.isNotEmpty()) authViewModel.resetPasswordState()
                     }
                 },
-                // 🌟 FIX: Wait for server result so it pops up at the exact same time as the others
+                // Wait for server result so it pops up at the exact same time as the others
                 isError = hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch,
                 supportingText = if (hasAttemptedSubmit && !authViewModel.isProcessing && !passwordsMatch) stringResource(R.string.change_password_match_error) else null
             )
@@ -168,7 +166,7 @@ fun ChangePasswordScreen(navController: NavController) {
                 onClick = { 
                     hasAttemptedSubmit = true 
                     if (isPasswordValid && passwordsMatch) {
-                        // 🌟 Use the callback to navigate ONLY when the server confirms success
+                        // Use the callback to navigate ONLY when the server confirms success
                         authViewModel.changePassword(oldPassword, newPassword) {
                             navController.popBackStack()
                         }
@@ -211,11 +209,11 @@ fun PasswordInputField(
             value = value,
             onValueChange = onValueChange,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            // 🌟 Removed the tight height constraint so the text doesn't look squashed
+            // Removed the tight height constraint so the text doesn't look squashed
             modifier = Modifier.fillMaxWidth(), 
             singleLine = true,
             isError = isError,
-            // 🌟 Increased font size for better readability
+            // Increased font size for better readability
             textStyle = TextStyle(fontSize = 16.sp),
             supportingText = {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -243,7 +241,7 @@ fun PasswordInputField(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                // 🌟 Keep background normal even if there is an error
+                // Keep background normal even if there is an error
                 errorContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 errorBorderColor = MaterialTheme.colorScheme.error,
                 errorTextColor = MaterialTheme.colorScheme.onSurface,

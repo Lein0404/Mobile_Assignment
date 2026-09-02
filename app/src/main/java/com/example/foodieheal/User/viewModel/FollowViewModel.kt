@@ -98,7 +98,7 @@ class FollowViewModel(private val repository: FollowRepository = FollowRepositor
         viewModelScope.launch {
             repository.acceptFollowRequest(followerId, myId)
             
-            // 🌟 Refresh counts after accepting
+            // Refresh counts after accepting
             val userRepo = com.example.foodieheal.User.Repo.UserRepository()
             userRepo.getUserByCustomId(myId) // This is just to trigger any DB logic if needed, 
             
