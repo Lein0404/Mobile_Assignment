@@ -93,7 +93,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         errorMessage = ""
         viewModelScope.launch {
             try {
-                val cleanEmail = emailInput.trim()
+                val cleanEmail = emailInput.trim().lowercase()
 
                 val userExists = client.postgrest.from("users").select {
                     filter { eq("email", cleanEmail) }
@@ -292,7 +292,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun login(emailInput: String, passwordInput: String) {
-        val cleanEmail = emailInput.trim()
+        val cleanEmail = emailInput.trim().lowercase()
         val cleanPassword = passwordInput.trim()
 
         if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
@@ -350,7 +350,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun loginAsChef(emailInput: String, passwordInput: String) {
-        val cleanEmail = emailInput.trim()
+        val cleanEmail = emailInput.trim().lowercase()
         val cleanPassword = passwordInput.trim()
 
         if (cleanEmail.isEmpty() || cleanPassword.isEmpty()) {
@@ -730,6 +730,13 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         val email = currentUser?.email ?: return
         isProcessing = true
         errorMessage = ""
+
+        if (oldPassword.trim() == newPassword.trim()) {
+            passwordErrorMessage = MainActivity.appContext?.getString(R.string.error_password_same_as_old) ?: "New password cannot same with the old password"
+            isProcessing = false
+            return
+        }
+
         viewModelScope.launch {
             try {
                 // 1. Always verify identity with OLD password first
@@ -738,8 +745,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     this.password = oldPassword
                 }
 
-                // 2. ONLY proceed if the password is correct AND meets our 8-20 rule
-                val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+                // 2. ONLY proceed if the password is correct AND meets our 8-20 rule (no spaces)
+                val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,20}$".toRegex()
                 if (!newPassword.matches(passwordRegex)) {
                     passwordErrorMessage = MainActivity.appContext?.getString(R.string.change_password_validation_error) ?: "Password must be 8-20 characters with uppercase, lowercase and numbers"
                     isProcessing = false
@@ -765,7 +772,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun updatePassword(newPassword: String) {
-        val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+        val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,20}$".toRegex()
         if (!newPassword.matches(passwordRegex)) {
             errorMessage = MainActivity.appContext?.getString(R.string.change_password_validation_error) ?: "Password must be 8-20 characters with uppercase, lowercase and numbers"
             return
@@ -781,7 +788,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun forgotPassword(emailInput: String) {
-        if (emailInput.isEmpty()) {
+        val cleanEmail = emailInput.trim().lowercase()
+        if (cleanEmail.isEmpty()) {
             errorMessage = MainActivity.appContext?.getString(R.string.error_enter_email) ?: "Please enter your email address"
             return
         }
@@ -789,7 +797,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
         errorMessage = ""
         viewModelScope.launch {
             try {
-                client.auth.resetPasswordForEmail(emailInput)
+                client.auth.resetPasswordForEmail(cleanEmail)
                 errorMessage = MainActivity.appContext?.getString(R.string.error_reset_link_sent) ?: "Reset link sent to your email"
             } catch (e: Exception) {
                 errorMessage = "${MainActivity.appContext?.getString(R.string.error_reset_email_failed) ?: "Failed to send reset email"}: ${parseError(e)}"

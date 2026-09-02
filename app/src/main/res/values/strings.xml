@@ -48,7 +48,8 @@
     <string name="error_invalid_email">Invalid email</string>
     <string name="error_account_not_found">Account not found</string>
     <string name="error_invalid_password_short">Invalid password</string>
-    <string name="error_password_requirement">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
+    <string name="error_password_requirement">Password must be 8-20 characters with uppercase, lowercase, numbers, and no spaces</string>
+    <string name="error_password_no_spaces">Spaces are not allowed in the password.</string>
     <string name="error_email_registered">Email already registered</string>
     <string name="error_unknown">An unknown error occurred. Please try again later.</string>
     <string name="error_user_not_found">No account found with this email.</string>
@@ -1807,8 +1808,9 @@
     <!-- Change Password Screen -->
     <string name="change_password_secure_account">Secure Your Account</string>
     <string name="change_password_enter_passwords">Enter your current and new password below to update.</string>
-    <string name="change_password_validation_error">Password must be 8-20 characters with uppercase, lowercase and numbers</string>
+    <string name="change_password_validation_error">Password must be 8-20 characters with uppercase, lowercase, numbers, and no spaces</string>
     <string name="change_password_match_error">Passwords do not match</string>
+    <string name="error_password_same_as_old">New password cannot be the same as the old password</string>
     <string name="change_password_update_btn">UPDATE PASSWORD</string>
 
     <!-- User Auth & Follow Flow Missing Strings -->

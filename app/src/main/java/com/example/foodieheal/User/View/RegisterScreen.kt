@@ -42,7 +42,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
 
     // Strict Validation Logic
     val emailRegex = "^[A-Za-z0-9._%+-]+@gmail\\.com$".toRegex()
-    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
+    val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\S{8,20}$".toRegex()
     val isEmailValid = email.matches(emailRegex)
     val isPasswordValid = password.matches(passwordRegex)
     val passwordsMatch = password == confirmPassword
@@ -246,7 +246,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 if (hasAttemptedSubmit && !isPasswordValid && password.isNotEmpty()) {
                     Text(
-                        text = stringResource(R.string.error_password_requirement),
+                        text = if (password.contains(" ")) stringResource(R.string.error_password_no_spaces) 
+                               else stringResource(R.string.error_password_requirement),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -311,7 +312,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 )
                 if (hasAttemptedSubmit && !passwordsMatch && confirmPassword.isNotEmpty()) {
                     Text(
-                        text = stringResource(R.string.error_passwords_not_matching),
+                        text = if (confirmPassword.contains(" ")) stringResource(R.string.error_password_no_spaces)
+                               else stringResource(R.string.error_passwords_not_matching),
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -353,10 +355,12 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             // Register Button
             Button(
                 onClick = {
+                    val cleanEmail = email.trim().lowercase()
+                    val cleanPassword = password.trim()
                     if (isEmailValid && isPasswordValid && passwordsMatch) {
                         // Validate email uniqueness before moving to next screen
-                        viewModel.validateEmailUniqueness(email) {
-                            viewModel.setTempCredentials(email, password)
+                        viewModel.validateEmailUniqueness(cleanEmail) {
+                            viewModel.setTempCredentials(cleanEmail, cleanPassword)
                             navController.navigate(Screen.EditBodyStatus.route + "?fromRegister=true")
                         }
                     } else {

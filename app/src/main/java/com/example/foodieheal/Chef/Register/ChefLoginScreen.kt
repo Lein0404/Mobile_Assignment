@@ -257,7 +257,7 @@ fun ChefLoginScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .clickable { viewModel.forgotPassword(email) }
+                        .clickable { viewModel.forgotPassword(email.trim()) }
                 )
             }
 
