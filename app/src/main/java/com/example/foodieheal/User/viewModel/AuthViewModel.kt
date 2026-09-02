@@ -652,12 +652,19 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
 
-                client.postgrest.from("users").update(updatedUser) { filter { eq("id", uid) } }
+                // Update users table in Supabase (match by custom_id first for consistency, fallback to id)
+                val cid = updatedUser.customId
+                if (!cid.isNullOrBlank()) {
+                    client.postgrest.from("users").update(updatedUser) { filter { eq("custom_id", cid) } }
+                } else {
+                    client.postgrest.from("users").update(updatedUser) { filter { eq("id", uid) } }
+                }
+
                 this@AuthViewModel.currentUser = updatedUser
                 saveUserToCache(updatedUser)
 
                 // Sync the updated author name and image across all recipes created by this user
-                updatedUser.customId?.let { cid ->
+                if (!cid.isNullOrBlank()) {
                     try {
                         client.postgrest.from("recipes").update(
                             mapOf("author_name" to sanitizedName, "author_image_url" to finalUrl)
@@ -665,7 +672,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                             filter { eq("recipe_author", cid) }
                         }
                     } catch (e: Exception) {
-                        // Non-critical background sync
+                        Log.e("AuthViewModel", "Recipe author sync failed", e)
                     }
                 }
 
