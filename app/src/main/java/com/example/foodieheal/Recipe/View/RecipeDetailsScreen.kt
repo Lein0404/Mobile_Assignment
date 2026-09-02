@@ -431,7 +431,7 @@ fun RecipeDetailsScreen(
                         Column(
                             modifier = Modifier
                                 .padding(start = 12.dp)
-                                .weight(1f, fill = false)
+                                .weight(1f)
                         ) {
                             Text(
                                 text = stringResource(R.string.label_recipe_by),
@@ -449,7 +449,7 @@ fun RecipeDetailsScreen(
                         }
 
                         if (!isMyRecipe && user != null) {
-                            Spacer(modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.width(12.dp))
                             val status = followViewModel.followStatus
                             val buttonText = when (status) {
                                 null -> stringResource(R.string.btn_follow)
@@ -468,8 +468,10 @@ fun RecipeDetailsScreen(
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                                modifier = Modifier.height(32.dp)
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .padding(end = 4.dp)
                             ) {
                                 Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
