@@ -80,7 +80,7 @@ fun AddRecipeScreen(
     val coroutineScope = rememberCoroutineScope()
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
-    // 🌟 Validation logic: All fields must be filled and valid
+    // Validation logic: All fields must be filled and valid
     val isAccountLoaded = authViewModel.currentUser?.customId != null
     val isFormValid by remember {
         derivedStateOf {
@@ -104,13 +104,13 @@ fun AddRecipeScreen(
         derivedStateOf {
             ingredients.sumOf { input ->
                 val qty = input.quantity.toDoubleOrNull() ?: 0.0
-                // 🌟 FIX: Match by BOTH name and unit to handle duplicates like Flour Tortilla
+                // Match by Both name and unit to handle duplicates like Flour Tortilla
                 val ingredientData = viewModel.availableIngredients.find { 
                     it.name?.equals(input.name, ignoreCase = true) == true &&
                     it.defaultUnit?.equals(input.unit, ignoreCase = true) == true
                 }
                 
-                // 🌟 NEW CALCULATION: qty * caloriePerUnitValue / unitValue
+                // qty * caloriePerUnitValue / unitValue
                 // Defaulting unitValue to 1.0 to avoid division by zero
                 val caloriePerUnitValue = ingredientData?.kcal ?: 0.0
                 val unitValue = ingredientData?.defaultQuantity ?: 1.0
@@ -134,7 +134,7 @@ fun AddRecipeScreen(
     LaunchedEffect(Unit) {
         viewModel.addRecipeSuccess.collect { success ->
             if (success) {
-                // 🌟 SUCCESS: Small delay so they can see the message
+                // Small delay so they can see the message
                 delay(800)
                 viewModel.activeTab = 1
                 navController.popBackStack()
@@ -174,7 +174,7 @@ fun AddRecipeScreen(
                 title = { Text(stringResource(R.string.title_add_recipe), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // 🌟 BACK: ensure we go back to "My Recipes" tab
+                        // ensure we go back to "My Recipes" tab
                         viewModel.activeTab = 1
                         navController.popBackStack() 
                     }) {
@@ -307,17 +307,17 @@ fun AddRecipeScreen(
                     AddRecipeTextField(
                         value = totalTime,
                         onValueChange = { input -> 
-                            // 🌟 FIX: Allow ONLY digits for Total Time (No decimals allowed)
+                            // Allow ONLY digits for Total Time (No decimals allowed)
                             if (input.all { it.isDigit() }) {
                                 totalTime = input
                             }
                         },
                         placeholder = stringResource(R.string.hint_total_time),
-                        // 🌟 Declared directly inside here
+                        // Declared directly inside here
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         trailingIcon = { Icon(painterResource(id = R.drawable.ic_clock), null, modifier = Modifier.size(20.dp)) }
                     )
-                    // 🌟 Added time limit hint
+                    // Added time limit hint
                     if (totalTime.isNotEmpty() && (totalTime.toIntOrNull() ?: 0) > 1440) {
                         Text(
                             text = stringResource(R.string.error_time_limit),
@@ -503,12 +503,12 @@ fun AddRecipeScreen(
                             }
                             Text(
                                 text = label,
-                                modifier = Modifier.padding(vertical = 8.dp), // 🌟 Increased padding for bigger chip
+                                modifier = Modifier.padding(vertical = 8.dp),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             ) 
                         },
-                        modifier = Modifier.weight(1f).height(48.dp), // 🌟 Set height explicitly
+                        modifier = Modifier.weight(1f).height(48.dp),
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = Color.White
@@ -520,7 +520,7 @@ fun AddRecipeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (viewModel.errorMessage != null) {
-                // 🌟 FIX: Show only a clean, simple message and remove the "red wall" of technical text
+                // Show only a clean, simple message and remove the "red wall" of technical text
                 val cleanError = viewModel.errorMessage!!.split("\n").firstOrNull() ?: stringResource(R.string.error_unknown_occurred)
                 Surface(
                     color = Color(0xFFFFEBEE),
@@ -537,7 +537,7 @@ fun AddRecipeScreen(
                 }
             }
 
-            // 🌟 Form Validation Message
+            // Form Validation Message
             if (!isFormValid) {
                 val msg = if (!isAccountLoaded) {
                     stringResource(R.string.msg_checking_account)
@@ -565,9 +565,9 @@ fun AddRecipeScreen(
 
                     val recipe = Recipe(
                         recipe_id = nextId,
-                        // 🌟 FIX: Use the short customId (U001) to match your search logic
+                        // Use the short customId (U001) to match your search logic
                         author_id = authViewModel.currentUser?.customId,
-                        authorName = authViewModel.currentUser?.name, // 🌟 Save author info for offline
+                        authorName = authViewModel.currentUser?.name, //Save author info for offline
                         authorImageUrl = authViewModel.currentUser?.profilePicUrl,
                         recipeName = recipeName,
                         recipeDescription = description,
@@ -595,8 +595,8 @@ fun AddRecipeScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), // 🌟 Themed Gray
-                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)   // 🌟 Themed Text
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 ),
                 enabled = isFormValid && !viewModel.isLoading
             ) {
@@ -657,7 +657,7 @@ fun AddRecipeTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     readOnly: Boolean = false,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default, // 🌟 Accept standard options
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default, //Accept standard options
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
@@ -667,7 +667,7 @@ fun AddRecipeTextField(
         modifier = modifier.fillMaxWidth().then(if (singleLine) Modifier.height(52.dp) else Modifier),
         singleLine = singleLine,
         readOnly = readOnly,
-        keyboardOptions = keyboardOptions, // 🌟 Pass it through
+        keyboardOptions = keyboardOptions,
         shape = RoundedCornerShape(12.dp),
         trailingIcon = trailingIcon,
         textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
@@ -912,7 +912,7 @@ fun IngredientRow(
                     OutlinedTextField(
                         value = item.quantity,
                         onValueChange = { input ->
-                            // 🌟 FIX: Allow only digits and a SINGLE decimal point
+                            // Allow only digits and a SINGLE decimal point
                             if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
                                 onUpdate(item.copy(quantity = input))
                             }
@@ -920,7 +920,7 @@ fun IngredientRow(
                         placeholder = { Text(stringResource(R.string.placeholder_zero), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         singleLine = true,
-                        // 🌟 Declared directly inside here
+                        // Declared directly inside here
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
                         textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),

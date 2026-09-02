@@ -14,7 +14,6 @@ import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.Recipe.Model.Ingredient
 import com.example.foodieheal.Recipe.Model.Recipe
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,7 +26,7 @@ class RecipeViewModel(
     private val networkMonitor: NetworkMonitor? = null
 ) : AndroidViewModel(application) {
 
-    // 🌟 UI States
+    // UI States
     var activeTab by mutableIntStateOf(0)
     var recipeList by mutableStateOf<List<Recipe>>(emptyList())
         private set
@@ -56,7 +55,7 @@ class RecipeViewModel(
     var isNetworkAvailable by mutableStateOf(true)
         private set
 
-    // 🌟 Event Flows
+    // Event Flows
     private val _addRecipeSuccess = MutableSharedFlow<Boolean>()
     val addRecipeSuccess = _addRecipeSuccess.asSharedFlow()
     private val _updateRecipeSuccess = MutableSharedFlow<Boolean>()
@@ -64,14 +63,14 @@ class RecipeViewModel(
     private val _bookmarkMessage = MutableSharedFlow<String>()
     val bookmarkMessage = _bookmarkMessage.asSharedFlow()
 
-    // 🌟 Fetching Guards (Prevent duplicate calls)
+    // Fetching Guards (Prevent duplicate calls)
     private var isFetchingAll = false
     private var isFetchingFollowing = false
     private var isFetchingMyRecipes = false
     private var isFetchingBookmarks = false
     private var isFetchingIngredients = false
 
-    // 🌟 Track active toggle jobs to allow cancellation/restarts
+    // Track active toggle jobs to allow cancellation/restarts
     private val bookmarkJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
     private var currentCustomId: String? = null
 
@@ -95,10 +94,9 @@ class RecipeViewModel(
         }
     }
 
-    /**
-     * 🌟 Manually updates the name/pic of all recipes in memory to match the current user.
-     * This ensures the Cards and Details update the exact same field instantly.
-     */
+
+     //Manually updates the name/pic of all recipes in memory to match the current user.
+     //This ensures the Cards and Details update the exact same field instantly.
     fun syncRecipeAuthorInfo(user: User) {
         val cid = user.customId ?: return
         currentCustomId = cid
@@ -107,7 +105,7 @@ class RecipeViewModel(
                 r.copy(
                     authorName = user.name,
                     authorImageUrl = user.profilePicUrl,
-                    // 🌟 Update authorInfo too (This is what the Detail screen and Card now share)
+                    // Update authorInfo too (This is what the Detail screen and Card now share)
                     authorInfo = (r.authorInfo ?: com.example.foodieheal.Recipe.Model.AuthorInfo()).copy(
                         name = user.name,
                         profile_pic_url = user.profilePicUrl
@@ -142,7 +140,7 @@ class RecipeViewModel(
                 repository.getAllRecipes()
                     .onSuccess { result ->
                         recipeList = result.sortedBy { it.recipe_id }
-                        // 🌟 Recovery: If some names are missing (Join failed), fetch them by ID automatically
+                        // Recovery: If some names are missing (Join failed), fetch them by ID automatically
                         fetchMissingAuthorInfo(result)
                     }
                     .onFailure { e ->
@@ -155,10 +153,9 @@ class RecipeViewModel(
         }
     }
 
-    /**
-     * 🌟 Recovery logic: Just like the Detail Screen, if a recipe arrives
-     * without a name, we fetch the User data by its ID separately.
-     */
+     // Recovery logic: Just like the Detail Screen, if a recipe arrives
+     // without a name, we fetch the User data by its ID separately.
+
     private fun fetchMissingAuthorInfo(recipes: List<Recipe>) {
         val missingIds = recipes.filter { it.authorName.isNullOrEmpty() && !it.author_id.isNullOrEmpty() }
             .mapNotNull { it.author_id }
@@ -167,7 +164,7 @@ class RecipeViewModel(
         if (missingIds.isEmpty()) return
 
         viewModelScope.launch {
-            // 🌟 BATCH FETCH: Get all missing authors in ONE request instead of a slow loop
+            // BATCH FETCH: Get all missing authors in ONE request instead of a slow loop
             repository.getUsersByCustomIds(missingIds).onSuccess { users ->
                 if (users.isNotEmpty()) {
                     val userMap = users.associateBy { it.customId }
@@ -233,7 +230,7 @@ class RecipeViewModel(
     fun fetchMyRecipes(authorId: String, force: Boolean = false) {
         if (isFetchingMyRecipes) return
 
-        // 🌟 SAFETY: Clear stale data if switching accounts
+        // Clear stale data if switching accounts
         val belongsToSomeoneElse = myRecipes.isNotEmpty() && myRecipes.any { it.author_id != authorId }
         if (belongsToSomeoneElse || force) {
             myRecipes = emptyList()
@@ -264,7 +261,7 @@ class RecipeViewModel(
         viewModelScope.launch {
             try {
                 isFetchingBookmarks = true
-                // 🌟 Local-first: immediately load cached bookmarks from Room so UI is populated with zero delay
+                // Local-first: immediately load cached bookmarks from Room so UI is populated with zero delay
                 val local = repository.getLocalBookmarkedRecipes(userId)
                 if (local.isNotEmpty()) {
                     val currentIds = bookmarkedRecipes.mapNotNull { it.recipe_id }.toSet()
@@ -309,12 +306,12 @@ class RecipeViewModel(
             return
         }
 
-        // 🌟 1. Cancel any existing job for this specific recipe to prevent race conditions
+        // 1. Cancel any existing job for this specific recipe to prevent race conditions
         bookmarkJobs[recipeId]?.cancel()
 
         val isBookmarked = bookmarkedRecipeIds.contains(recipeId)
 
-        // 🌟 2. Instant UI Update (Always happens regardless of network speed)
+        // 2. Instant UI Update (Always happens regardless of network speed)
         bookmarkedRecipeIds = if (isBookmarked) bookmarkedRecipeIds - recipeId else bookmarkedRecipeIds + recipeId
 
         if (isBookmarked) {
@@ -332,11 +329,11 @@ class RecipeViewModel(
             }
         }
 
-        // 🌟 3. Launch the new request (This job can be cancelled by the next click)
+        // 3. Launch the new request (This job can be cancelled by the next click)
         bookmarkJobs[recipeId] = viewModelScope.launch {
             try {
                 repository.toggleBookmark(userId, recipeId, isBookmarked).onSuccess {
-                    // 🌟 Check if this job is still active before showing toast or updating state
+                    // Check if this job is still active before showing toast or updating state
                     // This prevents "Old" jobs from overriding the current UI if they finish late.
                     if (!isActive) return@launch
 
@@ -380,9 +377,8 @@ class RecipeViewModel(
         }
     }
 
-    /**
-     * 🌟 EXCLUSIVE FUNCTION: Uses local-first logic for instant meal plan recipe viewing.
-     */
+
+     // Uses local-first logic for instant meal plan recipe viewing
     fun fetchRecipeLocalFirst(recipeId: String) {
         viewModelScope.launch {
             selectedRecipe = null
@@ -401,10 +397,10 @@ class RecipeViewModel(
         }
     }
 
-    /**
-     * 🌟 Clears the selected recipe data.
-     * Useful when exiting the details screen to prevent "stale data" flicker next time.
-     */
+
+     //Clears the selected recipe data.
+     //Useful when exiting the details screen to prevent "stale data" flicker next time.
+
     fun clearSelectedRecipe() {
         selectedRecipe = null
         recipeAuthor = null
@@ -440,7 +436,7 @@ class RecipeViewModel(
                 return@launch
             }
 
-            // 🌟 1. Instant Memory Update (Optimistic): Shows the new recipe card immediately
+            // 1. Instant Memory Update (Optimistic): Shows the new recipe card immediately
             recipeList = (recipeList + recipe).sortedBy { it.recipe_id }
             myRecipes = (myRecipes + recipe).sortedBy { it.recipe_id }
 
@@ -465,7 +461,7 @@ class RecipeViewModel(
                         refreshAll()
                     }
                     .onFailure { e ->
-                        // 🌟 Revert memory update on failure
+                        // Revert memory update on failure
                         recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
                         myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
                         parseError(e.message ?: "Save Failed")
@@ -488,7 +484,7 @@ class RecipeViewModel(
                 return@launch
             }
 
-            // 🌟 1. Instant Memory Update (Optimistic): Fixes the "delay"
+            // Instant Memory Update (Optimistic): Fixes the "delay"
             // We find the old recipe to preserve authorInfo, so the card name changes but pic/author stays
             val oldRecipe = recipeList.find { it.recipe_id == recipe.recipe_id }
             val updatedForMemory = recipe.copy(
@@ -528,7 +524,7 @@ class RecipeViewModel(
                     }
                     .onFailure { e ->
                         errorMessage = "Update Failed: ${e.message}"
-                        // 🌟 Revert memory update on failure
+                        // Revert memory update on failure
                         oldRecipe?.let { old ->
                             recipeList = recipeList.map { if (it.recipe_id == old.recipe_id) old else it }
                             myRecipes = myRecipes.map { if (it.recipe_id == old.recipe_id) old else it }
@@ -550,7 +546,7 @@ class RecipeViewModel(
             repository.deleteRecipe(recipeId).onSuccess {
                 Log.d("RecipeViewModel", "Delete successful for rid: $recipeId. Filtering locally...")
 
-                // 🌟 Immediate Local Update: Use a copy to ensure state change triggers UI
+                // Immediate Local Update: Use a copy to ensure state change triggers UI
                 val updatedMyRecipes = myRecipes.filter { it.recipe_id != recipeId }
                 val updatedRecipeList = recipeList.filter { it.recipe_id != recipeId }
                 val updatedBookmarkedRecipes = bookmarkedRecipes.filter { it.recipe_id != recipeId }
@@ -566,7 +562,7 @@ class RecipeViewModel(
 
                 _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_recipe_deleted_success))
 
-                // 🌟 Delay the background refresh slightly to give Supabase DB time to propagate the deletion
+                // Delay the background refresh slightly to give Supabase DB time to propagate the deletion
                 // and to prevent a race condition where the fetch returns the old data.
                 viewModelScope.launch {
                     delay(1000)

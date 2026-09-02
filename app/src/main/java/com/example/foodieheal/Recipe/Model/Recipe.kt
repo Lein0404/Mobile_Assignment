@@ -21,10 +21,10 @@ data class Recipe(
     @SerialName("last_updated") val lastUpdated: String? = null,
     @SerialName("visibility") val visibility: String = "public",
 
-    // 🌟 Join result field: catches the author name/pic during decoding if columns are missing.
+    // Join result field: catches the author name/pic during decoding if columns are missing.
     @SerialName("users") var authorInfo: AuthorInfo? = null,
 
-    // 🌟 Denormalized fields: Stored directly in 'recipes' table for speed and offline reliability.
+    // Denormalized fields: Stored directly in 'recipes' table for speed and offline reliability.
     @SerialName("author_name") var authorName: String? = null,
     @SerialName("author_image_url") var authorImageUrl: String? = null,
     @SerialName("author_image_cache") var authorImageCache: String? = null,
@@ -41,7 +41,7 @@ data class AuthorInfo(
 @Serializable
 data class IngredientItem(
     @SerialName("name") val name: String = "",
-    // 🌟 Use JsonElement to handle both String ("2") and Number (2) from Supabase safely
+    // Use JsonElement to handle both String ("2") and Number (2) from Supabase safely
     @SerialName("quantity") val quantity: JsonElement = JsonPrimitive("0"),
     @SerialName("unit") val unit: String = ""
 ) {
