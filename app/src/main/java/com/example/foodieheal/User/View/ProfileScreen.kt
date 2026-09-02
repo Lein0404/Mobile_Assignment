@@ -91,6 +91,7 @@ fun ProfileScreen(
 
     var chefStatusDialogInfo by remember { mutableStateOf<Pair<String, String>?>(null) }
     var showReapplyDialog by remember { mutableStateOf(false) }
+    var showLogoutConfirmation by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -335,12 +336,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     TextButton(
-                        onClick = {
-                            // Clear user-specific memory data on logout to prevent data pollution
-                            authViewModel.logout { 
-                                viewModel.clearUserData()
-                            }
-                        },
+                        onClick = { showLogoutConfirmation = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(R.string.nav_logout), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
@@ -349,6 +345,39 @@ fun ProfileScreen(
             }
         }
     ) {
+        if (showLogoutConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showLogoutConfirmation = false },
+                title = {
+                    Text(
+                        text = stringResource(R.string.logout_confirm_title),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = { Text(stringResource(R.string.logout_confirm_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showLogoutConfirmation = false
+                            // Clear user-specific memory data on logout to prevent data pollution
+                            authViewModel.logout {
+                                viewModel.clearUserData()
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.nav_logout),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLogoutConfirmation = false }) {
+                        Text(stringResource(R.string.dialog_cancel))
+                    }
+                }
+            )
+        }
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
