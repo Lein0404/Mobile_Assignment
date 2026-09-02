@@ -8,6 +8,9 @@ import com.example.foodieheal.model.Status
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.Duration
+import java.time.Instant
+import java.time.ZonedDateTime
 
 /**
  * Monitors the status of ingredient requests and triggers notifications when they are approved or rejected.
@@ -16,8 +19,18 @@ object IngredientRequestStatusMonitor {
 
     private const val TAG = "StatusMonitor"
     private const val PREFS_NAME = "ingredient_request_notifications"
-    private const val KEY_INITIALIZED = "has_initialized_request_tracking"
     private const val KEY_PREFIX_STATUS = "notified_status_"
+
+    /**
+     * Records a newly submitted request as PENDING immediately so that when it is later
+     * resolved (approved/rejected), the status transition is guaranteed to trigger an alert.
+     */
+    fun recordPendingRequest(userId: String, requestId: String, context: Context) {
+        if (userId.isBlank() || requestId.isBlank()) return
+        val prefs = context.getSharedPreferences("${PREFS_NAME}_$userId", Context.MODE_PRIVATE)
+        prefs.edit().putString("$KEY_PREFIX_STATUS$requestId", Status.PENDING.name).apply()
+        Log.d(TAG, "Recorded initial PENDING tracking for request $requestId (user: $userId)")
+    }
 
     /**
      * Checks Supabase directly for status updates of the given user's ingredient requests
@@ -45,44 +58,61 @@ object IngredientRequestStatusMonitor {
 
         val prefsName = if (userId.isNotBlank()) "${PREFS_NAME}_$userId" else PREFS_NAME
         val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-        val hasInitialized = prefs.getBoolean(KEY_INITIALIZED, false)
-
-        if (!hasInitialized) {
-            // First time tracking: record all existing statuses so we don't spam old historical notifications
-            val editor = prefs.edit()
-            requests.forEach { req ->
-                editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", req.requestStatus.name)
-            }
-            editor.putBoolean(KEY_INITIALIZED, true)
-            editor.apply()
-            Log.d(TAG, "Initialized ingredient request tracking for user '$userId' with ${requests.size} existing requests.")
-            return
-        }
-
-        // On subsequent checks: inspect each request for newly resolved status
         val editor = prefs.edit()
+
         requests.forEach { req ->
             val prevStatus = prefs.getString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", null)
             val currentStatus = req.requestStatus
 
             Log.d(TAG, "Checking request ${req.ingredientRequestId} (${req.ingredientName}): prevStatus=$prevStatus, currentStatus=${currentStatus.name}")
 
-            if ((currentStatus == Status.APPROVED || currentStatus == Status.REJECTED) &&
-                prevStatus != currentStatus.name
-            ) {
-                Log.d(TAG, "Status transition detected for ${req.ingredientRequestId}: $prevStatus -> ${currentStatus.name}. Posting notification.")
-                IngredientRequestNotificationHelper.showRequestStatusNotification(
-                    context = context,
-                    requestId = req.ingredientRequestId,
-                    ingredientName = req.ingredientName,
-                    status = currentStatus
-                )
-                editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", currentStatus.name)
-            } else if (prevStatus == null) {
-                // Record newly created pending requests
-                editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", currentStatus.name)
+            when {
+                // Case 1: Status is APPROVED or REJECTED and different from previously recorded status
+                (currentStatus == Status.APPROVED || currentStatus == Status.REJECTED) && prevStatus != currentStatus.name -> {
+                    // If prevStatus is null (first time seeing this completed request), check if it was processed recently
+                    val shouldNotify = if (prevStatus == null) {
+                        isProcessedRecently(req.datetimeProcessed)
+                    } else {
+                        true // Was previously PENDING or had a different status
+                    }
+
+                    if (shouldNotify) {
+                        Log.d(TAG, "Status transition detected for ${req.ingredientRequestId}: $prevStatus -> ${currentStatus.name}. Posting notification.")
+                        IngredientRequestNotificationHelper.showRequestStatusNotification(
+                            context = context,
+                            requestId = req.ingredientRequestId,
+                            ingredientName = req.ingredientName,
+                            status = currentStatus
+                        )
+                    } else {
+                        Log.d(TAG, "Skipping notification for old completed request ${req.ingredientRequestId} (processed: ${req.datetimeProcessed})")
+                    }
+                    editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", currentStatus.name)
+                }
+
+                // Case 2: New PENDING request discovered
+                prevStatus == null && currentStatus == Status.PENDING -> {
+                    editor.putString("$KEY_PREFIX_STATUS${req.ingredientRequestId}", currentStatus.name)
+                }
             }
         }
         editor.apply()
+    }
+
+    private fun isProcessedRecently(datetimeProcessed: String?): Boolean {
+        if (datetimeProcessed.isNullOrBlank()) return false
+        return try {
+            val processedInstant = try {
+                Instant.parse(datetimeProcessed)
+            } catch (_: Exception) {
+                ZonedDateTime.parse(datetimeProcessed).toInstant()
+            }
+            val age = Duration.between(processedInstant, Instant.now())
+            // Notify if processed within the last 6 hours
+            !age.isNegative && age.toHours() < 6
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to parse datetimeProcessed '$datetimeProcessed': ${e.message}")
+            false
+        }
     }
 }

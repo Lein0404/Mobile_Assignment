@@ -447,6 +447,7 @@ class IngredientRequestViewModel(
                     repository.updateIngredientRequest(request, unitRequests)
                 } else {
                     repository.submitIngredientRequest(request, unitRequests)
+                    IngredientRequestStatusMonitor.recordPendingRequest(currentUserId, requestId, getApplication())
                 }
 
                 _formState.value = IngredientFormState() // Reset
