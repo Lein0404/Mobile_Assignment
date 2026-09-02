@@ -213,7 +213,17 @@ fun EditProfileScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            if (authViewModel.profileMessage.startsWith("Update Failed", ignoreCase = true) || authViewModel.profileMessage.contains("No internet", ignoreCase = true) || authViewModel.profileMessage.contains("cannot exceed", ignoreCase = true)) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = authViewModel.profileMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             if (authViewModel.isProcessing) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -222,7 +232,6 @@ fun EditProfileScreen(navController: NavController) {
                     onClick = {
                         authViewModel.updateProfile(
                             name = name, 
-                            email = user?.email ?: "", 
                             profilePicUrl = profilePicUrl, 
                             description = description,
                             imageBytes = imageBytes

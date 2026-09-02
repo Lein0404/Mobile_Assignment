@@ -237,17 +237,23 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 }
             }
 
-            if (authViewModel.errorMessage.isNotEmpty()) {
+            val displayError = if (authViewModel.errorMessage.isNotEmpty()) {
+                authViewModel.errorMessage
+            } else if (authViewModel.profileMessage.startsWith("Update Failed", ignoreCase = true) || authViewModel.profileMessage.contains("No internet", ignoreCase = true)) {
+                authViewModel.profileMessage
+            } else null
+
+            if (displayError != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = authViewModel.errorMessage,
+                    text = displayError,
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -286,7 +292,6 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                             // Regular update for existing users
                             authViewModel.updateProfile(
                                 name = user?.name ?: "",
-                                email = user?.email ?: "",
                                 profilePicUrl = user?.profilePicUrl ?: "",
                                 description = user?.description ?: "",
                                 weight = weight.toDoubleOrNull(),

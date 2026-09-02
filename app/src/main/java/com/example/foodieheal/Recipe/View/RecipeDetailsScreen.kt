@@ -32,6 +32,7 @@ import com.example.foodieheal.navigation.Screen
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.draw.drawWithContent
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.foodieheal.ui.components.ShareRecipeDialog
 import kotlinx.coroutines.launch
 
@@ -376,6 +377,15 @@ fun RecipeDetailsScreen(
                     val displayAuthorName = (recipe.authorName ?: (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorInfo?.name))) ?: stringResource(R.string.unknown_author)
                     val displayAuthorImage = (recipe.authorImageUrl ?: (if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorInfo?.profile_pic_url)))
 
+                    val authorBitmap = remember(displayAuthorImage) {
+                        if (!displayAuthorImage.isNullOrBlank() && !displayAuthorImage.startsWith("http")) {
+                            try {
+                                val imageBytes = android.util.Base64.decode(displayAuthorImage, android.util.Base64.DEFAULT)
+                                android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            } catch (e: Exception) { null }
+                        } else null
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -387,26 +397,42 @@ fun RecipeDetailsScreen(
                             }
                             .padding(vertical = 4.dp)
                     ) {
-                        if (!displayAuthorImage.isNullOrBlank()) {
-                            AsyncImage(
-                                model = displayAuthorImage,
-                                contentDescription = "Author Profile",
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_outline_account_circle),
-                                contentDescription = "Default Author Profile",
-                                modifier = Modifier.size(40.dp).clip(CircleShape),
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (authorBitmap != null) {
+                                Image(
+                                    bitmap = authorBitmap.asImageBitmap(),
+                                    contentDescription = "Author Profile",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else if (!displayAuthorImage.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = displayAuthorImage,
+                                    contentDescription = "Author Profile",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_outline_account_circle),
+                                    contentDescription = "Default Author Profile",
+                                    modifier = Modifier.fillMaxSize(),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                                )
+                            }
                         }
                         
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 12.dp)
+                                .weight(1f, fill = false)
+                        ) {
                             Text(
                                 text = stringResource(R.string.label_recipe_by),
                                 fontSize = 12.sp,
@@ -416,7 +442,9 @@ fun RecipeDetailsScreen(
                                 text = displayAuthorName,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 

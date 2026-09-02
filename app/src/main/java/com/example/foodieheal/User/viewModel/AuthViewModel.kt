@@ -34,6 +34,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import androidx.lifecycle.ViewModelProvider
 import com.example.foodieheal.R
+import kotlinx.serialization.json.JsonElement
 import java.util.Calendar
 
 class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewModel() {
@@ -142,7 +143,8 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     val profileEvents = _profileEvents.receiveAsFlow()
 
     fun clearProfileEvents() {
-        // Channels clear automatically when received, so this is mostly for safety
+        profileMessage = ""
+        errorMessage = ""
     }
 
     init {
@@ -572,7 +574,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
 
                 withContext(Dispatchers.IO) {
                     client.postgrest.from("Chef").update(
-                        buildMap<String, kotlinx.serialization.json.JsonElement> {
+                        buildMap<String, JsonElement> {
                             put("availability_hours", jsonElement)
                         }
                     ) {
@@ -604,7 +606,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
     }
 
     fun updateProfile(
-        name: String, email: String, profilePicUrl: String, description: String = "",
+        name: String, profilePicUrl: String, description: String = "",
         weight: Double? = null, height: Double? = null, age: Int? = null, gender: String? = null, bmi: Double? = null,
         imageBytes: ByteArray? = null,
         onSuccess: () -> Unit = {} // Added callback for reliable navigation
@@ -642,7 +644,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 }
 
                 val updatedUser = currentUser?.copy(
-                    name = name, email = email, profilePicUrl = finalUrl, description = description,
+                    name = name, profilePicUrl = finalUrl, description = description,
                     weight = weight ?: currentUser?.weight, height = height ?: currentUser?.height,
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
@@ -650,10 +652,6 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 client.postgrest.from("users").update(updatedUser) { filter { eq("id", uid) } }
                 this@AuthViewModel.currentUser = updatedUser
                 saveUserToCache(updatedUser)
-
-                if (client.auth.currentUserOrNull()?.email != email && email.isNotEmpty()) {
-                    client.auth.updateUser { this.email = email }
-                }
 
                 // Send one-time success events
                 if (weight != null || height != null || age != null || bmi != null) {
