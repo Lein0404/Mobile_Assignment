@@ -41,7 +41,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
 
     // Strict Validation Logic
-    val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{3,}$".toRegex()
+    val emailRegex = "^[A-Za-z0-9._%+-]+@gmail\\.com$".toRegex()
     val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,20}$".toRegex()
     val isEmailValid = email.matches(emailRegex)
     val isPasswordValid = password.matches(passwordRegex)
