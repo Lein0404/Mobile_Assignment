@@ -655,6 +655,19 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 this@AuthViewModel.currentUser = updatedUser
                 saveUserToCache(updatedUser)
 
+                // Sync the updated author name and image across all recipes created by this user
+                updatedUser.customId?.let { cid ->
+                    try {
+                        client.postgrest.from("recipes").update(
+                            mapOf("author_name" to sanitizedName, "author_image_url" to finalUrl)
+                        ) {
+                            filter { eq("recipe_author", cid) }
+                        }
+                    } catch (e: Exception) {
+                        // Non-critical background sync
+                    }
+                }
+
                 // Send one-time success events
                 if (weight != null || height != null || age != null || bmi != null) {
                     _profileEvents.send(ProfileEvent.BodyStatusSuccess)

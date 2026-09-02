@@ -157,15 +157,14 @@ class RecipeViewModel(
      // without a name, we fetch the User data by its ID separately.
 
     private fun fetchMissingAuthorInfo(recipes: List<Recipe>) {
-        val missingIds = recipes.filter { it.authorName.isNullOrEmpty() && !it.author_id.isNullOrEmpty() }
-            .mapNotNull { it.author_id }
+        val authorIds = recipes.mapNotNull { it.author_id }
             .distinct()
 
-        if (missingIds.isEmpty()) return
+        if (authorIds.isEmpty()) return
 
         viewModelScope.launch {
-            // BATCH FETCH: Get all missing authors in ONE request instead of a slow loop
-            repository.getUsersByCustomIds(missingIds).onSuccess { users ->
+            // BATCH FETCH: Get author info for all recipes in ONE request
+            repository.getUsersByCustomIds(authorIds).onSuccess { users ->
                 if (users.isNotEmpty()) {
                     val userMap = users.associateBy { it.customId }
                     val updater: (Recipe) -> Recipe = { r ->
