@@ -214,7 +214,18 @@
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 try {
-                    val currentUserId = authViewModel.currentUser?.id ?: ""
+                    val currentUserId = authViewModel.currentUser?.id
+                    if (currentUserId.isNullOrBlank()) {
+                        Log.e(TAG, "saveTemplate(): Failed - No user logged in")
+                        _uiState.update { 
+                            it.copy(
+                                isLoading = false, 
+                                errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.error_user_not_logged_in) ?: "You must be logged in to save a template"
+                            ) 
+                        }
+                        return@launch
+                    }
+
                     Log.d(TAG, "saveTemplate(): Saving with userId: '$currentUserId'")
 
                     val finalPlanId = if (isEditMode && !planId.isNullOrEmpty()) {
@@ -231,12 +242,12 @@
                         planName = currentState.planName.trim(),
                         planDescription = currentState.planDescription.trim(),
                         userId = currentUserId,
-                        category = currentState.category,
+                        category = currentState.category!!, // Validated non-null above
                         dailyPlans = currentState.dailyPlans,
                         public = currentState.isPublic
                     )
 
-                    if (isEditMode) {
+                    val result = if (isEditMode) {
                         Log.d(TAG, "saveTemplate(): Saving plan entity (ID: '${planToSave.planId}')")
                         planRepository.saveWeeklyPlan(planToSave.toEntity())
                     } else {
@@ -244,14 +255,25 @@
                         planRepository.insertPlan(planToSave.toEntity())
                     }
 
-                    Log.d(TAG, "saveTemplate(): Template saved successfully")
-                    _uiState.update { it.copy(isLoading = false, isSavedSuccess = true) }
+                    if (result.isSuccess) {
+                        Log.d(TAG, "saveTemplate(): Template saved successfully")
+                        _uiState.update { it.copy(isLoading = false, isSavedSuccess = true) }
+                    } else {
+                        val error = result.exceptionOrNull()
+                        Log.e(TAG, "saveTemplate(): Repository call failed", error)
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = error?.localizedMessage ?: com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_save_template)
+                            )
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "saveTemplate() Exception occurred while saving template", e)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_save_template)
+                            errorMessage = e.localizedMessage ?: com.example.foodieheal.MainActivity.appContext?.getString(com.example.foodieheal.R.string.err_failed_save_template)
                         )
                     }
                 }

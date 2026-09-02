@@ -20,9 +20,10 @@ class PlanRepository {
     /**
      * Inserts a new WeeklyPlanEntity into Supabase.
      */
-    suspend fun insertPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
+    suspend fun insertPlan(planEntity: WeeklyPlanEntity): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             postgrest.insert(planEntity)
+            Unit
         }.onFailure { e ->
             Log.e("PlanRepository", "insertPlan failed", e)
         }
@@ -31,9 +32,10 @@ class PlanRepository {
     /**
      * Saves or updates a complete WeeklyPlanEntity in Supabase.
      */
-    suspend fun saveWeeklyPlan(planEntity: WeeklyPlanEntity) = withContext(Dispatchers.IO) {
+    suspend fun saveWeeklyPlan(planEntity: WeeklyPlanEntity): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             postgrest.upsert(planEntity)
+            Unit
         }.onFailure { e ->
             Log.e("PlanRepository", "saveWeeklyPlan failed", e)
         }
@@ -63,6 +65,8 @@ class PlanRepository {
                     eq("userId", userId)
                 }
             }.decodeList<WeeklyPlanEntity>()
+        }.onFailure { e ->
+            Log.e("PlanRepository", "observePlansByCategoryAndUser failed", e)
         }
         emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)
@@ -77,6 +81,8 @@ class PlanRepository {
                     eq("category", category.name)
                 }
             }.decodeList<WeeklyPlanEntity>()
+        }.onFailure { e ->
+            Log.e("PlanRepository", "observePlansByCategory failed", e)
         }
         emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)
@@ -87,6 +93,8 @@ class PlanRepository {
     fun observeAllPlans(): Flow<List<WeeklyPlanEntity>> = flow {
         val result = runCatching {
             postgrest.select().decodeList<WeeklyPlanEntity>()
+        }.onFailure { e ->
+            Log.e("PlanRepository", "observeAllPlans failed", e)
         }
         emit(result.getOrDefault(emptyList()))
     }.flowOn(Dispatchers.IO)

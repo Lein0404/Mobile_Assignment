@@ -15,19 +15,17 @@ data class DailyPlanDTO(
 
 @Serializable
 data class MealSlotDTO(
-    @SerialName("meal_type") val mealType: MealType = MealType.BREAKFAST,
-    @SerialName("mealType") val mealTypeAlt: MealType? = null,
+    @SerialName("mealType") val mealType: MealType = MealType.BREAKFAST,
     @SerialName("recipes") val recipes: List<RecipeReference> = emptyList()
 ) {
-    val realType: MealType get() = mealTypeAlt ?: mealType
+    val realType: MealType get() = mealType
 }
 
 @Serializable
 data class RecipeReference(
-    @SerialName("recipe_id") val recipeId: String = "",
-    @SerialName("recipeId") val recipeIdAlt: String? = null
+    @SerialName("recipeId") val recipeId: String = ""
 ) {
-    val realId: String get() = recipeId.ifEmpty { recipeIdAlt ?: "" }
+    val realId: String get() = recipeId
 }
 
 // --- Domain Models for UI use ---
@@ -45,10 +43,15 @@ data class RealMealSlot(
 )
 
 // Enum for standard meal categories
+@Serializable
 enum class MealType {
+    @SerialName("BREAKFAST")
     BREAKFAST,
+    @SerialName("LUNCH")
     LUNCH,
+    @SerialName("DINNER")
     DINNER,
+    @SerialName("SNACK")
     SNACK
 }
 

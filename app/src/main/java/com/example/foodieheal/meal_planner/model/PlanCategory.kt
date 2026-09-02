@@ -12,39 +12,39 @@ enum class PlanCategory(
     val dbKey: String,                 // 🔑 Safe key stored in database/Firestore
     @StringRes val displayNameRes: Int, // 🌐 Localized UI string reference
 ){
-    @SerialName("high_protein")
+    @SerialName("HIGH_PROTEIN")
     HIGH_PROTEIN(
-        dbKey = "high_protein",
+        dbKey = "HIGH_PROTEIN",
         displayNameRes = R.string.category_high_protein,
     ),
-    @SerialName("quick_easy")
+    @SerialName("QUICK_EASY")
     QUICK_EASY(
-        dbKey = "quick_easy",
+        dbKey = "QUICK_EASY",
         displayNameRes = R.string.category_quick_easy,
     ),
-    @SerialName("balanced")
+    @SerialName("BALANCED")
     BALANCED(
-        dbKey = "balanced",
+        dbKey = "BALANCED",
         displayNameRes = R.string.category_balanced,
     ),
-    @SerialName("ketogenic")
+    @SerialName("KETOGENIC")
     KETOGENIC(
-        dbKey = "ketogenic",
+        dbKey = "KETOGENIC",
         displayNameRes = R.string.category_ketogenic,
     ),
-    @SerialName("low_carb")
+    @SerialName("LOW_CARB")
     LOW_CARB(
-        dbKey = "low_carb",
+        dbKey = "LOW_CARB",
         displayNameRes = R.string.category_low_carb,
     ),
-    @SerialName("cost_friendly")
+    @SerialName("COST_FRIENDLY")
     COST_FRIENDLY(
-        dbKey = "cost_friendly",
+        dbKey = "COST_FRIENDLY",
         displayNameRes = R.string.category_cost_friendly,
     ),
-    @SerialName("others")
+    @SerialName("OTHERS")
     OTHERS(
-        dbKey = "others",
+        dbKey = "OTHERS",
         displayNameRes = R.string.category_others
     );
 
