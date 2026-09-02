@@ -167,6 +167,7 @@ fun AdminIngredientRequestFormScreen(
                         description = formState.description,
                         unitRows = formState.unitRows,
                         availableUnits = availableUnits,
+                        altNames = formState.altNames,
                         nameError = formState.nameError,
                         nameErrorArg = formState.nameErrorArg,
                         categoryError = formState.categoryError,
@@ -179,6 +180,9 @@ fun AdminIngredientRequestFormScreen(
                         onUnitRowUpdate = { index, unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
                         onUnitRowRemove = { viewModel.removeUnitRow(it) },
                         onAddUnitRow = { viewModel.addUnitRow() },
+                        onAltNameUpdate = { index, value -> viewModel.updateAltNameRow(index, value) },
+                        onAltNameRemove = { viewModel.removeAltNameRow(it) },
+                        onAddAltNameRow = { viewModel.addAltNameRow() },
                     ) {
                         // Screen-specific bottom content
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xl)))

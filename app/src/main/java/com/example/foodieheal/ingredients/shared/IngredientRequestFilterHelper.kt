@@ -48,7 +48,8 @@ object IngredientRequestFilterHelper {
         return items.filter { item ->
             val request = getRequest(item)
             val matchesQuery = query.isEmpty() ||
-                request.ingredientName.contains(query, ignoreCase = true)
+                request.ingredientName.contains(query, ignoreCase = true) ||
+                request.ingredientAltNames.any { it.contains(query, ignoreCase = true) }
 
             val matchesCategory = selectedCategories.isEmpty() ||
                 request.ingredientCategory == null ||

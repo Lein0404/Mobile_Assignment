@@ -753,14 +753,18 @@ fun IngredientRow(
                 } else {
                     availableIngredients
                         .filter { 
-                            it.name?.contains(searchQuery, ignoreCase = true) == true
+                            it.name?.contains(searchQuery, ignoreCase = true) == true ||
+                            it.altNames.any { alt -> alt.contains(searchQuery, ignoreCase = true) }
                         }
                         .take(50)
                 }
             }
 
             val isValidSelection = remember(item.name, availableIngredients) {
-                availableIngredients.any { it.name?.equals(item.name, ignoreCase = true) == true }
+                availableIngredients.any { 
+                    it.name?.equals(item.name, ignoreCase = true) == true ||
+                    it.altNames.any { alt -> alt.equals(item.name, ignoreCase = true) }
+                }
             }
 
             ExposedDropdownMenuBox(
@@ -772,7 +776,10 @@ fun IngredientRow(
                     onValueChange = { input -> 
                         searchQuery = input
                         nameExpanded = true 
-                        val exactMatch = availableIngredients.find { it.name?.equals(input.trim(), ignoreCase = true) == true }
+                        val exactMatch = availableIngredients.find { 
+                            it.name?.equals(input.trim(), ignoreCase = true) == true ||
+                            it.altNames.any { alt -> alt.equals(input.trim(), ignoreCase = true) }
+                        }
                         if (exactMatch != null) {
                             onUpdate(item.copy(
                                 name = exactMatch.name ?: "",
@@ -792,7 +799,10 @@ fun IngredientRow(
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true)
                         .onFocusEvent { focusState ->
                             if (!focusState.isFocused && !isValidSelection) {
-                                val confirmedMatch = availableIngredients.find { it.name?.equals(item.name, ignoreCase = true) == true }
+                                val confirmedMatch = availableIngredients.find { 
+                                    it.name?.equals(item.name, ignoreCase = true) == true ||
+                                    it.altNames.any { alt -> alt.equals(item.name, ignoreCase = true) }
+                                }
                                 if (confirmedMatch == null) {
                                     searchQuery = ""
                                     onUpdate(item.copy(name = "", unit = "-"))
@@ -820,7 +830,10 @@ fun IngredientRow(
                     onDismissRequest = { 
                         nameExpanded = false 
                         if (!isValidSelection) {
-                            val confirmedMatch = availableIngredients.find { it.name?.equals(item.name, ignoreCase = true) == true }
+                            val confirmedMatch = availableIngredients.find { 
+                                it.name?.equals(item.name, ignoreCase = true) == true ||
+                                it.altNames.any { alt -> alt.equals(item.name, ignoreCase = true) }
+                            }
                             if (confirmedMatch == null) {
                                 searchQuery = ""
                                 onUpdate(item.copy(name = "", unit = "-"))
@@ -853,12 +866,20 @@ fun IngredientRow(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        if (ingredient.altNames.isNotEmpty()) {
+                                            Text(
+                                                text = getHighlightedText(stringResource(R.string.ingredient_detail_alt_names) + ingredient.altNames.joinToString(", "), searchQuery),
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                                                maxLines = 2
+                                            )
+                                        }
                                         if (!ingredient.description.isNullOrBlank()) {
                                             Text(
-                                                text = getHighlightedText(ingredient.description, searchQuery),
+                                                text = ingredient.description,
                                                 fontSize = 11.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                                maxLines = 2 // Increased maxLines to show more context
+                                                maxLines = 2
                                             )
                                         }
                                         if (ingredient.defaultUnit != null) {

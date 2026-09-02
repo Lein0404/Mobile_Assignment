@@ -63,6 +63,9 @@ class AdminAddIngredientViewModel(
     fun updateFormName(name: String) = _formState.update { IngredientFormHelper.updateName(it, name) }
     fun updateFormCategory(category: IngredientCategory) = _formState.update { IngredientFormHelper.updateCategory(it, category) }
     fun updateFormDescription(desc: String) = _formState.update { IngredientFormHelper.updateDescription(it, desc) }
+    fun addAltNameRow() = _formState.update { IngredientFormHelper.addAltNameRow(it) }
+    fun updateAltNameRow(index: Int, value: String) = _formState.update { IngredientFormHelper.updateAltNameRow(it, index, value) }
+    fun removeAltNameRow(index: Int) = _formState.update { IngredientFormHelper.removeAltNameRow(it, index) }
     fun addUnitRow() = _formState.update { IngredientFormHelper.addUnitRow(it) }
     fun updateUnitRow(index: Int, unit: Units?, calories: String) = _formState.update { IngredientFormHelper.updateUnitRow(it, index, unit, calories) }
     fun removeUnitRow(index: Int) = _formState.update { IngredientFormHelper.removeUnitRow(it, index) }
@@ -108,6 +111,7 @@ class AdminAddIngredientViewModel(
                 val ingredientId = repository.getNextIngredientId()
                 val filledRows = state.unitRows.filter { it.selectedUnit != null && it.calories.isNotBlank() }
                 val unitIds = repository.getNextIngredientUnitIds(filledRows.size)
+                val cleanAltNames = state.altNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
 
                 val ingredient = Ingredients(
                     ingredientId = ingredientId,
@@ -116,7 +120,8 @@ class AdminAddIngredientViewModel(
                     ingredientDesc = state.description,
                     ingredientImage = imageUrl,
                     createdByUserId = null,
-                    isDefault = true
+                    isDefault = true,
+                    ingredientAltNames = cleanAltNames
                 )
 
                 val ingredientUnitsList = filledRows.mapIndexed { index, row ->

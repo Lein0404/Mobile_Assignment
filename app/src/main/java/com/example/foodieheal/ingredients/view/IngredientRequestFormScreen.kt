@@ -157,6 +157,7 @@ fun IngredientRequestFormScreen(
                         description = formState.description,
                         unitRows = formState.unitRows,
                         availableUnits = availableUnits,
+                        altNames = formState.altNames,
                         nameError = formState.nameError,
                         nameErrorArg = formState.nameErrorArg,
                         categoryError = formState.categoryError,
@@ -169,6 +170,9 @@ fun IngredientRequestFormScreen(
                         onUnitRowUpdate = { index, unit, cal -> viewModel.updateUnitRow(index, unit, cal) },
                         onUnitRowRemove = { viewModel.removeUnitRow(it) },
                         onAddUnitRow = { viewModel.addUnitRow() },
+                        onAltNameUpdate = { index, value -> viewModel.updateAltNameRow(index, value) },
+                        onAltNameRemove = { viewModel.removeAltNameRow(it) },
+                        onAddAltNameRow = { viewModel.addAltNameRow() },
                     ) {
                         // Screen-specific bottom content
                         formState.errorMessage?.let { resId ->

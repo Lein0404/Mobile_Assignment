@@ -12,6 +12,7 @@ data class Ingredients(
     @SerialName("ing_image") val ingredientImage: String? = null,
     @SerialName("created_by_user_id") val createdByUserId: String? = null,
     @SerialName("is_default") val isDefault: Boolean = false,
+    @SerialName("ing_alt_names") val ingredientAltNames: List<String> = emptyList(),
 )
 
 @Serializable

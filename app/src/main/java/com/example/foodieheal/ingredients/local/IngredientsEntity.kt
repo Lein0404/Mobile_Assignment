@@ -21,6 +21,7 @@ data class IngredientsEntity(
     @ColumnInfo(name = "ing_image") val ingredientImage: String? = null,
     @ColumnInfo(name = "created_by_user_id") val createdByUserId: String? = null,
     @ColumnInfo(name = "is_default") val isDefault: Boolean = false,
+    @ColumnInfo(name = "ing_alt_names") val ingredientAltNames: String = "",
 )
 
 /**
@@ -57,6 +58,7 @@ fun Ingredients.toEntity() = IngredientsEntity(
     ingredientImage = ingredientImage,
     createdByUserId = createdByUserId,
     isDefault = isDefault,
+    ingredientAltNames = ingredientAltNames.joinToString("|||"),
 )
 
 fun IngredientsEntity.toDomain() = Ingredients(
@@ -69,6 +71,7 @@ fun IngredientsEntity.toDomain() = Ingredients(
     ingredientImage = ingredientImage,
     createdByUserId = createdByUserId,
     isDefault = isDefault,
+    ingredientAltNames = if (ingredientAltNames.isBlank()) emptyList() else ingredientAltNames.split("|||"),
 )
 
 fun IngredientUnits.toEntity() = IngredientUnitsEntity(

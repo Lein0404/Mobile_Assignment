@@ -112,7 +112,8 @@ fun IngredientDetailScreen(
                 category = req?.ingredientCategory?.categoryName,
                 image = req?.ingredientImage,
                 description = req?.ingredientDesc,
-                calorieInfo = requestDetail?.calorieSummary
+                calorieInfo = requestDetail?.calorieSummary,
+                altNames = req?.ingredientAltNames ?: emptyList()
             )
         } else {
             val detail = ingredientsUiState.ingredientDetail
@@ -121,7 +122,8 @@ fun IngredientDetailScreen(
                 category = detail?.ingredient?.ingredientCategory?.categoryName,
                 image = detail?.ingredient?.ingredientImage,
                 description = detail?.ingredient?.ingredientDesc,
-                calorieInfo = detail?.calorieSummary
+                calorieInfo = detail?.calorieSummary,
+                altNames = detail?.ingredient?.ingredientAltNames ?: emptyList()
             )
         }
     }
@@ -226,6 +228,14 @@ fun IngredientDetailScreen(
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
+                                    if (displayData.altNames.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xxsm)))
+                                        Text(
+                                            text = stringResource(R.string.ingredient_detail_alt_names) + displayData.altNames.joinToString(", "),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                     
                                     if (isRequest) {
                                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_xsm)))
@@ -470,7 +480,8 @@ private data class IngredientDisplayData(
     val category: String? = null,
     val image: String? = null,
     val description: String? = null,
-    val calorieInfo: String? = null
+    val calorieInfo: String? = null,
+    val altNames: List<String> = emptyList()
 )
 
 @Composable

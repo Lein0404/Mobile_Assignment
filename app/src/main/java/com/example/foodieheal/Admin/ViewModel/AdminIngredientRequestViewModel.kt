@@ -180,6 +180,7 @@ class AdminIngredientRequestViewModel(
                         category = request.ingredientCategory,
                         description = request.ingredientDesc,
                         imageUrl = request.ingredientImage,
+                        altNames = if (request.ingredientAltNames.isEmpty()) listOf("") else request.ingredientAltNames,
                         unitRows = unitRequests.map { ur ->
                             UnitRowState(
                                 selectedUnit = allUnits[ur.unitID],
@@ -275,6 +276,8 @@ class AdminIngredientRequestViewModel(
                     return@launch
                 }
 
+                val cleanAltNames = state.altNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
                 // 1. Generate IDs
                 val ingredientId = productionRepository.getNextIngredientId()
                 val unitIds = productionRepository.getNextIngredientUnitIds(state.unitRows.size)
@@ -287,7 +290,8 @@ class AdminIngredientRequestViewModel(
                     ingredientDesc = state.description,
                     ingredientImage = imageUrl,
                     createdByUserId = current.createdByUserId.takeIf { it.isNotBlank() },
-                    isDefault = false
+                    isDefault = false,
+                    ingredientAltNames = cleanAltNames
                 )
                 productionRepository.insertIngredient(ingredient)
 
@@ -322,7 +326,8 @@ class AdminIngredientRequestViewModel(
                     rejectedReason = null, // Clear if it was previously rejected
                     adminNote = adminNote,
                     ingredientId = ingredientId,
-                    datetimeProcessed = Instant.now().toString()
+                    datetimeProcessed = Instant.now().toString(),
+                    ingredientAltNames = cleanAltNames
                 )
 
                 val unitRequestIds = repository.getNextUnitRequestIds(state.unitRows.size)
@@ -355,6 +360,9 @@ class AdminIngredientRequestViewModel(
     fun updateFormName(name: String) = _formState.update { IngredientFormHelper.updateName(it, name) }
     fun updateFormCategory(category: IngredientCategory) = _formState.update { IngredientFormHelper.updateCategory(it, category) }
     fun updateFormDescription(desc: String) = _formState.update { IngredientFormHelper.updateDescription(it, desc) }
+    fun addAltNameRow() = _formState.update { IngredientFormHelper.addAltNameRow(it) }
+    fun updateAltNameRow(index: Int, value: String) = _formState.update { IngredientFormHelper.updateAltNameRow(it, index, value) }
+    fun removeAltNameRow(index: Int) = _formState.update { IngredientFormHelper.removeAltNameRow(it, index) }
     fun addUnitRow() = _formState.update { IngredientFormHelper.addUnitRow(it) }
     fun updateUnitRow(index: Int, unit: Units?, calories: String) = _formState.update { IngredientFormHelper.updateUnitRow(it, index, unit, calories) }
     fun removeUnitRow(index: Int) = _formState.update { IngredientFormHelper.removeUnitRow(it, index) }

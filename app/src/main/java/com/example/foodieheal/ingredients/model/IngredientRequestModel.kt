@@ -17,7 +17,8 @@ data class IngredientRequest(
     @SerialName("admin_note") val adminNote: String? = null,
     @SerialName("ingredient_id") val ingredientId: String? = null,
     @SerialName("datetime_created") val datetimeCreated: String? = null,
-    @SerialName("datetime_processed") val datetimeProcessed: String? = null
+    @SerialName("datetime_processed") val datetimeProcessed: String? = null,
+    @SerialName("ing_alt_names") val ingredientAltNames: List<String> = emptyList()
 )
 
 @Serializable
