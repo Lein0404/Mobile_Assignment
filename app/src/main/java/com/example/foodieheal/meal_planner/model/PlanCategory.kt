@@ -4,34 +4,45 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.example.foodieheal.R
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class PlanCategory(
     val dbKey: String,                 // 🔑 Safe key stored in database/Firestore
     @StringRes val displayNameRes: Int, // 🌐 Localized UI string reference
 ){
+    @SerialName("high_protein")
     HIGH_PROTEIN(
         dbKey = "high_protein",
         displayNameRes = R.string.category_high_protein,
     ),
+    @SerialName("quick_easy")
     QUICK_EASY(
         dbKey = "quick_easy",
         displayNameRes = R.string.category_quick_easy,
     ),
+    @SerialName("balanced")
     BALANCED(
         dbKey = "balanced",
         displayNameRes = R.string.category_balanced,
     ),
+    @SerialName("ketogenic")
     KETOGENIC(
         dbKey = "ketogenic",
         displayNameRes = R.string.category_ketogenic,
     ),
+    @SerialName("low_carb")
     LOW_CARB(
         dbKey = "low_carb",
         displayNameRes = R.string.category_low_carb,
     ),
+    @SerialName("cost_friendly")
     COST_FRIENDLY(
         dbKey = "cost_friendly",
         displayNameRes = R.string.category_cost_friendly,
     ),
+    @SerialName("others")
     OTHERS(
         dbKey = "others",
         displayNameRes = R.string.category_others

@@ -156,15 +156,23 @@ class MealPlannerViewModel(
                 if (status is SessionStatus.Authenticated) {
                     Log.d(TAG, "Auth session restored. Clearing cache and reloading data.")
                     clearAllCache()
-                    
+
+                    val userId = status.session.user?.id ?: ""
+                    if (userId.isNotEmpty()) {
+                        performInitialSync(userId)
+                    }
+
                     // 1. Reload the current focused date
                     loadPlanForDate(lastActiveDate, forceRefresh = true)
-                    
+
                     // 2. Reload the calendar dots for the current month
                     loadMonthConditions(YearMonth.from(lastActiveDate))
                 } else {
                     // Clear data immediately on logout to prevent data leaking between users
-                    clearAllCache()
+                    viewModelScope.launch {
+                        repository.clearLocalData()
+                        clearAllCache()
+                    }
                 }
             }
         }
@@ -177,6 +185,17 @@ class MealPlannerViewModel(
         runCatching { monthConditions.clear() }
         runCatching { fetchedMonths.clear() }
         runCatching { syncedWeeks.clear() }
+    }
+
+    private fun performInitialSync(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d(TAG, "Starting initial background sync for user: $userId")
+            repository.syncAllUserPlans(userId)
+            withContext(Dispatchers.Main) {
+                // Refresh current view after sync completes if needed
+                loadMonthConditions(YearMonth.from(lastActiveDate), force = true)
+            }
+        }
     }
 
     fun loadPlanForDate(date: LocalDate, forceRefresh: Boolean = false) {
@@ -597,7 +616,7 @@ class MealPlannerViewModel(
         EXCESS_INTAKE
     }
 
-    fun loadMonthConditions(month: YearMonth, maxCalories: Int = currentMaxCalories) {
+    fun loadMonthConditions(month: YearMonth, maxCalories: Int = currentMaxCalories, force: Boolean = false) {
         val calorieGoalChanged = maxCalories > 0 && maxCalories != currentMaxCalories
         if (maxCalories > 0) {
             currentMaxCalories = maxCalories
@@ -607,7 +626,7 @@ class MealPlannerViewModel(
             recalculateAllMonthConditions()
         }
 
-        if (fetchedMonths.contains(month) && !calorieGoalChanged) {
+        if (!force && fetchedMonths.contains(month) && !calorieGoalChanged) {
             return
         }
 
@@ -665,6 +684,16 @@ class MealPlannerViewModel(
         // 1. Batch fetch all plans AND recipes for the whole month in TWO network requests total
         val plansResult = repository.getDailyPlansInRange(startDate, endDate, targetUserId)
         val plans = plansResult.getOrDefault(emptyList())
+
+        //  SYNC TO LOCAL DB: Ensure dots are available offline
+        if (isNetworkAvailable && targetUserId == SupabaseClient.client.auth.currentUserOrNull()?.id) {
+            val plansByWeek = plans.groupBy { plan ->
+                LocalDate.parse(plan.date).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            }
+            plansByWeek.forEach { (weekStart, weekPlans) ->
+                repository.saveWeeklyPlanLocally(weekStart, weekPlans)
+            }
+        }
 
         // 2. Update memory cache so swiping is instant
         //  RESTORED WITH SAFETY: Only update days that aren't currently being viewed/edited

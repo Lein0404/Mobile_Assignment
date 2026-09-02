@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -61,6 +62,8 @@ fun MealPlannerScreen(
     val context = LocalContext.current
 
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+    var lastShiftTime by remember { mutableLongStateOf(0L) }
+    val shiftDebounceMs = 600L
 
     var selectedDate by rememberSaveable(
         stateSaver = Saver(
@@ -99,9 +102,7 @@ fun MealPlannerScreen(
     val activeDailyPlan = mealPlannerViewModel.mealPlansCache[selectedDate]
 
     LaunchedEffect(selectedDate) {
-        if (isNetworkAvailable) {
-            mealPlannerViewModel.loadPlanForDate(selectedDate)
-        }
+        mealPlannerViewModel.loadPlanForDate(selectedDate)
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -321,13 +322,25 @@ fun MealPlannerScreen(
                     chefsMap = chefsMap,
                     onCalendarClick = { showDatePicker = true },
                     onDateSelected = { newDate ->
-                        selectedDate = newDate
+                        val now = System.currentTimeMillis()
+                        if (now - lastShiftTime > shiftDebounceMs) {
+                            selectedDate = newDate
+                            lastShiftTime = now
+                        }
                     },
                     onDateShiftBackward = {
-                        selectedDate = selectedDate.minusWeeks(1)
+                        val now = System.currentTimeMillis()
+                        if (now - lastShiftTime > shiftDebounceMs) {
+                            selectedDate = selectedDate.minusWeeks(1)
+                            lastShiftTime = now
+                        }
                     },
                     onDateShiftForward = {
-                        selectedDate = selectedDate.plusWeeks(1)
+                        val now = System.currentTimeMillis()
+                        if (now - lastShiftTime > shiftDebounceMs) {
+                            selectedDate = selectedDate.plusWeeks(1)
+                            lastShiftTime = now
+                        }
                     },
                     onLoadPlanForDate = { date ->
                         if (isNetworkAvailable) mealPlannerViewModel.loadPlanForDate(date)
