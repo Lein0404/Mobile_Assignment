@@ -207,8 +207,11 @@ fun IngredientRequestFormScreen(
                                                     if (requestId == null) successToastSubmitted else successToastUpdated,
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-                                                navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
-                                                    popUpTo(Screen.Ingredients.route) { this.inclusive = true }
+                                                val popped = navController.popBackStack(Screen.Ingredients.route, inclusive = false)
+                                                if (!popped) {
+                                                    navController.navigate(Screen.Ingredients.createRoute(tab = 1)) {
+                                                        popUpTo(0) { inclusive = true }
+                                                    }
                                                 }
                                             }
                                         )
