@@ -76,8 +76,15 @@ class AdminAddIngredientViewModel(
         return isValid
     }
 
-    fun submitIngredient(imageUrl: String?, onComplete: () -> Unit) {
-        if (!validateForm()) return
+    fun submitIngredient(
+        imageUrl: String?,
+        onComplete: () -> Unit,
+        onError: (() -> Unit)? = null
+    ) {
+        if (!validateForm()) {
+            onError?.invoke()
+            return
+        }
 
         val state = _formState.value
         viewModelScope.launch {
@@ -93,6 +100,7 @@ class AdminAddIngredientViewModel(
                             nameErrorArg = existingCatalogName
                         )
                     }
+                    onError?.invoke()
                     return@launch
                 }
 
@@ -106,6 +114,7 @@ class AdminAddIngredientViewModel(
                             nameErrorArg = existingRequestName
                         )
                     }
+                    onError?.invoke()
                     return@launch
                 }
                 val ingredientId = repository.getNextIngredientId()
@@ -143,10 +152,10 @@ class AdminAddIngredientViewModel(
                 _uiState.update {
                     it.copy(
                         isSubmitting = false,
-                        //TODO: errorMessage = getApplication<Application>().getString(R.string.admin_error_submission_failed, e.message ?: R.string.error_unknown)
                         errorMessage = R.string.error_unknown
                     )
                 }
+                onError?.invoke()
             }
         }
     }
