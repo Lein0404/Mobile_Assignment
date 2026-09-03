@@ -28,6 +28,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.encodeToJsonElement
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -108,8 +111,25 @@ class RecipeRepository(
 
     suspend fun insertRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val cleanRecipe = recipe.copy(authorInfo = null)
-            client.from("recipes").insert(cleanRecipe)
+            val payload = buildJsonObject {
+                recipe.recipe_id?.let { put("recipe_id", it) }
+                recipe.author_id?.let { put("recipe_author", it) }
+                put("recipe_name", recipe.recipeName)
+                put("recipe_description", recipe.recipeDescription)
+                put("recipe_course", recipe.recipeCourse)
+                put("recipe_time", recipe.time)
+                put("recipe_calories", recipe.calories)
+                put("cooking_skill", recipe.cookingSkill)
+                put("estimated_budget", recipe.estimatedBudget)
+                put("recipe_steps", recipe.recipeStep)
+                recipe.recipeImageUrl?.let { put("recipe_image", it) }
+                put("recipe_ingredients", json.encodeToJsonElement(recipe.ingredients))
+                recipe.lastUpdated?.let { put("last_updated", it) }
+                put("visibility", recipe.visibility)
+                recipe.authorName?.let { put("author_name", it) }
+                recipe.authorImageUrl?.let { put("author_image_url", it) }
+            }
+            client.from("recipes").insert(payload)
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))
 
             // Also cache the author info for offline profile viewing
@@ -119,8 +139,25 @@ class RecipeRepository(
 
     suspend fun updateRecipe(recipe: Recipe): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val cleanRecipe = recipe.copy(authorInfo = null)
-            client.from("recipes").update(cleanRecipe) {
+            val payload = buildJsonObject {
+                recipe.recipe_id?.let { put("recipe_id", it) }
+                recipe.author_id?.let { put("recipe_author", it) }
+                put("recipe_name", recipe.recipeName)
+                put("recipe_description", recipe.recipeDescription)
+                put("recipe_course", recipe.recipeCourse)
+                put("recipe_time", recipe.time)
+                put("recipe_calories", recipe.calories)
+                put("cooking_skill", recipe.cookingSkill)
+                put("estimated_budget", recipe.estimatedBudget)
+                put("recipe_steps", recipe.recipeStep)
+                recipe.recipeImageUrl?.let { put("recipe_image", it) }
+                put("recipe_ingredients", json.encodeToJsonElement(recipe.ingredients))
+                recipe.lastUpdated?.let { put("last_updated", it) }
+                put("visibility", recipe.visibility)
+                recipe.authorName?.let { put("author_name", it) }
+                recipe.authorImageUrl?.let { put("author_image_url", it) }
+            }
+            client.from("recipes").update(payload) {
                 filter { eq("recipe_id", recipe.recipe_id ?: "") }
             }
             recipeDao?.insertRecipes(listOf(recipe.toEntity(json)))

@@ -4,13 +4,23 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.serializer.KotlinXSerializer
 import io.github.jan.supabase.storage.Storage
 
 object SupabaseClient {
+    val json = kotlinx.serialization.json.Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+        explicitNulls = false
+        isLenient = true
+    }
+
     val client = createSupabaseClient(
         supabaseUrl = "https://gamlgwljbicaanomazvz.supabase.co",
         supabaseKey = "sb_publishable_NHNRwxkgEzo4V-dgDokkKw_WbrTkrQr"
     ) {
+        defaultSerializer = KotlinXSerializer(json)
         install(Auth) {
             scheme = "foodieheal"
             host = "reset"
@@ -18,12 +28,5 @@ object SupabaseClient {
         install(Postgrest)
         install(Storage)
         install(Realtime)
-    }
-
-    val json = kotlinx.serialization.json.Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-        encodeDefaults = true
-        isLenient = true
     }
 }

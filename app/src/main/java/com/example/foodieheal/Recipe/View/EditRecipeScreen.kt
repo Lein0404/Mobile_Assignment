@@ -89,7 +89,7 @@ fun EditRecipeScreen(
             recipeName = r.recipeName
             description = r.recipeDescription
             course = r.recipeCourse
-            visibility = r.visibility
+            visibility = r.visibility.lowercase().trim()
             totalTime = r.time.toString()
             cookingSkill = r.cookingSkill
             budget = r.estimatedBudget
@@ -551,7 +551,7 @@ fun EditRecipeScreen(
                             recipeName = recipeName,
                             recipeDescription = description,
                             recipeCourse = course,
-                            visibility = visibility,
+                            visibility = visibility.lowercase().trim(),
                             time = totalTime.toIntOrNull() ?: 0,
                             calories = totalCalories,
                             cookingSkill = cookingSkill,
