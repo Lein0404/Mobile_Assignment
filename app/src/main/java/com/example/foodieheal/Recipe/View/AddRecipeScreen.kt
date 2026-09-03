@@ -933,10 +933,15 @@ fun IngredientRow(
                         value = item.quantity,
                         onValueChange = { input ->
                             // Allow only digits and a SINGLE decimal point, max 2 decimal places
+                            // Added: Max 5 digits before the decimal point to prevent layout overflow
                             if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
                                 val decimalIndex = input.indexOf('.')
-                                if (decimalIndex == -1 || input.length - decimalIndex <= 3) {
-                                    onUpdate(item.copy(quantity = input))
+                                val integerPart = if (decimalIndex == -1) input else input.substring(0, decimalIndex)
+                                
+                                if (integerPart.length <= 5) {
+                                    if (decimalIndex == -1 || input.length - decimalIndex <= 3) {
+                                        onUpdate(item.copy(quantity = input))
+                                    }
                                 }
                             }
                         },
