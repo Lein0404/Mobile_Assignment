@@ -76,13 +76,13 @@ fun ProfileScreen(
     
     // isVisitor Check: True only if we have a valid target ID that isn't ours or the nav placeholder
     val isVisitor = targetCustomId != null && 
-                    targetCustomId != user?.customId && 
+                    targetCustomId != user?.id && 
                     targetCustomId != "{customId}"
 
     val isMyProfile = !isVisitor
     
     // Use targetCustomId if visiting someone else, else use current user
-    val effectiveCustomId = if (isVisitor) targetCustomId else user?.customId
+    val effectiveUserId = if (isVisitor) targetCustomId else user?.id
     
     val primaryColor = MaterialTheme.colorScheme.primary
     val view = LocalView.current
@@ -143,17 +143,18 @@ fun ProfileScreen(
     LaunchedEffect(targetCustomId) {
         if (!isMyProfile && targetCustomId != null) {
             val repo = com.example.foodieheal.User.Repo.UserRepository()
-            visitorProfile.value = repo.getUserByCustomId(targetCustomId)
+            // targetCustomId is now the UUID
+            visitorProfile.value = repo.getUserById(targetCustomId)
             
-            user?.customId?.let { myId ->
+            user?.id?.let { myId ->
                 followViewModel.fetchFollowStatus(myId, targetCustomId)
             }
         }
     }
 
-    LaunchedEffect(effectiveCustomId) {
-        effectiveCustomId?.let { cid ->
-            followViewModel.fetchFollowCounts(cid)
+    LaunchedEffect(effectiveUserId) {
+        effectiveUserId?.let { uid ->
+            followViewModel.fetchFollowCounts(uid)
         }
     }
 
@@ -198,8 +199,8 @@ fun ProfileScreen(
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
 
-    LaunchedEffect(selectedMainTab, showChefBookmarks, effectiveCustomId) {
-        val cid = effectiveCustomId ?: return@LaunchedEffect
+    LaunchedEffect(selectedMainTab, showChefBookmarks, effectiveUserId) {
+        val uid = effectiveUserId ?: return@LaunchedEffect
         
         // Reset filters when switching tabs
         userRecipesSearchQuery = ""
@@ -211,13 +212,13 @@ fun ProfileScreen(
         filterIngredients = emptySet()
         
         if (selectedMainTab == 0) {
-            viewModel.fetchMyRecipes(cid)
+            viewModel.fetchMyRecipes(uid)
         } else {
             // Always fetch following list to keep 'followedUserIds' updated for privacy checks
-            viewModel.fetchFollowingRecipes(cid)
+            viewModel.fetchFollowingRecipes(uid)
 
             if (!showChefBookmarks) {
-                viewModel.fetchBookmarkedRecipes(cid)
+                viewModel.fetchBookmarkedRecipes(uid)
             } else {
                 displayUser?.id?.let { bookmarkViewModel.fetchBookmarkedChefs(it) }
             }
@@ -520,8 +521,8 @@ fun ProfileScreen(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.clickable(enabled = isMyProfile) { 
-                                            effectiveCustomId?.let { cid ->
-                                                navController.navigate(Screen.FollowList.createRoute(cid, "followers"))
+                                            effectiveUserId?.let { uid ->
+                                                navController.navigate(Screen.FollowList.createRoute(uid, "followers"))
                                             }
                                         }
                                     ) {
@@ -551,8 +552,8 @@ fun ProfileScreen(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.clickable(enabled = isMyProfile) { 
-                                            effectiveCustomId?.let { cid ->
-                                                navController.navigate(Screen.FollowList.createRoute(cid, "following"))
+                                            effectiveUserId?.let { uid ->
+                                                navController.navigate(Screen.FollowList.createRoute(uid, "following"))
                                             }
                                         }
                                     ) {
@@ -590,7 +591,7 @@ fun ProfileScreen(
                                     }
                                     Button(
                                         onClick = {
-                                            user.customId?.let { myId ->
+                                            user.id?.let { myId ->
                                                 followViewModel.toggleFollow(myId, targetCustomId)
                                             }
                                         },

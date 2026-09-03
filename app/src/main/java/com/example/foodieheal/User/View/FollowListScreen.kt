@@ -141,7 +141,7 @@ fun FollowListScreen(
             ) {
                 items(users) { user ->
                     UserListItem(user = user) {
-                        navController.navigate(Screen.Profile.createRoute(user.customId))
+                        navController.navigate(Screen.Profile.createRoute(user.id ?: ""))
                     }
                 }
             }

@@ -74,7 +74,7 @@ class RecipeViewModel(
 
     // Track active toggle jobs to allow cancellation/restarts
     private val bookmarkJobs = mutableMapOf<String, Job>()
-    private var currentCustomId: String? = null
+    private var currentUserId: String? = null
 
     init {
         observeNetworkStatus()
@@ -87,9 +87,9 @@ class RecipeViewModel(
                 isNetworkAvailable = connected
                 if (connected) {
                     refreshAll()
-                    currentCustomId?.let { cid ->
-                        fetchBookmarkIds(cid)
-                        repository.syncBookmarks(cid)
+                    currentUserId?.let { uid ->
+                        fetchBookmarkIds(uid)
+                        repository.syncBookmarks(uid)
                     }
                 }
             }
@@ -100,10 +100,10 @@ class RecipeViewModel(
      //Manually updates the name/pic of all recipes in memory to match the current user.
      //This ensures the Cards and Details update the exact same field instantly.
     fun syncRecipeAuthorInfo(user: User) {
-        val cid = user.customId ?: return
-        currentCustomId = cid
+        val uid = user.id ?: return
+        currentUserId = uid
         val updater: (Recipe) -> Recipe = { r ->
-            if (r.author_id == cid) {
+            if (r.author_id == uid) {
                 r.copy(
                     authorName = user.name,
                     authorImageUrl = user.profilePicUrl,
@@ -119,7 +119,7 @@ class RecipeViewModel(
         recipeList = recipeList.map(updater)
         myRecipes = myRecipes.map(updater)
         bookmarkedRecipes = bookmarkedRecipes.map(updater)
-        if (selectedRecipe?.author_id == cid) {
+        if (selectedRecipe?.author_id == uid) {
             selectedRecipe = updater(selectedRecipe!!)
         }
     }
@@ -165,10 +165,10 @@ class RecipeViewModel(
         if (authorIds.isEmpty()) return
 
         viewModelScope.launch {
-            // Live Fetch: Get fresh author info from users table
+            // Live Fetch: Get fresh author info from users table by internal ID (UUID)
             repository.getUsersByCustomIds(authorIds).onSuccess { users ->
                 if (users.isNotEmpty()) {
-                    val userMap = users.associateBy { it.customId }
+                    val userMap = users.associateBy { it.id }
                     val updater: (Recipe) -> Recipe = { r ->
                         userMap[r.author_id]?.let { u ->
                             r.copy(
@@ -262,7 +262,7 @@ class RecipeViewModel(
 
     fun fetchBookmarkedRecipes(userId: String, force: Boolean = false) {
         if (userId.isBlank()) return
-        currentCustomId = userId
+        currentUserId = userId
         if (isFetchingBookmarks) return
         if (force) bookmarkedRecipes = emptyList()
 
@@ -295,7 +295,7 @@ class RecipeViewModel(
 
     fun fetchBookmarkIds(userId: String) {
         if (userId.isBlank()) return
-        currentCustomId = userId
+        currentUserId = userId
         viewModelScope.launch {
             repository.getUserBookmarkIds(userId).onSuccess { ids ->
                 bookmarkedRecipeIds = ids.toSet()
@@ -305,7 +305,7 @@ class RecipeViewModel(
 
     fun toggleBookmark(userId: String, recipeId: String, recipeName: String) {
         if (userId.isBlank() || recipeId.isBlank()) return
-        currentCustomId = userId
+        currentUserId = userId
 
         if (!isNetworkAvailable) {
             viewModelScope.launch {

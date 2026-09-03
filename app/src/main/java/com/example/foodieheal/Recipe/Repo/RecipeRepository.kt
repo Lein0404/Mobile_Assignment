@@ -135,8 +135,8 @@ class RecipeRepository(
             MainActivity.appContext?.let { context ->
                 val dao = UserDatabase.getDatabase(context).userDao()
                 val user = User(
-                    id = null,
-                    customId = recipe.author_id,
+                    id = recipe.author_id, // Store the UUID in the ID field
+                    customId = null, // CustomID will be fetched if needed, or we can just use the Name
                     name = recipe.authorName,
                     profilePicUrl = recipe.authorImageUrl
                 )
@@ -475,12 +475,12 @@ class RecipeRepository(
         }
     }
 
-    suspend fun getUsersByCustomIds(customIds: List<String>): Result<List<User>> = withContext(Dispatchers.IO) {
+    suspend fun getUsersByCustomIds(ids: List<String>): Result<List<User>> = withContext(Dispatchers.IO) {
         runCatching {
-            if (customIds.isEmpty()) return@runCatching emptyList()
+            if (ids.isEmpty()) return@runCatching emptyList()
             try {
                 val users = client.from("users")
-                    .select { filter { isIn("custom_id", customIds) } }
+                    .select { filter { isIn("id", ids) } }
                     .decodeList<User>()
 
                 // Cache for offline
@@ -493,7 +493,7 @@ class RecipeRepository(
                 // Offline fallback
                 MainActivity.appContext?.let { context ->
                     val dao = UserDatabase.getDatabase(context).userDao()
-                    customIds.mapNotNull { dao.getPublicUser(it)?.toDomain() }
+                    ids.mapNotNull { dao.getPublicUser(it)?.toDomain() }
                 } ?: emptyList()
             }
         }

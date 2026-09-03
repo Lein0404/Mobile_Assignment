@@ -224,13 +224,13 @@ fun RecipeCardItem(
                         )
                     }
 
-                    val authorToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
+                    val authorToDisplay = if (recipe.author_id == currentUser?.id && currentUser != null) {
                         currentUser.name
                     } else {
                         recipe.authorName ?: recipe.authorInfo?.name ?: stringResource(R.string.default_chef_name)
                     }
 
-                    val authorImageToDisplay = if (recipe.author_id == currentUser?.customId && currentUser != null) {
+                    val authorImageToDisplay = if (recipe.author_id == currentUser?.id && currentUser != null) {
                         currentUser.profilePicUrl
                     } else {
                         recipe.authorImageUrl ?: recipe.authorInfo?.profile_pic_url

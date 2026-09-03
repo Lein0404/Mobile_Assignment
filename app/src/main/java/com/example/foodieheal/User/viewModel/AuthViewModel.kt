@@ -666,16 +666,14 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 saveUserToCache(updatedUser)
 
                 // Sync the updated author name and image across all recipes created by this user
-                if (!cid.isNullOrBlank()) {
-                    try {
-                        client.postgrest.from("recipes").update(
-                            mapOf("author_name" to finalName, "author_image_url" to finalUrl)
-                        ) {
-                            filter { eq("recipe_author", cid) }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("AuthViewModel", "Recipe author sync failed", e)
+                try {
+                    client.postgrest.from("recipes").update(
+                        mapOf("author_name" to finalName, "author_image_url" to finalUrl)
+                    ) {
+                        filter { eq("recipe_author", uid) }
                     }
+                } catch (e: Exception) {
+                    Log.e("AuthViewModel", "Recipe author sync failed", e)
                 }
 
                 // Send one-time success events
