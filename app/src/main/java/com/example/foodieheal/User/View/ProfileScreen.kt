@@ -97,6 +97,7 @@ fun ProfileScreen(
 
     // Show success messages for password, profile, and body status updates
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients() // Ensure filters are fresh
         authViewModel.profileEvents.collect { event ->
             val message = when(event) {
                 is AuthViewModel.ProfileEvent.PasswordSuccess -> view.context.getString(R.string.profile_password_success)
