@@ -157,6 +157,7 @@ fun RecipesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
+        viewModel.fetchAvailableIngredients() // Refresh filter list on entry
         viewModel.bookmarkMessage.collect { message ->
             // Use currentSnackbarData?.dismiss() to show new messages instantly
             snackbarHostState.currentSnackbarData?.dismiss()
