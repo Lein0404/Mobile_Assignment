@@ -136,16 +136,12 @@ class MainActivity : FragmentActivity() {
 
                 // Global background observer for ingredient request status updates
                 val currentUserId = sharedAuthViewModel.currentUser?.id
-                LaunchedEffect(sharedAuthViewModel.loginSuccess, currentUserId, sharedAuthViewModel.isAdmin, sharedAuthViewModel.isChef, isNetworkConnected) {
+                LaunchedEffect(sharedAuthViewModel.loginSuccess, currentUserId, sharedAuthViewModel.isAdmin, sharedAuthViewModel.isChef) {
                     if (sharedAuthViewModel.loginSuccess && !currentUserId.isNullOrBlank() && !sharedAuthViewModel.isAdmin && !sharedAuthViewModel.isChef) {
-                        IngredientRequestSyncWorker.enqueuePeriodicSync(context)
-                        while (isActive) {
-                            if (isNetworkConnected) {
-                                IngredientRequestStatusMonitor.checkStatusUpdates(currentUserId, context)
-                            }
-                            delay(5000) // polls every 5 seconds
-                        }
-                    } else {
+                        IngredientRequestStatusMonitor.startPolling(currentUserId, context)
+                        IngredientRequestSyncWorker.enqueuePeriodicSync(context, currentUserId)
+                    } else if (!sharedAuthViewModel.loginSuccess && !sharedAuthViewModel.isInitializing) {
+                        IngredientRequestStatusMonitor.stopPolling(context)
                         IngredientRequestSyncWorker.cancelPeriodicSync(context)
                     }
                 }
@@ -396,6 +392,7 @@ class MainActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id
+            ?: IngredientRequestStatusMonitor.getActiveUserId(applicationContext)
         if (!userId.isNullOrBlank()) {
             lifecycleScope.launch {
                 IngredientRequestStatusMonitor.checkStatusUpdates(userId, applicationContext)
@@ -407,9 +404,10 @@ class MainActivity : FragmentActivity() {
         super.onStop()
         // When app is minimized or backgrounded, schedule background sync
         val userId = SupabaseClient.client.auth.currentUserOrNull()?.id
+            ?: IngredientRequestStatusMonitor.getActiveUserId(applicationContext)
         if (!userId.isNullOrBlank()) {
-            IngredientRequestSyncWorker.enqueueImmediateSync(applicationContext)
-            IngredientRequestSyncWorker.enqueuePeriodicSync(applicationContext)
+            IngredientRequestSyncWorker.enqueueImmediateSync(applicationContext, userId)
+            IngredientRequestSyncWorker.enqueuePeriodicSync(applicationContext, userId)
         }
     }
 
