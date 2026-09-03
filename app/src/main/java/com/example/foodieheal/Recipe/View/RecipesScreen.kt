@@ -863,7 +863,7 @@ fun RecipesScreen(
     recipeToShare?.let { recipe ->
         ShareRecipeDialog(
             recipe = recipe,
-            authorName = if (recipe.author_id == authViewModel.currentUser?.customId) authViewModel.currentUser?.name else recipe.authorName,
+            authorName = if (recipe.author_id == authViewModel.currentUser?.id) authViewModel.currentUser?.name else recipe.authorName,
             onDismiss = { recipeToShare = null }
         )
     }

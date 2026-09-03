@@ -1081,7 +1081,7 @@ fun ProfileScreen(
                             val filtered = bookmarkedRecipes.filter { recipe ->
                                 // Privacy & Visibility Logic
                                 val isVisible = when {
-                                    recipe.author_id == user?.customId -> true // My recipes are always visible to me
+                                    recipe.author_id == user?.id -> true // My recipes are always visible to me
                                     recipe.visibility == "public" -> true // Public recipes are visible to everyone
                                     recipe.visibility == "followers" -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
                                     else -> false // Private recipes (or any other status) are hidden from others
@@ -1116,9 +1116,9 @@ fun ProfileScreen(
                                             currentUser = user,
                                             isBookmarked = true,
                                             onBookmarkClick = {
-                                                user?.customId?.let { cid ->
+                                                user?.id?.let { uid ->
                                                     recipe.recipe_id?.let { rid ->
-                                                        viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                        viewModel.toggleBookmark(uid, rid, recipe.recipeName)
                                                     }
                                                 }
                                             },
@@ -1193,9 +1193,9 @@ fun ProfileScreen(
                 TextButton(
                     onClick = {
                         val rid = recipeToDelete?.recipe_id
-                        val cid = user?.customId
-                        if (rid != null && cid != null) {
-                            viewModel.deleteRecipe(rid, cid)
+                        val uid = user?.id
+                        if (rid != null && uid != null) {
+                            viewModel.deleteRecipe(rid, uid)
                         }
                         recipeToDelete = null
                     }
@@ -1215,7 +1215,7 @@ fun ProfileScreen(
     recipeToShare?.let { recipe ->
         ShareRecipeDialog(
             recipe = recipe,
-            authorName = if (recipe.author_id == user?.customId) user?.name else recipe.authorName,
+            authorName = if (recipe.author_id == user?.id) user?.name else recipe.authorName,
             onDismiss = { recipeToShare = null }
         )
     }
