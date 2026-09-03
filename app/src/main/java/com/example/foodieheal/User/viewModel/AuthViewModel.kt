@@ -487,7 +487,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     id = uid,
                     customId = customId,
                     email = tempEmail,
-                    name = "User ($customId)",
+                    name = "User ${customId.removePrefix("U")}",
                     weight = weight,
                     height = height,
                     age = age,
@@ -523,7 +523,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 val customId = "U${(maxIdNum + 1).toString().padStart(3, '0')}"
 
                 val newUser =
-                    User(id = uid, customId = customId, email = email, name = "User ($customId)")
+                    User(id = uid, customId = customId, email = email, name = "User ${customId.removePrefix("U")}")
 
                 client.postgrest.from("users").insert(newUser)
                 this@AuthViewModel.currentUser = newUser
@@ -644,16 +644,18 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                     }
                 }
 
-                val sanitizedName = name.replace("\r", "").replace("\n", "").trim()
+                val cid = currentUser?.customId
+                val defaultName = if (!cid.isNullOrBlank()) "User ${cid.removePrefix("U")}" else "User"
+                val trimmedName = name.replace("\r", "").replace("\n", "").trim()
+                val finalName = if (trimmedName.isBlank()) defaultName else trimmedName
 
                 val updatedUser = currentUser?.copy(
-                    name = sanitizedName, profilePicUrl = finalUrl, description = description,
+                    name = finalName, profilePicUrl = finalUrl, description = description,
                     weight = weight ?: currentUser?.weight, height = height ?: currentUser?.height,
                     age = age ?: currentUser?.age, gender = gender ?: currentUser?.gender, bmi = bmi ?: currentUser?.bmi
                 ) ?: return@launch
 
                 // Update users table in Supabase (match by custom_id first for consistency, fallback to id)
-                val cid = updatedUser.customId
                 if (!cid.isNullOrBlank()) {
                     client.postgrest.from("users").update(updatedUser) { filter { eq("custom_id", cid) } }
                 } else {
@@ -667,7 +669,7 @@ class AuthViewModel(private val networkMonitor: NetworkMonitor? = null) : ViewMo
                 if (!cid.isNullOrBlank()) {
                     try {
                         client.postgrest.from("recipes").update(
-                            mapOf("author_name" to sanitizedName, "author_image_url" to finalUrl)
+                            mapOf("author_name" to finalName, "author_image_url" to finalUrl)
                         ) {
                             filter { eq("recipe_author", cid) }
                         }

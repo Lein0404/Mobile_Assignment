@@ -502,10 +502,10 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.width(20.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
-                                val rawName = if (displayUser == null && isVisitor) stringResource(R.string.profile_offline_user) else (displayUser?.name ?: "")
-                                val displayName = remember(rawName) {
-                                    val clean = if (rawName.startsWith("User (U") && rawName.endsWith(")")) "User" else rawName
-                                    clean.trim()
+                                val displayName = if (displayUser == null && isVisitor) {
+                                    stringResource(R.string.profile_offline_user)
+                                } else {
+                                    displayUser?.name?.ifBlank { null } ?: stringResource(id = R.string.user)
                                 }
                                 Text(
                                     text = displayName,
