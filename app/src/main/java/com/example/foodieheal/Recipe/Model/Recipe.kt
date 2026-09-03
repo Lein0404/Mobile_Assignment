@@ -1,9 +1,12 @@
 package com.example.foodieheal.Recipe.Model
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class Recipe(
     @SerialName("recipe_id") val recipe_id: String? = null,
@@ -19,7 +22,7 @@ data class Recipe(
     @SerialName("recipe_image") val recipeImageUrl: String? = null,
     @SerialName("recipe_ingredients") val ingredients: List<IngredientItem> = emptyList(),
     @SerialName("last_updated") val lastUpdated: String? = null,
-    @SerialName("visibility") val visibility: String = "public",
+    @EncodeDefault @SerialName("visibility") val visibility: String = "public",
 
     // Join result field: catches the author name/pic during decoding if columns are missing.
     @SerialName("users") var authorInfo: AuthorInfo? = null,
@@ -27,7 +30,6 @@ data class Recipe(
     // Denormalized fields: Stored directly in 'recipes' table for speed and offline reliability.
     @SerialName("author_name") var authorName: String? = null,
     @SerialName("author_image_url") var authorImageUrl: String? = null,
-    @SerialName("author_image_cache") var authorImageCache: String? = null,
 
     @kotlinx.serialization.Transient var isOffline: Boolean = false
 )
