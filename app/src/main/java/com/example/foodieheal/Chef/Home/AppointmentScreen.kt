@@ -36,6 +36,8 @@ import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.foodieheal.ui.components.getHighlightedText
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import java.util.Locale
 import androidx.annotation.StringRes
 
@@ -369,10 +371,12 @@ fun AppointmentsScreen(
                             items(filteredAppointments, key = { it.AppointmentID ?: it.created_at.orEmpty() }) { appointment ->
                                 val clientUser = state.usersMap[appointment.userId]
                                 val userName = clientUser?.name ?: stringResource(R.string.unknown_client)
+                                val userProfilePicUrl = clientUser?.profilePicUrl
 
                                 AppointmentCard(
                                     appointment = appointment,
                                     userName = userName,
+                                    userProfilePicUrl = userProfilePicUrl,
                                     searchQuery = searchQuery,
                                     onCardClick = { onCardClick(appointment) }
                                 )
@@ -391,6 +395,7 @@ fun AppointmentsScreen(
 fun AppointmentCard(
     appointment: Appointment,
     userName: String,
+    userProfilePicUrl: String? = null,
     searchQuery: String = "",
     onCardClick: () -> Unit
 ) {
@@ -425,13 +430,22 @@ fun AppointmentCard(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         modifier = Modifier.size(38.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_outline_account_circle),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                        if (!userProfilePicUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = userProfilePicUrl,
+                                contentDescription = userName,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
+                        } else {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = userName.trim().firstOrNull()?.uppercase() ?: "U",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
 

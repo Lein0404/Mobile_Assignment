@@ -85,6 +85,7 @@ import com.example.foodieheal.hiring.util.CalendarSyncHelper
 fun AppointmentDetailScreen(
     appointment: Appointment,
     userName: String = "Client",
+    userProfilePicUrl: String? = null,
     userPhone: String = "",
     isNetworkAvailable: Boolean = true,
     attachedRecipes: List<AppointmentRecipeWithDetails> = emptyList(),
@@ -168,13 +169,22 @@ fun AppointmentDetailScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(48.dp)
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = userName.firstOrNull()?.uppercase() ?: "C",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                if (!userProfilePicUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = userProfilePicUrl,
+                                        contentDescription = userName,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
                                     )
+                                } else {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = userName.firstOrNull()?.uppercase() ?: "C",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
                                 }
                             }
 
@@ -727,21 +737,31 @@ fun AppointmentDetailScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .background(
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                                    CircleShape
-                                                ),
-                                            contentAlignment = Alignment.Center
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            modifier = Modifier.size(32.dp)
                                         ) {
-                                            Text(
-                                                text = userName.take(1).uppercase(Locale.ROOT),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 14.sp,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
+                                            if (!userProfilePicUrl.isNullOrBlank()) {
+                                                AsyncImage(
+                                                    model = userProfilePicUrl,
+                                                    contentDescription = userName,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else {
+                                                Box(
+                                                    contentAlignment = Alignment.Center,
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Text(
+                                                        text = userName.take(1).uppercase(Locale.ROOT),
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 14.sp,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
                                         }
 
                                         Column {

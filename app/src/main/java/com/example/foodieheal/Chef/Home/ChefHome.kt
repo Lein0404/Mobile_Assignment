@@ -372,10 +372,12 @@ fun ChefHomeScreen(
                                 if (nextAppointment != null) {
                                     val chefUser = state.usersMap[nextAppointment.userId]
                                     val userName = chefUser?.name ?: stringResource(R.string.unknown_client)
+                                    val userProfilePicUrl = chefUser?.profilePicUrl
 
                                     AppointmentCard(
                                         appointment = nextAppointment,
                                         userName = userName,
+                                        userProfilePicUrl = userProfilePicUrl,
                                         onCardClick = { onCardClick(nextAppointment) }
                                     )
                                 } else {
