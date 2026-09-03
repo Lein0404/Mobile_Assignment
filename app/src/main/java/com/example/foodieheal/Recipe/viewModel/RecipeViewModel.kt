@@ -369,6 +369,8 @@ class RecipeViewModel(
     }
 
     fun fetchRecipeById(recipeId: String) {
+        if (selectedRecipe?.recipe_id == recipeId) return // Avoid resetting if already loaded
+        
         viewModelScope.launch {
             selectedRecipe = null
             recipeAuthor = null
@@ -388,6 +390,8 @@ class RecipeViewModel(
 
      // Uses local-first logic for instant meal plan recipe viewing
     fun fetchRecipeLocalFirst(recipeId: String) {
+        if (selectedRecipe?.recipe_id == recipeId) return // Avoid resetting if already loaded
+
         viewModelScope.launch {
             selectedRecipe = null
             recipeAuthor = null

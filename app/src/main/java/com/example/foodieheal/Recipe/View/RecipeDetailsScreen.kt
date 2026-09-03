@@ -56,13 +56,6 @@ fun RecipeDetailsScreen(
         }
     }
 
-    // 2. Clear state when leaving the screen
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.clearSelectedRecipe()
-        }
-    }
-
     LaunchedEffect(recipe?.author_id, user?.id) {
         val aid = recipe?.author_id
         val uid = user?.id

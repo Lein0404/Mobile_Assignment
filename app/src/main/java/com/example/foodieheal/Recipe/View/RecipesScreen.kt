@@ -125,6 +125,9 @@ fun RecipesScreen(
                 // Privacy & Visibility Logic
                 val isVisible = when {
                     recipe.author_id == currentUserId -> true // My recipes are always visible to me
+                    // If we are in the "My Recipes" tab, we ONLY show our own recipes.
+                    // This prevents other public recipes from appearing here if the list is being refreshed.
+                    selectedTab == 1 -> false 
                     recipe.visibility == "public" -> true // Public recipes are visible to everyone
                     recipe.visibility == "followers" -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
                     else -> false // Private recipes (or any other status) are hidden from others
