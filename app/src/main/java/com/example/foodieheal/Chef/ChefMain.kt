@@ -217,7 +217,9 @@ fun ChefMainScreen(
                         ?: (homeUiState as? HomeUiState.Success)?.usersMap
                         ?: emptyMap()
 
-                    val userName = usersMap[appointment.userId]?.name ?: stringResource(R.string.unknown_client)
+                    val clientUser = usersMap[appointment.userId]
+                    val userName = clientUser?.name ?: stringResource(R.string.unknown_client)
+                    val userProfilePicUrl = clientUser?.profilePicUrl
 
                     val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
                     val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()
@@ -235,6 +237,7 @@ fun ChefMainScreen(
                     AppointmentDetailScreen(
                         appointment = appointment,
                         userName = userName,
+                        userProfilePicUrl = userProfilePicUrl,
                         isNetworkAvailable = isNetworkAvailable,
                         attachedRecipes = attachedRecipes,
                         isLoadingRecipes = isLoadingRecipes,
