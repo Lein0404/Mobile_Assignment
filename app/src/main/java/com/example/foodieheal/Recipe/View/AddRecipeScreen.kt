@@ -307,8 +307,8 @@ fun AddRecipeScreen(
                     AddRecipeTextField(
                         value = totalTime,
                         onValueChange = { input -> 
-                            // Allow ONLY digits for Total Time (No decimals allowed)
-                            if (input.all { it.isDigit() }) {
+                            // Allow digits only, max 5 characters to show error if > 1440
+                            if (input.all { it.isDigit() } && input.length <= 5) {
                                 totalTime = input
                             }
                         },
@@ -932,9 +932,12 @@ fun IngredientRow(
                     OutlinedTextField(
                         value = item.quantity,
                         onValueChange = { input ->
-                            // Allow only digits and a SINGLE decimal point
+                            // Allow only digits and a SINGLE decimal point, max 2 decimal places
                             if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
-                                onUpdate(item.copy(quantity = input))
+                                val decimalIndex = input.indexOf('.')
+                                if (decimalIndex == -1 || input.length - decimalIndex <= 3) {
+                                    onUpdate(item.copy(quantity = input))
+                                }
                             }
                         },
                         placeholder = { Text(stringResource(R.string.placeholder_zero), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },

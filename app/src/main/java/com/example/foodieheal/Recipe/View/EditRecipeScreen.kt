@@ -339,7 +339,8 @@ fun EditRecipeScreen(
                         AddRecipeTextField(
                             value = totalTime,
                             onValueChange = { input ->
-                                if (input.all { it.isDigit() }) {
+                                // Allow digits only, max 5 characters to show error if > 1440
+                                if (input.all { it.isDigit() } && input.length <= 5) {
                                     totalTime = input
                                 }
                             },
