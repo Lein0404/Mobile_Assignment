@@ -5,7 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.local.IngredientsEntity
+import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.ShoppingList
 
 /**
@@ -13,13 +15,16 @@ import com.example.foodieheal.ingredients.model.ShoppingList
  */
 object ShoppingListShareHelper {
 
-    fun formatShoppingListForSharing(shoppingList: ShoppingList): String {
+    fun formatShoppingListForSharing(
+        shoppingList: ShoppingList,
+        emptyMessage: String = "(No items in shopping list)"
+    ): String {
         val title = shoppingList.title.ifEmpty { shoppingList.shoppingListId }
         if (shoppingList.items.isEmpty()) {
-            return "$title\n\n(No items in shopping list)"
+            return "$title\n\n$emptyMessage"
         }
 
-        val grouped = shoppingList.items.groupBy { it.category?.categoryName ?: "Others" }
+        val grouped = shoppingList.items.groupBy { it.category?.categoryName ?: IngredientCategory.OTHERS.categoryName }
         val body = grouped.entries.joinToString("\n\n") { (categoryName, items) ->
             val itemsText = items.joinToString("\n") { item ->
                 if (item.isChecked) "${item.ingredientName} ✔" else item.ingredientName
@@ -31,7 +36,8 @@ object ShoppingListShareHelper {
     }
 
     fun shareShoppingList(context: Context, shoppingList: ShoppingList) {
-        val shareText = formatShoppingListForSharing(shoppingList)
+        val emptyMsg = context.getString(R.string.shopping_list_share_empty)
+        val shareText = formatShoppingListForSharing(shoppingList, emptyMsg)
         val title = shoppingList.title.ifEmpty { shoppingList.shoppingListId }
 
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -41,19 +47,21 @@ object ShoppingListShareHelper {
             type = "text/plain"
         }
 
-        val shareIntent = Intent.createChooser(sendIntent, "Share shopping list")
+        val chooserTitle = context.getString(R.string.shopping_list_share)
+        val shareIntent = Intent.createChooser(sendIntent, chooserTitle)
         context.startActivity(shareIntent)
     }
 
     fun copyShoppingListToClipboard(context: Context, shoppingList: ShoppingList) {
-        val shareText = formatShoppingListForSharing(shoppingList)
+        val emptyMsg = context.getString(R.string.shopping_list_share_empty)
+        val shareText = formatShoppingListForSharing(shoppingList, emptyMsg)
         val title = shoppingList.title.ifEmpty { shoppingList.shoppingListId }
 
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(title, shareText)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(context, "Shopping list copied to clipboard", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.shopping_list_copied_toast), Toast.LENGTH_SHORT).show()
     }
 
     fun getClipboardText(context: Context): String {

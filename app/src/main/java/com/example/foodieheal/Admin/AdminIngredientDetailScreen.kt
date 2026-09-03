@@ -357,7 +357,7 @@ fun RejectRequestDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Reject Request", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.admin_detail_reject_title), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 Text(stringResource(R.string.admin_detail_reject_prompt))
