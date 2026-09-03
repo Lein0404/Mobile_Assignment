@@ -12,9 +12,6 @@ import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-
 class FollowRepository {
 
     private fun getDao() = MainActivity.appContext?.let { UserDatabase.getDatabase(it).userDao() }
@@ -40,19 +37,13 @@ class FollowRepository {
     suspend fun sendFollowRequest(followerId: String, followingId: String) = withContext(Dispatchers.IO) {
         try {
             val nextId = getNextFollowId()
-            val payload = buildJsonObject {
-                put("id", nextId)
-                put("follower_id", followerId)
-                put("following_id", followingId)
-                put("status", "PENDING")
-            }
-            SupabaseClient.client.from("follows").insert(payload)
             val follow = Follow(
                 id = nextId,
                 followerId = followerId,
                 followingId = followingId,
                 status = "PENDING"
             )
+            SupabaseClient.client.from("follows").insert(follow)
             getDao()?.insertFollows(listOf(follow.toEntity()))
         } catch (e: Exception) {
             Log.e("FollowRepository", "Error sending follow request", e)
@@ -75,10 +66,9 @@ class FollowRepository {
 
     suspend fun acceptFollowRequest(followerId: String, followingId: String) = withContext(Dispatchers.IO) {
         try {
-            val payload = buildJsonObject {
-                put("status", "ACCEPTED")
-            }
-            SupabaseClient.client.from("follows").update(payload) {
+            SupabaseClient.client.from("follows").update({
+                set("status", "ACCEPTED")
+            }) {
                 filter {
                     eq("follower_id", followerId)
                     eq("following_id", followingId)
