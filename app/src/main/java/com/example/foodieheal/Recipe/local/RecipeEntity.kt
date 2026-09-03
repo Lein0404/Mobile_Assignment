@@ -57,7 +57,7 @@ fun Recipe.toEntity(json: Json): RecipeEntity {
         recipe_id = this.recipe_id ?: "",
         author_id = this.author_id,
         recipeName = this.recipeName,
-        recipeDescription = this.recipeDescription,
+        recipeDescription = this.recipeDescription.orEmpty(),
         recipeCourse = this.recipeCourse,
         time = this.time,
         calories = this.calories,

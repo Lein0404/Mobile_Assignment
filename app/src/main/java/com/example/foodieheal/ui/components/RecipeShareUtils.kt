@@ -108,10 +108,10 @@ fun ShareableRecipeCard(
                 HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(20.dp))
 
-                if (recipe.recipeDescription.isNotBlank()) {
+                if (!recipe.recipeDescription.isNullOrBlank()) {
                     Text("Description", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
                     Text(
-                        text = recipe.recipeDescription,
+                        text = recipe.recipeDescription.orEmpty(),
                         fontSize = 13.sp,
                         color = Color.DarkGray,
                         modifier = Modifier.padding(top = 8.dp)

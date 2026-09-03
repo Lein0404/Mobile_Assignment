@@ -128,8 +128,8 @@ fun RecipesScreen(
                     // If we are in the "My Recipes" tab, we ONLY show our own recipes.
                     // This prevents other public recipes from appearing here if the list is being refreshed.
                     selectedTab == 1 -> false 
-                    recipe.visibility == "public" -> true // Public recipes are visible to everyone
-                    recipe.visibility == "followers" -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
+                    recipe.visibility.isNullOrBlank() || recipe.visibility.equals("public", ignoreCase = true) -> true // Public recipes are visible to everyone
+                    recipe.visibility.equals("followers", ignoreCase = true) -> viewModel.followedUserIds.contains(recipe.author_id) // Visible only if following
                     else -> false // Private recipes (or any other status) are hidden from others
                 }
                 if (!isVisible) return@filter false
@@ -182,7 +182,7 @@ fun RecipesScreen(
         
         // Tab 0: Popular recipes -> Always fetch in background to sync newly added recipes from other accounts without flashing
         if (selectedTab == 0) {
-            viewModel.fetchAllRecipes()
+            viewModel.fetchAllRecipes(force = true)
         }
 
         if (uid != null) {

@@ -12,7 +12,7 @@ data class Recipe(
     @SerialName("recipe_id") val recipe_id: String? = null,
     @SerialName("recipe_author") val author_id: String? = null,
     @SerialName("recipe_name") val recipeName: String = "Loading...",
-    @SerialName("recipe_description") val recipeDescription: String = "",
+    @SerialName("recipe_description") val recipeDescription: String? = "",
     @SerialName("recipe_course") val recipeCourse: String = "",
     @SerialName("recipe_time") val time: Int = 0,
     @SerialName("recipe_calories") val calories: Int = 0,

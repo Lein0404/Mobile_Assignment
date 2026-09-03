@@ -87,7 +87,7 @@ fun EditRecipeScreen(
     LaunchedEffect(existingRecipe) {
         existingRecipe?.let { r ->
             recipeName = r.recipeName
-            description = r.recipeDescription
+            description = r.recipeDescription.orEmpty()
             course = r.recipeCourse
             visibility = r.visibility
             totalTime = r.time.toString()
