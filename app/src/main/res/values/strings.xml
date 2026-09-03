@@ -1001,10 +1001,11 @@
     <string name="admin_fab_add_ingredient">Add New Ingredient</string>
     <string name="admin_offline_manage_message">Please connect to the internet to manage ingredients and requests</string>
     <string name="admin_requests_search_placeholder">Search ingredient requests here</string>
-    <string name="admin_categories_header">Categories</string>
+    <string name="admin_categories_header">Categories Filter</string>
     <string name="admin_no_requests_found">No requests found.</string>
     <string name="admin_filter_status_title">Filter by Status</string>
     <string name="admin_filter_sheet_title">Filter Requests</string>
+    <string name="ingredients_filter_sheet_title">Filter Ingredients</string>
     <string name="admin_filter_reset_all">Reset All</string>
     <string name="admin_filter_section_status">Request Status</string>
     <string name="admin_filter_section_created_date">Requested Date</string>

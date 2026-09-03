@@ -20,6 +20,8 @@ data class IngredientsUiState(
     val selectedTab: Int = 0,
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val tempSelectedCategories: Set<IngredientCategory> = emptySet(),
+    val showFilterSheet: Boolean = false,
     val ingredients: List<IngredientItem> = emptyList(),
     val filteredIngredients: List<IngredientItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -143,6 +145,42 @@ class IngredientsViewModel(
 
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
+        applyFilters()
+    }
+
+    fun onShowFilterSheet(show: Boolean) {
+        _uiState.update {
+            it.copy(
+                showFilterSheet = show,
+                tempSelectedCategories = it.selectedCategories
+            )
+        }
+    }
+
+    fun updateTempCategory(category: IngredientCategory) {
+        _uiState.update { state ->
+            val newCategories = if (state.tempSelectedCategories.contains(category)) {
+                state.tempSelectedCategories - category
+            } else {
+                state.tempSelectedCategories + category
+            }
+            state.copy(tempSelectedCategories = newCategories)
+        }
+    }
+
+    fun resetTempFilters() {
+        _uiState.update {
+            it.copy(tempSelectedCategories = emptySet())
+        }
+    }
+
+    fun applyFilterSheet() {
+        _uiState.update {
+            it.copy(
+                showFilterSheet = false,
+                selectedCategories = it.tempSelectedCategories
+            )
+        }
         applyFilters()
     }
 

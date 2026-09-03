@@ -1,14 +1,9 @@
 package com.example.foodieheal.ingredients.shared
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,161 +11,163 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.foodieheal.R
-import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.model.Status
 
 /**
- * Shared composable for the search bar + "Categories" label + category filter chips
+ * Shared composable for Search Bar with Filter Icon + optional ScrollableTabRow for status filters.
  */
 @Composable
 fun IngredientSearchAndFilter(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     searchPlaceholder: String,
-    selectedCategories: Set<IngredientCategory>,
-    onToggleCategory: (IngredientCategory) -> Unit,
-    categoriesLabel: String = stringResource(R.string.categories_filter_header),
-    showFilterIcon: Boolean = false,
+    modifier: Modifier = Modifier,
+    showFilterIcon: Boolean = true,
     isFilterActive: Boolean = false,
     onFilterClick: () -> Unit = {},
-    lazyRowState: LazyListState = rememberLazyListState(),
-    isExpanded: Boolean = false,
-    onExpandedChange: (Boolean) -> Unit = {}
+    showStatusTabs: Boolean = false,
+    selectedStatus: Status? = null,
+    onStatusSelected: (Status?) -> Unit = {},
+    totalCount: Int = 0,
+    pendingCount: Int = 0,
+    approvedCount: Int = 0,
+    rejectedCount: Int = 0
 ) {
-    val headerColor =
-        if (selectedCategories.isNotEmpty()) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurface
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
 
-    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-    // 1. Search Bar
-    OutlinedTextField(
-        value = searchQuery,
-        onValueChange = onSearchQueryChange,
-        placeholder = {
-            Text(
-                text = searchPlaceholder,
-                style = MaterialTheme.typography.labelLarge
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-        singleLine = true,
-        shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
-        trailingIcon = {
-            if (showFilterIcon) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = dimensionResource(id = R.dimen.padding_md))
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_filter_alt),
-                        contentDescription = stringResource(R.string.ingredients_requests_apply_filter),
-                        tint = if (isFilterActive) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                        modifier = Modifier.clickable { onFilterClick() }
+            // 1. Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = {
+                    Text(
+                        text = searchPlaceholder,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_md)))
+                },
+                leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
                         contentDescription = stringResource(R.string.search),
-                        modifier = Modifier.clickable { onFilterClick() }
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            } else {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = stringResource(R.string.search)
+                },
+                trailingIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = dimensionResource(id = R.dimen.padding_xsm))
+                    ) {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { onSearchQueryChange("") }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.cancel),
+                                    contentDescription = stringResource(R.string.clear_search),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(dimensionResource(id = R.dimen.icon_small_size))
+                                )
+                            }
+                        }
+                        if (showFilterIcon) {
+                            IconButton(onClick = onFilterClick) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_filter_alt),
+                                    contentDescription = stringResource(R.string.ingredients_requests_apply_filter),
+                                    tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
+                singleLine = true,
+                shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_sm)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary
                 )
-            }
-        },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-        ),
-    )
-
-    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
-
-    // 2. Category Header with Toggle
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onExpandedChange(!isExpanded) }
-            .padding(horizontal = dimensionResource(id = R.dimen.padding_l)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_sm))
-        ) {
-            Text(
-                text = categoriesLabel,
-                fontWeight = FontWeight.Bold,
-                color = headerColor
             )
-            if (selectedCategories.isNotEmpty()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape,
-                ) {
-                    Text(
-                        text = selectedCategories.size.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(
-                            horizontal = dimensionResource(R.dimen.padding_sm),
-                            vertical = dimensionResource(R.dimen.padding_xxsm)
+
+            Spacer(modifier = Modifier.height(if (showStatusTabs) dimensionResource(id = R.dimen.padding_sm) else dimensionResource(id = R.dimen.padding_l)))
+
+        // 2. Status Filter Tabs
+        if (showStatusTabs) {
+            val tabs = listOf(
+                Triple(null, stringResource(R.string.admin_filter_all), totalCount),
+                Triple(Status.PENDING, stringResource(R.string.admin_filter_pending), pendingCount),
+                Triple(Status.APPROVED, stringResource(R.string.admin_filter_approved), approvedCount),
+                Triple(Status.REJECTED, stringResource(R.string.admin_filter_rejected), rejectedCount)
+            )
+
+            val selectedIndex = when (selectedStatus) {
+                null -> 0
+                Status.PENDING -> 1
+                Status.APPROVED -> 2
+                Status.REJECTED -> 3
+            }
+
+            ScrollableTabRow(
+                selectedTabIndex = selectedIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+                edgePadding = dimensionResource(id = R.dimen.padding_l),
+                indicator = { tabPositions ->
+                    if (selectedIndex in tabPositions.indices) {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
+                            color = MaterialTheme.colorScheme.primary
                         )
+                    }
+                },
+                divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
+            ) {
+                tabs.forEachIndexed { index, (status, title, count) ->
+                    val isSelected = selectedIndex == index
+                    Tab(
+                        selected = isSelected,
+                        onClick = { onStatusSelected(status) },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = title,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "$count",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
             }
         }
-        Icon(
-            painter =
-                if (isExpanded) painterResource(R.drawable.ic_arrow_drop_up)
-                else painterResource(R.drawable.ic_arrow_drop_down),
-            contentDescription =
-                if (isExpanded) stringResource(R.string.ingredients_collapse_categories)
-                else stringResource(R.string.ingredients_expand_categories),
-            tint = headerColor
-        )
     }
-
-    if (isExpanded) {
-        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_sm)))
-
-        // 3. Category Chips
-        LazyRow(
-            state = lazyRowState,
-            contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.padding_l)),
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_smd))
-        ) {
-            items(IngredientCategory.entries) { category ->
-                val isSelected = selectedCategories.contains(category)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onToggleCategory(category) },
-                    label = {
-                        Text(
-                            text = category.categoryName,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.corner_radius_md)),
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        labelColor = MaterialTheme.colorScheme.onSecondary,
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    border = null
-                )
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_l)))
+}
 }

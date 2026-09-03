@@ -70,10 +70,6 @@ fun AdminIngredientsScreen(
     val adminUiState by adminViewModel.uiState.collectAsState()
     val ingredientsUiState by ingredientsViewModel.uiState.collectAsState()
 
-    // Separate scroll states for each tab
-    val communityCategoryScrollState = rememberLazyListState()
-    val requestsCategoryScrollState = rememberLazyListState()
-
     // Sync tab state only if initialTab is explicitly provided (0 or 1)
     LaunchedEffect(initialTab) {
         if (initialTab != -1) {
@@ -173,15 +169,13 @@ fun AdminIngredientsScreen(
                             viewModel = ingredientsViewModel,
                             uiState = ingredientsUiState,
                             navController = navController,
-                            categoryScrollState = communityCategoryScrollState,
                             showAddToCart = false // Admins don't have shopping list
                         )
                     } else {
                         AdminIngredientRequestsScreen(
                             viewModel = adminViewModel,
                             uiState = adminUiState,
-                            navController = navController,
-                            categoryScrollState = requestsCategoryScrollState
+                            navController = navController
                         )
                     }
                 }
@@ -250,10 +244,9 @@ fun AdminOfflineMessage() {
 fun AdminIngredientRequestsScreen(
     viewModel: AdminIngredientsViewModel,
     uiState: AdminIngredientsUiState,
-    navController: NavController,
-    categoryScrollState: LazyListState = rememberLazyListState()
+    navController: NavController
 ) {
-    val isFilterActive = uiState.selectedStatus != null ||
+    val isFilterActive = uiState.selectedCategories.isNotEmpty() ||
         uiState.createdDateStart != null ||
         uiState.createdDateEnd != null ||
         uiState.processedDateStart != null ||
@@ -266,15 +259,16 @@ fun AdminIngredientRequestsScreen(
             searchQuery = uiState.searchQuery,
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
             searchPlaceholder = stringResource(R.string.admin_requests_search_placeholder),
-            selectedCategories = uiState.selectedCategories,
-            onToggleCategory = { viewModel.toggleCategory(it) },
-            categoriesLabel = stringResource(R.string.admin_categories_header),
             showFilterIcon = true,
             isFilterActive = isFilterActive,
             onFilterClick = { viewModel.onShowFilterSheet(true) },
-            lazyRowState = categoryScrollState,
-            isExpanded = uiState.isCategoriesExpanded,
-            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
+            showStatusTabs = true,
+            selectedStatus = uiState.selectedStatus,
+            onStatusSelected = { viewModel.onStatusTabSelected(it) },
+            totalCount = uiState.totalCount,
+            pendingCount = uiState.pendingCount,
+            approvedCount = uiState.approvedCount,
+            rejectedCount = uiState.rejectedCount
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -309,6 +303,7 @@ fun AdminIngredientRequestsScreen(
                     contentPadding = PaddingValues(
                         start = dimensionResource(id = R.dimen.padding_l),
                         end = dimensionResource(id = R.dimen.padding_l),
+                        top = dimensionResource(id = R.dimen.padding_l),
                         bottom = dimensionResource(id = R.dimen.padding_xxl)
                     )
                 ) {
@@ -330,8 +325,9 @@ fun AdminIngredientRequestsScreen(
     IngredientRequestFilterBottomSheet(
         show = uiState.showFilterSheet,
         onDismissRequest = { viewModel.onShowFilterSheet(false) },
-        selectedStatus = uiState.tempSelectedStatus,
-        onStatusChange = { viewModel.updateTempStatus(it) },
+        selectedCategories = uiState.tempSelectedCategories,
+        onToggleCategory = { viewModel.updateTempCategory(it) },
+        showDateFilters = true,
         createdStartDate = uiState.tempCreatedDateStart,
         createdEndDate = uiState.tempCreatedDateEnd,
         onCreatedStartDateChange = { viewModel.updateTempCreatedStartDate(it) },
