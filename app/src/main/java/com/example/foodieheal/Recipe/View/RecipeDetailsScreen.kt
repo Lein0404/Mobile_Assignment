@@ -47,12 +47,12 @@ fun RecipeDetailsScreen(
     val recipe = viewModel.selectedRecipe
     val view = LocalView.current
     val isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipeId)
-    val isMyRecipe = recipe?.author_id == user?.customId
+    val isMyRecipe = recipe?.author_id == user?.id
 
-    LaunchedEffect(recipeId, user?.customId) {
+    LaunchedEffect(recipeId, user?.id) {
         viewModel.fetchRecipeLocalFirst(recipeId)
-        user?.customId?.let { cid ->
-            viewModel.fetchBookmarkIds(cid)
+        user?.id?.let { uid ->
+            viewModel.fetchBookmarkIds(uid)
         }
     }
 
@@ -63,9 +63,9 @@ fun RecipeDetailsScreen(
         }
     }
 
-    LaunchedEffect(recipe?.author_id, user?.customId) {
+    LaunchedEffect(recipe?.author_id, user?.id) {
         val aid = recipe?.author_id
-        val uid = user?.customId
+        val uid = user?.id
         if (aid != null && uid != null && aid != uid) {
             followViewModel.fetchFollowStatus(uid, aid)
         }
@@ -128,9 +128,9 @@ fun RecipeDetailsScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        user?.customId?.let { cid ->
+                        user?.id?.let { uid ->
                             recipe?.recipe_id?.takeIf { it.isNotBlank() }?.let { rid ->
-                                viewModel.toggleBookmark(cid, rid, recipe?.recipeName ?: "")
+                                viewModel.toggleBookmark(uid, rid, recipe?.recipeName ?: "")
                             }
                         }
                     }) {
@@ -460,7 +460,7 @@ fun RecipeDetailsScreen(
                             Button(
                                 onClick = {
                                     recipe.author_id?.let { aid ->
-                                        user.customId?.let { uid ->
+                                        user.id?.let { uid ->
                                             followViewModel.toggleFollow(uid, aid)
                                         }
                                     }
@@ -636,7 +636,7 @@ fun RecipeDetailsScreen(
                     TextButton(
                         onClick = {
                             val rid = recipeToDelete?.recipe_id
-                            val uid = user?.customId
+                            val uid = user?.id
                             if (rid != null && uid != null) {
                                 viewModel.deleteRecipe(rid, uid)
                                 navController.popBackStack() // Go back after successful deletion

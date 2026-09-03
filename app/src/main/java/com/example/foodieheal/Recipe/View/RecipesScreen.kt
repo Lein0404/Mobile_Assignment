@@ -102,8 +102,8 @@ fun RecipesScreen(
         filterIngredients = emptySet()
     }
 
-    // Use the short customId (U001) for all filtering to stay consistent
-    val currentUserId = authViewModel.currentUser?.customId
+    // Use the Supabase UUID (id) for all filtering and visibility checks
+    val currentUserId = authViewModel.currentUser?.id
 
     // Filtering based on your instructions
     val currentDataList = when (selectedTab) {
@@ -173,33 +173,32 @@ fun RecipesScreen(
         }
     }
 
-    LaunchedEffect(selectedTab, currentUserId) {
-        val cid = authViewModel.currentUser?.customId
+    LaunchedEffect(selectedTab, currentUserId, showFollowingFeed) {
+        val uid = authViewModel.currentUser?.id
         
         // Tab 0: Popular recipes -> Always fetch in background to sync newly added recipes from other accounts without flashing
         if (selectedTab == 0) {
             viewModel.fetchAllRecipes()
         }
 
-        if (cid != null) {
-            // Always refresh bookmarks if the owner has changed
-            // We check if the current IDs in memory actually belong to the current user
-            viewModel.fetchBookmarkIds(cid)
+        if (uid != null) {
+            // Always refresh bookmark IDs to ensure the heart/bookmark icons are accurate
+            viewModel.fetchBookmarkIds(uid)
 
             when (selectedTab) {
                 1 -> {
-                     val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != cid }
+                     val belongsToSomeoneElse = viewModel.myRecipes.any { it.author_id != uid }
                         if (viewModel.myRecipes.isEmpty() || belongsToSomeoneElse) {
-                            viewModel.fetchMyRecipes(cid)
+                            viewModel.fetchMyRecipes(uid)
                         }
                 }
                 2 -> {
                     // Always fetch following list to keep 'followedUserIds' updated for privacy checks
-                    viewModel.fetchFollowingRecipes(cid)
+                    viewModel.fetchFollowingRecipes(uid)
                     
                     if (!showFollowingFeed) {
-                        // Use customId (cid) to match the Supabase table and local Room DB
-                        viewModel.fetchBookmarkedRecipes(cid)
+                        // Use UUID (uid) to match the Supabase table and local Room DB
+                        viewModel.fetchBookmarkedRecipes(uid)
                     }
                 }
             }
@@ -568,10 +567,10 @@ fun RecipesScreen(
                         isSelected = isSelected,
                         isSelectionMode = isSelectionMode,
                         onBookmarkClick = {
-                            // Revert to customId (U001) as per Supabase table screenshot
-                            authViewModel.currentUser?.customId?.let { cid ->
+                            // Use the Supabase UUID (id) for bookmarking
+                            authViewModel.currentUser?.id?.let { uid ->
                                 recipe.recipe_id?.let { rid ->
-                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                    viewModel.toggleBookmark(uid, rid, recipe.recipeName)
                                 }
                             }
                         },
@@ -901,8 +900,8 @@ fun RecipesScreen(
                     TextButton(
                         onClick = {
                             val rid = recipeToDelete?.recipe_id
-                            // Ensure we use the short customId for deletion
-                            val uid = authViewModel.currentUser?.customId
+                            // Ensure we use the Supabase UUID (id) for deletion
+                            val uid = authViewModel.currentUser?.id
                             if (rid != null && uid != null) {
                                 viewModel.deleteRecipe(rid, uid)
                             }

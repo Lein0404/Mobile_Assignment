@@ -67,8 +67,8 @@ fun FollowRequestsScreen(
         }
     }
 
-    LaunchedEffect(user?.customId) {
-        user?.customId?.let { followViewModel.fetchFollowers(it) }
+    LaunchedEffect(user?.id) {
+        user?.id?.let { followViewModel.fetchFollowers(it) }
     }
 
     LaunchedEffect(requests, followViewModel.isLoadingFollowList) {
@@ -80,7 +80,7 @@ fun FollowRequestsScreen(
                     val repo = RecipeRepository()
                     repo.getUsersByCustomIds(ids).onSuccess { result ->
                         result.forEach { u ->
-                            u.customId?.let { requestUsers[it] = u }
+                            u.id?.let { requestUsers[it] = u }
                         }
                     }
                 } finally {
@@ -162,14 +162,14 @@ fun FollowRequestsScreen(
                         request = request,
                         requester = requester,
                         onAccept = {
-                            user?.customId?.let { myId ->
+                            user?.id?.let { myId ->
                                 request.followerId?.let { fid ->
                                     followViewModel.acceptRequest(myId, fid)
                                 }
                             }
                         },
                         onReject = {
-                            user?.customId?.let { myId ->
+                            user?.id?.let { myId ->
                                 request.followerId?.let { fid ->
                                     followViewModel.rejectRequest(myId, fid)
                                 }
