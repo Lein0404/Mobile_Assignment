@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +47,7 @@ import com.example.foodieheal.hiring.viewmodel.AppointmentBookingViewModel
 import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.ui.components.AppointmentListSkeleton
 import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.foodieheal.Chef.model.Chef
 import java.time.DayOfWeek
@@ -105,6 +107,7 @@ fun HiringAppointment(
 
     val endOfWeek = weekDays.last()
     val weekRangeText = "${startOfWeek.dayOfMonth} - ${endOfWeek.dayOfMonth} ${endOfWeek.format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH))}"
+    val isToday = selectedDate == LocalDate.now()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -137,7 +140,7 @@ fun HiringAppointment(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Header Row (Week range text + Navigation controls)
+            // Header Row (Week range text + Today quick jump + Navigation controls)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,12 +148,45 @@ fun HiringAppointment(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = weekRangeText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = weekRangeText,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    // Quick "Today" Jump Chip
+                    if (!isToday) {
+                        Surface(
+                            onClick = { selectedDate = LocalDate.now() },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_clock),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.hiring_schedule_today),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Previous Week
@@ -191,17 +227,37 @@ fun HiringAppointment(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            DayScheduleSection(
-                selectedDate = selectedDate,
-                appointments = chefAppointmentsForSelectedDate,
-                chef = chef,
-                onAddAppointmentClick = {
-                    if (!selectedDate.isBefore(LocalDate.now())) {
-                        onAddAppointmentClick(selectedDate)
+            // Pull-to-Refresh Schedule Area
+            PullToRefreshBox(
+                isRefreshing = chefAppointmentsUiState.isLoading,
+                onRefresh = {
+                    val chefId = chef.chefId.ifEmpty { chef.id }
+                    if (chefId.isNotBlank()) {
+                        bookingViewModel.fetchAppointmentsForChef(chefId)
                     }
                 },
-                modifier = Modifier.weight(1f)
-            )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                if (chefAppointmentsUiState.isLoading && chefAppointments.isEmpty()) {
+                    AppointmentListSkeleton(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    DayScheduleSection(
+                        selectedDate = selectedDate,
+                        appointments = chefAppointmentsForSelectedDate,
+                        chef = chef,
+                        onAddAppointmentClick = {
+                            if (!selectedDate.isBefore(LocalDate.now())) {
+                                onAddAppointmentClick(selectedDate)
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
     }
 

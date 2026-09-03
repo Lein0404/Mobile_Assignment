@@ -478,6 +478,41 @@ class AppointmentBookingViewModel(
         }
     }
 
+    private fun isMatchingDate(dateStr: String, targetDateStr: String): Boolean {
+        val d1 = dateStr.trim()
+        val d2 = targetDateStr.trim()
+        if (d1.equals(d2, ignoreCase = true)) return true
+
+        val formats = listOf(
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd")
+        )
+
+        var parsedD1: LocalDate? = null
+        for (fmt in formats) {
+            try {
+                parsedD1 = LocalDate.parse(d1, fmt)
+                break
+            } catch (_: Exception) {}
+        }
+
+        var parsedD2: LocalDate? = null
+        for (fmt in formats) {
+            try {
+                parsedD2 = LocalDate.parse(d2, fmt)
+                break
+            } catch (_: Exception) {}
+        }
+
+        return if (parsedD1 != null && parsedD2 != null) {
+            parsedD1 == parsedD2
+        } else {
+            d1.contains(d2) || d2.contains(d1)
+        }
+    }
+
     private fun isSlotOverlapping(
         startCal: Calendar,
         endCal: Calendar,
@@ -485,7 +520,7 @@ class AppointmentBookingViewModel(
         currentAppointmentId: String? = null
     ): Boolean {
         val appointments = chefAppointmentsState.value.appointments.filter {
-            it.Date == targetDate &&
+            isMatchingDate(it.Date, targetDate) &&
                     !it.Status.equals("cancelled", ignoreCase = true) &&
                     !it.Status.equals("rejected", ignoreCase = true) &&
                     (currentAppointmentId == null || it.AppointmentID != currentAppointmentId)

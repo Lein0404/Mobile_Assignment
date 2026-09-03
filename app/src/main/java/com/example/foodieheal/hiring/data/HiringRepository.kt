@@ -753,13 +753,13 @@ class HiringRepository(
                 .select {
                     filter {
                         eq("chefId", chefId)
-                        eq("Date", date)
                     }
                 }
                 .decodeList<Appointment>()
                 .filter { appt ->
                     val status = appt.Status.trim().lowercase(Locale.US)
-                    status != "cancelled" && status != "rejected" &&
+                    val isSameDate = isMatchingDate(appt.Date, date)
+                    isSameDate && status != "cancelled" && status != "rejected" &&
                     (excludeId == null || appt.AppointmentID != excludeId)
                 }
         } catch (e: Exception) {
@@ -806,6 +806,41 @@ class HiringRepository(
         } catch (e: Exception) {
             Log.w("HiringRepository", "parseToMinutes failed for '$timeStr': ${e.localizedMessage}")
             null
+        }
+    }
+
+    private fun isMatchingDate(dateStr: String, targetDateStr: String): Boolean {
+        val d1 = dateStr.trim()
+        val d2 = targetDateStr.trim()
+        if (d1.equals(d2, ignoreCase = true)) return true
+
+        val formats = listOf(
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd")
+        )
+
+        var parsedD1: java.time.LocalDate? = null
+        for (fmt in formats) {
+            try {
+                parsedD1 = java.time.LocalDate.parse(d1, fmt)
+                break
+            } catch (_: Exception) {}
+        }
+
+        var parsedD2: java.time.LocalDate? = null
+        for (fmt in formats) {
+            try {
+                parsedD2 = java.time.LocalDate.parse(d2, fmt)
+                break
+            } catch (_: Exception) {}
+        }
+
+        return if (parsedD1 != null && parsedD2 != null) {
+            parsedD1 == parsedD2
+        } else {
+            d1.contains(d2) || d2.contains(d1)
         }
     }
 }
