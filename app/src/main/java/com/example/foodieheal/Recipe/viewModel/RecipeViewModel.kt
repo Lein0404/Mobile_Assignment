@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class RecipeViewModel(
     application: Application,
@@ -438,28 +442,44 @@ class RecipeViewModel(
 
     fun addRecipe(recipe: Recipe, imageBytes: ByteArray? = null) {
         viewModelScope.launch {
+            errorMessage = null // Clear previous error
+
             if (!isNetworkAvailable) {
                 _bookmarkMessage.emit(getApplication<Application>().getString(R.string.msg_no_internet_add_recipe))
                 return@launch
             }
 
-            if (recipe.author_id.isNullOrBlank()) {
-                errorMessage = getApplication<Application>().getString(R.string.error_missing_author_link)
-                return@launch
-            }
-
-            // 1. Instant Memory Update (Optimistic): Shows the new recipe card immediately
-            recipeList = (recipeList + recipe).sortedBy { it.recipe_id }
-            myRecipes = (myRecipes + recipe).sortedBy { it.recipe_id }
-
             isLoading = true
-            var finalRecipe = recipe
 
             try {
-                if (imageBytes != null && recipe.recipe_id != null) {
-                    val uploadResult = repository.uploadRecipeImage(recipe.recipe_id, imageBytes)
+                // Fetch the live highest recipe ID from Supabase to guarantee no ID collisions with other users
+                val liveId = repository.getFreshNextRecipeId()
+                val currentTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }.format(Date())
+
+                var finalRecipe = recipe.copy(
+                    recipe_id = liveId,
+                    lastUpdated = currentTimestamp
+                )
+
+                Log.d("RecipeViewModel", "Adding recipe with author_id: '${finalRecipe.author_id}', recipe_id: '${finalRecipe.recipe_id}', lastUpdated: '$currentTimestamp'")
+
+                if (finalRecipe.author_id.isNullOrBlank()) {
+                    Log.e("RecipeViewModel", "Author ID is null or blank!")
+                    errorMessage = getApplication<Application>().getString(R.string.error_missing_author_link)
+                    isLoading = false
+                    return@launch
+                }
+
+                // 1. Instant Memory Update (Optimistic): Shows the new recipe card immediately
+                recipeList = (recipeList + finalRecipe).sortedBy { it.recipe_id }
+                myRecipes = (myRecipes + finalRecipe).sortedBy { it.recipe_id }
+
+                if (imageBytes != null && finalRecipe.recipe_id != null) {
+                    val uploadResult = repository.uploadRecipeImage(finalRecipe.recipe_id, imageBytes)
                     if (uploadResult.isSuccess) {
-                        finalRecipe = recipe.copy(recipeImageUrl = uploadResult.getOrNull())
+                        finalRecipe = finalRecipe.copy(recipeImageUrl = uploadResult.getOrNull())
                         // Update memory again with the real image URL
                         recipeList = recipeList.map { if (it.recipe_id == finalRecipe.recipe_id) finalRecipe else it }
                         myRecipes = myRecipes.map { if (it.recipe_id == finalRecipe.recipe_id) finalRecipe else it }
@@ -474,15 +494,14 @@ class RecipeViewModel(
                     }
                     .onFailure { e ->
                         // Revert memory update on failure
-                        recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
-                        myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
+                        recipeList = recipeList.filter { it.recipe_id != finalRecipe.recipe_id }
+                        myRecipes = myRecipes.filter { it.recipe_id != finalRecipe.recipe_id }
+                        Log.e("RecipeViewModel", "Failed to insert recipe into Supabase: ${e.message}", e)
                         parseError(e.message ?: "Save Failed")
                     }
             } catch (e: Exception) {
+                Log.e("RecipeViewModel", "Exception during addRecipe: ${e.message}", e)
                 errorMessage = e.message
-                // Revert memory update
-                recipeList = recipeList.filter { it.recipe_id != recipe.recipe_id }
-                myRecipes = myRecipes.filter { it.recipe_id != recipe.recipe_id }
             } finally {
                 isLoading = false
             }
@@ -496,13 +515,18 @@ class RecipeViewModel(
                 return@launch
             }
 
+            val currentTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }.format(Date())
+
             // Instant Memory Update (Optimistic): Fixes the "delay"
             // We find the old recipe to preserve authorInfo, so the card name changes but pic/author stays
             val oldRecipe = recipeList.find { it.recipe_id == recipe.recipe_id }
             val updatedForMemory = recipe.copy(
                 authorInfo = oldRecipe?.authorInfo,
                 authorName = oldRecipe?.authorName,
-                authorImageUrl = oldRecipe?.authorImageUrl
+                authorImageUrl = oldRecipe?.authorImageUrl,
+                lastUpdated = currentTimestamp
             )
             
             recipeList = recipeList.map { if (it.recipe_id == recipe.recipe_id) updatedForMemory else it }
@@ -512,7 +536,7 @@ class RecipeViewModel(
             }
 
             isLoading = true
-            var finalRecipe = recipe
+            var finalRecipe = recipe.copy(lastUpdated = currentTimestamp)
 
             try {
                 if (imageBytes != null && recipe.recipe_id != null) {
@@ -587,7 +611,8 @@ class RecipeViewModel(
     }
 
     private fun parseError(msg: String) {
-        errorMessage = if (msg.contains("recipe_author", ignoreCase = true)) {
+        Log.e("RecipeViewModel", "parseError received: $msg")
+        errorMessage = if (msg.contains("violates foreign key constraint", ignoreCase = true) && msg.contains("recipe_author", ignoreCase = true)) {
             "Database Error: Missing author link. Please check Supabase."
         } else {
             msg.split("\n").firstOrNull() ?: "Operation Failed"

@@ -364,9 +364,17 @@ fun RecipeDetailsScreen(
 
                     // Author Section
                     val author = viewModel.recipeAuthor
-                    // Prioritize recipe's own cached info, then live session, then join result
-                    val displayAuthorName = (recipe.authorName ?: (if (isMyRecipe && user != null) user.name else (author?.name ?: recipe.authorInfo?.name))) ?: stringResource(R.string.unknown_author)
-                    val displayAuthorImage = (recipe.authorImageUrl ?: (if (isMyRecipe && user != null) user.profilePicUrl else (author?.profilePicUrl ?: recipe.authorInfo?.profile_pic_url)))
+                    val displayAuthorName = if (isMyRecipe && user != null && !user.name.isNullOrBlank()) {
+                        user.name
+                    } else {
+                        author?.name ?: recipe.authorInfo?.name ?: recipe.authorName ?: stringResource(R.string.unknown_author)
+                    }
+
+                    val displayAuthorImage = if (isMyRecipe && user != null && !user.profilePicUrl.isNullOrBlank()) {
+                        user.profilePicUrl
+                    } else {
+                        author?.profilePicUrl ?: recipe.authorInfo?.profile_pic_url ?: recipe.authorImageUrl
+                    }
 
                     val authorBitmap = remember(displayAuthorImage) {
                         if (!displayAuthorImage.isNullOrBlank() && !displayAuthorImage.startsWith("http")) {
@@ -472,13 +480,12 @@ fun RecipeDetailsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(20.dp))
-
                     // Description (Hidden if empty)
-                    if (recipe.recipeDescription.isNotBlank()) {
+                    if (!recipe.recipeDescription.isNullOrBlank()) {
                         Text(text = stringResource(R.string.label_description_optional), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         var isExpanded by remember { mutableStateOf(false) }
                         Text(
-                            text = recipe.recipeDescription,
+                            text = recipe.recipeDescription.orEmpty(),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 18.sp,
@@ -489,7 +496,7 @@ fun RecipeDetailsScreen(
                             maxLines = if (isExpanded) Int.MAX_VALUE else 5,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (!isExpanded && (recipe.recipeDescription.length > 150 || recipe.recipeDescription.count { it == '\n' } >= 5)) {
+                        if (!isExpanded && ((recipe.recipeDescription?.length ?: 0) > 150 || (recipe.recipeDescription?.count { it == '\n' } ?: 0) >= 5)) {
                             Text(
                                 text = stringResource(R.string.msg_more),
                                 fontSize = 14.sp,

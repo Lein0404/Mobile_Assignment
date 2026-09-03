@@ -273,7 +273,7 @@ fun RecipeDetailPreviewSheet(
                     )
                 }
 
-                if (recipe.recipeDescription.isNotBlank()) {
+                if (!recipe.recipeDescription.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.label_description),
@@ -288,7 +288,7 @@ fun RecipeDetailPreviewSheet(
 
                     Column(modifier = Modifier.animateContentSize()) {
                         Text(
-                            text = recipe.recipeDescription,
+                            text = recipe.recipeDescription.orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 20.sp,

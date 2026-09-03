@@ -50,14 +50,17 @@ class RecipeRepository(
     suspend fun getAllRecipes(): Result<List<Recipe>> = withContext(Dispatchers.IO) {
         runCatching {
             try {
+                Log.d("RecipeRepository", "Fetching all recipes from Supabase...")
                 val recipes = try {
                     client.from("recipes")
                         .select(Columns.raw("*, users!recipe_author(name, profile_pic_url)"))
                         .decodeList<Recipe>()
                 } catch (e: Exception) {
-                    Log.d("RecipeRepository", "AllRecipes Join Fallback Triggered: ${e.localizedMessage}")
+                    Log.w("RecipeRepository", "AllRecipes Join Fallback Triggered: ${e.localizedMessage}")
                     client.from("recipes").select().decodeList<Recipe>()
                 }
+
+                Log.d("RecipeRepository", "Successfully fetched ${recipes.size} recipes from Supabase: ${recipes.map { "${it.recipe_id} (${it.recipeName}, visibility=${it.visibility})" }}")
 
                 recipes.forEach { recipe ->
                     recipe.authorName = recipe.authorInfo?.name ?: recipe.authorName
@@ -70,7 +73,7 @@ class RecipeRepository(
                 
                 recipes
             } catch (e: Exception) {
-                Log.e("RecipeRepository", "Error fetching all recipes", e)
+                Log.e("RecipeRepository", "Error fetching all recipes from Supabase (falling back to Room): ${e.message}", e)
                 recipeDao?.getAllRecipes()?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
         }
@@ -103,6 +106,18 @@ class RecipeRepository(
                 Log.w("RecipeRepository", "Notice: Empty or failed fetch for my recipes: ${e.localizedMessage}")
                 recipeDao?.getMyRecipes(authorId)?.map { it.toDomain(json).apply { isOffline = true } } ?: emptyList()
             }
+        }
+    }
+
+    suspend fun getFreshNextRecipeId(): String = withContext(Dispatchers.IO) {
+        try {
+            val list = client.from("recipes").select(Columns.list("recipe_id")).decodeList<Recipe>()
+            val maxId = list.mapNotNull { it.recipe_id?.removePrefix("R")?.toIntOrNull() }.maxOrNull() ?: 0
+            "R${(maxId + 1).toString().padStart(3, '0')}"
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "Error generating live recipe ID", e)
+            val fallbackMax = recipeDao?.getAllRecipes()?.mapNotNull { it.recipe_id?.removePrefix("R")?.toIntOrNull() }?.maxOrNull() ?: 0
+            "R${(fallbackMax + 1).toString().padStart(3, '0')}"
         }
     }
 
