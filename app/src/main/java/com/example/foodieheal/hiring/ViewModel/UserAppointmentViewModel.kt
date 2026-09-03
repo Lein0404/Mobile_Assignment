@@ -51,6 +51,8 @@ class UserAppointmentViewModel(
         viewModelScope.launch {
             _isLoadingRecipes.value = true
             try {
+                // Clear existing entry to force re-evaluation of recipe status (e.g. if deleted)
+                _attachedRecipes.update { it - appointmentId }
                 val recipes = repository.fetchAppointmentRecipes(appointmentId)
                 _attachedRecipes.update { it + (appointmentId to recipes) }
             } catch (e: Exception) {

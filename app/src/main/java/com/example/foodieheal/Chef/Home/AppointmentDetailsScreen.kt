@@ -520,7 +520,7 @@ fun AppointmentDetailScreen(
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
-                            text = stringResource(R.string.no_recipes_requested),
+                            text = stringResource(R.string.no_recipes_attached_booking),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -573,13 +573,13 @@ fun AppointmentDetailScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = recipe?.recipeName ?: stringResource(R.string.default_recipe_name, item.recipeId),
+                                                text = recipe?.recipeName ?: stringResource(R.string.no_recipes_attached_booking),
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
-                                                maxLines = 1,
+                                                maxLines = 2,
                                                 overflow = TextOverflow.Ellipsis,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 14.sp,
+                                                color = if (recipe != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+                                                fontSize = 13.sp,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
 

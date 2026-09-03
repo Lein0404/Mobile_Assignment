@@ -97,7 +97,7 @@ fun UserAppointmentDetailScreen(
     val attachedRecipes = attachedRecipesMap[appointmentId] ?: emptyList()
 
     LaunchedEffect(appointmentId) {
-        if (appointmentId.isNotBlank() && !attachedRecipesMap.containsKey(appointmentId)) {
+        if (appointmentId.isNotBlank()) {
             viewModel.loadRecipesForAppointment(appointmentId)
         }
     }
@@ -627,13 +627,13 @@ fun UserAppointmentDetailScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Text(
-                                                    text = recipe?.recipeName ?: stringResource(R.string.recipe_fallback_title, item.recipeId),
+                                                    text = recipe?.recipeName ?: stringResource(R.string.no_recipes_attached_booking),
                                                     style = MaterialTheme.typography.titleSmall,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    maxLines = 1,
+                                                    color = if (recipe != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+                                                    maxLines = 2,
                                                     overflow = TextOverflow.Ellipsis,
-                                                    fontSize = 14.sp,
+                                                    fontSize = 13.sp,
                                                     modifier = Modifier.weight(1f, fill = false)
                                                 )
 

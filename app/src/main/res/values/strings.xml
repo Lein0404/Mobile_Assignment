@@ -322,7 +322,7 @@
     <string name="edit_attached_recipes_btn">Edit Attached Recipes (%1$d)</string>
     <string name="dish_count_singular">1 dish</string>
     <string name="dish_count_plural">%1$d dishes</string>
-    <string name="no_recipes_attached_booking">No specific recipes attached to this booking</string>
+    <string name="no_recipes_attached_booking">No recipes is attached/ Author has deleted the attached recipes.</string>
     <string name="recipe_fallback_title">Recipe #%1$s</string>
     <string name="attach_recipes_menu_title">Attach Recipes / Menu</string>
     <string name="select_dishes_for_chef_sub">Select dishes for your chef to prepare</string>
