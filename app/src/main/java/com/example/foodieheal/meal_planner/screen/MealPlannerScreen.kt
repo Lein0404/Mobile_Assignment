@@ -34,7 +34,6 @@ import com.example.foodieheal.meal_planner.viewModel.MealPlannerViewModel
 import com.example.foodieheal.meal_planner.viewModel.WeeklyCalendarState
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
-import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -49,7 +48,6 @@ import java.time.YearMonth
 @Composable
 fun MealPlannerScreen(
     mealPlannerViewModel: MealPlannerViewModel,
-    userAppointmentViewModel: UserAppointmentViewModel,
     authViewModel: AuthViewModel,
     onNavigateToProfile: () -> Unit,
     onRecipeDetails: (String) -> Unit,
@@ -74,12 +72,16 @@ fun MealPlannerScreen(
         mutableStateOf(mealPlannerViewModel.deepLinkSourceDays?.firstOrNull() ?: LocalDate.now())
     }
 
-    val appointmentsState by userAppointmentViewModel.userAppointmentsState.collectAsStateWithLifecycle()
+    val appointmentsState by mealPlannerViewModel.userAppointmentsState.collectAsStateWithLifecycle()
 
     val appointmentsForSelectedDate = remember(appointmentsState, selectedDate) {
         if (appointmentsState is UserAppointmentsUiState.Success) {
             val success = appointmentsState as UserAppointmentsUiState.Success
-            success.appointments.filter { it.Date == selectedDate.toString() }
+            success.appointments.filter { 
+                it.Date == selectedDate.toString() && 
+                !it.Status.equals("cancelled", ignoreCase = true) &&
+                !it.Status.equals("rejected", ignoreCase = true)
+            }
         } else {
             emptyList()
         }

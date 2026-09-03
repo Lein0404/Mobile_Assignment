@@ -17,12 +17,17 @@ import com.example.foodieheal.meal_planner.model.RealMealSlot
 import com.example.foodieheal.meal_planner.model.WeeklyPlan
 import com.example.foodieheal.Recipe.Model.Recipe
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
+import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.navigation.Screen
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -35,7 +40,8 @@ import java.time.temporal.TemporalAdjusters
 class MealPlannerViewModel(
     application: Application,
     private val repository: MealPlannerRepository,
-    private val recipeRepository: RecipeRepository
+    private val recipeRepository: RecipeRepository,
+    private val hiringRepository: HiringRepository
 ) : AndroidViewModel(application) {
 
     private companion object {
@@ -50,6 +56,9 @@ class MealPlannerViewModel(
 
     private val _uiEvent = MutableSharedFlow<String>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+    private val _userAppointmentsState = MutableStateFlow<UserAppointmentsUiState>(UserAppointmentsUiState.Loading)
+    val userAppointmentsState: StateFlow<UserAppointmentsUiState> = _userAppointmentsState.asStateFlow()
 
     private val networkMonitor = NetworkMonitor(application)
 
@@ -167,6 +176,9 @@ class MealPlannerViewModel(
 
                     // 2. Reload the calendar dots for the current month
                     loadMonthConditions(YearMonth.from(lastActiveDate))
+
+                    // 3. Fetch user appointments
+                    fetchAppointmentsForCurrentUser()
                 } else {
                     // Clear data immediately on logout to prevent data leaking between users
                     viewModelScope.launch {
@@ -194,6 +206,29 @@ class MealPlannerViewModel(
             withContext(Dispatchers.Main) {
                 // Refresh current view after sync completes if needed
                 loadMonthConditions(YearMonth.from(lastActiveDate), force = true)
+            }
+        }
+    }
+
+    fun fetchAppointmentsForCurrentUser() {
+        viewModelScope.launch {
+            try {
+                val currentUserId = SupabaseClient.client.auth.currentUserOrNull()?.id
+                if (currentUserId.isNullOrEmpty()) {
+                    _userAppointmentsState.value = UserAppointmentsUiState.Error("User not logged in.")
+                    return@launch
+                }
+
+                val appointments = hiringRepository.fetchAppointmentsForUser(currentUserId)
+                val chefsMap = hiringRepository.fetchChefsMapForAppointments(appointments)
+
+                _userAppointmentsState.value = UserAppointmentsUiState.Success(
+                    appointments = appointments,
+                    usersMap = chefsMap
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching user appointments", e)
+                _userAppointmentsState.value = UserAppointmentsUiState.Error(e.localizedMessage ?: "Failed to load appointments")
             }
         }
     }

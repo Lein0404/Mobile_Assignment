@@ -315,45 +315,45 @@ fun AppointmentSummarySection(
     chefsMap: Map<String, User>,
     onAppointmentClick: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-        ),
-        onClick = {
-            appointments.firstOrNull()?.AppointmentID?.let { onAppointmentClick(it) }
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_planner),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.title_scheduled_hiring_appointments),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiary
+            )
         }
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_planner),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.title_scheduled_hiring_appointments),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiary
-                )
-            }
 
-            Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
-            appointments.forEach { appointment ->
+        appointments.forEach { appointment ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                ),
+                onClick = {
+                    appointment.AppointmentID?.let { onAppointmentClick(it) }
+                }
+            ) {
                 val chefName = chefsMap[appointment.chefId]?.name ?: stringResource(R.string.default_chef_name)
                 val timeSlot = "${formatToAmPm(appointment.Start_Time)} - ${formatToAmPm(appointment.End_Time)}"
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -372,14 +372,6 @@ fun AppointmentSummarySection(
                     }
 
                     AppointmentStatusBadge(appointment.Status)
-                }
-
-                if (appointment != appointments.last()) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f)
-                    )
                 }
             }
         }

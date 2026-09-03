@@ -99,6 +99,12 @@ fun UserAppointmentDetailScreen(
     LaunchedEffect(appointmentId) {
         if (appointmentId.isNotBlank()) {
             viewModel.loadRecipesForAppointment(appointmentId)
+            // Ensure we have the latest appointments list if the specific ID is not found initially
+            if (viewModel.userAppointmentsState.value !is UserAppointmentsUiState.Success ||
+                (viewModel.userAppointmentsState.value as? UserAppointmentsUiState.Success)?.appointments?.none { it.AppointmentID == appointmentId } == true
+            ) {
+                viewModel.fetchAppointmentsForCurrentUser(forceRefresh = false)
+            }
         }
     }
 
@@ -115,7 +121,29 @@ fun UserAppointmentDetailScreen(
 
     if (appointment == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            when (appointmentsState) {
+                is UserAppointmentsUiState.Loading -> CircularProgressIndicator()
+                is UserAppointmentsUiState.Error -> {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = (appointmentsState as UserAppointmentsUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Button(onClick = { viewModel.fetchAppointmentsForCurrentUser(forceRefresh = true) }) {
+                            Text(stringResource(R.string.btn_retry))
+                        }
+                    }
+                }
+                is UserAppointmentsUiState.Success -> {
+                    Text(
+                        text = stringResource(R.string.error_appointment_not_found),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
         }
         return
     }

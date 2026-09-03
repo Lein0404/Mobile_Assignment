@@ -1234,6 +1234,7 @@
     <string name="empty_no_templates_match">No templates match your search</string>
     <string name="empty_no_my_templates">You haven’t created any templates yet</string>
     <string name="error_recipe_not_found">Recipe not found.</string>
+    <string name="error_appointment_not_found">Appointment not found.</string>
     <string name="error_recipe_not_available_offline">Recipe data not available offline.</string>
     <string name="label_plan_id">Plan ID</string>
     <string name="label_public_template">Public Template</string>
