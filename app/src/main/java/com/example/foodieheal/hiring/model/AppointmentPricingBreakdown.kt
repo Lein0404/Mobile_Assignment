@@ -30,7 +30,7 @@ data class AppointmentPricingBreakdown(
     val finalTotalPrice: Double = 0.0
 ) {
     companion object {
-        const val INTERSTATE_SURCHARGE_AMOUNT = 30.0
+        const val INTERSTATE_SURCHARGE_AMOUNT = 60.0
         const val PLATFORM_FEE_RATE = 0.05 // 5% platform commission
         fun calculate(
             chefHourlyRate: Double,
