@@ -417,7 +417,7 @@ class RecipeViewModel(
 
     fun fetchAuthorData(authorId: String) {
         viewModelScope.launch {
-            repository.getUserByCustomId(authorId).onSuccess { author ->
+            repository.getUserById(authorId).onSuccess { author ->
                 recipeAuthor = author
                 // Update selected recipe with author name/pic for offline persistence
                 selectedRecipe?.let { current ->

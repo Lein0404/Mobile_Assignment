@@ -1037,9 +1037,9 @@ fun ProfileScreen(
                                         showMenu = isMyProfile,
                                         isBookmarked = viewModel.bookmarkedRecipeIds.contains(recipe.recipe_id),
                                         onBookmarkClick = {
-                                            user?.customId?.let { cid ->
+                                            user?.id?.let { uid ->
                                                 recipe.recipe_id?.let { rid ->
-                                                    viewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                                    viewModel.toggleBookmark(uid, rid, recipe.recipeName)
                                                 }
                                             }
                                         },

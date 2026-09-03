@@ -452,11 +452,11 @@ class RecipeRepository(
         }
     }
 
-    suspend fun getUserByCustomId(customId: String): Result<User?> = withContext(Dispatchers.IO) {
+    suspend fun getUserById(userId: String): Result<User?> = withContext(Dispatchers.IO) {
         runCatching {
             try {
                 val user = client.from("users")
-                    .select { filter { eq("custom_id", customId) } }
+                    .select { filter { eq("id", userId) } }
                     .decodeSingleOrNull<User>()
 
                 // Cache for offline
@@ -469,7 +469,7 @@ class RecipeRepository(
                 // Offline fallback
                 MainActivity.appContext?.let { context ->
                     val dao = UserDatabase.getDatabase(context).userDao()
-                    dao.getPublicUser(customId)?.toDomain()
+                    dao.getPublicUser(userId)?.toDomain()
                 }
             }
         }
