@@ -88,10 +88,10 @@ fun  HomeScreen(
         recipeViewModel.fetchAllRecipes()
     }
 
-    LaunchedEffect(user?.customId) {
-        user?.customId?.let { cid ->
-            recipeViewModel.fetchBookmarkIds(cid)
-            recipeViewModel.fetchBookmarkedRecipes(cid)
+    LaunchedEffect(user?.id) {
+        user?.id?.let { uid ->
+            recipeViewModel.fetchBookmarkIds(uid)
+            recipeViewModel.fetchBookmarkedRecipes(uid)
         }
     }
 
@@ -243,9 +243,9 @@ fun  HomeScreen(
                             }
                         },
                         onBookmarkClick = { recipe ->
-                            user?.customId?.let { cid ->
+                            user?.id?.let { uid ->
                                 recipe.recipe_id?.let { rid ->
-                                    recipeViewModel.toggleBookmark(cid, rid, recipe.recipeName)
+                                    recipeViewModel.toggleBookmark(uid, rid, recipe.recipeName)
                                 }
                             }
                         },
