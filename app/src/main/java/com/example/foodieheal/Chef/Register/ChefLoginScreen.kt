@@ -53,6 +53,10 @@ fun ChefLoginScreen(
     val view = LocalView.current
     val primaryColor = MaterialTheme.colorScheme.primary
 
+    // Resource strings for robust error comparison
+    val invalidCreds = stringResource(R.string.error_invalid_credentials)
+    val accountNotFound = stringResource(R.string.error_account_not_found)
+
     // Update Status Bar Color
     SideEffect {
         val window = (view.context as Activity).window
@@ -184,9 +188,16 @@ fun ChefLoginScreen(
                     )
                 )
 
-                if (hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty()) {
+                // Email Specific Errors — show after clicking Login
+                val emailError = when {
+                    hasAttemptedSubmit && !isEmailFormatValid && email.isNotEmpty() -> stringResource(R.string.chef_login_invalid_email)
+                    viewModel.errorMessage == accountNotFound || viewModel.errorMessage.contains("Account details not found", ignoreCase = true) -> accountNotFound
+                    else -> null
+                }
+
+                if (emailError != null) {
                     Text(
-                        text = stringResource(R.string.chef_login_invalid_email),
+                        text = emailError,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -242,6 +253,18 @@ fun ChefLoginScreen(
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
+
+                // Password Specific Errors
+                if (viewModel.errorMessage == invalidCreds || 
+                    viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) || 
+                    viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)) {
+                    Text(
+                        text = stringResource(R.string.error_invalid_password_short),
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
 
             // Forgot Password Link
@@ -261,7 +284,37 @@ fun ChefLoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // System Error Messages — show after clicking Login
+            val isAuthError = viewModel.errorMessage == invalidCreds ||
+                             viewModel.errorMessage == accountNotFound ||
+                             viewModel.errorMessage.contains("Invalid email or password", ignoreCase = true) ||
+                             viewModel.errorMessage.contains("Invalid login credentials", ignoreCase = true)
+
+            if (viewModel.errorMessage.isNotEmpty() && !isAuthError) {
+                val isSuccess = viewModel.errorMessage.contains("sent", ignoreCase = true)
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Text(
+                        text = viewModel.errorMessage,
+                        color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+                }
+            }
 
             // Chef Login Button
             Button(
@@ -291,30 +344,6 @@ fun ChefLoginScreen(
                     )
                 } else {
                     Text(stringResource(R.string.chef_login_btn_submit), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
-            }
-
-            if (viewModel.errorMessage.isNotEmpty()) {
-                val isSuccess = viewModel.errorMessage.contains("sent", ignoreCase = true)
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text(
-                        text = viewModel.errorMessage,
-                        color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp)
-                    )
                 }
             }
 

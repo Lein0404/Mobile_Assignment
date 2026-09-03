@@ -82,6 +82,12 @@ import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 
+enum class RecipeSelectorTab {
+    MY_RECIPES,
+    BOOKMARKS,
+    FOLLOWED
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeBookmarkSelectorSheet(
@@ -103,30 +109,39 @@ fun RecipeBookmarkSelectorSheet(
 
     var previewingRecipe by remember { mutableStateOf<Recipe?>(null) }
 
-    // Toggle between Following and Bookmarks
-    var showFollowingFeed by remember { mutableStateOf(false) }
+    // Tab Selection (My Recipes, Bookmarks, Follow)
+    var selectedTab by remember { mutableStateOf(RecipeSelectorTab.BOOKMARKS) }
     val currentUserId = authViewModel?.currentUser?.id?.ifBlank { authViewModel?.currentUser?.customId } ?: authViewModel?.currentUser?.customId
 
-    // Fetch following & bookmarked recipes
+    // Fetch my recipes, following and bookmarked recipes
     LaunchedEffect(currentUserId) {
         val cid = currentUserId
         if (recipeViewModel != null && !cid.isNullOrBlank()) {
             recipeViewModel.fetchBookmarkIds(cid)
+            recipeViewModel.fetchMyRecipes(cid)
             recipeViewModel.fetchBookmarkedRecipes(cid)
             recipeViewModel.fetchFollowingRecipes(cid)
         }
     }
 
-    LaunchedEffect(showFollowingFeed, currentUserId) {
+    LaunchedEffect(selectedTab, currentUserId) {
         val cid = currentUserId
         if (recipeViewModel != null && !cid.isNullOrBlank()) {
-            if (showFollowingFeed) {
-                if (recipeViewModel.followingRecipes.isEmpty()) {
-                    recipeViewModel.fetchFollowingRecipes(cid)
+            when (selectedTab) {
+                RecipeSelectorTab.MY_RECIPES -> {
+                    if (recipeViewModel.myRecipes.isEmpty()) {
+                        recipeViewModel.fetchMyRecipes(cid)
+                    }
                 }
-            } else {
-                if (recipeViewModel.bookmarkedRecipes.isEmpty()) {
-                    recipeViewModel.fetchBookmarkedRecipes(cid)
+                RecipeSelectorTab.BOOKMARKS -> {
+                    if (recipeViewModel.bookmarkedRecipes.isEmpty()) {
+                        recipeViewModel.fetchBookmarkedRecipes(cid)
+                    }
+                }
+                RecipeSelectorTab.FOLLOWED -> {
+                    if (recipeViewModel.followingRecipes.isEmpty()) {
+                        recipeViewModel.fetchFollowingRecipes(cid)
+                    }
                 }
             }
         }
@@ -134,23 +149,30 @@ fun RecipeBookmarkSelectorSheet(
 
     val currentDataList: List<Recipe> = remember(
         recipeViewModel,
-        showFollowingFeed,
+        selectedTab,
         bookmarkedRecipes,
+        recipeViewModel?.myRecipes,
         recipeViewModel?.followingRecipes,
         recipeViewModel?.bookmarkedRecipes
     ) {
         if (recipeViewModel != null) {
-            if (showFollowingFeed) {
-                recipeViewModel.followingRecipes
-            } else {
-                if (recipeViewModel.bookmarkedRecipes.isNotEmpty()) {
-                    recipeViewModel.bookmarkedRecipes
-                } else {
-                    bookmarkedRecipes
+            when (selectedTab) {
+                RecipeSelectorTab.MY_RECIPES -> recipeViewModel.myRecipes
+                RecipeSelectorTab.BOOKMARKS -> {
+                    if (recipeViewModel.bookmarkedRecipes.isNotEmpty()) {
+                        recipeViewModel.bookmarkedRecipes
+                    } else {
+                        bookmarkedRecipes
+                    }
                 }
+                RecipeSelectorTab.FOLLOWED -> recipeViewModel.followingRecipes
             }
         } else {
-            bookmarkedRecipes
+            when (selectedTab) {
+                RecipeSelectorTab.MY_RECIPES -> emptyList()
+                RecipeSelectorTab.BOOKMARKS -> bookmarkedRecipes
+                RecipeSelectorTab.FOLLOWED -> emptyList()
+            }
         }
     }
 
@@ -269,7 +291,7 @@ fun RecipeBookmarkSelectorSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Followed and Bookmark
+            // 3-Way Tab Selector: My Recipes, Bookmarks, Followed
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -284,37 +306,32 @@ fun RecipeBookmarkSelectorSheet(
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val subTabModifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(18.dp))
+                val tabs = listOf(
+                    RecipeSelectorTab.MY_RECIPES to stringResource(R.string.tab_my_recipes_title),
+                    RecipeSelectorTab.BOOKMARKS to stringResource(R.string.label_bookmarks_toggle),
+                    RecipeSelectorTab.FOLLOWED to stringResource(R.string.label_followed)
+                )
 
-                Box(
-                    modifier = subTabModifier
-                        .background(if (showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                        .clickable { showFollowingFeed = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_followed),
-                        color = if (showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Box(
-                    modifier = subTabModifier
-                        .background(if (!showFollowingFeed) MaterialTheme.colorScheme.primary else Color.Transparent)
-                        .clickable { showFollowingFeed = false },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_bookmarks_toggle),
-                        color = if (!showFollowingFeed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                tabs.forEach { (tab, label) ->
+                    val isSelected = selectedTab == tab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .clickable { selectedTab = tab },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
 
@@ -417,17 +434,23 @@ fun RecipeBookmarkSelectorSheet(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                painter = painterResource(id = if (showFollowingFeed) R.drawable.follower else R.drawable.bookmark),
+                                painter = painterResource(
+                                    id = when (selectedTab) {
+                                        RecipeSelectorTab.MY_RECIPES -> R.drawable.ic_recipe
+                                        RecipeSelectorTab.BOOKMARKS -> R.drawable.bookmark
+                                        RecipeSelectorTab.FOLLOWED -> R.drawable.follower
+                                    }
+                                ),
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = if (showFollowingFeed) {
-                                    stringResource(R.string.empty_no_followed_recipes)
-                                } else {
-                                    stringResource(R.string.empty_no_bookmarked_recipes)
+                                text = when (selectedTab) {
+                                    RecipeSelectorTab.MY_RECIPES -> stringResource(R.string.empty_no_my_recipes)
+                                    RecipeSelectorTab.BOOKMARKS -> stringResource(R.string.empty_no_bookmarked_recipes)
+                                    RecipeSelectorTab.FOLLOWED -> stringResource(R.string.empty_no_followed_recipes)
                                 },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
@@ -435,10 +458,10 @@ fun RecipeBookmarkSelectorSheet(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (showFollowingFeed) {
-                                    stringResource(R.string.empty_no_followed_recipes_sub)
-                                } else {
-                                    stringResource(R.string.empty_bookmarked_recipes_sub)
+                                text = when (selectedTab) {
+                                    RecipeSelectorTab.MY_RECIPES -> stringResource(R.string.empty_my_recipes_sub)
+                                    RecipeSelectorTab.BOOKMARKS -> stringResource(R.string.empty_bookmarked_recipes_sub)
+                                    RecipeSelectorTab.FOLLOWED -> stringResource(R.string.empty_no_followed_recipes_sub)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
