@@ -34,6 +34,7 @@ import com.example.foodieheal.navigation.Screen
 import com.example.foodieheal.Recipe.View.RecipeCardItem
 import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.hiring.viewmodel.HiringViewModel
+import com.example.foodieheal.ui.components.HomeChefRowSkeleton
 import androidx.compose.ui.res.stringResource
 
 @Composable
@@ -297,14 +298,7 @@ fun ChefListSection(
 
         // Loading State (Only when list is empty)
         isLoading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            HomeChefRowSkeleton()
         }
 
         // Error State with Retry Button

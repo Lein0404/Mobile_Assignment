@@ -206,6 +206,62 @@ fun ChefCardSkeleton(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun HomeChefCardSkeleton(modifier: Modifier = Modifier) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = modifier
+            .width(165.dp)
+            .padding(vertical = 4.dp)
+    ) {
+        Column {
+            // Profile Image Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(135.dp)
+                    .shimmerEffect()
+            )
+
+            // Info Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
+                ShimmerLine(height = 14.dp, widthFraction = 0.75f)
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ShimmerLine(height = 11.dp, modifier = Modifier.width(36.dp))
+                    ShimmerLine(height = 11.dp, modifier = Modifier.width(48.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeChefRowSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        repeat(3) {
+            HomeChefCardSkeleton()
+        }
+    }
+}
+
+@Composable
 fun ChefGridItemSkeleton(modifier: Modifier = Modifier) {
     Card(
         shape = RoundedCornerShape(16.dp),
