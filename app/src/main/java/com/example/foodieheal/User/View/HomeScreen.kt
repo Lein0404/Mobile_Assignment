@@ -84,6 +84,26 @@ fun  HomeScreen(
     val chefErrorMessage by chefViewModel.errorMessage.collectAsState()
     val isNetworkAvailable by chefViewModel.isNetworkAvailable.collectAsState()
 
+    var popularChefs by remember { mutableStateOf<List<Chef>>(emptyList()) }
+
+    LaunchedEffect(chefList) {
+        if (popularChefs.isNotEmpty()) {
+            val updated = popularChefs.map { old ->
+                val id = old.chefId.ifEmpty { old.id }
+                chefList.find { (it.chefId.ifEmpty { it.id }) == id } ?: old
+            }
+            if (updated != popularChefs) {
+                popularChefs = updated
+            }
+        }
+
+        if (popularChefs.isEmpty() && chefList.isNotEmpty()) {
+            popularChefs = chefList
+                .sortedByDescending { it.averagerating ?: 0.0 }
+                .take(5)
+        }
+    }
+
     LaunchedEffect(Unit) {
         chefViewModel.fetchAllChefs()
         recipeViewModel.fetchAllRecipes()
@@ -167,18 +187,47 @@ fun  HomeScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(vertical = 24.dp)
                 ) {
-                    // Chef Section
-                    Text(
-                        text = stringResource(id = R.string.home_section_chef),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    // Popular Chefs Section
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.home_section_popular_chefs),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Button(
+                            onClick = {
+                                navController.navigate(Screen.Hiring.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.home_btn_see_all),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     ChefListSection(
-                        chefs = chefList,
+                        chefs = popularChefs,
                         isLoading = isChefLoading,
                         errorMessage = chefErrorMessage,
                         isNetworkAvailable = isNetworkAvailable,

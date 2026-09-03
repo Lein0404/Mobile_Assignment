@@ -1454,6 +1454,7 @@
     <string name="greeting_night">Good Night</string>
     <string name="default_username">Username</string>
     <string name="home_section_chef">Chef</string>
+    <string name="home_section_popular_chefs">Popular Chefs</string>
     <string name="home_section_popular_recipes">Popular Recipes</string>
     <string name="home_btn_see_all">See All</string>
     <string name="home_banner_title">Missing an Ingredient?</string>
