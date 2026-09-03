@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
+import com.example.foodieheal.Chef.model.WeeklyAvailability
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +61,7 @@ import com.example.foodieheal.meal_planner.screen.MealDatePickerDialog
 import com.example.foodieheal.meal_planner.screen.WeeklyDateCardRow
 import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.ui.components.AppointmentListSkeleton
+import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import com.example.foodieheal.Chef.model.Chef
 import java.time.DayOfWeek
@@ -140,6 +154,12 @@ fun HiringAppointment(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // Chef Context Summary Header Card
+            ChefSummaryHeader(
+                chef = chef,
+                selectedDate = selectedDate
+            )
+
             // Header Row (Week range text + Today quick jump + Navigation controls)
             Row(
                 modifier = Modifier
@@ -290,7 +310,7 @@ private fun DayScheduleSection(
     }
 
     val weeklyAvail = remember(chef.availability_hours) {
-        com.example.foodieheal.Chef.model.WeeklyAvailability.fromJsonElement(chef.availability_hours)
+        WeeklyAvailability.fromJsonElement(chef.availability_hours)
     }
     val isChefAvailableOnDate = remember(weeklyAvail, selectedDate, chef.availability_hours) {
         if (chef.availability_hours == null) true
@@ -318,7 +338,7 @@ private fun DayScheduleSection(
                     Column {
                         Text(
                             text = formattedTitle,
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -328,6 +348,13 @@ private fun DayScheduleSection(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error
+                            )
+                        } else if (appointments.isNotEmpty()) {
+                            Text(
+                                text = "${appointments.size} scheduled booking${if (appointments.size > 1) "s" else ""}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -345,42 +372,133 @@ private fun DayScheduleSection(
                 }
             }
 
-            if (appointments.isEmpty()) {
+            if (!isChefAvailableOnDate) {
                 item {
-                    Box(
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 32.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(vertical = 8.dp)
                     ) {
-                        Text(
-                            text = if (!isChefAvailableOnDate) {
-                                stringResource(R.string.hiring_chef_off_duty_desc)
-                            } else {
-                                stringResource(R.string.empty_no_appointments_for_date)
-                            },
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 15.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_clock),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = stringResource(R.string.hiring_chef_off_duty_title),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = stringResource(R.string.hiring_chef_off_duty_desc),
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
+                                fontSize = 13.sp,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
+            } else if (appointments.isEmpty()) {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_planner),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = stringResource(R.string.empty_no_appointments_for_date),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (!isPastDate) "Chef has open availability on this date! Tap below to reserve." else "No appointments were scheduled on this date.",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 18.sp
+                            )
+
+                            if (!isPastDate) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = onAddAppointmentClick,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_add_circle_outline),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(R.string.add_booking),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             } else {
                 items(appointments) { appointment ->
-                    val startAmPm = formatToAmPm(appointment.Start_Time)
-                    val endAmPm = formatToAmPm(appointment.End_Time)
-                    val timeSlotText = if (startAmPm.isNotBlank() && endAmPm.isNotBlank()) {
-                        stringResource(R.string.time_range_format, startAmPm, endAmPm)
-                    } else if (startAmPm.isNotBlank()) {
-                        startAmPm
-                    } else {
-                        stringResource(R.string.label_appointment)
-                    }
-
                     AppointmentCard(
-                        title = timeSlotText,
-                        statusText = appointment.Status.orEmpty(),
-                        showAddIcon = false
+                        startTime = appointment.Start_Time,
+                        endTime = appointment.End_Time,
+                        statusText = appointment.Status.orEmpty()
                     )
                 }
             }
@@ -390,67 +508,213 @@ private fun DayScheduleSection(
 
 @Composable
 private fun AppointmentCard(
-    title: String,
+    startTime: String,
+    endTime: String,
     statusText: String,
-    showAddIcon: Boolean = false,
-    onAddClick: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
-    val (statusBgColor, statusTextColor) = when (statusText.lowercase(java.util.Locale.ROOT).trim()) {
-        "completed", "finished" -> Color(0xFFE3F2FD) to Color(0xFF1565C0) // Soft Blue
-        "confirmed", "accepted" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Soft Green
-        "cancelled"             -> Color(0xFFFFEBEE) to Color(0xFFC62828) // Soft Red
-        "rejected"              -> Color(0xFFFBE9E7) to Color(0xFFD84315) // Soft Deep Orange / Rust Red
-        "unpaid"                -> Color(0xFFFFF8E1) to Color(0xFFF57F17) // Soft Amber / Yellow-Orange
-        "pending"               -> Color(0xFFFFF3E0) to Color(0xFFE65100) // Soft Orange
-        else                    -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    val startAmPm = formatToAmPm(startTime)
+    val endAmPm = formatToAmPm(endTime)
+    val timeSlotText = if (startAmPm.isNotBlank() && endAmPm.isNotBlank()) {
+        stringResource(R.string.time_range_format, startAmPm, endAmPm)
+    } else if (startAmPm.isNotBlank()) {
+        startAmPm
+    } else {
+        stringResource(R.string.label_appointment)
     }
 
-    Column(
-        modifier = Modifier
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Time Slot with clock icon badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_clock),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = timeSlotText,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.label_appointment),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Standardized Status Badge
+                AppointmentStatusBadge(status = statusText)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChefSummaryHeader(
+    chef: Chef,
+    selectedDate: LocalDate,
+    modifier: Modifier = Modifier
+) {
+    val weeklyAvail = remember(chef.availability_hours) {
+        WeeklyAvailability.fromJsonElement(chef.availability_hours)
+    }
+    val isAvailableOnSelectedDate = remember(weeklyAvail, selectedDate, chef.availability_hours) {
+        if (chef.availability_hours == null) true
+        else weeklyAvail.isDateAvailable(selectedDate)
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiary
-            )
-
-            if (showAddIcon) {
-                IconButton(onClick = { onAddClick?.invoke() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add_circle_outline),
-                        contentDescription = stringResource(R.string.add_appointment),
-                        tint = MaterialTheme.colorScheme.onTertiary,
-                        modifier = Modifier.size(28.dp)
+            // Chef Avatar
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!chef.profilePictureUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = chef.profilePictureUrl,
+                        contentDescription = stringResource(R.string.profile_picture),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = chef.name.take(1).uppercase(Locale.ROOT).ifBlank {
+                            stringResource(R.string.default_initial_chef)
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            // Chef Name and Detail
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = chef.name.ifEmpty { stringResource(R.string.unknown_chef) },
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
-                .background(statusBgColor, shape = RoundedCornerShape(20.dp))
-                .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = statusText.uppercase(),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = statusTextColor
-            )
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Rating
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_star),
+                            contentDescription = stringResource(R.string.rating_star),
+                            tint = Color(0xFFFFB300),
+                            modifier = Modifier.size(13.dp)
+                        )
+                        val rating = chef.averagerating
+                        Text(
+                            text = if (rating != null && rating > 0.0) String.format(Locale.US, "%.1f", rating) else stringResource(R.string.chef_new_rating),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Hourly rate
+                    chef.Pricing?.let { price ->
+                        Text(
+                            text = stringResource(R.string.rate_per_hour, price.toInt()),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            // Availability Badge for Selected Date
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = if (isAvailableOnSelectedDate) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(if (isAvailableOnSelectedDate) Color(0xFF2E7D32) else Color(0xFFC62828))
+                    )
+                    Text(
+                        text = if (isAvailableOnSelectedDate) stringResource(R.string.chef_available_today) else stringResource(R.string.hiring_schedule_off_duty),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isAvailableOnSelectedDate) Color(0xFF2E7D32) else Color(0xFFC62828)
+                    )
+                }
+            }
         }
     }
 }
