@@ -29,6 +29,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
 import com.example.foodieheal.hiring.viewmodel.UserAppointmentViewModel
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.ui.components.AppointmentListSkeleton
 import com.example.foodieheal.ui.components.AppointmentStatusBadge
 import com.example.foodieheal.ui.components.formatToAmPm
 import java.util.Locale
@@ -51,14 +52,7 @@ fun UserAppointmentsTabContent(
     ) {
         when (val currentState = state) {
             is UserAppointmentsUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                AppointmentListSkeleton()
             }
 
             is UserAppointmentsUiState.Error -> {

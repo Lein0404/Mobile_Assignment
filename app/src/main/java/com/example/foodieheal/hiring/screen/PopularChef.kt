@@ -37,6 +37,7 @@ import com.example.foodieheal.hiring.components.ChefFilterBottomSheet
 import com.example.foodieheal.hiring.components.ChefFilterState
 import com.example.foodieheal.hiring.components.ChefSearchBar
 import com.example.foodieheal.hiring.components.filterAndSortChefs
+import com.example.foodieheal.ui.components.ChefGridSkeleton
 import com.example.foodieheal.ui.components.getHighlightedText
 import java.util.Locale
 
@@ -87,14 +88,7 @@ fun PopularChefsTabContent(
         ) {
             when {
                 isLoading && chefs.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    ChefGridSkeleton()
                 }
                 !errorMessage.isNullOrEmpty() && chefs.isEmpty() -> {
                     Box(

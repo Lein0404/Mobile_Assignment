@@ -26,6 +26,7 @@ import com.example.foodieheal.hiring.components.ChefFilterState
 import com.example.foodieheal.hiring.components.ChefSearchBar
 import com.example.foodieheal.hiring.components.filterAndSortChefs
 import com.example.foodieheal.Chef.model.Chef
+import com.example.foodieheal.ui.components.ChefGridSkeleton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,14 +72,7 @@ fun BookmarkedChefsTabContent(
         ) {
             val isLoading = viewModel.isLoadingBookmarks
             if (isLoading && bookmarkedChefs.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                ChefGridSkeleton()
             } else if (bookmarkedChefs.isNotEmpty()) {
                 if (filteredBookmarkedChefs.isEmpty()) {
                     Box(
