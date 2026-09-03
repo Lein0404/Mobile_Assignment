@@ -51,9 +51,8 @@ object IngredientRequestFilterHelper {
                 request.ingredientName.contains(query, ignoreCase = true) ||
                 request.ingredientAltNames.any { it.contains(query, ignoreCase = true) }
 
-            val matchesCategory = selectedCategories.isEmpty() ||
-                request.ingredientCategory == null ||
-                selectedCategories.contains(request.ingredientCategory)
+            val category = request.ingredientCategory ?: IngredientCategory.OTHERS
+            val matchesCategory = selectedCategories.isEmpty() || selectedCategories.contains(category)
 
             val matchesStatus = selectedStatus == null || request.requestStatus == selectedStatus
 

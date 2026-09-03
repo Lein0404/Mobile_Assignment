@@ -43,13 +43,12 @@ data class AdminIngredientsUiState(
     val isRefreshing: Boolean = false,
     val isNetworkAvailable: Boolean = true,
     val errorMessage: Int? = null,
-    val isCategoriesExpanded: Boolean = false
-) {
-    val totalCount: Int get() = requests.size
-    val pendingCount: Int get() = requests.count { it.request.requestStatus == Status.PENDING }
-    val approvedCount: Int get() = requests.count { it.request.requestStatus == Status.APPROVED }
-    val rejectedCount: Int get() = requests.count { it.request.requestStatus == Status.REJECTED }
-}
+    val isCategoriesExpanded: Boolean = false,
+    val totalCount: Int = 0,
+    val pendingCount: Int = 0,
+    val approvedCount: Int = 0,
+    val rejectedCount: Int = 0
+)
 
 data class AdminIngredientRequestItem(
     val request: IngredientRequest,
@@ -232,18 +231,31 @@ class AdminIngredientsViewModel(
 
     private fun applyFilters() {
         _uiState.update { state ->
-            val filtered = IngredientRequestFilterHelper.filterRequests(
+            val nonStatusFiltered = IngredientRequestFilterHelper.filterRequests(
                 items = state.requests,
                 searchQuery = state.searchQuery,
                 selectedCategories = state.selectedCategories,
-                selectedStatus = state.selectedStatus,
+                selectedStatus = null,
                 createdDateStart = state.createdDateStart,
                 createdDateEnd = state.createdDateEnd,
                 processedDateStart = state.processedDateStart,
                 processedDateEnd = state.processedDateEnd,
                 getRequest = { it.request }
             )
-            state.copy(filteredRequests = filtered)
+
+            val filtered = if (state.selectedStatus == null) {
+                nonStatusFiltered
+            } else {
+                nonStatusFiltered.filter { it.request.requestStatus == state.selectedStatus }
+            }
+
+            state.copy(
+                filteredRequests = filtered,
+                totalCount = nonStatusFiltered.size,
+                pendingCount = nonStatusFiltered.count { it.request.requestStatus == Status.PENDING },
+                approvedCount = nonStatusFiltered.count { it.request.requestStatus == Status.APPROVED },
+                rejectedCount = nonStatusFiltered.count { it.request.requestStatus == Status.REJECTED }
+            )
         }
     }
 }

@@ -158,6 +158,9 @@ fun AdminAddIngredientScreen(
                                             onComplete = {
                                                 Toast.makeText(context, successToastMsg, Toast.LENGTH_SHORT).show()
                                                 navController.popBackStack()
+                                            },
+                                            onError = {
+                                                Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                                             }
                                         )
                                     }

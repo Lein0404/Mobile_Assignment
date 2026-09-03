@@ -213,6 +213,9 @@ fun IngredientRequestFormScreen(
                                                         popUpTo(0) { inclusive = true }
                                                     }
                                                 }
+                                            },
+                                            onError = {
+                                                Toast.makeText(context, validateErrorToastMsg, Toast.LENGTH_SHORT).show()
                                             }
                                         )
                                     }
