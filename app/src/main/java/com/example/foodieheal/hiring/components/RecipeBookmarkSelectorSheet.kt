@@ -105,7 +105,7 @@ fun RecipeBookmarkSelectorSheet(
 
     // Toggle between Following and Bookmarks
     var showFollowingFeed by remember { mutableStateOf(false) }
-    val currentUserId = authViewModel?.currentUser?.customId
+    val currentUserId = authViewModel?.currentUser?.id?.ifBlank { authViewModel?.currentUser?.customId } ?: authViewModel?.currentUser?.customId
 
     // Fetch following & bookmarked recipes
     LaunchedEffect(currentUserId) {
@@ -179,8 +179,8 @@ fun RecipeBookmarkSelectorSheet(
                 // Visibility & Privacy check
                 val isVisible = when {
                     recipe.author_id == currentUserId -> true
-                    recipe.visibility == "public" -> true
-                    recipe.visibility == "followers" -> recipeViewModel?.followedUserIds?.contains(recipe.author_id) == true
+                    recipe.visibility.isNullOrBlank() || recipe.visibility.equals("public", ignoreCase = true) -> true
+                    recipe.visibility.equals("followers", ignoreCase = true) -> recipeViewModel?.followedUserIds?.contains(recipe.author_id) == true
                     else -> false
                 }
                 if (!isVisible) return@filter false
