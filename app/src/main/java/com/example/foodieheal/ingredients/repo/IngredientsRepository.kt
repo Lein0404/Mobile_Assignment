@@ -17,8 +17,8 @@ import kotlinx.coroutines.withContext
  * Strategy:
  * 1. Return cached data from Room immediately.
  * 2. Attempt to fetch fresh data from Supabase in the background.
- * 3. On success → update Room cache and return fresh data.
- * 4. On failure (offline) → keep using cached data silently.
+ * 3. On success --> update Room cache and return fresh data.
+ * 4. On failure (offline) --> keep using cached data silently.
  */
 class IngredientsRepository(private val dao: IngredientsDao) {
 

@@ -21,8 +21,6 @@ import com.example.foodieheal.ingredients.model.IngredientCategory
 
 /**
  * Shared composable for the search bar + "Categories" label + category filter chips
- * used across IngredientsExistingScreen, IngredientRequestsScreen,
- * and AdminIngredientRequestsScreen.
  */
 @Composable
 fun IngredientSearchAndFilter(

@@ -22,9 +22,6 @@ object IngredientRequestNotificationHelper {
     private const val TAG = "IngredientReqNotif"
     const val CHANNEL_ID = "ingredient_requests_channel"
 
-    /**
-     * Safe to call repeatedly because creating an existing channel with the same ID is a no-op.
-     */
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = context.getString(R.string.ingredient_request_channel_name)

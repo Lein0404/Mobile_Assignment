@@ -48,7 +48,7 @@ data class UnitsEntity(
     @ColumnInfo(name = "default_quantity") val defaultQuantity: Double = 1.0,
 )
 
-// ──────────────── Converter helpers: Entity ↔ Domain Model ────────────────
+// Converter helpers: Entity <--> Domain Model
 
 fun Ingredients.toEntity() = IngredientsEntity(
     ingredientId = ingredientId,

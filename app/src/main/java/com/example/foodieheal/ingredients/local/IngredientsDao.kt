@@ -8,14 +8,6 @@ import androidx.room.Query
 /**
  * Data Access Object (DAO) for the local ingredients cache (ingredients, ingredient_units, units tables).
  * Provides CRUD operations for the offline cache that mirrors Supabase data.
- * 
- * Key Functions:
- * - @Dao: Marks this interface as a DAO for Room.
- * - @Insert: Inserts data into the database.
- * - @Query: Executes SQL queries to retrieve or delete data.
- * - @Upsert: Insert or update operation.
- * - Flow<T>: Returns reactive streams for real-time UI updates.
- * - suspend functions: For database operations that run on background threads.
  */
 @Dao
 interface IngredientsDao {

@@ -84,14 +84,13 @@ object IngredientNameNormalizer {
 
 /**
  * Stateless helper that provides shared form manipulation and validation logic
- * for ingredient forms. Each ViewModel delegates to these pure functions
- * instead of duplicating the logic.
+ * for ingredient forms.
+ *
+ * Each ViewModel delegates to these pure functions instead of duplicating the logic.
  */
 object IngredientFormHelper {
 
-    // ──────────────────────────────────────────────
     // Field update helpers (clear error on edit)
-    // ──────────────────────────────────────────────
 
     fun updateName(state: IngredientFormState, name: String): IngredientFormState =
         state.copy(ingredientName = name, nameError = null, nameErrorArg = null)
@@ -102,9 +101,7 @@ object IngredientFormHelper {
     fun updateDescription(state: IngredientFormState, desc: String): IngredientFormState =
         state.copy(description = desc, descriptionError = null)
 
-    // ──────────────────────────────────────────────
     // Alternate Name row helpers
-    // ──────────────────────────────────────────────
 
     fun addAltNameRow(state: IngredientFormState): IngredientFormState =
         state.copy(altNames = state.altNames + "")
@@ -124,9 +121,7 @@ object IngredientFormHelper {
         return state.copy(altNames = newList)
     }
 
-    // ──────────────────────────────────────────────
     // Unit row helpers
-    // ──────────────────────────────────────────────
 
     fun addUnitRow(state: IngredientFormState): IngredientFormState =
         state.copy(unitRows = state.unitRows + UnitRowState(), unitRowsError = null)
@@ -149,14 +144,10 @@ object IngredientFormHelper {
         return state.copy(unitRows = newList)
     }
 
-    // ──────────────────────────────────────────────
     // Validation
-    // ──────────────────────────────────────────────
 
     /**
      * Validates all form fields.
-     * @return a [Pair] of (isValid, updatedStateWithErrors).
-     * The caller should apply the updated state to the StateFlow.
      */
     fun validateForm(state: IngredientFormState): Pair<Boolean, IngredientFormState> {
         var isValid = true
@@ -218,9 +209,7 @@ object IngredientFormHelper {
         return Pair(isValid, updatedState)
     }
 
-    // ──────────────────────────────────────────────
     // Utility
-    // ──────────────────────────────────────────────
 
     fun clearError(state: IngredientFormState): IngredientFormState =
         state.copy(errorMessage = null)
