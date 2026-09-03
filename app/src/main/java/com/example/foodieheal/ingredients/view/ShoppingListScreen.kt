@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import com.example.foodieheal.R
 import com.example.foodieheal.ingredients.model.IngredientCategory
 import com.example.foodieheal.ingredients.model.ShoppingListItem
+import com.example.foodieheal.ingredients.shared.IngredientRequestFilterBottomSheet
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.shared.ShoppingListShareHelper
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModelFactory
@@ -405,14 +406,15 @@ fun ShoppingListScreen(
                 }
         ) {
             // ──────────────── Search & Category Filters ────────────────
+            val isFilterActive = detailState.selectedCategories.isNotEmpty()
             IngredientSearchAndFilter(
                 searchQuery = detailState.searchQuery,
                 onSearchQueryChange = { viewModel.onItemSearchQueryChange(it) },
                 searchPlaceholder = stringResource(R.string.shopping_list_search_items_placeholder),
-                selectedCategories = detailState.selectedCategories,
-                onToggleCategory = { viewModel.toggleCategory(it) },
-                isExpanded = detailState.isCategoriesExpanded,
-                onExpandedChange = { viewModel.toggleCategoriesExpanded() }
+                showFilterIcon = true,
+                isFilterActive = isFilterActive,
+                onFilterClick = { viewModel.onShowFilterSheet(true) },
+                showStatusTabs = false
             )
 
             // ──────────────── Items Content ────────────────
@@ -624,6 +626,16 @@ fun ShoppingListScreen(
             }
         )
     }
+
+    IngredientRequestFilterBottomSheet(
+        show = detailState.showFilterSheet,
+        onDismissRequest = { viewModel.onShowFilterSheet(false) },
+        selectedCategories = detailState.tempSelectedCategories,
+        onToggleCategory = { viewModel.updateTempCategory(it) },
+        showDateFilters = false,
+        onResetAll = { viewModel.resetTempFilters() },
+        onApply = { viewModel.applyFilterSheet() }
+    )
 }
 
 @Composable

@@ -25,6 +25,7 @@ import com.example.foodieheal.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import com.example.foodieheal.ingredients.local.ShoppingListItemEntity
 import com.example.foodieheal.ingredients.model.IngredientCategory
+import com.example.foodieheal.ingredients.shared.IngredientRequestFilterBottomSheet
 import com.example.foodieheal.ingredients.shared.IngredientSearchAndFilter
 import com.example.foodieheal.ingredients.viewModel.IngredientItem
 import com.example.foodieheal.ingredients.viewModel.IngredientsViewModel
@@ -85,14 +86,15 @@ fun ShoppingListAddItemScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
+                val isFilterActive = uiState.selectedCategories.isNotEmpty()
                 IngredientSearchAndFilter(
                     searchQuery = uiState.searchQuery,
                     onSearchQueryChange = { ingredientsViewModel.onSearchQueryChange(it) },
                     searchPlaceholder = stringResource(R.string.shopping_list_search_placeholder),
-                    selectedCategories = uiState.selectedCategories,
-                    onToggleCategory = { ingredientsViewModel.toggleCategory(it) },
-                    isExpanded = uiState.isCategoriesExpanded,
-                    onExpandedChange = { ingredientsViewModel.toggleCategoriesExpanded() }
+                    showFilterIcon = true,
+                    isFilterActive = isFilterActive,
+                    onFilterClick = { ingredientsViewModel.onShowFilterSheet(true) },
+                    showStatusTabs = false
                 )
 
                 if (uiState.isLoading) {
@@ -111,6 +113,7 @@ fun ShoppingListAddItemScreen(
                         contentPadding = PaddingValues(
                             start = dimensionResource(id = R.dimen.padding_l),
                             end = dimensionResource(id = R.dimen.padding_l),
+                            top = dimensionResource(id = R.dimen.padding_l),
                             bottom = 100.dp // Space for bottom button
                         )
                     ) {
@@ -213,6 +216,16 @@ fun ShoppingListAddItemScreen(
                 }
             }
         }
+
+        IngredientRequestFilterBottomSheet(
+            show = uiState.showFilterSheet,
+            onDismissRequest = { ingredientsViewModel.onShowFilterSheet(false) },
+            selectedCategories = uiState.tempSelectedCategories,
+            onToggleCategory = { ingredientsViewModel.updateTempCategory(it) },
+            showDateFilters = false,
+            onResetAll = { ingredientsViewModel.resetTempFilters() },
+            onApply = { ingredientsViewModel.applyFilterSheet() }
+        )
     }
 }
 

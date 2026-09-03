@@ -28,14 +28,17 @@ class ShoppingListRepository(private val dao: ShoppingListDao) {
     }
 
     /**
-     * Generates the next sequential ID for shopping list (starts from "SPL0001" for each user).
+     * Generates a unique sequential ID for shopping list (e.g. "SPL_${userId}_0001").
+     * Prefixing with userId ensures global uniqueness and prevents Room @Relation data leakage across users.
      */
     suspend fun getNextShoppingListId(userId: String): String = withContext(Dispatchers.IO) {
         val existingLists = dao.getShoppingListsForUser(userId)
         val maxNum = existingLists
-            .mapNotNull { it.shoppingListId.removePrefix("SPL").toIntOrNull() }
+            .mapNotNull {
+                it.shoppingListId.substringAfterLast("_").removePrefix("SPL").toIntOrNull()
+            }
             .maxOrNull() ?: 0
-        "SPL${(maxNum + 1).toString().padStart(4, '0')}"
+        "SPL_${userId}_${(maxNum + 1).toString().padStart(4, '0')}"
     }
 
     /**
@@ -44,7 +47,8 @@ class ShoppingListRepository(private val dao: ShoppingListDao) {
     suspend fun createShoppingList(userId: String, title: String? = null): ShoppingListEntity = withContext(Dispatchers.IO) {
         val nextId = getNextShoppingListId(userId)
         val now = System.currentTimeMillis()
-        val defaultTitle = title?.takeIf { it.isNotBlank() } ?: "Shopping List ${nextId.removePrefix("SPL").trimStart('0')}"
+        val listNumber = nextId.substringAfterLast("_").removePrefix("SPL").trimStart('0').ifEmpty { "1" }
+        val defaultTitle = title?.takeIf { it.isNotBlank() } ?: "Shopping List $listNumber"
         val entity = ShoppingListEntity(
             shoppingListId = nextId,
             userId = userId,

@@ -6,8 +6,7 @@ import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.ingredients.model.IngredientRequest
 import com.example.foodieheal.model.Status
 import io.github.jan.supabase.postgrest.from
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.time.Duration
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -19,7 +18,73 @@ object IngredientRequestStatusMonitor {
 
     private const val TAG = "StatusMonitor"
     private const val PREFS_NAME = "ingredient_request_notifications"
+    private const val GLOBAL_PREFS = "ingredient_request_global_prefs"
+    private const val KEY_LAST_ACTIVE_USER_ID = "last_active_user_id"
     private const val KEY_PREFIX_STATUS = "notified_status_"
+
+    private val monitorScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var pollingJob: Job? = null
+
+    /**
+     * Starts continuous background polling at the process level.
+     * Continues running even when activities are paused, stopped, or minimized.
+     */
+    fun startPolling(userId: String, context: Context, intervalMs: Long = 5000L) {
+        if (userId.isBlank()) return
+        saveActiveUserId(userId, context)
+
+        // Cancel previous polling job if any
+        pollingJob?.cancel()
+
+        pollingJob = monitorScope.launch {
+            Log.d(TAG, "Started process-level status polling for user '$userId' (Interval: ${intervalMs}ms)")
+            while (isActive) {
+                try {
+                    checkStatusUpdates(userId, context)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error during process-level polling cycle: ${e.message}", e)
+                }
+                delay(intervalMs)
+            }
+        }
+    }
+
+    /**
+     * Stops continuous process-level polling (e.g., when the user logs out).
+     */
+    fun stopPolling(context: Context? = null) {
+        pollingJob?.cancel()
+        pollingJob = null
+        if (context != null) {
+            clearActiveUserId(context)
+        }
+        Log.d(TAG, "Stopped process-level status polling.")
+    }
+
+    /**
+     * Persists the active user ID so WorkManager background tasks can retrieve it even in a dead process.
+     */
+    fun saveActiveUserId(userId: String, context: Context) {
+        if (userId.isBlank()) return
+        val prefs = context.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_LAST_ACTIVE_USER_ID, userId).apply()
+    }
+
+    /**
+     * Retrieves the persisted active user ID.
+     */
+    fun getActiveUserId(context: Context): String? {
+        val prefs = context.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_LAST_ACTIVE_USER_ID, null)
+    }
+
+    /**
+     * Clears the persisted active user ID (on user logout).
+     */
+    fun clearActiveUserId(context: Context) {
+        val prefs = context.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
+        prefs.edit().remove(KEY_LAST_ACTIVE_USER_ID).apply()
+    }
 
     /**
      * Records a newly submitted request as PENDING immediately so that when it is later

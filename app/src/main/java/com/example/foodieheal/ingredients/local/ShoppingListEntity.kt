@@ -13,7 +13,7 @@ import com.example.foodieheal.ingredients.model.ShoppingListItem
 
 /**
  * Room entity representing a user's Shopping List metadata.
- * A user can have multiple shopping lists (identified by shopping_list_id, e.g. "SPL0001").
+ * A user can have multiple shopping lists (identified by shopping_list_id, and their user_id to ensure global uniqueness).
  */
 @Entity(
     tableName = "shopping_lists",
@@ -30,7 +30,7 @@ data class ShoppingListEntity(
 
 /**
  * Room entity representing an ingredient item in a Shopping List.
- * Stores only ingredient name and ingredient category (no units, descriptions, etc.).
+ * Stores only ingredient name and ingredient category.
  */
 @Entity(
     tableName = "shopping_list_items",
@@ -59,7 +59,7 @@ data class ShoppingListWithItemsEntity(
     val items: List<ShoppingListItemEntity>
 )
 
-// ──────────────── Converter helpers: Entity ↔ Domain Model ────────────────
+// Converter helpers: Entity <--> Domain Model
 
 fun ShoppingListItemEntity.toDomain() = ShoppingListItem(
     id = id,

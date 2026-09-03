@@ -14,10 +14,16 @@ class IngredientRequestSyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val userId = SupabaseClient.client.auth.currentUserOrNull()?.id
+            // Retrieve userId from WorkManager input data, persistent storage, or Supabase auth session
+            val userId = inputData.getString(KEY_USER_ID)
+                ?: IngredientRequestStatusMonitor.getActiveUserId(applicationContext)
+                ?: SupabaseClient.client.auth.currentUserOrNull()?.id
+
             if (!userId.isNullOrBlank()) {
                 Log.d(TAG, "Running background status check for user: $userId")
                 IngredientRequestStatusMonitor.checkStatusUpdates(userId, applicationContext)
+            } else {
+                Log.w(TAG, "Background sync skipped: No active user ID found.")
             }
             Result.success()
         } catch (e: Exception) {
@@ -28,36 +34,57 @@ class IngredientRequestSyncWorker(
 
     companion object {
         private const val TAG = "RequestSyncWorker"
+        const val KEY_USER_ID = "user_id"
         private const val UNIQUE_WORK_NAME = "IngredientRequestSyncWork"
 
-        fun enqueuePeriodicSync(context: Context) {
+        fun enqueuePeriodicSync(context: Context, userId: String? = null) {
+            val targetUserId = userId ?: IngredientRequestStatusMonitor.getActiveUserId(context)
+            if (!targetUserId.isNullOrBlank()) {
+                IngredientRequestStatusMonitor.saveActiveUserId(targetUserId, context)
+            }
+
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            // PeriodicWorkRequest = checks Supabase in the background whenever network is available
+            val inputData = if (!targetUserId.isNullOrBlank()) {
+                workDataOf(KEY_USER_ID to targetUserId)
+            } else {
+                workDataOf()
+            }
+
+            // PeriodicWorkRequest = checks Supabase in the background whenever network is available (min 15 min interval)
             val periodicWork = PeriodicWorkRequestBuilder<IngredientRequestSyncWorker>(
                 15, TimeUnit.MINUTES
             )
                 .setConstraints(constraints)
+                .setInputData(inputData)
                 .build()
 
-            // WorkManager = performs background sync
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 UNIQUE_WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 periodicWork
             )
-            Log.d(TAG, "Enqueued periodic status sync work.")
+            Log.d(TAG, "Enqueued periodic status sync work for user: $targetUserId.")
         }
 
-        fun enqueueImmediateSync(context: Context) {
+        fun enqueueImmediateSync(context: Context, userId: String? = null) {
+            val targetUserId = userId ?: IngredientRequestStatusMonitor.getActiveUserId(context)
+
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
+            val inputData = if (!targetUserId.isNullOrBlank()) {
+                workDataOf(KEY_USER_ID to targetUserId)
+            } else {
+                workDataOf()
+            }
+
             val oneTimeWork = OneTimeWorkRequestBuilder<IngredientRequestSyncWorker>()
                 .setConstraints(constraints)
+                .setInputData(inputData)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -65,13 +92,14 @@ class IngredientRequestSyncWorker(
                 ExistingWorkPolicy.REPLACE,
                 oneTimeWork
             )
-            Log.d(TAG, "Enqueued immediate status sync work.")
+            Log.d(TAG, "Enqueued immediate status sync work for user: $targetUserId.")
         }
 
         fun cancelPeriodicSync(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK_NAME)
             WorkManager.getInstance(context).cancelUniqueWork("ImmediateIngredientRequestSyncWork")
-            Log.d(TAG, "Cancelled periodic and immediate status sync work.")
+            IngredientRequestStatusMonitor.clearActiveUserId(context)
+            Log.d(TAG, "Cancelled periodic and immediate status sync work and cleared active user ID.")
         }
     }
 }

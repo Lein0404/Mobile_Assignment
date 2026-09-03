@@ -30,11 +30,8 @@ import com.kanyidev.searchable_dropdown.LargeSearchableDropdownMenu
 /**
  * Shared, reusable form body for ingredient creation/editing/review screens.
  *
- * Renders: Image upload → Name → Category → Description → UnitRows → Add unit button,
+ * Renders: Image upload --> Name --> Alternate Names --> Category --> Description --> UnitRows --> Add unit button,
  * then yields control to [bottomContent] for screen-specific buttons, error messages, etc.
- *
- * Used by AdminAddIngredientScreen, AdminIngredientRequestFormScreen,
- * and IngredientRequestFormScreen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

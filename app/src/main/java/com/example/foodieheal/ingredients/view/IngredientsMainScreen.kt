@@ -93,10 +93,6 @@ fun IngredientsMainScreen(
         }
     }
 
-    // Separate scroll states for each tab
-    val existingCategoryScrollState = rememberLazyListState()
-    val requestsCategoryScrollState = rememberLazyListState()
-
     // Sync tab state only if initialTab is explicitly provided (0 or 1)
     LaunchedEffect(initialTab) {
         if (initialTab != -1) {
@@ -219,7 +215,6 @@ fun IngredientsMainScreen(
                     viewModel = viewModel,
                     uiState = uiState,
                     navController = navController,
-                    categoryScrollState = existingCategoryScrollState,
                     onAddToCart = { ingredient ->
                         viewModel.requestAddToShoppingList(ingredient) { listTitle ->
                             Toast.makeText(
@@ -234,8 +229,7 @@ fun IngredientsMainScreen(
                 IngredientRequestsScreen(
                     viewModel = requestViewModel,
                     uiState = requestUiState,
-                    navController = navController,
-                    categoryScrollState = requestsCategoryScrollState
+                    navController = navController
                 )
             }
 
@@ -278,8 +272,7 @@ fun IngredientsMainScreen(
 fun IngredientRequestsScreen(
     viewModel: IngredientRequestViewModel,
     uiState: IngredientRequestUiState,
-    navController: NavController,
-    categoryScrollState: LazyListState = rememberLazyListState()
+    navController: NavController
 ) {
     // Gate: show offline message when not connected
     if (!uiState.isNetworkAvailable) {
@@ -316,7 +309,7 @@ fun IngredientRequestsScreen(
         return
     }
 
-    val isFilterActive = uiState.selectedStatus != null ||
+    val isFilterActive = uiState.selectedCategories.isNotEmpty() ||
         uiState.createdDateStart != null ||
         uiState.createdDateEnd != null ||
         uiState.processedDateStart != null ||
@@ -329,14 +322,16 @@ fun IngredientRequestsScreen(
             searchQuery = uiState.searchQuery,
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
             searchPlaceholder = stringResource(R.string.ingredients_requests_search_placeholder),
-            selectedCategories = uiState.selectedCategories,
-            onToggleCategory = { viewModel.toggleCategory(it) },
             showFilterIcon = true,
             isFilterActive = isFilterActive,
             onFilterClick = { viewModel.onShowFilterSheet(true) },
-            lazyRowState = categoryScrollState,
-            isExpanded = uiState.isCategoriesExpanded,
-            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
+            showStatusTabs = true,
+            selectedStatus = uiState.selectedStatus,
+            onStatusSelected = { viewModel.onStatusTabSelected(it) },
+            totalCount = uiState.totalCount,
+            pendingCount = uiState.pendingCount,
+            approvedCount = uiState.approvedCount,
+            rejectedCount = uiState.rejectedCount
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -397,6 +392,7 @@ fun IngredientRequestsScreen(
                     contentPadding = PaddingValues(
                         start = dimensionResource(id = R.dimen.padding_l),
                         end = dimensionResource(id = R.dimen.padding_l),
+                        top = dimensionResource(id = R.dimen.padding_l),
                         bottom = 80.dp // Keep FAB space
                     )
                 ) {
@@ -418,8 +414,9 @@ fun IngredientRequestsScreen(
     IngredientRequestFilterBottomSheet(
         show = uiState.showFilterSheet,
         onDismissRequest = { viewModel.onShowFilterSheet(false) },
-        selectedStatus = uiState.tempSelectedStatus,
-        onStatusChange = { viewModel.updateTempStatus(it) },
+        selectedCategories = uiState.tempSelectedCategories,
+        onToggleCategory = { viewModel.updateTempCategory(it) },
+        showDateFilters = true,
         createdStartDate = uiState.tempCreatedDateStart,
         createdEndDate = uiState.tempCreatedDateEnd,
         onCreatedStartDateChange = { viewModel.updateTempCreatedStartDate(it) },
@@ -481,10 +478,11 @@ fun IngredientsExistingScreen(
     viewModel: IngredientsViewModel,
     uiState: IngredientsUiState,
     navController: NavController,
-    categoryScrollState: LazyListState = rememberLazyListState(),
     onAddToCart: (Ingredients) -> Unit = {},
     showAddToCart: Boolean = true
 ) {
+    val isFilterActive = uiState.selectedCategories.isNotEmpty()
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -492,11 +490,10 @@ fun IngredientsExistingScreen(
             searchQuery = uiState.searchQuery,
             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
             searchPlaceholder = stringResource(R.string.ingredients_existing_search_placeholder),
-            selectedCategories = uiState.selectedCategories,
-            onToggleCategory = { viewModel.toggleCategory(it) },
-            lazyRowState = categoryScrollState,
-            isExpanded = uiState.isCategoriesExpanded,
-            onExpandedChange = { viewModel.toggleCategoriesExpanded() }
+            showFilterIcon = true,
+            isFilterActive = isFilterActive,
+            onFilterClick = { viewModel.onShowFilterSheet(true) },
+            showStatusTabs = false
         )
 
         if (uiState.isLoading && !uiState.isRefreshing) {
@@ -560,6 +557,7 @@ fun IngredientsExistingScreen(
                 contentPadding = PaddingValues(
                     start = dimensionResource(id = R.dimen.padding_l),
                     end = dimensionResource(id = R.dimen.padding_l),
+                    top = dimensionResource(id = R.dimen.padding_l),
                     bottom = dimensionResource(id = R.dimen.padding_l)
                 )
             ) {
@@ -582,6 +580,16 @@ fun IngredientsExistingScreen(
             }
         }
     }
+
+    IngredientRequestFilterBottomSheet(
+        show = uiState.showFilterSheet,
+        onDismissRequest = { viewModel.onShowFilterSheet(false) },
+        selectedCategories = uiState.tempSelectedCategories,
+        onToggleCategory = { viewModel.updateTempCategory(it) },
+        showDateFilters = false,
+        onResetAll = { viewModel.resetTempFilters() },
+        onApply = { viewModel.applyFilterSheet() }
+    )
 }
 
 @Composable

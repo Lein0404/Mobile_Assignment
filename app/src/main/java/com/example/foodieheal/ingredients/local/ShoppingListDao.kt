@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * DAO for the local multi-list Shopping List module.
- * All operations are local-only — no Supabase sync.
+ * All operations are local-only.
  */
 @Dao
 interface ShoppingListDao {

@@ -46,6 +46,8 @@ data class ShoppingListDetailUiState(
     val filteredItems: List<ShoppingListItem> = emptyList(),
     val searchQuery: String = "",
     val selectedCategories: Set<IngredientCategory> = emptySet(),
+    val tempSelectedCategories: Set<IngredientCategory> = emptySet(),
+    val showFilterSheet: Boolean = false,
     val isCategoriesExpanded: Boolean = false,
     val editableTitle: String = "",
     val showUnsavedChangesDialog: Boolean = false,
@@ -267,6 +269,48 @@ class ShoppingListViewModel(
 
     fun onItemSearchQueryChange(query: String) {
         _uiState.update { it.copy(detailState = it.detailState.copy(searchQuery = query)) }
+        applyItemFilters()
+    }
+
+    fun onShowFilterSheet(show: Boolean) {
+        _uiState.update {
+            it.copy(
+                detailState = it.detailState.copy(
+                    showFilterSheet = show,
+                    tempSelectedCategories = it.detailState.selectedCategories
+                )
+            )
+        }
+    }
+
+    fun updateTempCategory(category: IngredientCategory) {
+        _uiState.update { state ->
+            val newCategories = if (state.detailState.tempSelectedCategories.contains(category)) {
+                state.detailState.tempSelectedCategories - category
+            } else {
+                state.detailState.tempSelectedCategories + category
+            }
+            state.copy(detailState = state.detailState.copy(tempSelectedCategories = newCategories))
+        }
+    }
+
+    fun resetTempFilters() {
+        _uiState.update {
+            it.copy(
+                detailState = it.detailState.copy(tempSelectedCategories = emptySet())
+            )
+        }
+    }
+
+    fun applyFilterSheet() {
+        _uiState.update {
+            it.copy(
+                detailState = it.detailState.copy(
+                    showFilterSheet = false,
+                    selectedCategories = it.detailState.tempSelectedCategories
+                )
+            )
+        }
         applyItemFilters()
     }
 

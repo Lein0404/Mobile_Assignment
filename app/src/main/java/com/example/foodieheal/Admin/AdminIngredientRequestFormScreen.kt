@@ -59,8 +59,8 @@ fun AdminIngredientRequestFormScreen(
         isDeleted = actionUiState.isDeletedByUser,
         isProcessed = actionUiState.isAlreadyProcessed,
         onDeletedConfirm = {
-            // Return to the list screen correctly
-            navController.popBackStack(Screen.AdminChefScreen.route, false)
+            // Return to the previous screen correctly
+            navController.popBackStack()
         },
         onProcessedConfirm = {
             // Return to the detail screen to see the updated status
@@ -349,7 +349,7 @@ private fun RequestConflictDialog(
         AlertDialog(
             onDismissRequest = { },
             title = { Text(stringResource(R.string.admin_detail_conflict_processed_title), fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.admin_detail_conflict_processed_title)) },
+            text = { Text(stringResource(R.string.admin_detail_conflict_processed_text)) },
             confirmButton = {
                 TextButton(onClick = onProcessedConfirm) {
                     Text(stringResource(R.string.ok))

@@ -33,6 +33,7 @@ data class IngredientRequestUiState(
     val createdDateEnd: LocalDate? = null,
     val processedDateStart: LocalDate? = null,
     val processedDateEnd: LocalDate? = null,
+    val tempSelectedCategories: Set<IngredientCategory> = emptySet(),
     val tempSelectedStatus: Status? = null,
     val tempCreatedDateStart: LocalDate? = null,
     val tempCreatedDateEnd: LocalDate? = null,
@@ -48,7 +49,12 @@ data class IngredientRequestUiState(
     val errorMessage: Int? = null,
     val showDeleteDialog: Boolean = false,
     val isCategoriesExpanded: Boolean = false
-)
+) {
+    val totalCount: Int get() = requests.size
+    val pendingCount: Int get() = requests.count { it.request.requestStatus == Status.PENDING }
+    val approvedCount: Int get() = requests.count { it.request.requestStatus == Status.APPROVED }
+    val rejectedCount: Int get() = requests.count { it.request.requestStatus == Status.REJECTED }
+}
 
 data class IngredientRequestItem(
     val request: IngredientRequest,
@@ -197,12 +203,29 @@ class IngredientRequestViewModel(
         _uiState.update {
             it.copy(
                 showFilterSheet = show,
+                tempSelectedCategories = it.selectedCategories,
                 tempSelectedStatus = it.selectedStatus,
                 tempCreatedDateStart = it.createdDateStart,
                 tempCreatedDateEnd = it.createdDateEnd,
                 tempProcessedDateStart = it.processedDateStart,
                 tempProcessedDateEnd = it.processedDateEnd
             )
+        }
+    }
+
+    fun onStatusTabSelected(status: Status?) {
+        _uiState.update { it.copy(selectedStatus = status, tempSelectedStatus = status) }
+        applyFilters()
+    }
+
+    fun updateTempCategory(category: IngredientCategory) {
+        _uiState.update { state ->
+            val newCategories = if (state.tempSelectedCategories.contains(category)) {
+                state.tempSelectedCategories - category
+            } else {
+                state.tempSelectedCategories + category
+            }
+            state.copy(tempSelectedCategories = newCategories)
         }
     }
 
@@ -229,6 +252,7 @@ class IngredientRequestViewModel(
     fun resetTempFilters() {
         _uiState.update {
             it.copy(
+                tempSelectedCategories = emptySet(),
                 tempSelectedStatus = null,
                 tempCreatedDateStart = null,
                 tempCreatedDateEnd = null,
@@ -242,6 +266,7 @@ class IngredientRequestViewModel(
         _uiState.update {
             it.copy(
                 showFilterSheet = false,
+                selectedCategories = it.tempSelectedCategories,
                 selectedStatus = it.tempSelectedStatus,
                 createdDateStart = it.tempCreatedDateStart,
                 createdDateEnd = it.tempCreatedDateEnd,

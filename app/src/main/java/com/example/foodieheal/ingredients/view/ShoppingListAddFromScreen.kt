@@ -97,7 +97,7 @@ fun ShoppingListAddFromScreen(
                     ?: recipeViewModel.myRecipes.find { it.recipe_id == recipeId }
                     ?: recipeViewModel.bookmarkedRecipes.find { it.recipe_id == recipeId }
 
-                if (recipe != null && recipe.ingredients.isNotEmpty()) {
+                if (recipe != null) {
                     shoppingListViewModel.setIngredientsFromRecipe(recipe.ingredients)
                 } else if (recipeId != null) {
                     recipeViewModel.fetchRecipeById(recipeId)
