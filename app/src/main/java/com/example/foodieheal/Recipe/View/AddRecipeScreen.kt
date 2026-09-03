@@ -566,7 +566,7 @@ fun AddRecipeScreen(
                     val recipe = Recipe(
                         recipe_id = nextId,
                         // Use the Supabase UUID (id) to satisfy database foreign key constraints
-                        author_id = authViewModel.currentUser?.id,
+                        author_id = authViewModel.getEffectiveUserId(),
                         authorName = authViewModel.currentUser?.name, //Save author info for offline
                         authorImageUrl = authViewModel.currentUser?.profilePicUrl,
                         recipeName = recipeName,
