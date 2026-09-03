@@ -158,8 +158,11 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 value = weight, 
                 onValueChange = { input -> 
                     if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
-                        val num = input.toDoubleOrNull()
-                        if (num == null || num <= 500) weight = input
+                        val decimalIndex = input.indexOf('.')
+                        if (decimalIndex == -1 || input.length - decimalIndex <= 3) {
+                            val num = input.toDoubleOrNull()
+                            if (num == null || num <= 500) weight = input
+                        }
                     }
                 }, 
                 suffix = stringResource(R.string.unit_kg)
@@ -173,8 +176,11 @@ fun EditBodyStatusScreen(navController: NavController, fromRegister: Boolean = f
                 value = height, 
                 onValueChange = { input -> 
                     if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
-                        val num = input.toDoubleOrNull()
-                        if (num == null || num <= 300) height = input
+                        val decimalIndex = input.indexOf('.')
+                        if (decimalIndex == -1 || input.length - decimalIndex <= 3) {
+                            val num = input.toDoubleOrNull()
+                            if (num == null || num <= 300) height = input
+                        }
                     }
                 }, 
                 suffix = stringResource(R.string.unit_cm)
