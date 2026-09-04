@@ -26,6 +26,7 @@ import com.example.foodieheal.R
 import com.example.foodieheal.Recipe.Repo.RecipeRepository
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.User.viewModel.FollowViewModel
+import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +36,7 @@ fun FollowListScreen(
     userId: String,
     type: String, // "followers" or "following"
     followViewModel: FollowViewModel = viewModel(),
+    recipeViewModel: RecipeViewModel
 ) {
     val users = remember { mutableStateListOf<User>() }
     var isFetchingUsers by remember { mutableStateOf(false) }
