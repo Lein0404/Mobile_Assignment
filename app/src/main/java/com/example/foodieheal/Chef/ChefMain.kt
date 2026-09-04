@@ -224,9 +224,11 @@ fun ChefMainScreen(
                     val isNetworkAvailable by homeViewModel.isNetworkAvailable.collectAsState()
                     val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()
                     val isLoadingRecipes by homeViewModel.isLoadingRecipes.collectAsState()
+                    val checkedPrepItemsMap by homeViewModel.checkedPrepItems.collectAsState()
 
                     val apptId = appointment.AppointmentID.orEmpty()
                     val attachedRecipes = attachedRecipesMap[apptId] ?: emptyList()
+                    val checkedItemKeys = checkedPrepItemsMap[apptId] ?: emptySet()
 
                     LaunchedEffect(apptId) {
                         if (apptId.isNotBlank() && !attachedRecipesMap.containsKey(apptId)) {
@@ -241,6 +243,13 @@ fun ChefMainScreen(
                         isNetworkAvailable = isNetworkAvailable,
                         attachedRecipes = attachedRecipes,
                         isLoadingRecipes = isLoadingRecipes,
+                        checkedItemKeys = checkedItemKeys,
+                        onToggleItem = { itemKey ->
+                            homeViewModel.togglePrepItem(apptId, itemKey)
+                        },
+                        onSetAllItems = { itemKeys, isChecked ->
+                            homeViewModel.setAllPrepItems(apptId, itemKeys, isChecked)
+                        },
                         onBackClick = { chefNavController.popBackStack() },
                         onStatusChange = { newStatus, rejectionReason ->
                             val id = appointment.AppointmentID.orEmpty()

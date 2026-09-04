@@ -1943,4 +1943,26 @@
     <string name="admin_chef_toast_rejected">Chef %1$s application rejected</string>
     <string name="admin_chef_toast_approved_email">Chef %1$s approved &amp; notification email sent</string>
     <string name="admin_chef_toast_rejected_email">Chef %1$s rejected &amp; explanation email sent</string>
+
+    <!-- Chef Ingredient Prep Checklist -->
+    <string name="prep_checklist_title">Ingredient Prep Checklist</string>
+    <string name="prep_checklist_subtitle">Auto-aggregated ingredients across all %1$d attached dishes</string>
+    <string name="prep_checklist_subtitle_single">Ingredients require from attached dish</string>
+    <string name="prep_progress_format">%1$d of %2$d items prepared (%3$d%%)</string>
+    <string name="prep_all_completed_badge">All Items Ready!</string>
+    <string name="prep_filter_all">All (%1$d)</string>
+    <string name="prep_filter_pending">To Prep (%1$d)</string>
+    <string name="prep_filter_completed">Prepared (%1$d)</string>
+    <string name="prep_filter_chef_provided">Chef Brings (%1$d)</string>
+    <string name="prep_filter_client_provided">Client Supplies (%1$d)</string>
+    <string name="prep_mark_all">Check All</string>
+    <string name="prep_reset">Reset</string>
+    <string name="prep_search_placeholder">Search ingredients...</string>
+    <string name="prep_tag_chef_brings">Chef Provides</string>
+    <string name="prep_tag_client_supplies">Client Provides</string>
+    <string name="prep_used_in_dishes">Used in: %1$s</string>
+    <string name="prep_no_ingredients_found">No ingredients match your filter.</string>
+    <string name="prep_empty_dishes">No attached dishes to aggregate ingredients from.</string>
+    <string name="prep_quick_action_btn">📋 Prep List</string>
+    <string name="prep_quick_summary">%1$d/%2$d Prep Done</string>
 </resources>

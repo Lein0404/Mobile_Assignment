@@ -1,6 +1,7 @@
 package com.example.foodieheal.Chef.ViewModel
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.example.foodieheal.R
 import androidx.compose.runtime.getValue
@@ -15,6 +16,8 @@ import com.example.foodieheal.hiring.model.Appointment
 import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.SupabaseClient
+import com.example.foodieheal.Chef.model.ChefPrepIngredient
+import com.example.foodieheal.Chef.model.ChefPrepAggregator
 import com.example.foodieheal.Chef.notification.ChefNotificationHelper
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.realtime.RealtimeChannel
@@ -95,11 +98,59 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
     private val _isLoadingRecipes = MutableStateFlow(false)
     val isLoadingRecipes: StateFlow<Boolean> = _isLoadingRecipes.asStateFlow()
 
+    // Persistent checked prep ingredient items keyed by appointmentId -> Set of item IDs
+    private val _checkedPrepItems = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+    val checkedPrepItems: StateFlow<Map<String, Set<String>>> = _checkedPrepItems.asStateFlow()
+
+    private val prepPrefs by lazy {
+        getApplication<Application>().getSharedPreferences("chef_prep_checklist_prefs", Context.MODE_PRIVATE)
+    }
+
+    private fun loadSavedPrepState(appointmentId: String): Set<String> {
+        return prepPrefs.getStringSet("prep_checked_$appointmentId", emptySet())?.toSet() ?: emptySet()
+    }
+
+    private fun savePrepState(appointmentId: String, checkedSet: Set<String>) {
+        prepPrefs.edit().putStringSet("prep_checked_$appointmentId", checkedSet).apply()
+    }
+
+    fun togglePrepItem(appointmentId: String, itemKey: String) {
+        if (appointmentId.isBlank() || itemKey.isBlank()) return
+        val currentSet = _checkedPrepItems.value[appointmentId] ?: loadSavedPrepState(appointmentId)
+        val newSet = if (currentSet.contains(itemKey)) {
+            currentSet - itemKey
+        } else {
+            currentSet + itemKey
+        }
+        _checkedPrepItems.update { it + (appointmentId to newSet) }
+        savePrepState(appointmentId, newSet)
+    }
+
+    fun setAllPrepItems(appointmentId: String, itemKeys: List<String>, isChecked: Boolean) {
+        if (appointmentId.isBlank()) return
+        val currentSet = _checkedPrepItems.value[appointmentId] ?: loadSavedPrepState(appointmentId)
+        val newSet = if (isChecked) {
+            currentSet + itemKeys
+        } else {
+            currentSet - itemKeys.toSet()
+        }
+        _checkedPrepItems.update { it + (appointmentId to newSet) }
+        savePrepState(appointmentId, newSet)
+    }
+
+    fun ensurePrepStateLoaded(appointmentId: String) {
+        if (appointmentId.isNotBlank() && !_checkedPrepItems.value.containsKey(appointmentId)) {
+            val saved = loadSavedPrepState(appointmentId)
+            _checkedPrepItems.update { it + (appointmentId to saved) }
+        }
+    }
+
     var selectedAppointment by mutableStateOf<Appointment?>(null)
         private set
 
     fun loadRecipesForAppointment(appointmentId: String) {
         if (appointmentId.isBlank()) return
+        ensurePrepStateLoaded(appointmentId)
         viewModelScope.launch {
             _isLoadingRecipes.value = true
             try {
@@ -119,6 +170,7 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
         selectedAppointment = appointment
         appointment?.AppointmentID?.let { id ->
             if (id.isNotBlank()) {
+                ensurePrepStateLoaded(id)
                 loadRecipesForAppointment(id)
             }
         }

@@ -90,6 +90,9 @@ fun AppointmentDetailScreen(
     isNetworkAvailable: Boolean = true,
     attachedRecipes: List<AppointmentRecipeWithDetails> = emptyList(),
     isLoadingRecipes: Boolean = false,
+    checkedItemKeys: Set<String> = emptySet(),
+    onToggleItem: (String) -> Unit = {},
+    onSetAllItems: (List<String>, Boolean) -> Unit = { _, _ -> },
     onBackClick: () -> Unit = {},
     onStatusChange: (newStatus: String, rejectionReason: String?) -> Unit = { _, _ -> }
 ) {
@@ -711,6 +714,19 @@ fun AppointmentDetailScreen(
                         }
                     }
                 }
+            }
+
+            // Interactive Ingredient Prep Checklist Section
+            if (attachedRecipes.isNotEmpty()) {
+                com.example.foodieheal.Chef.components.ChefPrepChecklistSection(
+                    appointmentId = appointment.AppointmentID.orEmpty(),
+                    attachedRecipes = attachedRecipes,
+                    checkedItemKeys = checkedItemKeys,
+                    onToggleItem = onToggleItem,
+                    onSetAllItems = onSetAllItems,
+                    initialExpanded = appointment.Status.equals("confirmed", ignoreCase = true) ||
+                            appointment.Status.equals("in progress", ignoreCase = true)
+                )
             }
 
             // Review Section

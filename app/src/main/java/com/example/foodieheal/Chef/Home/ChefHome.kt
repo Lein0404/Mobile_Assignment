@@ -373,13 +373,44 @@ fun ChefHomeScreen(
                                     val chefUser = state.usersMap[nextAppointment.userId]
                                     val userName = chefUser?.name ?: stringResource(R.string.unknown_client)
                                     val userProfilePicUrl = chefUser?.profilePicUrl
+                                    val nextApptId = nextAppointment.AppointmentID.orEmpty()
+                                    val attachedRecipesMap by homeViewModel.attachedRecipes.collectAsState()
+                                    val checkedPrepItemsMap by homeViewModel.checkedPrepItems.collectAsState()
+                                    val attachedRecipes = attachedRecipesMap[nextApptId] ?: emptyList()
+                                    val checkedKeys = checkedPrepItemsMap[nextApptId] ?: emptySet()
 
-                                    AppointmentCard(
-                                        appointment = nextAppointment,
-                                        userName = userName,
-                                        userProfilePicUrl = userProfilePicUrl,
-                                        onCardClick = { onCardClick(nextAppointment) }
-                                    )
+                                    LaunchedEffect(nextApptId) {
+                                        if (nextApptId.isNotBlank() && !attachedRecipesMap.containsKey(nextApptId)) {
+                                            homeViewModel.loadRecipesForAppointment(nextApptId)
+                                        }
+                                    }
+
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        AppointmentCard(
+                                            appointment = nextAppointment,
+                                            userName = userName,
+                                            userProfilePicUrl = userProfilePicUrl,
+                                            onCardClick = { onCardClick(nextAppointment) }
+                                        )
+
+                                        if (attachedRecipes.isNotEmpty()) {
+                                            com.example.foodieheal.Chef.components.ChefPrepChecklistSection(
+                                                appointmentId = nextApptId,
+                                                attachedRecipes = attachedRecipes,
+                                                checkedItemKeys = checkedKeys,
+                                                onToggleItem = { itemKey ->
+                                                    homeViewModel.togglePrepItem(nextApptId, itemKey)
+                                                },
+                                                onSetAllItems = { itemKeys, isChecked ->
+                                                    homeViewModel.setAllPrepItems(nextApptId, itemKeys, isChecked)
+                                                },
+                                                initialExpanded = false
+                                            )
+                                        }
+                                    }
                                 } else {
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
