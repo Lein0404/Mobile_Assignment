@@ -113,6 +113,87 @@ object ChefNotificationHelper {
         }
     }
 
+    const val CONFIRMED_NOTIFICATION_ID = 4002
+
+    // Posts a push notification informing the chef that an appointment has been paid and confirmed.
+    fun showConfirmedAppointmentNotification(
+        context: Context,
+        clientName: String? = null,
+        appointmentDate: String? = null,
+        appointmentTime: String? = null,
+        totalAmount: Double? = null,
+        appointmentId: String? = null
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permissionStatus = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "POST_NOTIFICATIONS permission not granted. Skipping notification.")
+                return
+            }
+        }
+
+        try {
+            createNotificationChannel(context)
+
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("NAVIGATE_TO", "chef_appointments")
+                if (!appointmentId.isNullOrBlank()) {
+                    putExtra("APPOINTMENT_ID", appointmentId)
+                }
+            }
+
+            val requestCode = appointmentId?.hashCode() ?: CONFIRMED_NOTIFICATION_ID
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val title = context.getString(R.string.chef_notif_confirmed_title)
+            val formattedAmount = totalAmount?.let { String.format(java.util.Locale.US, "RM %.2f", it) }
+
+            val message = when {
+                !clientName.isNullOrBlank() && !appointmentDate.isNullOrBlank() && formattedAmount != null -> {
+                    context.getString(R.string.chef_notif_confirmed_msg_full, clientName, formattedAmount, appointmentDate)
+                }
+                !clientName.isNullOrBlank() && formattedAmount != null -> {
+                    context.getString(R.string.chef_notif_confirmed_msg_amount, clientName, formattedAmount)
+                }
+                !clientName.isNullOrBlank() -> {
+                    context.getString(R.string.chef_notif_confirmed_msg_client, clientName)
+                }
+                else -> {
+                    context.getString(R.string.chef_notif_confirmed_msg_default)
+                }
+            }
+
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.foodieheallogo_removebg_preview)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_EVENT)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            val notificationManager = NotificationManagerCompat.from(context)
+            val notifId = appointmentId?.hashCode() ?: CONFIRMED_NOTIFICATION_ID
+            notificationManager.notify(notifId, notification)
+            Log.d(TAG, "Successfully posted confirmed appointment notification for $appointmentId")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException while showing confirmed notification: ${e.message}", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error displaying confirmed notification: ${e.message}", e)
+        }
+    }
+
     // Cancel the active pending appointments notification.
     fun cancelNotification(context: Context) {
         try {

@@ -6,8 +6,11 @@ import com.example.foodieheal.MainActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.foodieheal.Chef.model.Chef
 import com.example.foodieheal.Payment.data.payment
+import com.example.foodieheal.hiring.data.HiringRepository
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import com.example.foodieheal.meal_planner.viewModel.NetworkMonitor
 import com.example.foodieheal.SupabaseClient as AppSupabaseClient
 import io.github.jan.supabase.SupabaseClient
@@ -63,9 +66,43 @@ class PaymentViewModel(
                     }
                     .decodeSingle<Appointment>()
 
+                var breakdown: AppointmentPricingBreakdown? = null
+                try {
+                    val hiringRepo = HiringRepository()
+                    val targetChefId = fetchedAppointment.chefId
+                    val chef: Chef? = if (!targetChefId.isNullOrBlank()) {
+                        hiringRepo.fetchChefById(targetChefId)
+                    } else {
+                        null
+                    }
+                    val attachedRecipes = hiringRepo.fetchAppointmentRecipes(appointmentId)
+
+                    val selectedRecipes = attachedRecipes.mapNotNull { item ->
+                        item.recipe?.let { recipe ->
+                            com.example.foodieheal.hiring.model.SelectedAppointmentRecipe(
+                                recipe = recipe,
+                                serviceCount = item.service_count.toInt().coerceAtLeast(1),
+                                customNote = item.custom_note.orEmpty(),
+                                chefProvidesIngredients = item.chef_provide_ingredient
+                            )
+                        }
+                    }
+
+                    breakdown = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculate(
+                        chefHourlyRate = chef?.Pricing ?: 0.0,
+                        appointmentTime = "${fetchedAppointment.Start_Time} - ${fetchedAppointment.End_Time}",
+                        selectedRecipes = selectedRecipes,
+                        userState = fetchedAppointment.State,
+                        chefState = chef?.state.orEmpty()
+                    )
+                } catch (calcEx: Exception) {
+                    Log.e("PaymentViewModel", "Error calculating pricing breakdown: ${calcEx.localizedMessage}")
+                }
+
                 _uiState.update {
                     it.copy(
                         appointment = fetchedAppointment,
+                        pricingBreakdown = breakdown,
                         isLoading = false
                     )
                 }

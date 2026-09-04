@@ -34,80 +34,133 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
 data class PriceBreakdown(
     val baseRate: Double,
-    val servingPremium: Double,
-    val recipesAddOn: Double
+    val recipesAddOn: Double,
+    val platformCharge: Double
 ) {
-    val total: Double get() = baseRate + servingPremium + recipesAddOn
+    // Backward compatibility alias
+    val servingPremium: Double get() = platformCharge
+
+    val total: Double get() = baseRate + recipesAddOn + platformCharge
 
     val baseFraction: Float     get() = if (total <= 0) 0f else (baseRate / total).toFloat()
-    val premiumFraction: Float  get() = if (total <= 0) 0f else (servingPremium / total).toFloat()
     val recipesFraction: Float  get() = if (total <= 0) 0f else (recipesAddOn / total).toFloat()
+    val premiumFraction: Float  get() = if (total <= 0) 0f else (platformCharge / total).toFloat()
+    val platformFraction: Float get() = premiumFraction
 }
 
+/**
+ * - base rate: hourly rate amount (labor cost = hourly rate * hours)
+ * - recipe add: recipe price + ingredient cost (+ travel surcharge if any)
+ * - platform charge: platform fee (5% commission on subtotal)
+ */
 fun deriveBreakdown(
     totalPrice: Double,
-    startTime: String?,
-    endTime: String?,
-    servingSize: Int
+    startTime: String? = null,
+    endTime: String? = null,
+    servingSize: Int = 1,
+    hourlyRate: Double? = null,
+    recipePrice: Double? = null,
+    ingredientCost: Double? = null,
+    pricingBreakdown: AppointmentPricingBreakdown? = null
 ): PriceBreakdown {
-    if (totalPrice <= 0) return PriceBreakdown(0.0, 0.0, 0.0)
+    if (pricingBreakdown != null && pricingBreakdown.finalTotalPrice > 0) {
+        return PriceBreakdown(
+            baseRate       = pricingBreakdown.laborCost,
+            recipesAddOn   = pricingBreakdown.ingredientsCost + pricingBreakdown.travelSurcharge,
+            platformCharge = pricingBreakdown.platformFee
+        )
+    }
 
-    val hours = parseHours(startTime, endTime) ?: 2.0
+    if (totalPrice <= 0.0) return PriceBreakdown(0.0, 0.0, 0.0)
 
-    val extraGuests = (servingSize - 4).coerceAtLeast(0)
-    val premiumRate = (extraGuests * 0.10).coerceAtMost(0.40)
-    val servingPremium = totalPrice * premiumRate
+    val hours = parseHours(startTime, endTime) ?: 1.0
 
-    // Base: implied rate × hours (without premium / add-ons)
-    // We weight hours slightly vs. remainder
-    val hoursWeight = (hours / (hours + 1.0)).coerceIn(0.5, 0.85)
-    val base = (totalPrice - servingPremium) * hoursWeight
+    // Exact platform fee formula from AppointmentPricingBreakdown:
+    // Total = Subtotal * (1 + PLATFORM_FEE_RATE)
+    // Subtotal = Total / (1 + 0.05)
+    // Platform Fee = Total - Subtotal
+    val feeRate = AppointmentPricingBreakdown.PLATFORM_FEE_RATE
+    val subtotal = (totalPrice / (1.0 + feeRate)).coerceAtLeast(0.0)
+    val platformCharge = (totalPrice - subtotal).coerceAtLeast(0.0)
 
-    // Remainder = recipe add-ons
-    val recipesAddOn = (totalPrice - base - servingPremium).coerceAtLeast(0.0)
+    // Base Rate (Labor Cost = hourlyRate * hours) and Recipe Add (Recipe + Ingredients)
+    val base: Double
+    val recipeAdd: Double
+
+    if (hourlyRate != null && hourlyRate > 0.0) {
+        val calculatedBase = hourlyRate * hours
+        base = calculatedBase.coerceIn(0.0, subtotal)
+        recipeAdd = (subtotal - base).coerceAtLeast(0.0)
+    } else if (recipePrice != null || ingredientCost != null) {
+        val recipeIngredientTotal = (recipePrice ?: 0.0) + (ingredientCost ?: 0.0)
+        recipeAdd = recipeIngredientTotal.coerceIn(0.0, subtotal)
+        base = (subtotal - recipeAdd).coerceAtLeast(0.0)
+    } else {
+        // When only total price and time are provided, allocate hourly rate amount proportional to duration
+        val hoursWeight = (hours / (hours + 0.8)).coerceIn(0.40, 0.75)
+        base = subtotal * hoursWeight
+        recipeAdd = (subtotal - base).coerceAtLeast(0.0)
+    }
 
     return PriceBreakdown(
         baseRate       = base,
-        servingPremium = servingPremium,
-        recipesAddOn   = recipesAddOn
+        recipesAddOn   = recipeAdd,
+        platformCharge = platformCharge
     )
 }
 
 private fun parseHours(startTime: String?, endTime: String?): Double? {
     if (startTime.isNullOrBlank() || endTime.isNullOrBlank()) return null
-    val patterns = listOf("hh:mm a", "h:mm a", "HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
-    for (pattern in patterns) {
-        try {
-            val fmt = SimpleDateFormat(pattern, Locale.US)
-            val start = fmt.parse(startTime.trim()) ?: continue
-            val end   = fmt.parse(endTime.trim())   ?: continue
-            val diffMs = end.time - start.time
-            if (diffMs > 0) return diffMs / 3_600_000.0
-        } catch (_: Exception) {}
+    return try {
+        AppointmentPricingBreakdown.calculateHours(startTime, endTime)
+    } catch (_: Exception) {
+        val patterns = listOf("hh:mm a", "h:mm a", "HH:mm:ss", "HH:mm", "H:mm:ss", "H:mm")
+        for (pattern in patterns) {
+            try {
+                val fmt = SimpleDateFormat(pattern, Locale.US)
+                val start = fmt.parse(startTime.trim()) ?: continue
+                val end   = fmt.parse(endTime.trim())   ?: continue
+                val diffMs = end.time - start.time
+                if (diffMs > 0) return diffMs / 3_600_000.0
+            } catch (_: Exception) {}
+        }
+        null
     }
-    return null
 }
 
-private val ColorBase    = Color(0xFF5C6BC0)
-private val ColorPremium = Color(0xFFF57C00)
-private val ColorRecipes = Color(0xFF2E7D32)
+private val ColorBase    = Color(0xFF5C6BC0) // Indigo - Base Rate (Hourly Rate Amount)
+private val ColorRecipes = Color(0xFF2E7D32) // Forest Green - Recipe Add (Recipe Price + Ingredient)
+private val ColorPremium = Color(0xFFF57C00) // Amber/Orange - Premium Rate (Platform Charge)
 
 @Composable
 fun AnimatedPriceBreakdownBar(
     totalPrice: Double,
     startTime: String?,
     endTime: String?,
-    servingSize: Int,
+    servingSize: Int = 1,
+    hourlyRate: Double? = null,
+    recipePrice: Double? = null,
+    ingredientCost: Double? = null,
+    pricingBreakdown: AppointmentPricingBreakdown? = null,
     modifier: Modifier = Modifier
 ) {
-    val breakdown = remember(totalPrice, startTime, endTime, servingSize) {
-        deriveBreakdown(totalPrice, startTime, endTime, servingSize)
+    val breakdown = remember(totalPrice, startTime, endTime, servingSize, hourlyRate, recipePrice, ingredientCost, pricingBreakdown) {
+        deriveBreakdown(
+            totalPrice       = totalPrice,
+            startTime        = startTime,
+            endTime          = endTime,
+            servingSize      = servingSize,
+            hourlyRate       = hourlyRate,
+            recipePrice      = recipePrice,
+            ingredientCost   = ingredientCost,
+            pricingBreakdown = pricingBreakdown
+        )
     }
 
     var triggered by remember { mutableStateOf(false) }
@@ -118,15 +171,15 @@ fun AnimatedPriceBreakdownBar(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "base_anim"
     )
-    val animPremium by animateFloatAsState(
-        targetValue = if (triggered) breakdown.premiumFraction else 0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow),
-        label = "premium_anim"
-    )
     val animRecipes by animateFloatAsState(
         targetValue = if (triggered) breakdown.recipesFraction else 0f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
         label = "recipes_anim"
+    )
+    val animPremium by animateFloatAsState(
+        targetValue = if (triggered) breakdown.premiumFraction else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow),
+        label = "premium_anim"
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -154,14 +207,6 @@ fun AnimatedPriceBreakdownBar(
                         .background(ColorBase)
                 )
             }
-            if (animPremium > 0f) {
-                Box(
-                    modifier = Modifier
-                        .weight(animPremium)
-                        .height(14.dp)
-                        .background(ColorPremium)
-                )
-            }
             if (animRecipes > 0f) {
                 Box(
                     modifier = Modifier
@@ -170,33 +215,49 @@ fun AnimatedPriceBreakdownBar(
                         .background(ColorRecipes)
                 )
             }
+            if (animPremium > 0f) {
+                Box(
+                    modifier = Modifier
+                        .weight(animPremium)
+                        .height(14.dp)
+                        .background(ColorPremium)
+                )
+            }
 
-            Box(modifier = Modifier.weight(((1f - animBase - animPremium - animRecipes).coerceAtLeast(0.001f))))
+            val remainingWeight = (1f - animBase - animRecipes - animPremium).coerceAtLeast(0.0001f)
+            if (remainingWeight > 0.001f) {
+                Box(modifier = Modifier.weight(remainingWeight))
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
         // Legend rows
+        // Base Rate (Hourly Rate Amount / Labor Cost)
         BreakdownLegendRow(
             color      = ColorBase,
             label      = stringResource(R.string.breakdown_base_rate),
             amount     = breakdown.baseRate,
             percentage = breakdown.baseFraction
         )
-        if (breakdown.servingPremium > 0) {
-            BreakdownLegendRow(
-                color      = ColorPremium,
-                label      = stringResource(R.string.breakdown_serving_premium, (servingSize - 4).coerceAtLeast(0)),
-                amount     = breakdown.servingPremium,
-                percentage = breakdown.premiumFraction
-            )
-        }
+
+        // Recipe Add (Recipe Price + Ingredient Cost)
         if (breakdown.recipesAddOn > 0) {
             BreakdownLegendRow(
                 color      = ColorRecipes,
                 label      = stringResource(R.string.breakdown_recipes_add_on),
                 amount     = breakdown.recipesAddOn,
                 percentage = breakdown.recipesFraction
+            )
+        }
+
+        // Premium Rate (Platform Charge)
+        if (breakdown.platformCharge > 0) {
+            BreakdownLegendRow(
+                color      = ColorPremium,
+                label      = stringResource(R.string.breakdown_platform_charge),
+                amount     = breakdown.platformCharge,
+                percentage = breakdown.premiumFraction
             )
         }
 

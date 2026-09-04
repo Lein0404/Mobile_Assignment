@@ -436,10 +436,11 @@ fun PaymentScreen(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     AnimatedPriceBreakdownBar(
-                        totalPrice  = totalPrice,
-                        startTime   = appointment.Start_Time,
-                        endTime     = appointment.End_Time,
-                        servingSize = appointment.Serving_Size
+                        totalPrice       = totalPrice,
+                        startTime        = appointment.Start_Time,
+                        endTime          = appointment.End_Time,
+                        servingSize      = appointment.Serving_Size,
+                        pricingBreakdown = paymentState.pricingBreakdown
                     )
                 }
             }

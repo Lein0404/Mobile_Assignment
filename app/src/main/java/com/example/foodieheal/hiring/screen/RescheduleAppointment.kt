@@ -36,6 +36,8 @@ import com.example.foodieheal.Recipe.viewModel.RecipeViewModel
 import com.example.foodieheal.User.viewModel.AuthViewModel
 import com.example.foodieheal.hiring.components.RecipeBookmarkSelectorSheet
 import com.example.foodieheal.hiring.components.RecipeDetailPreviewSheet
+import com.example.foodieheal.hiring.data.HiringRepository
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 import com.example.foodieheal.hiring.model.AppointmentValidationError
 import com.example.foodieheal.hiring.model.SelectedAppointmentRecipe
 import com.example.foodieheal.hiring.model.UserAppointmentsUiState
@@ -51,7 +53,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RescheduleAppointmentScreen(
     appointmentId: String,
@@ -78,9 +80,17 @@ fun RescheduleAppointmentScreen(
         return
     }
 
+    var chefProfile by remember { mutableStateOf<com.example.foodieheal.Chef.model.Chef?>(null) }
+
     LaunchedEffect(appointment.chefId) {
         appointment.chefId?.let { chefId ->
-            bookingViewModel.fetchAppointmentsForChef(chefId)
+            if (chefId.isNotBlank()) {
+                bookingViewModel.fetchAppointmentsForChef(chefId)
+                try {
+                    val hiringRepo = HiringRepository()
+                    chefProfile = hiringRepo.fetchChefById(chefId)
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -119,14 +129,27 @@ fun RescheduleAppointmentScreen(
     }
 
     // Dynamic Price Calculation using AppointmentPricingBreakdown
-    val chefHourlyRate = remember(appointment) {
-        val originalHours = com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculateHours(appointment.Start_Time, appointment.End_Time)
-        val origPrice = appointment.Total_Price ?: 0.0
-        if (originalHours > 0.0) origPrice / originalHours else origPrice
+    val chefHourlyRate = remember(appointment, chefProfile, selectedRecipes) {
+        val directRate = chefProfile?.Pricing
+        if (directRate != null && directRate > 0.0) {
+            directRate
+        } else {
+            val originalHours = AppointmentPricingBreakdown.calculateHours(appointment.Start_Time, appointment.End_Time)
+            val origPrice = appointment.Total_Price ?: 0.0
+            val feeRate = AppointmentPricingBreakdown.PLATFORM_FEE_RATE
+            val subtotal = origPrice / (1.0 + feeRate)
+            val initialIngredients = selectedRecipes.sumOf { item ->
+                if (item.chefProvidesIngredients) {
+                    AppointmentPricingBreakdown.parseEstimatedBudget(item.recipe.estimatedBudget) * item.serviceCount.coerceAtLeast(1)
+                } else 0.0
+            }
+            val labor = (subtotal - initialIngredients).coerceAtLeast(0.0)
+            if (originalHours > 0.0) labor / originalHours else labor
+        }
     }
 
     val pricingBreakdown = remember(chefHourlyRate, startTime, endTime, selectedState, appointment, selectedRecipes) {
-        com.example.foodieheal.hiring.model.AppointmentPricingBreakdown.calculate(
+        AppointmentPricingBreakdown.calculate(
             chefHourlyRate = chefHourlyRate,
             appointmentTime = "$startTime - $endTime",
             selectedRecipes = selectedRecipes,
@@ -269,7 +292,11 @@ fun RescheduleAppointmentScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(end = 8.dp)
+                        ) {
                             Text(
                                 text = stringResource(R.string.label_total_price),
                                 fontSize = 12.sp,
@@ -287,7 +314,8 @@ fun RescheduleAppointmentScreen(
                             text = String.format(Locale.US, "RM %.2f", recalculatedTotalPrice),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            softWrap = false
                         )
                     }
                 }
@@ -521,16 +549,12 @@ fun RescheduleAppointmentScreen(
                                     text = stringResource(R.string.requested_dishes_optional),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = stringResource(R.string.attach_bookmarked_recipes_sub),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -590,15 +614,15 @@ fun RescheduleAppointmentScreen(
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalAlignment = Alignment.Top,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                                         ) {
                                             AsyncImage(
                                                 model = recipe.recipeImageUrl,
                                                 contentDescription = recipe.recipeName,
                                                 modifier = Modifier
-                                                    .size(42.dp)
+                                                    .size(46.dp)
                                                     .clip(RoundedCornerShape(8.dp))
                                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                                 contentScale = ContentScale.Crop,
@@ -606,25 +630,82 @@ fun RescheduleAppointmentScreen(
                                                 placeholder = painterResource(R.drawable.ic_recipe)
                                             )
 
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = recipe.recipeName,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                // Recipe Title + Top-Right Action Buttons
                                                 Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Text(
-                                                        text = stringResource(R.string.portion_count_format, item.serviceCount),
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        text = recipe.recipeName,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        maxLines = 2,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        modifier = Modifier
+                                                            .weight(1f, fill = false)
+                                                            .padding(end = 4.dp)
                                                     )
+
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                                    ) {
+                                                        IconButton(
+                                                            onClick = { previewingRecipeInForm = recipe },
+                                                            modifier = Modifier.size(26.dp)
+                                                        ) {
+                                                            Icon(
+                                                                painter = painterResource(R.drawable.ic_recipe),
+                                                                contentDescription = stringResource(R.string.view_details),
+                                                                tint = MaterialTheme.colorScheme.primary,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+
+                                                        IconButton(
+                                                            onClick = {
+                                                                selectedRecipes = selectedRecipes.filterNot { it.recipe.recipe_id == recipe.recipe_id }
+                                                            },
+                                                            modifier = Modifier.size(26.dp)
+                                                        ) {
+                                                            Icon(
+                                                                painter = painterResource(R.drawable.cancel),
+                                                                contentDescription = stringResource(R.string.remove),
+                                                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.85f),
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                // Badges row: Portions & Ingredient Supply
+                                                FlowRow(
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Surface(
+                                                        shape = RoundedCornerShape(4.dp),
+                                                        color = MaterialTheme.colorScheme.primaryContainer
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(R.string.portion_count_format, item.serviceCount),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                            fontSize = 10.sp,
+                                                            maxLines = 1,
+                                                            softWrap = false
+                                                        )
+                                                    }
+
                                                     Surface(
                                                         shape = RoundedCornerShape(4.dp),
                                                         color = if (item.chefProvidesIngredients) {
@@ -639,14 +720,17 @@ fun RescheduleAppointmentScreen(
                                                             } else {
                                                                 stringResource(R.string.tag_user_provides)
                                                             },
-                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                                             style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.SemiBold,
                                                             color = if (item.chefProvidesIngredients) {
                                                                 MaterialTheme.colorScheme.onPrimaryContainer
                                                             } else {
                                                                 MaterialTheme.colorScheme.onSurfaceVariant
                                                             },
-                                                            fontSize = 10.sp
+                                                            fontSize = 10.sp,
+                                                            maxLines = 1,
+                                                            softWrap = false
                                                         )
                                                     }
                                                 }
@@ -656,39 +740,8 @@ fun RescheduleAppointmentScreen(
                                                         text = "“${item.customNote}”",
                                                         style = MaterialTheme.typography.bodySmall,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                                        maxLines = 1,
+                                                        maxLines = 2,
                                                         overflow = TextOverflow.Ellipsis
-                                                    )
-                                                }
-                                            }
-
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = { previewingRecipeInForm = recipe },
-                                                    modifier = Modifier.size(30.dp)
-                                                ) {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.ic_recipe),
-                                                        contentDescription = stringResource(R.string.view_details),
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(17.dp)
-                                                    )
-                                                }
-
-                                                IconButton(
-                                                    onClick = {
-                                                        selectedRecipes = selectedRecipes.filterNot { it.recipe.recipe_id == recipe.recipe_id }
-                                                    },
-                                                    modifier = Modifier.size(30.dp)
-                                                ) {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.cancel),
-                                                        contentDescription = stringResource(R.string.remove),
-                                                        tint = MaterialTheme.colorScheme.error,
-                                                        modifier = Modifier.size(17.dp)
                                                     )
                                                 }
                                             }

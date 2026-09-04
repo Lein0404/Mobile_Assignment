@@ -1323,6 +1323,13 @@
     <string name="chef_login_apply_here">Apply directly here</string>
     <string name="chef_login_back_to_customer">Back to Customer Login</string>
 
+    <!-- Chef Notifications -->
+    <string name="chef_notif_confirmed_title">Booking Confirmed &amp; Paid!</string>
+    <string name="chef_notif_confirmed_msg_full">%1$s completed payment of %2$s for your appointment on %3$s.</string>
+    <string name="chef_notif_confirmed_msg_amount">%1$s completed payment of %2$s. Your booking is confirmed.</string>
+    <string name="chef_notif_confirmed_msg_client">%1$s completed payment. Your appointment is now confirmed.</string>
+    <string name="chef_notif_confirmed_msg_default">A client has completed payment. The appointment is now confirmed.</string>
+
     <!-- AppointmentReview -->
     <string name="hiring_review_itemized_receipt">Itemized Receipt</string>
     <string name="hiring_review_chef_labor">Chef Labor (RM %1$s/hr × %2$s hrs)</string>
@@ -1395,9 +1402,10 @@
 
     <!-- AnimatedPriceBreakdown -->
     <string name="breakdown_title_price_breakdown">Price Breakdown</string>
-    <string name="breakdown_base_rate">Base Rate</string>
-    <string name="breakdown_serving_premium">Serving Premium (%d extra guests)</string>
-    <string name="breakdown_recipes_add_on">Recipes &amp; Add-ons</string>
+    <string name="breakdown_base_rate">Base Rate (Hourly)</string>
+    <string name="breakdown_platform_charge" formatted="false">Platform Charge (5%)</string>
+    <string name="breakdown_serving_premium" formatted="false">Platform Charge (5%)</string>
+    <string name="breakdown_recipes_add_on">Recipe &amp; Ingredients</string>
     <string name="breakdown_total">Total</string>
     <string name="breakdown_currency_format">RM %s</string>
 

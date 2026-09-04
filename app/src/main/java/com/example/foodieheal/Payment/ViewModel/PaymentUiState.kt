@@ -1,6 +1,7 @@
 package com.example.foodieheal.Payment.ViewModel
 
 import com.example.foodieheal.hiring.model.Appointment
+import com.example.foodieheal.hiring.model.AppointmentPricingBreakdown
 
 sealed class PaymentMethod(
     open val id: String,
@@ -35,6 +36,7 @@ sealed class PaymentMethod(
 data class PaymentUiState(
     val isLoading: Boolean = false,
     val appointment: Appointment? = null,
+    val pricingBreakdown: AppointmentPricingBreakdown? = null,
     val availableMethods: List<PaymentMethod> = emptyList(),
     val selectedMethod: PaymentMethod? = null,
     val isPaymentSuccess: Boolean = false,

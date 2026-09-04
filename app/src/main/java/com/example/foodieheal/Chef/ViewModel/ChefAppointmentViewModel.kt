@@ -16,6 +16,7 @@ import com.example.foodieheal.hiring.model.AppointmentRecipeWithDetails
 import com.example.foodieheal.User.Model.User
 import com.example.foodieheal.SupabaseClient
 import com.example.foodieheal.Chef.notification.ChefNotificationHelper
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
@@ -180,6 +181,51 @@ class ChefPortalViewModel(application: Application) : AndroidViewModel(applicati
                         is PostgresAction.Update -> {
                             fetchAppointmentsForCurrentChef()
                             loadDashboardData()
+                            val newStatus = record?.get("Status")?.let {
+                                try { it.toString().replace("\"", "").trim() } catch (_: Exception) { null }
+                            }
+                            if (newStatus?.equals("Confirmed", ignoreCase = true) == true) {
+                                val apptId = record?.get("AppointmentID")?.let {
+                                    try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                                }
+                                val date = record?.get("Date")?.let {
+                                    try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                                }
+                                val startTime = record?.get("Start_Time")?.let {
+                                    try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                                }
+                                val endTime = record?.get("End_Time")?.let {
+                                    try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                                }
+                                val apptTime = if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) "$startTime - $endTime" else startTime
+                                val price = record?.get("Total_Price")?.let {
+                                    try { it.toString().replace("\"", "").toDoubleOrNull() } catch (_: Exception) { null }
+                                }
+                                val userId = record?.get("userId")?.let {
+                                    try { it.toString().replace("\"", "") } catch (_: Exception) { null }
+                                }
+
+                                viewModelScope.launch {
+                                    val clientUser = userId?.let { id ->
+                                        (_appointmentsUiState.value as? AppointmentsUiState.Success)?.usersMap?.get(id)
+                                            ?: (_homeUiState.value as? HomeUiState.Success)?.usersMap?.get(id)
+                                            ?: try {
+                                                com.example.foodieheal.SupabaseClient.client.from("users")
+                                                    .select { filter { eq("id", id) } }
+                                                    .decodeSingleOrNull<com.example.foodieheal.User.Model.User>()
+                                            } catch (_: Exception) { null }
+                                    }
+
+                                    ChefNotificationHelper.showConfirmedAppointmentNotification(
+                                        context = getApplication(),
+                                        clientName = clientUser?.name,
+                                        appointmentDate = date,
+                                        appointmentTime = apptTime,
+                                        totalAmount = price,
+                                        appointmentId = apptId
+                                    )
+                                }
+                            }
                             _realtimeAlert.value = resString(R.string.chef_realtime_booking_updated)
                         }
                         is PostgresAction.Delete -> {
