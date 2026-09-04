@@ -4,8 +4,6 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.foodieheal.SupabaseClient
-import com.example.foodieheal.hiring.data.HiringRepository
-import com.example.foodieheal.hiring.local.HiringDatabase
 import com.example.foodieheal.meal_planner.data.MealPlannerRepository
 import com.example.foodieheal.meal_planner.local.MealPlanDatabase
 import com.example.foodieheal.Recipe.local.RecipeDatabase
@@ -28,15 +26,7 @@ class MealPlannerViewModelFactory(
                 recipeDao = recipeDao
             )
             val recipeRepository = RecipeRepository(recipeDao)
-
-            val hiringDb = HiringDatabase.getInstance(application)
-            val hiringRepository = HiringRepository(
-                chefDao = hiringDb.chefDao(),
-                appointmentDao = hiringDb.appointmentDao(),
-                reviewDao = hiringDb.chefReviewDao()
-            )
-
-            return MealPlannerViewModel(application, repository, recipeRepository, hiringRepository) as T
+            return MealPlannerViewModel(application, repository, recipeRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

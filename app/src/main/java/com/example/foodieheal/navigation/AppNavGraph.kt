@@ -144,6 +144,7 @@ fun AppNavGraph(
             composable(Screen.Planner.route) {
                 MealPlannerScreen(
                     mealPlannerViewModel = mealPlannerViewModel,
+                    userAppointmentViewModel = userAppointmentViewModel,
                     authViewModel = sharedAuthViewModel,
                     onNavigateToProfile = { navController.navigate(Screen.EditBodyStatus.route) },
                     onRecipeDetails = { recipeId ->
@@ -587,7 +588,6 @@ fun AppNavGraph(
                     onBackClick = { navController.popBackStack() },
                     onFinalConfirm = {
                         userAppointmentViewModel.fetchAppointmentsForCurrentUser()
-                        mealPlannerViewModel.fetchAppointmentsForCurrentUser()
                         navController.popBackStack(Screen.Home.route, inclusive = false)
                     }
                 )
@@ -651,7 +651,6 @@ fun AppNavGraph(
                     onPaymentSuccess = { transactionId ->
                         // Refresh main appointment list when payment completes
                         userAppointmentViewModel.fetchAppointmentsForCurrentUser()
-                        mealPlannerViewModel.fetchAppointmentsForCurrentUser()
                         navController.popBackStack()
                     },
                     onPaymentError = { error ->
@@ -672,6 +671,7 @@ fun AppNavGraph(
                     appointmentId = appointmentId,
                     userViewModel = userAppointmentViewModel,
                     onSubmitSuccess = {
+                        userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                         navController.popBackStack()
                     }
                 )
@@ -691,6 +691,7 @@ fun AppNavGraph(
                     authViewModel = sharedAuthViewModel,
                     onBackClick = { navController.popBackStack() },
                     onRescheduleSuccess = {
+                        userAppointmentViewModel.fetchAppointmentsForCurrentUser()
                         navController.popBackStack()
                     }
                 )
